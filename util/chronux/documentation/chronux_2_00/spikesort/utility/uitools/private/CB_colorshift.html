@@ -1,0 +1,144 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of CB_colorshift</title>
+  <meta name="keywords" content="CB_colorshift">
+  <meta name="description" content="CB_COLORSHIFT     Callback for UIcolorshift.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../../index.html">Home</a> &gt;  <a href="#">chronux_2_00</a> &gt; <a href="../../../index.html">spikesort</a> &gt; <a href="../../index.html">utility</a> &gt; <a href="../index.html">uitools</a> &gt; <a href="index.html">private</a> &gt; CB_colorshift.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../../index.html"><img alt="<" border="0" src="../../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for chronux_2_00\spikesort\utility\uitools\private&nbsp;<img alt=">" border="0" src="../../../../../right.png"></a></td></tr></table>-->
+
+<h1>CB_colorshift
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>CB_COLORSHIFT     Callback for UIcolorshift.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>function CB_colorshift(handle, events) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">CB_COLORSHIFT     Callback for UIcolorshift.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function done_cbar(handle, event)</a></li><li><a href="#_sub2" class="code">function scale_cbar(handle, event, ud)</a></li><li><a href="#_sub3" class="code">function shift_cbar(handle, event, ud)</a></li></ul>
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function CB_colorshift(handle, events)</a>
+0002 <span class="comment">%CB_COLORSHIFT     Callback for UIcolorshift.</span>
+0003 
+0004 <span class="comment">% Fields for UserData structure:</span>
+0005 <span class="comment">%  fighdl - parent figure hndl    mouseroot - global coords initial click</span>
+0006 <span class="comment">%  target - data axes hndl        climsinit - initial clim</span>
+0007 <span class="comment">%  cimage - colorbar image hndl   limitSEL  - 1 = bottom limit, 2 = top</span>
+0008 <span class="comment">%  mode   - 'H'oriz or 'V'ert     mouseSEL  - 1 = horiz (X), 2 = vert (Y)</span>
+0009 <span class="comment">%  cbrhdl - colorbar axes hndl    limitstr  - 'XLim'=horiz, 'YLim'=vert</span>
+0010 <span class="comment">%  cmap   - initial colormap      cmaplen - # rows in colormap</span>
+0011 <span class="comment">%  datastr - 'XData'=horiz,'YData'=vert</span>
+0012 <span class="comment">%  incr_per_pix - clim incr per pixel of mouse motion</span>
+0013 
+0014 <span class="comment">%  shft_per_pix - clim shift per pixel of mouse motion</span>
+0015 
+0016 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Set Up Data %%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0017 info = get(handle, <span class="string">'UserData'</span>);
+0018 
+0019 info.mouseSEL = (info.mode == <span class="string">'V'</span>) + 1;   <span class="comment">% 1 for 'H' mode, 2 for 'V'</span>
+0020 <span class="keyword">if</span> (info.mode == <span class="string">'H'</span>),  info.limitstr = <span class="string">'XLim'</span>;  info.datastr = <span class="string">'XData'</span>;
+0021 <span class="keyword">else</span>                    info.limitstr = <span class="string">'YLim'</span>;  info.datastr = <span class="string">'YData'</span>;
+0022 <span class="keyword">end</span>
+0023 
+0024 info.climsinit = get(info.target,<span class="string">'CLim'</span>);   
+0025 info.incr_per_pix = diff(info.climsinit)./200;
+0026 
+0027 info.cmap = get(info.fighdl, <span class="string">'Colormap'</span>);
+0028 info.cmaplen = size(info.cmap,1);
+0029 info.shft_per_pix = info.cmaplen./256;
+0030 
+0031 
+0032 <span class="comment">% mouseclick in data units</span>
+0033 clickData = get(handle,<span class="string">'CurrentPoint'</span>);  clickData = clickData(1,info.mouseSEL);
+0034 
+0035 <span class="comment">% mouseclick in figure units</span>
+0036 clickRoot = get(0, <span class="string">'PointerLocation'</span>);   info.mouseinit = clickRoot(info.mouseSEL);
+0037 
+0038 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%% Decide Action %%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0039 dlims = get(handle, info.limitstr);              
+0040 click = (clickData - dlims(1)) ./ (dlims(2)-dlims(1));  <span class="comment">% data units -&gt; normalized</span>
+0041 <span class="keyword">if</span> (click &gt;= 0.95),     mode = <span class="string">'top'</span>;   info.limitSEL = 2;
+0042 <span class="keyword">elseif</span> (click &lt;= 0.05), mode = <span class="string">'bot'</span>;   info.limitSEL = 1;
+0043 <span class="keyword">else</span>                    mode = <span class="string">'shf'</span>;
+0044 <span class="keyword">end</span>
+0045 
+0046 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Track Mouse %%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0047 oldMotionFcn   = get(info.fighdl, <span class="string">'WindowButtonMotionFcn'</span>);
+0048 oldButtonUpFcn = get(info.fighdl, <span class="string">'WindowButtonUpFcn'</span>);
+0049 set(info.fighdl, <span class="string">'WindowButtonUpFcn'</span>, {@<a href="#_sub1" class="code" title="subfunction done_cbar(handle, event)">done_cbar</a>});
+0050 <span class="keyword">switch</span>(mode),
+0051     <span class="keyword">case</span> {<span class="string">'top'</span>, <span class="string">'bot'</span>}
+0052         set(info.fighdl, <span class="string">'WindowButtonMotionFcn'</span>, {@<a href="#_sub2" class="code" title="subfunction scale_cbar(handle, event, ud)">scale_cbar</a>, info});
+0053     <span class="keyword">case</span> <span class="string">'shf'</span>,
+0054         set(info.fighdl, <span class="string">'WindowButtonMotionFcn'</span>, {@<a href="#_sub3" class="code" title="subfunction shift_cbar(handle, event, ud)">shift_cbar</a>, info});
+0055 <span class="keyword">end</span>
+0056 waitfor(info.fighdl, <span class="string">'WindowButtonMotionFcn'</span>, <span class="string">''</span>);
+0057 
+0058 set(info.fighdl, <span class="string">'WindowButtonMotionFcn'</span>, oldMotionFcn);
+0059 set(info.fighdl, <span class="string">'WindowButtonUpFcn'</span>, oldButtonUpFcn);
+0060 
+0061 axes(info.target);  <span class="comment">% R13 TMW bug on deletion if colorbar remains current axes</span>
+0062 <span class="keyword">if</span> (info.mode == <span class="string">'H'</span>)
+0063     UIcolorshift(<span class="string">'horiz'</span>, <span class="string">'peer'</span>,info.target);   <span class="comment">% refresh display</span>
+0064 <span class="keyword">else</span>
+0065     UIcolorshift(<span class="string">'peer'</span>, info.target);  
+0066 <span class="keyword">end</span>
+0067 <span class="comment">% click = round((click-range(1)) ./ (range(2)-range(1)) .* 255);</span>
+0068 <span class="comment">% shift = mod([-127:128] + click, 256) + 1;      % make shifted indices</span>
+0069 <span class="comment">% cmap = colormap;</span>
+0070 <span class="comment">% colormap(cmap(shift,:));  % then shift the map</span>
+0071 
+0072 
+0073 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0074 <span class="comment">%%%%%%%%%%%%%%%%%%%% Callbacks for the Callback %%%%%%%%%%%%%%%%%%%%%%</span>
+0075 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0076 
+0077 <span class="comment">%%%%% Used to signal to cb_colorshift that tracking is over.</span>
+0078 <a name="_sub1" href="#_subfunctions" class="code">function done_cbar(handle, event)</a>
+0079 set(handle, <span class="string">'WindowButtonMotionFcn'</span>, <span class="string">''</span>)
+0080 
+0081 <span class="comment">%%%%% Rescale color limits</span>
+0082 <a name="_sub2" href="#_subfunctions" class="code">function scale_cbar(handle, event, ud)</a>
+0083 mouse = get(0,<span class="string">'PointerLocation'</span>);
+0084 ud.climsinit(ud.limitSEL) = ud.climsinit(ud.limitSEL) - (mouse(ud.mouseSEL)-ud.mouseinit)*ud.incr_per_pix;
+0085 <span class="keyword">if</span> (diff(ud.climsinit) &gt; 0)
+0086     set(ud.target, <span class="string">'CLim'</span>, ud.climsinit);
+0087     set(ud.cbrhdl, ud.limitstr, ud.climsinit);
+0088     set(ud.cimage, ud.datastr, ud.climsinit);
+0089 <span class="keyword">end</span>
+0090 
+0091 <span class="comment">%%%%% Shift color limits</span>
+0092 <a name="_sub3" href="#_subfunctions" class="code">function shift_cbar(handle, event, ud)</a>
+0093 mouse = get(0,<span class="string">'PointerLocation'</span>);
+0094 shift = round((mouse(ud.mouseSEL)-ud.mouseinit)*ud.shft_per_pix);
+0095 cmap = ud.cmap;
+0096 set(ud.fighdl, <span class="string">'Colormap'</span>, cmap(circshift((1:ud.cmaplen)', shift), :));</pre></div>
+<hr><address>Generated on Fri 15-Aug-2008 11:35:42 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

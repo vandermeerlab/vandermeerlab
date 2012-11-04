@@ -1,0 +1,207 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of ssgtest</title>
+  <meta name="keywords" content="ssgtest">
+  <meta name="description" content="temporary script to translate the SSG_DATABROWSE functions into a GUI.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="#">chronux_2_00</a> &gt; <a href="../index.html">spikesort</a> &gt; <a href="index.html">ssg</a> &gt; ssgtest.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for chronux_2_00\spikesort\ssg&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>ssgtest
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>temporary script to translate the SSG_DATABROWSE functions into a GUI.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function ssgtest(spikes, assignments, show, mode) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> temporary script to translate the SSG_DATABROWSE functions into a GUI.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="raise_me.html" class="code" title="function raise_me (hObject, event, me)">raise_me</a>	Pulls the clicked object to the top of the ui stack; useful</li><li><a href="ssg_featureselect.html" class="code" title="function varargout = ssg_featureselect(varargin)">ssg_featureselect</a>	SSG_FEATURESELECT M-file for ssg_featureselect.fig</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="ssg_databrowse2d.html" class="code" title="function ssg_databrowse2d(spikes, assigns, show)">ssg_databrowse2d</a>	SSG_DATABROWSE2D  Feature projection GUI in 2D (work in progress).</li><li><a href="ssg_databrowse3d.html" class="code" title="function ssg_databrowse3d(spikes, assigns, show)">ssg_databrowse3d</a>	SSG_DATABROWSE3D  Feature projection GUI in 3D (work in progress).</li></ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function delete_function(hObject, event)</a></li><li><a href="#_sub2" class="code">function make_control(hObject, event, controlaxis)</a></li><li><a href="#_sub3" class="code">function make_density(myfig, event, myaxes)</a></li></ul>
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function ssgtest(spikes, assignments, show, mode)</a>
+0002 <span class="comment">% temporary script to translate the SSG_DATABROWSE functions into a GUI.</span>
+0003 
+0004 <span class="keyword">if</span> (~ismember(mode, {<span class="string">'xy'</span>,<span class="string">'xyz'</span>})), error(<span class="string">'Unknown mode.'</span>);  <span class="keyword">end</span>;
+0005 
+0006 <span class="keyword">if</span> (isempty(assignments))
+0007     <span class="keyword">if</span> (isfield(spikes, <span class="string">'hierarchy'</span>) &amp;&amp; isfield(spikes.hierarchy, <span class="string">'assigns'</span>))
+0008         assignments = spikes.hierarchy.assigns;
+0009     <span class="keyword">elseif</span> (isfield(spikes, <span class="string">'overcluster'</span>))
+0010         assignments = spikes.overcluster.assigns;
+0011     <span class="keyword">else</span>
+0012         assignments = ones(size(spikes.spiketimes));
+0013     <span class="keyword">end</span>
+0014 <span class="keyword">end</span>
+0015 clusters = unique(assignments);  numclusts = length(clusters);
+0016 
+0017 <span class="keyword">if</span> (isempty(show)),  show = clusters;  <span class="keyword">end</span>;
+0018 <span class="keyword">if</span> (isfield(spikes, <span class="string">'overcluster'</span>) &amp;&amp; all(ismember(assignments, [spikes.overcluster.assigns; 0])))
+0019     cmap = spikes.overcluster.colors;
+0020 <span class="keyword">else</span>
+0021     cmap = jet(length(show));
+0022 <span class="keyword">end</span>
+0023 
+0024 show(show == 0) = [];
+0025 
+0026 <span class="comment">% SVD the data because we want to use the PCs as default axes.</span>
+0027 [pca.scores,pca.u,pca.s,pca.v] = pcasvd(spikes.waveforms);
+0028 spikes.pca = pca;
+0029 data = pca.scores;
+0030 
+0031 <span class="comment">% Make the plot.</span>
+0032 figure;  hfig = gcf;    hax = gca;    hold on;
+0033 inds = cell(numclusts,1);  ssghandle = zeros(1, numclusts);
+0034 <span class="keyword">for</span> clu = 1:numclusts
+0035     sel = find(assignments == clusters(clu));
+0036     inds{clu} = sel;
+0037     <span class="keyword">if</span> (strcmp(mode, <span class="string">'xyz'</span>))
+0038         hndl = plot3(data(sel,1), data(sel,2), data(sel,3),<span class="string">'.'</span>);
+0039     <span class="keyword">else</span>
+0040         hndl = plot(data(sel,1), data(sel,2), <span class="string">'.'</span>);
+0041         set(hndl, <span class="string">'ButtonDownFcn'</span>, {@<a href="raise_me.html" class="code" title="function raise_me (hObject, event, me)">raise_me</a>, hndl});
+0042     <span class="keyword">end</span>
+0043 
+0044     <span class="keyword">if</span> (clusters(clu) == 0),                 set(hndl, <span class="string">'Color'</span>, [0 0 0], <span class="string">'Marker'</span>, <span class="string">'x'</span>);
+0045     <span class="keyword">elseif</span> (ismember(clusters(clu), show)),  set(hndl, <span class="string">'Color'</span>, cmap(clusters(clu),:));
+0046     <span class="keyword">else</span>                                     set(hndl, <span class="string">'Color'</span>, Clgy);
+0047     <span class="keyword">end</span>;
+0048     
+0049     <span class="keyword">if</span> (clusters(clu) == 0),                 h_out = hndl;
+0050     <span class="keyword">elseif</span> (ismember(clusters(clu), show)),  h_pts(clusters(clu)) = hndl;
+0051     <span class="keyword">end</span>
+0052     
+0053     ssghandle(clu) = hndl;
+0054 <span class="keyword">end</span>
+0055 h_pts = h_pts(show);
+0056 
+0057 <span class="keyword">if</span> (length(find(h_pts)) == 1), set(h_pts, <span class="string">'MarkerSize'</span>, 5, <span class="string">'Marker'</span>, <span class="string">'.'</span>);  <span class="keyword">end</span>;
+0058 <span class="keyword">if</span> (~strcmp(mode,<span class="string">'xyz'</span>)),  uistack(h_pts, <span class="string">'top'</span>);  <span class="keyword">end</span>;
+0059 
+0060 hold off;
+0061 
+0062 <span class="comment">% Make the figure's spike-sorting gui (SSG) object.</span>
+0063 ssg.mode = mode;
+0064 ssg.ss_object = spikes;
+0065 ssg.ss_assigns = assignments;
+0066 ssg.group_indices = inds;   ssg.group_handles = ssghandle;
+0067 ssg.xchoice = <span class="string">'PC'</span>;     ssg.xparam1 = <span class="string">'1'</span>;      ssg.xcontrol = [];
+0068 ssg.ychoice = <span class="string">'PC'</span>;     ssg.yparam1 = <span class="string">'2'</span>;      ssg.ycontrol = [];
+0069 ssg.zchoice = <span class="string">'PC'</span>;     ssg.zparam1 = <span class="string">'3'</span>;      ssg.zcontrol = [];
+0070 guidata(gcf, ssg);
+0071 
+0072 <span class="comment">% Colorize each axis for easy identification.</span>
+0073 set(hax, <span class="string">'XColor'</span>, [0.8 0 0.5], <span class="string">'YColor'</span>, [0.1 0.7 0.3], <span class="string">'ZColor'</span>, [0 0.4 0.7]);
+0074 
+0075 <span class="comment">% Make the axis labels &amp; callback-ify them.</span>
+0076 textprops = {<span class="string">'FontSize'</span>, 14, <span class="string">'FontWeight'</span>, <span class="string">'bold'</span>, <span class="string">'Rotation'</span>, 0};
+0077 hx = xlabel([ssg.xchoice ssg.xparam1]);  set(hx, <span class="string">'ButtonDownFcn'</span>, {@<a href="#_sub2" class="code" title="subfunction make_control(hObject, event, controlaxis)">make_control</a>, <span class="string">'x'</span>}, textprops{:});
+0078 hy = ylabel([ssg.ychoice ssg.yparam1]);  set(hy, <span class="string">'ButtonDownFcn'</span>, {@<a href="#_sub2" class="code" title="subfunction make_control(hObject, event, controlaxis)">make_control</a>, <span class="string">'y'</span>}, textprops{:});
+0079 <span class="keyword">if</span> (strcmp(mode,<span class="string">'xyz'</span>))
+0080     hz = zlabel([ssg.zchoice ssg.zparam1]);  set(hz, <span class="string">'ButtonDownFcn'</span>, {@<a href="#_sub2" class="code" title="subfunction make_control(hObject, event, controlaxis)">make_control</a>, <span class="string">'z'</span>}, textprops{:});
+0081     cameratoolbar(<span class="string">'ResetCamera'</span>);  
+0082     cameratoolbar(<span class="string">'SetMode'</span>, <span class="string">'orbit'</span>);
+0083     set(gcf, <span class="string">'Renderer'</span>, <span class="string">'OpenGL'</span>);
+0084     grid on;
+0085 <span class="keyword">else</span>
+0086     cameratoolbar(<span class="string">'SetMode'</span>, <span class="string">'nomode'</span>);
+0087     set(gcf, <span class="string">'Renderer'</span>, <span class="string">'zbuffer'</span>);
+0088 <span class="keyword">end</span>
+0089 axis equal;
+0090 
+0091 <span class="comment">% Set up the legend (unless there are too many clusters, in which case just show noise).</span>
+0092 clustnames = cellstr(num2str(show));
+0093 <span class="keyword">if</span> (exist(<span class="string">'h_out'</span>, <span class="string">'var'</span>)),  h_pts = [h_out, h_pts];   clustnames = cat(1, {<span class="string">'Outliers'</span>}, clustnames);  <span class="keyword">end</span>;
+0094 
+0095 <span class="keyword">if</span> (numclusts &lt; 12  &amp;&amp;  numclusts &gt; 1)
+0096     hleg = legend(h_pts, clustnames, 0);    
+0097 <span class="keyword">elseif</span> (exist(<span class="string">'h_out'</span>, <span class="string">'var'</span>)),
+0098     hleg = legend(h_pts(1), clustnames{1}, 0);
+0099 <span class="keyword">end</span>
+0100 <span class="keyword">if</span> (strcmp(mode,<span class="string">'xyz'</span>) &amp;&amp; exist(<span class="string">'hleg'</span>, <span class="string">'var'</span>))
+0101     legpos = get(hleg, <span class="string">'Position'</span>);
+0102     legpos(2) = 0.78;
+0103     set(hleg, <span class="string">'Position'</span>, legpos);
+0104 <span class="keyword">end</span>
+0105 
+0106 set(hfig, <span class="string">'DeleteFcn'</span>, @<a href="#_sub1" class="code" title="subfunction delete_function(hObject, event)">delete_function</a>);
+0107 set(hfig, <span class="string">'ButtonDownFcn'</span>, {@<a href="#_sub3" class="code" title="subfunction make_density(myfig, event, myaxes)">make_density</a>, hax});
+0108 figure(hfig);  <span class="comment">% bring figure to top</span>
+0109 
+0110 
+0111 <a name="_sub1" href="#_subfunctions" class="code">function delete_function(hObject, event)</a>
+0112 <span class="comment">% Need to delete any associated control GUIs.</span>
+0113 ssg = guidata(hObject);
+0114 delete([ssg.xcontrol, ssg.ycontrol, ssg.zcontrol]);
+0115 
+0116 
+0117 <a name="_sub2" href="#_subfunctions" class="code">function make_control(hObject, event, controlaxis)</a>
+0118 <span class="comment">% Raises the associated axis control if it exists and creates it if it does not.</span>
+0119 <span class="comment">% Note that the axis control is responsible for registering its handle with the</span>
+0120 <span class="comment">% the guidata of this axis upon its creation/deletion.</span>
+0121 ssg = guidata(hObject);
+0122 controlhandle = ssg.([controlaxis <span class="string">'control'</span>]);
+0123 <span class="keyword">if</span> (~isempty(controlhandle))
+0124     figure(controlhandle);
+0125 <span class="keyword">else</span>
+0126     <a href="ssg_featureselect.html" class="code" title="function varargout = ssg_featureselect(varargin)">ssg_featureselect</a>(gca, controlaxis);
+0127 <span class="keyword">end</span>
+0128 
+0129 <a name="_sub3" href="#_subfunctions" class="code">function make_density(myfig, event, myaxes)</a>
+0130 <span class="comment">% Replots the current data as a density using histxy or hist3d.</span>
+0131 ssg = guidata(myfig);
+0132 <span class="keyword">if</span>(strcmp(get(myfig, <span class="string">'SelectionType'</span>), <span class="string">'open'</span>))
+0133     [az,el] = view;   T = view;
+0134     properties2d = {<span class="string">'XLim'</span>, <span class="string">'YLim'</span>, <span class="string">'DataAspectRatio'</span>};
+0135     properties3d = cat(2, properties2d, {<span class="string">'Zlim'</span>, <span class="string">'CameraViewAngle'</span>});
+0136     properties2d = cat(1, properties2d, get(gca,properties2d));
+0137     properties3d = cat(1, properties3d, get(gca,properties3d));
+0138     
+0139     xdata = [];    ydata = [];   zdata = [];
+0140     <span class="keyword">for</span> clust = 1:length(ssg.group_handles)
+0141         xdata = [xdata get(ssg.group_handles(clust), <span class="string">'XData'</span>)];
+0142         ydata = [ydata get(ssg.group_handles(clust), <span class="string">'YData'</span>)];
+0143         <span class="keyword">if</span> (strcmp(ssg.mode,<span class="string">'xyz'</span>))
+0144             zdata = [zdata get(ssg.group_handles(clust), <span class="string">'ZData'</span>)];
+0145         <span class="keyword">end</span>
+0146     <span class="keyword">end</span>
+0147     figure; hdens = gca;
+0148     <span class="keyword">if</span> (strcmp(ssg.mode,<span class="string">'xyz'</span>))
+0149         view(T);  set(gca,properties3d{:});
+0150         levels = logspace(-3,0,10);
+0151         histxyz([xdata', ydata', zdata'], [], [], 20, [], 0);  
+0152         set(hdens, <span class="string">'Box'</span>, <span class="string">'on'</span>);  grid on;
+0153     <span class="keyword">else</span>
+0154         histxy(xdata,ydata,250,1);
+0155         set(gca,properties2d{:},<span class="string">'Color'</span>,[0 0 0.508]);
+0156         UIlogmenu(findobj(gca,<span class="string">'Type'</span>,<span class="string">'Image'</span>));
+0157     <span class="keyword">end</span>
+0158 <span class="keyword">end</span>
+0159</pre></div>
+<hr><address>Generated on Fri 15-Aug-2008 11:35:42 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of CB_subzoom</title>
+  <meta name="keywords" content="CB_subzoom">
+  <meta name="description" content="CB_MYFUNC         Callback for UImyfunc.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../../index.html">Home</a> &gt;  <a href="#">chronux_2_00</a> &gt; <a href="../../../index.html">spikesort</a> &gt; <a href="../../index.html">utility</a> &gt; <a href="../index.html">uitools</a> &gt; <a href="index.html">private</a> &gt; CB_subzoom.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../../index.html"><img alt="<" border="0" src="../../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for chronux_2_00\spikesort\utility\uitools\private&nbsp;<img alt=">" border="0" src="../../../../../right.png"></a></td></tr></table>-->
+
+<h1>CB_subzoom
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>CB_MYFUNC         Callback for UImyfunc.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>function CB_subzoom(handle, event) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">CB_MYFUNC         Callback for UImyfunc.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+<li><a href="find_uimenu.html" class="code" title="function [cxitem,cxmenu] = find_uimenu(parent, tag, label, callback)">find_uimenu</a>	FIND_UIMENU        Finds/creates an item in a UIcontextmenu.</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function CB_subzoom(handle, event)</a>
+0002 <span class="comment">%CB_MYFUNC         Callback for UImyfunc.</span>
+0003 
+0004 hei_zoom = 0.85;  <span class="comment">% fractional height in zoomed state</span>
+0005 wid_zoom = 0.85;  <span class="comment">% fractional width in zoomed state</span>
+0006 
+0007 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Access Data %%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0008 <span class="comment">% First we get the target axes &amp; its context menu -- these are in charge.</span>
+0009 userdata = get(handle, <span class="string">'UserData'</span>);  
+0010 target = userdata.targetaxs;
+0011 mymenu = <a href="find_uimenu.html" class="code" title="function [cxitem,cxmenu] = find_uimenu(parent, tag, label, callback)">find_uimenu</a>(target, <span class="string">'subzoom'</span>);
+0012 <span class="comment">% If any kids have similar menu's, they need to mirror state</span>
+0013 allcontexts = get(get(target, <span class="string">'Children'</span>), <span class="string">'UIContextMenu'</span>);
+0014 <span class="keyword">if</span> (iscell(allcontexts)),  allcontexts = cat(1, allcontexts{:});  <span class="keyword">end</span>;
+0015 chmenu = findobj(allcontexts, <span class="string">'Tag'</span>, <span class="string">'subzoom'</span>);
+0016 
+0017 userdata = get(mymenu, <span class="string">'UserData'</span>);
+0018 
+0019 userdata.zoomstate = ~onoff2bool(get(mymenu,<span class="string">'Checked'</span>));
+0020 set([mymenu, chmenu], <span class="string">'Checked'</span>, bool2onoff(userdata.zoomstate));
+0021 
+0022 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Process %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0023 oldunits = get(target, <span class="string">'Units'</span>);   set(target, <span class="string">'Units'</span>, <span class="string">'normalized'</span>);
+0024 <span class="keyword">if</span> (userdata.zoomstate)   <span class="comment">% ZOOMING IN</span>
+0025     userdata.revert = get(target, <span class="string">'Position'</span>);
+0026     set(target, <span class="string">'Position'</span>, <span class="keyword">...</span>
+0027                  [(1-wid_zoom)/2 (1-hei_zoom)/2 wid_zoom hei_zoom]);
+0028     uistack(target, <span class="string">'top'</span>);
+0029 <span class="keyword">else</span>                      <span class="comment">% ZOOMING OUT</span>
+0030     set(target, <span class="string">'Position'</span>, userdata.revert);
+0031     userdata.revert = [];
+0032 <span class="keyword">end</span>
+0033 <span class="keyword">if</span> (~isempty(legend(target))),  legend(target);  <span class="keyword">end</span>;
+0034 set(target, <span class="string">'Units'</span>, oldunits);
+0035 
+0036 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Clean Up %%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0037 set(mymenu, <span class="string">'UserData'</span>, userdata);</pre></div>
+<hr><address>Generated on Fri 15-Aug-2008 11:35:42 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of pairdist</title>
+  <meta name="keywords" content="pairdist">
+  <meta name="description" content="PAIRDIST          Computes a pairwise Euclidean distance matrix.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="#">chronux_2_00</a> &gt; <a href="../../index.html">spikesort</a> &gt; <a href="../index.html">utility</a> &gt; <a href="index.html">datatools</a> &gt; pairdist.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for chronux_2_00\spikesort\utility\datatools&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>pairdist
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>PAIRDIST          Computes a pairwise Euclidean distance matrix.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function dists = pairdist(X,varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">PAIRDIST          Computes a pairwise Euclidean distance matrix.
+   DISTS = PAIRDIST(X) returns a symmetric positive definite matrix DISTS
+   such that the DISTS(i,j) is the Euclidean distance between the vectors
+   X(i,:) and X(j,:).  X must be a real-valued matrix.
+
+   DISTS = PAIRDIST(X,Y), where X is an M x D matrix and Y is N x D,
+   returns an M x N matrix DISTS such that DISTS(i,j) is the Euclidean
+   distance between X(i,:) and Y(j,:).  X and Y must be real-valued.
+
+   The algorithm used by default utilizes the expansion
+                    (x-y)'(x-y) == x'x + y'y - 2x'y,
+   because the right hand side uses fewer floating point operations.
+   However, round-off error with this technique may produce small but
+   non-zero (even negative) values when x == y.
+
+   DISTS = PAIRDIST(X,Y,'safe') indicates that it is possible for
+   the ith row of X to be identical to the jth row of Y.  This uses a
+   slower algorithm, but guarantees that DISTS(i,j) == 0 in these cases.
+   For the special case of PAIRDIST(X), it is not necessary to specify
+   the 'safe' flag if the only potential zero distances are those along
+   the diagonal of DISTS.
+
+   DISTS = PAIRDIST(..., 'nosqrt') returns DISTS as above, except that
+   the squared distances are returned.  The algorithm to compute the
+   distances finds the squared distances in an intermediate step, so this
+   calculation is faster than returning the Euclidean distance proper.
+
+   DISTS = PAIRDIST(..., 'reuse') attempts to reuse memory from an
+   earlier call to PAIRDIST.  When DISTS is a large matrix, the resulting
+   time savings can be significant.  However, this option can result in
+   unexpected Matlab behavior for the returned variable DISTS.  In
+   particular, clearing DISTS in the calling workspace will not release
+   the memory associated with that variable; to release the memory, you
+   must run the command 'clear functions'.  Further, DISTS may be
+   unexpectedly modified by later calls to PAIRDIST.  For example,
+
+       A = PAIRDIST(X1,Y1);         % Look at the value of A(1,2)
+       B = PAIRDIST(X2,Y2,'reuse'); % The value of A(1,2) will change
+                                    % here even though A was not assigned
+
+   If this behavior is undesirable, make a copy of the returned distance
+   matrix before calling PAIRDIST again.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="knn.html" class="code" title="function [neighbors, distances] = knn(data, k)">knn</a>	KNN               Finds the K nearest neighbors in a reference matrix.</li></ul>
+<!-- crossreference -->
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function dists = pairdist(X,varargin)</a>
+0002 <span class="comment">%PAIRDIST          Computes a pairwise Euclidean distance matrix.</span>
+0003 <span class="comment">%   DISTS = PAIRDIST(X) returns a symmetric positive definite matrix DISTS</span>
+0004 <span class="comment">%   such that the DISTS(i,j) is the Euclidean distance between the vectors</span>
+0005 <span class="comment">%   X(i,:) and X(j,:).  X must be a real-valued matrix.</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">%   DISTS = PAIRDIST(X,Y), where X is an M x D matrix and Y is N x D,</span>
+0008 <span class="comment">%   returns an M x N matrix DISTS such that DISTS(i,j) is the Euclidean</span>
+0009 <span class="comment">%   distance between X(i,:) and Y(j,:).  X and Y must be real-valued.</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">%   The algorithm used by default utilizes the expansion</span>
+0012 <span class="comment">%                    (x-y)'(x-y) == x'x + y'y - 2x'y,</span>
+0013 <span class="comment">%   because the right hand side uses fewer floating point operations.</span>
+0014 <span class="comment">%   However, round-off error with this technique may produce small but</span>
+0015 <span class="comment">%   non-zero (even negative) values when x == y.</span>
+0016 <span class="comment">%</span>
+0017 <span class="comment">%   DISTS = PAIRDIST(X,Y,'safe') indicates that it is possible for</span>
+0018 <span class="comment">%   the ith row of X to be identical to the jth row of Y.  This uses a</span>
+0019 <span class="comment">%   slower algorithm, but guarantees that DISTS(i,j) == 0 in these cases.</span>
+0020 <span class="comment">%   For the special case of PAIRDIST(X), it is not necessary to specify</span>
+0021 <span class="comment">%   the 'safe' flag if the only potential zero distances are those along</span>
+0022 <span class="comment">%   the diagonal of DISTS.</span>
+0023 <span class="comment">%</span>
+0024 <span class="comment">%   DISTS = PAIRDIST(..., 'nosqrt') returns DISTS as above, except that</span>
+0025 <span class="comment">%   the squared distances are returned.  The algorithm to compute the</span>
+0026 <span class="comment">%   distances finds the squared distances in an intermediate step, so this</span>
+0027 <span class="comment">%   calculation is faster than returning the Euclidean distance proper.</span>
+0028 <span class="comment">%</span>
+0029 <span class="comment">%   DISTS = PAIRDIST(..., 'reuse') attempts to reuse memory from an</span>
+0030 <span class="comment">%   earlier call to PAIRDIST.  When DISTS is a large matrix, the resulting</span>
+0031 <span class="comment">%   time savings can be significant.  However, this option can result in</span>
+0032 <span class="comment">%   unexpected Matlab behavior for the returned variable DISTS.  In</span>
+0033 <span class="comment">%   particular, clearing DISTS in the calling workspace will not release</span>
+0034 <span class="comment">%   the memory associated with that variable; to release the memory, you</span>
+0035 <span class="comment">%   must run the command 'clear functions'.  Further, DISTS may be</span>
+0036 <span class="comment">%   unexpectedly modified by later calls to PAIRDIST.  For example,</span>
+0037 <span class="comment">%</span>
+0038 <span class="comment">%       A = PAIRDIST(X1,Y1);         % Look at the value of A(1,2)</span>
+0039 <span class="comment">%       B = PAIRDIST(X2,Y2,'reuse'); % The value of A(1,2) will change</span>
+0040 <span class="comment">%                                    % here even though A was not assigned</span>
+0041 <span class="comment">%</span>
+0042 <span class="comment">%   If this behavior is undesirable, make a copy of the returned distance</span>
+0043 <span class="comment">%   matrix before calling PAIRDIST again.</span>
+0044 
+0045 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%% Parse Inputs %%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0046 Y = [];   takeSqrt = 1;   reuseMem = 0;  useSafe = 0;
+0047 <span class="keyword">while</span> (length(varargin) &gt; 0)
+0048     tail = varargin{end};  varargin = varargin(1:end-1);  <span class="comment">% chomp last arg</span>
+0049     <span class="keyword">if</span> (ischar(tail) &amp;&amp; strcmpi(tail, <span class="string">'nosqrt'</span>))
+0050         takeSqrt = 0;
+0051     <span class="keyword">elseif</span> (ischar(tail) &amp;&amp; strcmpi(tail, <span class="string">'reuse'</span>)),
+0052         reuseMem = 1;
+0053     <span class="keyword">elseif</span> (ischar(tail) &amp;&amp; strcmpi(tail, <span class="string">'safe'</span>)),
+0054         useSafe = 1;
+0055     <span class="keyword">elseif</span> (isa(tail, <span class="string">'double'</span>))
+0056         Y = tail;   <span class="keyword">break</span>;    <span class="comment">% this should be the leftmost argument</span>
+0057     <span class="keyword">else</span>
+0058         error(<span class="string">'Unknown argument.'</span>);
+0059     <span class="keyword">end</span>
+0060 <span class="keyword">end</span>
+0061 <span class="keyword">if</span> (length(varargin) &gt; 0),  error(<span class="string">'Too many arguments.'</span>);  <span class="keyword">end</span>;
+0062 <span class="keyword">if</span> (isempty(Y)),  Y = X;  <span class="keyword">end</span>;   <span class="comment">% self-distance computation</span>
+0063 
+0064 [M,D1] = size(X);
+0065 [N,D2] = size(Y);
+0066 <span class="keyword">if</span> (D1~=D2),  error(<span class="string">'X and Y must have the same number of columns.'</span>);  <span class="keyword">end</span>;
+0067 <span class="keyword">if</span> (~isreal(X) || ~isreal(Y) || ~isa(X,<span class="string">'double'</span>) || ~isa(Y,<span class="string">'double'</span>))
+0068     error(<span class="string">'Input matrices must be real-valued matrices of type double.'</span>);
+0069 <span class="keyword">end</span>
+0070     
+0071 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%% Do the Computation %%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0072 dists = CORE_pairdist(X,Y,takeSqrt,reuseMem,useSafe);</pre></div>
+<hr><address>Generated on Fri 15-Aug-2008 11:35:42 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of convnsep</title>
+  <meta name="keywords" content="convnsep">
+  <meta name="description" content="CONVNSEP          N-dimensional convolution with separable kernels.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="#">chronux_2_00</a> &gt; <a href="../../index.html">spikesort</a> &gt; <a href="../index.html">utility</a> &gt; <a href="index.html">datatools</a> &gt; convnsep.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for chronux_2_00\spikesort\utility\datatools&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>convnsep
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>CONVNSEP          N-dimensional convolution with separable kernels.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function C = convnsep(varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">CONVNSEP          N-dimensional convolution with separable kernels.
+   C = CONVNSEP(H1,H2,...,A) performs an N-dimensional convolution of A
+   with the separable kernel given by the outer product of the H1,H2,...
+   such that the input vector Hk is convolved along the kth dimension of
+   the real N-D array A.  If the number of kernels Hk is equal to M-1,
+   then the (HM..HN) kernels are taken to be 1.  No convolution occurs
+   for dimensions k with corresponding kernel Hk = 1.
+
+   C = CONVN(H1,H2,...,A,'shape') controls the size of the answer C:
+     'full'   - (default) returns the full N-D convolution
+     'same'   - returns the central part of the convolution that
+                is the same size as A.
+     'valid'  - returns only the part of the result that can be
+                computed without assuming zero-padded arrays.  The
+                size of the result is max(size(A,k)-size(Hk,k)+1,0)
+                in the kth dimension.
+
+   See also CONVN, CONV2.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="smooth3f.html" class="code" title="function smoothed = smooth3f(data, filt, sz, arg)">smooth3f</a>	SMOOTH3F          Smooth 3D data (fast version).</li></ul>
+<!-- crossreference -->
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function C = convnsep(varargin)</a>
+0002 <span class="comment">%CONVNSEP          N-dimensional convolution with separable kernels.</span>
+0003 <span class="comment">%   C = CONVNSEP(H1,H2,...,A) performs an N-dimensional convolution of A</span>
+0004 <span class="comment">%   with the separable kernel given by the outer product of the H1,H2,...</span>
+0005 <span class="comment">%   such that the input vector Hk is convolved along the kth dimension of</span>
+0006 <span class="comment">%   the real N-D array A.  If the number of kernels Hk is equal to M-1,</span>
+0007 <span class="comment">%   then the (HM..HN) kernels are taken to be 1.  No convolution occurs</span>
+0008 <span class="comment">%   for dimensions k with corresponding kernel Hk = 1.</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">%   C = CONVN(H1,H2,...,A,'shape') controls the size of the answer C:</span>
+0011 <span class="comment">%     'full'   - (default) returns the full N-D convolution</span>
+0012 <span class="comment">%     'same'   - returns the central part of the convolution that</span>
+0013 <span class="comment">%                is the same size as A.</span>
+0014 <span class="comment">%     'valid'  - returns only the part of the result that can be</span>
+0015 <span class="comment">%                computed without assuming zero-padded arrays.  The</span>
+0016 <span class="comment">%                size of the result is max(size(A,k)-size(Hk,k)+1,0)</span>
+0017 <span class="comment">%                in the kth dimension.</span>
+0018 <span class="comment">%</span>
+0019 <span class="comment">%   See also CONVN, CONV2.</span>
+0020 
+0021 <span class="comment">% Modified from TMW's CONVN for efficiency.</span>
+0022 <span class="comment">%  The following commented code tests CONVNSEP against CONVN:</span>
+0023 <span class="comment">% D = 50;  R = 3;  sd = 1;</span>
+0024 <span class="comment">% data = randn([D,D,D]) + i*randn([D,D,D]);</span>
+0025 <span class="comment">% gauss1 = gausskernel(R,sd);    gauss3 = gausskernel([R,R,R],sd);</span>
+0026 <span class="comment">% tic; orig = convn(data,gauss3,'same');  toc</span>
+0027 <span class="comment">% tic; modf = convnsep(gauss1,gauss1,gauss1,data,'same'); toc</span>
+0028 <span class="comment">% mse = sqrt(mean(abs(orig(:)-modf(:)).^2))   % mean squared error</span>
+0029 
+0030 
+0031 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%% Parse Inputs %%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0032 <span class="comment">% determine output shape</span>
+0033 <span class="keyword">if</span> (nargin &lt; 2), error(<span class="string">'At least two arguments are required.'</span>); <span class="keyword">end</span>;
+0034 <span class="keyword">if</span> (ischar(varargin{end})),  
+0035     shape = varargin{end};   varargin = varargin(1:end-1);
+0036     <span class="keyword">if</span> (length(varargin) == 1), 
+0037         C = varargin{1};   <span class="keyword">return</span>;     <span class="comment">% If no kernels specified, no work to do</span>
+0038     <span class="keyword">end</span>;
+0039 <span class="keyword">else</span>
+0040     shape = <span class="string">'full'</span>;
+0041 <span class="keyword">end</span>
+0042 
+0043 <span class="comment">% get target matrix</span>
+0044 A = varargin{end};   varargin = varargin(1:end-1);
+0045 <span class="keyword">if</span> (~isa(A,<span class="string">'double'</span>)),   A = double(A);  <span class="keyword">end</span>;
+0046 D = ndims(A);
+0047 
+0048 <span class="comment">% get kernels</span>
+0049 H = varargin;   N = length(H);
+0050 <span class="keyword">if</span> (N &gt; D),  error(<span class="string">'Can not have more kernels than the number of dimensions in A.'</span>); <span class="keyword">end</span>;
+0051 Hisreal = ones(D,1);
+0052 <span class="keyword">for</span> k = 1:D,
+0053     <span class="keyword">if</span> (k &lt;= N)
+0054         <span class="keyword">if</span> ((numel(H{k})&gt;1) &amp;&amp; ~isvectord(H{k})), error(<span class="string">'All kernels Hk must be vectors.'</span>);  <span class="keyword">end</span>;
+0055         <span class="keyword">if</span> (~isa(H{k},<span class="string">'double'</span>)),  H{k} = double(H{k}(:));  <span class="keyword">end</span>;  <span class="comment">% force col/double</span>
+0056         Hisreal(k) = isreal(H{k});
+0057     <span class="keyword">else</span>
+0058         H{k} = 1;
+0059         Hisreal(k) = 1;
+0060     <span class="keyword">end</span>
+0061 <span class="keyword">end</span>
+0062 
+0063 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%% Do the Conv %%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0064 C = A;
+0065 <span class="keyword">for</span> k = 1:N,
+0066     orient = ones(1,ndims(A));   orient(k) = numel(H{k});
+0067     kernel = reshape(H{k}, orient);
+0068 
+0069     <span class="keyword">if</span> (Hisreal(k) &amp;&amp; isreal(C))
+0070         C = convnc(kernel,C);  
+0071     <span class="keyword">elseif</span> (Hisreal(k) &amp;&amp; ~isreal(C))
+0072         C = convnc(kernel,real(C)) + j*convnc(kernel,imag(C));
+0073     <span class="keyword">elseif</span> (~Hisreal(k) &amp;&amp; isreal(C))
+0074         C = convnc(real(kernel),C) + j*convnc(imag(kernel),C);  
+0075     <span class="keyword">else</span>
+0076         Hr = real(kernel);    Hi = imag(kernel);
+0077         Cr = real(C);         Ci = imag(C);
+0078         C = convnc(Hr,Cr) - convnc(Hi,Ci) + j*(convnc(Hi,Cr) + convnc(Hr,Ci)); 
+0079     <span class="keyword">end</span>
+0080 <span class="keyword">end</span>
+0081 
+0082 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%% Get the right shape %%%%%%%%%%%%%%%%%%%%%%</span>
+0083 <span class="comment">% nothing more to do for 'full' shape</span>
+0084 <span class="keyword">if</span> (strcmp(shape,<span class="string">'full'</span>)),  <span class="keyword">return</span>;  <span class="keyword">end</span>;
+0085  
+0086 <span class="comment">% but for 'same' or 'valid' we need to crop the conv result</span>
+0087 subs = cell(1,ndims(C));
+0088 <span class="keyword">if</span> (strcmp(shape,<span class="string">'same'</span>))  
+0089   <span class="keyword">for</span> k = 1:D
+0090       subs{k}  = floor(length(H{k})/2) + (1:size(A,k));  <span class="comment">% central region</span>
+0091   <span class="keyword">end</span>
+0092 <span class="keyword">elseif</span> (strcmp(shape,<span class="string">'valid'</span>))
+0093   <span class="keyword">for</span> k = 1:D
+0094       validLen = max(size(A,k)-length(H{k})+1,0);
+0095       subs{k}  = length(H{k})-1 + (1:validLen);
+0096   <span class="keyword">end</span>
+0097 <span class="keyword">end</span>
+0098 C = C(subs{:});</pre></div>
+<hr><address>Generated on Fri 15-Aug-2008 11:35:42 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

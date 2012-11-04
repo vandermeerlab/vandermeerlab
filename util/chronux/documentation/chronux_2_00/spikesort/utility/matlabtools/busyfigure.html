@@ -1,0 +1,111 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of busyfigure</title>
+  <meta name="keywords" content="busyfigure">
+  <meta name="description" content="BUSYFIGURE        Disable/restore a UI figure.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="#">chronux_2_00</a> &gt; <a href="../../index.html">spikesort</a> &gt; <a href="../index.html">utility</a> &gt; <a href="index.html">matlabtools</a> &gt; busyfigure.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for chronux_2_00\spikesort\utility\matlabtools&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>busyfigure
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>BUSYFIGURE        Disable/restore a UI figure.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function oldinfo = busyfigure(figurehandle, busy, statusstring, oldinfo) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">BUSYFIGURE        Disable/restore a UI figure.
+   OLDINFO = BUSYFIGURE(FIGUREHANDLE, BUSY) freezes (or unfreezes) the UI
+   figure when it is busy (done) with a task; the BUSY argument is 1 to
+   freeze and 0 to unfreeze.  Freezing disables all uicontrols, disables
+   the figure's click callback, and sets the mouse pointer to a watch.
+
+   BUSYFIGURE(FIGUREHANDLE, BUSY, STATUSSTRING, OLDINFO) also sets status
+   information via the Matlab 'setstatus' function; passing an empty
+   string will skip this call.  (Note that passing in an empty string
+   does _not_ set the status to ''.)  When freezing, the figure's
+   original pre-freeze state is returned; pass this structure as the
+   fourth argument when unfreezing to restore state.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function oldinfo = busyfigure(figurehandle, busy, statusstring, oldinfo)</a>
+0002 <span class="comment">%BUSYFIGURE        Disable/restore a UI figure.</span>
+0003 <span class="comment">%   OLDINFO = BUSYFIGURE(FIGUREHANDLE, BUSY) freezes (or unfreezes) the UI</span>
+0004 <span class="comment">%   figure when it is busy (done) with a task; the BUSY argument is 1 to</span>
+0005 <span class="comment">%   freeze and 0 to unfreeze.  Freezing disables all uicontrols, disables</span>
+0006 <span class="comment">%   the figure's click callback, and sets the mouse pointer to a watch.</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">%   BUSYFIGURE(FIGUREHANDLE, BUSY, STATUSSTRING, OLDINFO) also sets status</span>
+0009 <span class="comment">%   information via the Matlab 'setstatus' function; passing an empty</span>
+0010 <span class="comment">%   string will skip this call.  (Note that passing in an empty string</span>
+0011 <span class="comment">%   does _not_ set the status to ''.)  When freezing, the figure's</span>
+0012 <span class="comment">%   original pre-freeze state is returned; pass this structure as the</span>
+0013 <span class="comment">%   fourth argument when unfreezing to restore state.</span>
+0014 
+0015 <span class="keyword">if</span> (busy)  <span class="comment">% FREEZE</span>
+0016 
+0017     <span class="comment">% Get current uicontrol handles and enable states.</span>
+0018     controls = get(figurehandle, <span class="string">'Children'</span>);
+0019     oldinfo.controls = controls(strcmp(get(controls, <span class="string">'Type'</span>), <span class="string">'uicontrol'</span>));
+0020     oldinfo.enables = get(oldinfo.controls, <span class="string">'Enable'</span>);
+0021     set(oldinfo.controls, <span class="string">'Enable'</span>, <span class="string">'off'</span>);
+0022 
+0023     <span class="comment">% Deal with the status bar.</span>
+0024     statusbarH = controls(find(strcmp(get(controls, <span class="string">'Tag'</span>), <span class="string">'Status'</span>)));
+0025     <span class="keyword">if</span> (~isempty(statusbarH)), set(statusbarH, <span class="string">'Enable'</span>, <span class="string">'on'</span>); <span class="keyword">end</span>   <span class="comment">% need enabled</span>
+0026     <span class="keyword">if</span> (~isempty(statusstring)), setstatus(figurehandle, statusstring); <span class="keyword">end</span>
+0027     
+0028     <span class="comment">% Unset the figure mouse press callback, but save it for later restoration.</span>
+0029     oldinfo.figure_click_callback = get(figurehandle, <span class="string">'ButtonDownFcn'</span>);
+0030     set(figurehandle, <span class="string">'ButtonDownFcn'</span>, <span class="string">''</span>);
+0031     
+0032     <span class="comment">% Set pointer to watch to visually indicate that we're busy.</span>
+0033     oldinfo.pointer = get(figurehandle, <span class="string">'Pointer'</span>);
+0034     setptr(figurehandle, <span class="string">'watch'</span>);
+0035     
+0036 <span class="keyword">else</span>       <span class="comment">% RESTORE</span>
+0037     <span class="keyword">if</span> (nargin &lt; 4)
+0038         error(<span class="string">'Unfreezing requires the structure returned when the figure was frozen.'</span>);
+0039     <span class="keyword">end</span>
+0040 
+0041     <span class="comment">% Restore enable states.</span>
+0042     <span class="keyword">for</span> cntrl = 1:length(oldinfo.enables)
+0043         set(oldinfo.controls(cntrl), <span class="string">'Enable'</span>, oldinfo.enables{cntrl});
+0044     <span class="keyword">end</span>
+0045 
+0046     <span class="comment">% Status update.</span>
+0047     <span class="keyword">if</span> (~isempty(statusstring)), setstatus(figurehandle, statusstring); <span class="keyword">end</span>
+0048 
+0049     <span class="comment">% Reset the figure mouse click callback.</span>
+0050     set(figurehandle, <span class="string">'ButtonDownFcn'</span>, oldinfo.figure_click_callback);
+0051     
+0052     <span class="comment">% Finally, restore old pointer.</span>
+0053     setptr(figurehandle, oldinfo.pointer);
+0054 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Fri 15-Aug-2008 11:35:42 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

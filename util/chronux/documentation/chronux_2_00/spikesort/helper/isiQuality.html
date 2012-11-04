@@ -1,0 +1,152 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of isiQuality</title>
+  <meta name="keywords" content="isiQuality">
+  <meta name="description" content="ISIQUALITY   Computes statistical measures of refactory period quality.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="#">chronux_2_00</a> &gt; <a href="../index.html">spikesort</a> &gt; <a href="index.html">helper</a> &gt; isiQuality.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for chronux_2_00\spikesort\helper&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>isiQuality
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>ISIQUALITY   Computes statistical measures of refactory period quality.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function [allow, scores, cdfs] = isiQuality(unit1times, unit2times, tmin, tmax, tref, Fs) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> ISIQUALITY   Computes statistical measures of refactory period quality.  
+     [allow, scores, cdfs] = isiQuality(unit1times, unit2times, tmin, tmax, tref, Fs)
+
+ Returns a boolean specifying whether the refractory period statistics are
+   statistically worsened by combining the two input lists, along with two
+   outputs that give more details:
+
+ INPUTS:
+   unit1times, unit2times  : (sec) original spike time lists
+   tmin                    : (sec) minimum possible interval
+   tmax                    : (sec) max interval for statistical comparison 
+   tref                    : (sec) estimate of the refractory period
+   Fs                      : (Hz)  data sampling frequency
+
+ OUTPUTS:
+   allow                   : (0 or 1) is it ok to combine the two lists?
+   scores                  : (3 x 1) isi scores for [unit1 unit2 combined] lists;
+                             describe the normalized fraction of spikes violating
+                             the putative refractory period (1.0 means that the
+                             mean density of intervals below tref is the same as the
+                             mean density from tref to tmax.
+   cdfs                    : (3 x m) isi cdfs for unit1, unit2 and combined lists,
+                             covering the range from 0 to tmax with bin size
+                             1/Fs. (i.e., m is floor(tmax*Fs)).</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="merge_clusters.html" class="code" title="function spikes = merge_clusters(spikes, to, from)">merge_clusters</a>	MERGE_CLUSTERS  Merge two clusters after automatic hierarchical aggregation.</li></ul>
+<!-- crossreference -->
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [allow, scores, cdfs] = isiQuality(unit1times, unit2times, tmin, tmax, tref, Fs)</a>
+0002 
+0003 <span class="comment">% ISIQUALITY   Computes statistical measures of refactory period quality.</span>
+0004 <span class="comment">%     [allow, scores, cdfs] = isiQuality(unit1times, unit2times, tmin, tmax, tref, Fs)</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% Returns a boolean specifying whether the refractory period statistics are</span>
+0007 <span class="comment">%   statistically worsened by combining the two input lists, along with two</span>
+0008 <span class="comment">%   outputs that give more details:</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">% INPUTS:</span>
+0011 <span class="comment">%   unit1times, unit2times  : (sec) original spike time lists</span>
+0012 <span class="comment">%   tmin                    : (sec) minimum possible interval</span>
+0013 <span class="comment">%   tmax                    : (sec) max interval for statistical comparison</span>
+0014 <span class="comment">%   tref                    : (sec) estimate of the refractory period</span>
+0015 <span class="comment">%   Fs                      : (Hz)  data sampling frequency</span>
+0016 <span class="comment">%</span>
+0017 <span class="comment">% OUTPUTS:</span>
+0018 <span class="comment">%   allow                   : (0 or 1) is it ok to combine the two lists?</span>
+0019 <span class="comment">%   scores                  : (3 x 1) isi scores for [unit1 unit2 combined] lists;</span>
+0020 <span class="comment">%                             describe the normalized fraction of spikes violating</span>
+0021 <span class="comment">%                             the putative refractory period (1.0 means that the</span>
+0022 <span class="comment">%                             mean density of intervals below tref is the same as the</span>
+0023 <span class="comment">%                             mean density from tref to tmax.</span>
+0024 <span class="comment">%   cdfs                    : (3 x m) isi cdfs for unit1, unit2 and combined lists,</span>
+0025 <span class="comment">%                             covering the range from 0 to tmax with bin size</span>
+0026 <span class="comment">%                             1/Fs. (i.e., m is floor(tmax*Fs)).</span>
+0027 
+0028 <span class="comment">% Useful numbers</span>
+0029 f = (tref - tmin) ./ (tmax - tmin);        <span class="comment">% fraction of range that is below tref</span>
+0030 bins = linspace(0, tmax, floor(tmax*Fs));  <span class="comment">% using tmax*Fs bins means no info is lost to rounding</span>
+0031 refractory_bin = sum((bins &lt;= tref));      <span class="comment">% index of refractory period</span>
+0032 
+0033 <span class="comment">% Convert from times to interspike intervals</span>
+0034 isi1 = diff(sort(unit1times));
+0035 isi2 = diff(sort(unit2times));
+0036 isiT = diff(sort([unit1times; unit2times]));
+0037 
+0038 <span class="comment">% Calculate histograms for the intervals below tmax.</span>
+0039 isi1hist = hist(isi1(isi1 &lt; tmax), bins);
+0040 isi2hist = hist(isi2(isi2 &lt; tmax), bins);
+0041 isiThist = hist(isiT(isiT &lt; tmax), bins);
+0042 
+0043 <span class="comment">% Count total # intervals below tmax (set 0 counts to 1 as a courtesy to the next step)</span>
+0044 isi1count = max(sum(isi1hist),1);
+0045 isi2count = max(sum(isi2hist),1);
+0046 isiTcount = max(sum(isiThist),1);
+0047 
+0048 <span class="comment">% Make cdfs from histograms</span>
+0049 cdfs = zeros(3, length(bins));
+0050 cdfs(1,:) = cumsum(isi1hist) ./ isi1count;
+0051 cdfs(2,:) = cumsum(isi2hist) ./ isi2count;
+0052 cdfs(3,:) = cumsum(isiThist) ./ isiTcount;
+0053 
+0054 <span class="comment">%</span>
+0055 <span class="comment">% if ((isi1count == 1) || (isi2count == 1)),  % if either original list had no violations</span>
+0056 <span class="comment">%</span>
+0057 <span class="comment">%</span>
+0058 <span class="comment">% else</span>
+0059     <span class="comment">% Compute the (scaled) difference between the initial cdfs and the combined cdfs.</span>
+0060     diffs = zeros(2, length(bins));
+0061     diffs(1,:) = sqrt((isi1count*isiTcount)./(isi1count+isiTcount)) .* (cdfs(3,:) - cdfs(1,:));
+0062     diffs(2,:) = sqrt((isi2count*isiTcount)./(isi2count+isiTcount)) .* (cdfs(3,:) - cdfs(2,:));
+0063     
+0064     <span class="comment">% Max value of this difference in the region shorter than the refractory period</span>
+0065 
+0066     dstats(1) = max(diffs(1, 1:refractory_bin));
+0067     dstats(2) = max(diffs(2, 1:refractory_bin));
+0068     
+0069     <span class="comment">% based on Kolmogorov-Smirnoff statistics (see Fee, Mitra, Kleinfeld, 1996)</span>
+0070     lambda = 0:0.01:2;
+0071     pdfDstat = (0.5 * (1 + erf(lambda./(sqrt(2*f*(1-f)))))) - <span class="keyword">...</span>
+0072         (0.5 .* exp(-2.*lambda.^2) .* (1 - erf((1-2*f).*lambda./(sqrt(2*f*(1-f))))));
+0073     cutoff = lambda(max(find(pdfDstat &lt; 0.95)));
+0074 
+0075     <span class="comment">% Does either d-statistic exceed the statistical cutoff?</span>
+0076     <span class="keyword">if</span> (any(dstats &gt; cutoff)),  allow = 0;
+0077     <span class="keyword">else</span>                        allow = 1;
+0078     <span class="keyword">end</span>
+0079 <span class="comment">% end</span>
+0080 
+0081 <span class="comment">% The cdf at the tref bin is the fraction of spikes below tref; to get a score,</span>
+0082 <span class="comment">% we normalize by dividing by f from above.</span>
+0083 scores =  (cdfs(:, refractory_bin)) ./ f;</pre></div>
+<hr><address>Generated on Fri 15-Aug-2008 11:35:42 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

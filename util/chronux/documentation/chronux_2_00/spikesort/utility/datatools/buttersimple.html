@@ -1,0 +1,139 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of buttersimple</title>
+  <meta name="keywords" content="buttersimple">
+  <meta name="description" content="BUTTERSIMPLE      Fixed order Butterworth digital filter design.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="#">chronux_2_00</a> &gt; <a href="../../index.html">spikesort</a> &gt; <a href="../index.html">utility</a> &gt; <a href="index.html">datatools</a> &gt; buttersimple.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for chronux_2_00\spikesort\utility\datatools&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>buttersimple
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>BUTTERSIMPLE      Fixed order Butterworth digital filter design.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function [B, A] = buttersimple(Wn, option) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">BUTTERSIMPLE      Fixed order Butterworth digital filter design.
+   [B, A] = BUTTERSIMPLE(Wn), where 0.0 &lt; Wn &lt; 1.0, computes the
+   numerator/denominator coefficients for a 6th order lowpass digital
+   Butterworth filter.
+
+   [B, A] = BUTTERSIMPLE(Wn, 'high'), where 0.0 &lt; Wn &lt; 1.0, computes the
+   coefficients for a 6th order high-pass digital Butterworth filter.
+
+   [B, A] = BUTTERSIMPLE([W1 W2]), with 0.0 &lt; W1 &lt;1.0 and 0.0 &lt; W2 &lt; 1.0,
+   computes the coefficients for a 6th order bandpass digital filter with
+   passband W1 &lt; W &lt; W2.
+
+   Based on TMW Signal Processing Toolbox function BUTTER, but without
+   any of the generality and does not require any toolboxes.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [B, A] = buttersimple(Wn, option)</a>
+0002 <span class="comment">%BUTTERSIMPLE      Fixed order Butterworth digital filter design.</span>
+0003 <span class="comment">%   [B, A] = BUTTERSIMPLE(Wn), where 0.0 &lt; Wn &lt; 1.0, computes the</span>
+0004 <span class="comment">%   numerator/denominator coefficients for a 6th order lowpass digital</span>
+0005 <span class="comment">%   Butterworth filter.</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">%   [B, A] = BUTTERSIMPLE(Wn, 'high'), where 0.0 &lt; Wn &lt; 1.0, computes the</span>
+0008 <span class="comment">%   coefficients for a 6th order high-pass digital Butterworth filter.</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">%   [B, A] = BUTTERSIMPLE([W1 W2]), with 0.0 &lt; W1 &lt;1.0 and 0.0 &lt; W2 &lt; 1.0,</span>
+0011 <span class="comment">%   computes the coefficients for a 6th order bandpass digital filter with</span>
+0012 <span class="comment">%   passband W1 &lt; W &lt; W2.</span>
+0013 <span class="comment">%</span>
+0014 <span class="comment">%   Based on TMW Signal Processing Toolbox function BUTTER, but without</span>
+0015 <span class="comment">%   any of the generality and does not require any toolboxes.</span>
+0016 
+0017 <span class="comment">% Step 1: Compute analog frequencies</span>
+0018 <span class="keyword">if</span> (~all(Wn&gt;0 &amp; Wn&lt;1.0)),  
+0019     error(<span class="string">'Cutoff frequencies must be in the interval (0,1).'</span>);  
+0020 <span class="keyword">end</span>
+0021 Wn = 4*tan(pi*Wn/2);
+0022 <span class="keyword">if</span> (length(Wn) == 2)
+0023     mode = <span class="string">'B'</span>;
+0024     Bw = diff(Wn);          <span class="comment">% bandwidth</span>
+0025     Wn = sqrt(prod(Wn));    <span class="comment">% center frequency</span>
+0026 <span class="keyword">elseif</span> (length(Wn) == 1)
+0027     <span class="keyword">if</span> (nargin &gt; 1)
+0028         <span class="keyword">if</span> (~strcmpi(option, <span class="string">'high'</span>)),  error(<span class="string">'Unknown option.'</span>);   <span class="keyword">end</span>;
+0029         mode = <span class="string">'H'</span>;
+0030     <span class="keyword">else</span>  mode = <span class="string">'L'</span>;
+0031     <span class="keyword">end</span>
+0032 <span class="keyword">else</span>
+0033     error(<span class="string">'Wn can not have more than two elements.'</span>);
+0034 <span class="keyword">end</span>
+0035 
+0036 <span class="comment">% Step 2: Make Butterworth lowpass prototype</span>
+0037 <span class="keyword">if</span> (mode == <span class="string">'B'</span>)  <span class="comment">% if bandpass, start w/ 3rd order prototype</span>
+0038     a = [-1 0 0; 1 -1 -1; 0 1 0];
+0039     b = [1 0 0]';    
+0040     c = [0 0 1];
+0041     d = 0;
+0042 <span class="keyword">else</span>  <span class="comment">% otherwise 6th order lowpass prototype</span>
+0043     a = diag([1 1 1 1 1], -1) + diag([-1 0 -1 0 -1],1);
+0044     <span class="keyword">for</span> j = [1,3,5]
+0045         a(j,j) = 2*cos((1-(j/12))*pi);
+0046     <span class="keyword">end</span>
+0047     b = [1 0 0 0 0 0]';
+0048     c = [0 0 0 0 0 1];
+0049     d = 0;
+0050 <span class="keyword">end</span>
+0051         
+0052 <span class="comment">% Step 3: Convert to lowpass/bandpass/highpass &amp; shift frequency</span>
+0053 <span class="keyword">switch</span>(mode)
+0054     <span class="keyword">case</span> <span class="string">'L'</span>,
+0055         a = Wn*a;
+0056         b = Wn*b;
+0057 <span class="comment">%       c = c;</span>
+0058 <span class="comment">%       d = d;</span>
+0059     <span class="keyword">case</span> <span class="string">'B'</span>,
+0060         a = Wn*[a/(Wn/Bw) eye(3); -eye(3) zeros(3)];
+0061         b = [b*Bw; 0; 0; 0];
+0062         c = [c 0 0 0];
+0063         d = 0;
+0064     <span class="keyword">case</span> <span class="string">'H'</span>,
+0065         d = d - c/a*b;        
+0066         c = c/a;
+0067         b = -Wn*(a\b);       
+0068         a =  Wn*inv(a);
+0069 <span class="keyword">end</span>
+0070 
+0071 <span class="comment">% Step 4: Find discrete equivalent</span>
+0072 t1 = eye(6) + a/4;    t2 = eye(6) - a/4;
+0073 d = c/t2*b/4 + d;
+0074 c = c/t2/sqrt(2);
+0075 b = t2\b/sqrt(2);
+0076 a = t2\t1;
+0077 
+0078 <span class="comment">% Step 5: Convert to polynomial form</span>
+0079 A = poly(a);
+0080 B = poly(a-b*c)+(d-1)*A;</pre></div>
+<hr><address>Generated on Fri 15-Aug-2008 11:35:42 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

@@ -1,0 +1,8 @@
+/* Created by mdot for Matlab */
+digraph m2html {
+
+  plot_matrix [URL="plot_matrix.html"];
+  plot_vector [URL="plot_vector.html"];
+  plotsig [URL="plotsig.html"];
+  plotsigdiff [URL="plotsigdiff.html"];
+}

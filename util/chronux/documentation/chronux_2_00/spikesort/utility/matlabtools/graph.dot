@@ -1,0 +1,18 @@
+/* Created by mdot for Matlab */
+digraph m2html {
+
+  bool2onoff [URL="bool2onoff.html"];
+  busyfigure [URL="busyfigure.html"];
+  callerfile [URL="callerfile.html"];
+  copyaxes [URL="copyaxes.html"];
+  copyfig [URL="copyfig.html"];
+  datetime2ind [URL="datetime2ind.html"];
+  lasterrid [URL="lasterrid.html"];
+  matlabversion [URL="matlabversion.html"];
+  onoff2bool [URL="onoff2bool.html"];
+  printf [URL="printf.html"];
+  progressBar [URL="progressBar.html"];
+  ps2pdf [URL="ps2pdf.html"];
+  report_addpage [URL="report_addpage.html"];
+  strmatchre [URL="strmatchre.html"];
+}

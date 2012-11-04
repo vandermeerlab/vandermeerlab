@@ -1,0 +1,64 @@
+*********************************************
+*
+*	Matlab Import/Export MEX files Release Notes
+*
+*********************************************
+
+****************
+* v5.0.1
+****************
+Fixed Bugs:
+-All Nlx2Mat MEX files can now read files larger than 2GB.
+
+****************
+* v5.0.0
+****************
+Added Features:
+-Now supports reading and writing a single channel of raw data (NRD) files via Nlx2MatNRD and Mat2NlxNRD.
+-Mat2NlxSpike has replaced Mat2NlxSE, Mat2NlxST and Mat2NlxTT.
+-All Mat2Nlx commands no longer take a number of output records as an argument. The number of output records is determined by the data being exported.
+
+General Changes:
+-All Mat2Nlx functions now create a generic header for the output file if none is specified.
+-All Mat2Nlx and Nlx2Mat functions now use one (1) based indexing (i.e. the first record is now record 1 not 0).
+-Improved help documentation
+-Improved error messages.
+
+Fixed Bugs:
+-All Nlx2Mat functions now import correct record indices when using extraction mode 3 (record list)
+-All Nlx2Mat functions now import correct record if a timestamp occurs within a record when using modes 4 (timestamp range) and 5 (timestamp list).
+
+****************
+* v4.1.3
+****************
+Fixed Bugs:
+-Nlx2MatSpike now correctly imports all subchannel data for tetrodes and stereotrodes.
+-Nlx2MatEV now properly handles TTL values when bit 15 is high.
+
+****************
+* v4.1.2
+****************
+General Changes:
+-Requires Matlab R2006b (7.3) or newer
+
+Fixed Bugs:
+-Mat2NlxEV no longer crashes when exporting without a header.
+-Nlx2Mat functions no longer increase memory usage with every call.
+-Nlx2Mat functions using import modes 4 and 5 now import the record before a requested timestamp if a record doesn't start with the requested timestamp.
+
+****************
+* v4.1.1
+****************
+General Changes:
+-Import MEX files now read files that contain records that have out of order timestamps.
+-Updated some errors in the help documentation.
+
+
+****************
+* v4.1.0
+****************
+Added Features:
+-64bit Matlab support
+
+General Changes:
+-Changed to new MEX file format (R2008a)

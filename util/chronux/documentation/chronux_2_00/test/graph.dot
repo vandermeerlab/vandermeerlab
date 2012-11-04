@@ -1,0 +1,15 @@
+/* Created by mdot for Matlab */
+digraph m2html {
+  testAvg3 -> myrandint;
+  testAvg4 -> myrandint;
+  testspecgram -> mtspecgramc_slow;
+
+  mtspecgramc_fast [URL="mtspecgramc_fast.html"];
+  mtspecgramc_slow [URL="mtspecgramc_slow.html"];
+  myrandint [URL="myrandint.html"];
+  testAvg3 [URL="testAvg3.html"];
+  testAvg4 [URL="testAvg4.html"];
+  testscript [URL="testscript.html"];
+  testspecgram [URL="testspecgram.html"];
+  uispecerr [URL="uispecerr.html"];
+}

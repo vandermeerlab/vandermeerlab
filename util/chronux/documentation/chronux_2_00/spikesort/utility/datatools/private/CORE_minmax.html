@@ -1,0 +1,91 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of CORE_minmax</title>
+  <meta name="keywords" content="CORE_minmax">
+  <meta name="description" content="CORE_MINMAX       Core computational routine for MINMAX.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../../index.html">Home</a> &gt;  <a href="#">chronux_2_00</a> &gt; <a href="../../../index.html">spikesort</a> &gt; <a href="../../index.html">utility</a> &gt; <a href="../index.html">datatools</a> &gt; <a href="index.html">private</a> &gt; CORE_minmax.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../../index.html"><img alt="<" border="0" src="../../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for chronux_2_00\spikesort\utility\datatools\private&nbsp;<img alt=">" border="0" src="../../../../../right.png"></a></td></tr></table>-->
+
+<h1>CORE_minmax
+&nbsp;&nbsp;<img src="../../../../../c.png" alt="Windows" border="0" title="Windows"></h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>CORE_MINMAX       Core computational routine for MINMAX.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>function [xmn,xmx,mni,mxi] = CORE_minmax(x) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">CORE_MINMAX       Core computational routine for MINMAX.
+   [XMN,XMX,MNI,MXI] = CORE_MINMAX(X) returns scalars such that
+   XMN = X(MNI) = min(X) and XMX = X(MXI) = max(X).  Ties in indices are
+   broken in favor of the lowest magnitude index.
+   
+   NaN values are ignored unless the input is all NaN.  In this case, XMN
+   and XMX are set to NaN, while MNI and MXI are set to 1.  This mimics
+   the behavior of the Matlab native MIN/MAX functions. 
+
+   CONDITIONS
+   ----------
+   X must be a real vector of type DOUBLE.  An N-D array X is treated as X(:).
+   Infinite values are allowed.   NaN's are ignored (see above).</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [xmn,xmx,mni,mxi] = CORE_minmax(x)</a>
+0002 <span class="comment">%CORE_MINMAX       Core computational routine for MINMAX.</span>
+0003 <span class="comment">%   [XMN,XMX,MNI,MXI] = CORE_MINMAX(X) returns scalars such that</span>
+0004 <span class="comment">%   XMN = X(MNI) = min(X) and XMX = X(MXI) = max(X).  Ties in indices are</span>
+0005 <span class="comment">%   broken in favor of the lowest magnitude index.</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">%   NaN values are ignored unless the input is all NaN.  In this case, XMN</span>
+0008 <span class="comment">%   and XMX are set to NaN, while MNI and MXI are set to 1.  This mimics</span>
+0009 <span class="comment">%   the behavior of the Matlab native MIN/MAX functions.</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">%   CONDITIONS</span>
+0012 <span class="comment">%   ----------</span>
+0013 <span class="comment">%   X must be a real vector of type DOUBLE.  An N-D array X is treated as X(:).</span>
+0014 <span class="comment">%   Infinite values are allowed.   NaN's are ignored (see above).</span>
+0015 
+0016 [xmn,mni] = min(x(:));
+0017 [xmx,mxi] = max(x(:));
+0018 
+0019 <span class="keyword">return</span>;
+0020 
+0021 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0022 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TEST CODE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0023 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0024 <span class="comment">% N = 5e6;</span>
+0025 <span class="comment">% array = randn(N,1);  array(1:1e4:end) = NaN;</span>
+0026 <span class="comment">% % array = [1:N];     array(1:10:end) = NaN;  % much slower</span>
+0027 <span class="comment">% tic; [mminval,mmaxval,mminind,mmaxind] = CORE_minmax(array);  t(1) = toc;</span>
+0028 <span class="comment">% tic; [minval,minind] = min(array);   [maxval,maxind] = max(array); t(2) = toc;</span>
+0029 <span class="comment">% printf('\nCORE_minmax took %5.3f sec and Matlab code took %5.3f sec.', t(1), t(2));</span>
+0030 <span class="comment">% if (~isequal([mminval,mmaxval,mminind,mmaxind], [minval,maxval,minind,maxind]))</span>
+0031 <span class="comment">%     printf('The two calls did not produce the same results.');</span>
+0032 <span class="comment">% end</span>
+0033</pre></div>
+<hr><address>Generated on Fri 15-Aug-2008 11:35:42 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

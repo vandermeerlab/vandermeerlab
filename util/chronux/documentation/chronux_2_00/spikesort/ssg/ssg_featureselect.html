@@ -1,0 +1,320 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of ssg_featureselect</title>
+  <meta name="keywords" content="ssg_featureselect">
+  <meta name="description" content="SSG_FEATURESELECT M-file for ssg_featureselect.fig">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="#">chronux_2_00</a> &gt; <a href="../index.html">spikesort</a> &gt; <a href="index.html">ssg</a> &gt; ssg_featureselect.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for chronux_2_00\spikesort\ssg&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>ssg_featureselect
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>SSG_FEATURESELECT M-file for ssg_featureselect.fig</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function varargout = ssg_featureselect(varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> SSG_FEATURESELECT M-file for ssg_featureselect.fig
+      SSG_FEATURESELECT(axes_handle) creates a new SSG_FEATURESELECT.  Not
+      a user GUI; intended for internal use by SS GUI applications.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="ssgtest.html" class="code" title="function ssgtest(spikes, assignments, show, mode)">ssgtest</a>	temporary script to translate the SSG_DATABROWSE functions into a GUI.</li></ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function ssg_featureselect_OpeningFcn(hObject, eventdata, handles, varargin)</a></li><li><a href="#_sub2" class="code">function varargout = ssg_featureselect_OutputFcn(hObject, eventdata, handles)</a></li><li><a href="#_sub3" class="code">function edit_param1_CreateFcn(hObject, eventdata, handles)</a></li><li><a href="#_sub4" class="code">function popup_datatype_CreateFcn(hObject, eventdata, handles)</a></li><li><a href="#_sub5" class="code">function slider_aspect_CreateFcn(hObject, eventdata, handles)</a></li><li><a href="#_sub6" class="code">function popup_datatype_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub7" class="code">function edit_param1_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub8" class="code">function button_next_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub9" class="code">function button_last_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub10" class="code">function figure_delete_Callback(hObject, eventdata, handles)</a></li><li><a href="#_sub11" class="code">function pos = labelposition_screen_coords(handles)</a></li><li><a href="#_sub12" class="code">function handles = param1_bounds_check(handles, param1)</a></li><li><a href="#_sub13" class="code">function alter_data(handles)</a></li></ul>
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function varargout = ssg_featureselect(varargin)</a>
+0002 <span class="comment">% SSG_FEATURESELECT M-file for ssg_featureselect.fig</span>
+0003 <span class="comment">%      SSG_FEATURESELECT(axes_handle) creates a new SSG_FEATURESELECT.  Not</span>
+0004 <span class="comment">%      a user GUI; intended for internal use by SS GUI applications.</span>
+0005 
+0006 <span class="comment">% Begin initialization code - DO NOT EDIT</span>
+0007 gui_Singleton = 0;
+0008 gui_State = struct(<span class="string">'gui_Name'</span>,       mfilename, <span class="keyword">...</span>
+0009                    <span class="string">'gui_Singleton'</span>,  gui_Singleton, <span class="keyword">...</span>
+0010                    <span class="string">'gui_OpeningFcn'</span>, @<a href="#_sub1" class="code" title="subfunction ssg_featureselect_OpeningFcn(hObject, eventdata, handles, varargin)">ssg_featureselect_OpeningFcn</a>, <span class="keyword">...</span>
+0011                    <span class="string">'gui_OutputFcn'</span>,  @<a href="#_sub2" class="code" title="subfunction varargout = ssg_featureselect_OutputFcn(hObject, eventdata, handles)">ssg_featureselect_OutputFcn</a>, <span class="keyword">...</span>
+0012                    <span class="string">'gui_LayoutFcn'</span>,  [] , <span class="keyword">...</span>
+0013                    <span class="string">'gui_Callback'</span>,   []);
+0014 <span class="keyword">if</span> nargin &amp;&amp; ischar(varargin{1})
+0015     gui_State.gui_Callback = str2func(varargin{1});
+0016 <span class="keyword">end</span>
+0017 
+0018 <span class="keyword">if</span> nargout
+0019     [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});
+0020 <span class="keyword">else</span>
+0021     gui_mainfcn(gui_State, varargin{:});
+0022 <span class="keyword">end</span>
+0023 <span class="comment">% End initialization code - DO NOT EDIT</span>
+0024 
+0025 
+0026 <span class="comment">% --- Executes just before ssg_featureselect is made visible.</span>
+0027 <a name="_sub1" href="#_subfunctions" class="code">function ssg_featureselect_OpeningFcn(hObject, eventdata, handles, varargin)</a>
+0028 handles.output = hObject;
+0029 
+0030 
+0031 <span class="comment">% Argument error checking</span>
+0032 <span class="keyword">if</span> (length(varargin) &lt; 2)
+0033     error(<span class="string">'SSG:invalid_init_arg'</span>, <span class="string">'Incorrect initalization syntax.'</span>);
+0034 <span class="keyword">end</span>
+0035 handles.axes_handle = varargin{1};
+0036 handles.switchaxis = varargin{2};
+0037 
+0038 <span class="keyword">if</span> (~ishandle(handles.axes_handle) || ~strcmp(get(handles.axes_handle, <span class="string">'Type'</span>), <span class="string">'axes'</span>) || <span class="keyword">...</span>
+0039     isempty(guidata(handles.axes_handle)))
+0040     error(<span class="string">'SSG:invalid_init_arg'</span>, <span class="string">'First initialization argument must be an axis handle created by an SSG function.'</span>);
+0041 <span class="keyword">end</span>
+0042 <span class="keyword">if</span> (~ischar(handles.switchaxis) || ~any(strcmpi({<span class="string">'x'</span>, <span class="string">'y'</span>, <span class="string">'z'</span>}, handles.switchaxis)))
+0043     error(<span class="string">'SSG:invalid_init_arg'</span>, <span class="string">'Second initialization argument must be one of ''x'', ''y'', or ''z''.'</span>);
+0044 <span class="keyword">end</span>
+0045 ssg = guidata(handles.axes_handle);
+0046 
+0047 choices = get(handles.popup_datatype, <span class="string">'String'</span>);
+0048 value = find(strcmpi(choices, ssg.([handles.switchaxis <span class="string">'choice'</span>])));
+0049 <span class="keyword">if</span> (isempty(value))
+0050     error(<span class="string">'SSG:invalid_default_choice'</span>, [<span class="string">'Invalid entry in initial '</span> handles.switchaxis <span class="string">'choice.'</span>]);
+0051 <span class="keyword">end</span>
+0052 
+0053 <span class="comment">% Fill in controls to reflect exisiting data choice.</span>
+0054 set(handles.popup_datatype, <span class="string">'Value'</span>, value);
+0055 set(handles.edit_param1, <span class="string">'String'</span>, ssg.([handles.switchaxis <span class="string">'param1'</span>]));
+0056 handles.oldparam = ssg.([handles.switchaxis <span class="string">'param1'</span>]);
+0057 handles.maxparam = size(ssg.ss_object.waveforms, 2);
+0058 set(handles.figure_ssg_featureselect, <span class="string">'Name'</span>, [upper(handles.switchaxis) <span class="string">'-Axis Selection'</span>]);
+0059 
+0060 <span class="comment">% Move this window to the current location of the corresponding label for convenience.</span>
+0061 set(handles.figure_ssg_featureselect, <span class="string">'Units'</span>, <span class="string">'Pixel'</span>);
+0062 newpos = <a href="#_sub11" class="code" title="subfunction pos = labelposition_screen_coords(handles)">labelposition_screen_coords</a>(handles);
+0063 currpos = get(handles.figure_ssg_featureselect, <span class="string">'Position'</span>);
+0064 set(handles.figure_ssg_featureselect, <span class="string">'Position'</span>, [(newpos-currpos(3:4)*0.75) currpos(3:4)]);
+0065 set(handles.figure_ssg_featureselect, <span class="string">'Color'</span>, get(handles.axes_handle, [handles.switchaxis <span class="string">'Color'</span>]));
+0066 
+0067 <span class="comment">% Update guidata structures</span>
+0068 ssg.([handles.switchaxis <span class="string">'control'</span>]) = handles.figure_ssg_featureselect;
+0069 guidata(handles.axes_handle, ssg);
+0070 guidata(hObject, handles);
+0071 
+0072 
+0073 <span class="comment">% Outputs from this function are returned to the command line.</span>
+0074 <a name="_sub2" href="#_subfunctions" class="code">function varargout = ssg_featureselect_OutputFcn(hObject, eventdata, handles)</a>
+0075 varargout{1} = handles.output;
+0076 
+0077 
+0078 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%  GUI INITIALIZATION %%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0079 <span class="comment">% Executes during object creation, after setting all properties.</span>
+0080 <span class="comment">%  Most of this is just for visual consistency.</span>
+0081 
+0082 <a name="_sub3" href="#_subfunctions" class="code">function edit_param1_CreateFcn(hObject, eventdata, handles)</a>
+0083 <span class="keyword">if</span> ispc,  set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+0084 <span class="keyword">else</span>      set(hObject,<span class="string">'BackgroundColor'</span>,get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>));
+0085 <span class="keyword">end</span>
+0086 
+0087 <a name="_sub4" href="#_subfunctions" class="code">function popup_datatype_CreateFcn(hObject, eventdata, handles)</a>
+0088 <span class="keyword">if</span> ispc,  set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+0089 <span class="keyword">else</span>      set(hObject,<span class="string">'BackgroundColor'</span>,get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>));
+0090 <span class="keyword">end</span>
+0091 
+0092 <a name="_sub5" href="#_subfunctions" class="code">function slider_aspect_CreateFcn(hObject, eventdata, handles)</a>
+0093 set(hObject,<span class="string">'BackgroundColor'</span>, [.9 .9 .9]);
+0094 
+0095 
+0096 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%% CALLBACKS  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0097 
+0098 <a name="_sub6" href="#_subfunctions" class="code">function popup_datatype_Callback(hObject, eventdata, handles)</a>
+0099 <span class="comment">% Make GUI state consistent before calling for data update.</span>
+0100 choices = get(hObject, <span class="string">'String'</span>);
+0101 choice = choices{get(hObject, <span class="string">'Value'</span>)};
+0102 paramhandles = [handles.edit_param1, handles.button_next, handles.button_last];
+0103 <span class="keyword">switch</span> (choice),
+0104     <span class="keyword">case</span> {<span class="string">'Signal'</span>, <span class="string">'PC'</span>}
+0105         set(paramhandles, <span class="string">'Enable'</span>, <span class="string">'on'</span>);
+0106     <span class="keyword">case</span> {<span class="string">'Event Time'</span>, <span class="string">'Height'</span>, <span class="string">'Width'</span>, <span class="string">'ISI Preceding'</span>, <span class="string">'Total Energy'</span>, <span class="string">'Cluster #'</span>}
+0107         set(paramhandles, <span class="string">'Enable'</span>, <span class="string">'off'</span>);
+0108 <span class="keyword">end</span>
+0109 <a href="#_sub13" class="code" title="subfunction alter_data(handles)">alter_data</a>(handles);
+0110 
+0111 
+0112 <a name="_sub7" href="#_subfunctions" class="code">function edit_param1_Callback(hObject, eventdata, handles)</a>
+0113 <span class="comment">% Bounds checking on the parameter edit box.</span>
+0114 param1 = str2double(get(handles.edit_param1, <span class="string">'String'</span>));
+0115 <span class="keyword">if</span> (isnan(param1) || (param1 ~= round(param1)))
+0116     set(handles.edit_param1, <span class="string">'String'</span>, handles.oldparam);
+0117     beep;
+0118 <span class="keyword">else</span>
+0119     handles = <a href="#_sub12" class="code" title="subfunction handles = param1_bounds_check(handles, param1)">param1_bounds_check</a>(handles, param1);
+0120     <a href="#_sub13" class="code" title="subfunction alter_data(handles)">alter_data</a>(handles);
+0121 <span class="keyword">end</span>
+0122 
+0123 
+0124 <span class="comment">% These next two functions just advance or review the param1 value</span>
+0125 <span class="comment">% in integer steps; just finger-candy to make it easier to step</span>
+0126 <span class="comment">% through a range of values.</span>
+0127 <a name="_sub8" href="#_subfunctions" class="code">function button_next_Callback(hObject, eventdata, handles)</a>
+0128 param1 = str2double(get(handles.edit_param1, <span class="string">'String'</span>));
+0129 handles = <a href="#_sub12" class="code" title="subfunction handles = param1_bounds_check(handles, param1)">param1_bounds_check</a>(handles, param1 + 1);
+0130 <a href="#_sub13" class="code" title="subfunction alter_data(handles)">alter_data</a>(handles);
+0131 
+0132 <a name="_sub9" href="#_subfunctions" class="code">function button_last_Callback(hObject, eventdata, handles)</a>
+0133 param1 = str2double(get(handles.edit_param1, <span class="string">'String'</span>));
+0134 handles = <a href="#_sub12" class="code" title="subfunction handles = param1_bounds_check(handles, param1)">param1_bounds_check</a>(handles, param1 - 1);
+0135 <a href="#_sub13" class="code" title="subfunction alter_data(handles)">alter_data</a>(handles);
+0136 
+0137 
+0138 <a name="_sub10" href="#_subfunctions" class="code">function figure_delete_Callback(hObject, eventdata, handles)</a>
+0139 <span class="comment">% We need to let the parent axis know when this GUI is deleted.</span>
+0140 ssg = guidata(handles.axes_handle);
+0141 ssg.([handles.switchaxis <span class="string">'control'</span>]) = [];
+0142 guidata(handles.axes_handle, ssg);
+0143 
+0144 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%% HELPER FUNCTIONS  %%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0145 
+0146 <a name="_sub11" href="#_subfunctions" class="code">function pos = labelposition_screen_coords(handles)</a>
+0147 <span class="comment">% Returns [left, lower] pixel coordinates where the GUI can be placed</span>
+0148 <span class="comment">% (in screen coordinates) so that it appears somewhere in the vicinity</span>
+0149 <span class="comment">% of the axes (i tried to have them pop up on top of the axis labels, but</span>
+0150 <span class="comment">% there's something wrong with the units of the label's 'Extent' property</span>
+0151 <span class="comment">% in MatlabR13).</span>
+0152 axeshndl = handles.axes_handle;
+0153 figurehndl = get(axeshndl, <span class="string">'Parent'</span>);
+0154 
+0155 oldunits = get([figurehndl, axeshndl], <span class="string">'Units'</span>);
+0156 set([figurehndl, axeshndl], <span class="string">'Units'</span>, <span class="string">'Pixel'</span>);
+0157 
+0158 axes_relative = get(axeshndl, <span class="string">'Position'</span>);
+0159 figure_pos = get(figurehndl, <span class="string">'Position'</span>);
+0160 
+0161 set(figurehndl, <span class="string">'Units'</span>, oldunits{1});
+0162 set(axeshndl, <span class="string">'Units'</span>, oldunits{2});
+0163 
+0164 <span class="comment">% Offsets to get near default axis orientation.  Won't do the right thing if the</span>
+0165 <span class="comment">% axes have been rotated . . . its an imperfect world.</span>
+0166 offset = axes_relative(3:4);
+0167 <span class="keyword">switch</span>(handles.switchaxis),  
+0168     <span class="keyword">case</span> <span class="string">'x'</span>,
+0169         offset = offset .* [0.75 0];
+0170     <span class="keyword">case</span> <span class="string">'y'</span>,
+0171         offset = offset .* [-0.10 0.10];
+0172     <span class="keyword">case</span> <span class="string">'z'</span>,
+0173         offset = offset .* [0 0.75];
+0174 <span class="keyword">end</span>
+0175 pos = figure_pos + axes_relative;
+0176 pos = pos(1:2) + offset;
+0177 
+0178 
+0179 <a name="_sub12" href="#_subfunctions" class="code">function handles = param1_bounds_check(handles, param1)</a>
+0180 <span class="comment">% Checks bounds on 'param1', clipping to [1,maxparam] if necessary, then</span>
+0181 <span class="comment">% sets the param1 edit box to reflect the clipped value.</span>
+0182 <span class="comment">% Note that this function also sets the 'handles.oldparam' to the newly</span>
+0183 <span class="comment">% validated string but does NOT save the modified 'handles'.  Make sure to</span>
+0184 <span class="comment">% accept 'handles' as an output and to save if you want to remember the</span>
+0185 <span class="comment">% old value (useful for recovering from user typos).</span>
+0186 <span class="keyword">if</span> (param1 &lt; 1)
+0187     param1 = <span class="string">'1'</span>;
+0188 <span class="keyword">elseif</span> (param1 &gt; handles.maxparam)
+0189     param1 = num2str(handles.maxparam);
+0190 <span class="keyword">else</span>
+0191     param1 = num2str(param1);
+0192 <span class="keyword">end</span>
+0193 set(handles.edit_param1, <span class="string">'String'</span>, param1);
+0194 handles.oldparam = param1;
+0195 
+0196     
+0197 <a name="_sub13" href="#_subfunctions" class="code">function alter_data(handles)</a>
+0198 <span class="comment">%%% NEEDS COMMENTS!</span>
+0199 choices = get(handles.popup_datatype, <span class="string">'String'</span>);
+0200 choice = choices{get(handles.popup_datatype, <span class="string">'Value'</span>)};
+0201 param1 = str2double(get(handles.edit_param1, <span class="string">'String'</span>));
+0202 ssg = guidata(handles.axes_handle);
+0203 axname = handles.switchaxis;  <span class="comment">% shorthand</span>
+0204 
+0205 <span class="comment">% First get the relevant data values ...</span>
+0206 <span class="keyword">switch</span> (choice), 
+0207     <span class="keyword">case</span> <span class="string">'Signal'</span>, 
+0208         vector = ssg.ss_object.waveforms(:,param1);
+0209       
+0210     <span class="keyword">case</span> <span class="string">'PC'</span>, <span class="comment">% (for principal components, we might need to compute the first time)</span>
+0211         <span class="keyword">if</span> (~isfield(ssg.ss_object, <span class="string">'pca'</span>))
+0212             parentfig = get(handles.axes_handle, <span class="string">'Parent'</span>);  oldptr = get(parentfig, <span class="string">'Pointer'</span>);
+0213             set([handles.figure_ssg_featureselect, parentfig], <span class="string">'Pointer'</span>, <span class="string">'watch'</span>);
+0214 
+0215             [pca.scores,pca.u,pca.s,pca.v] = pcasvd(ssg.ss_object.waveforms);
+0216             ssg.ss_object.pca = pca;
+0217             
+0218             set(handles.figure_ssg_featureselect, <span class="string">'Pointer'</span>, <span class="string">'arrow'</span>);
+0219             set(parentfig, <span class="string">'Pointer'</span>, oldptr);
+0220         <span class="keyword">end</span>
+0221         vector = ssg.ss_object.pca.scores(:,param1);
+0222         
+0223     <span class="keyword">case</span> <span class="string">'Cluster #'</span>,
+0224         vector = ssg.ss_assigns;
+0225         
+0226     <span class="keyword">case</span> <span class="string">'Event Time'</span>,
+0227         vector = ssg.ss_object.spiketimes;
+0228         
+0229     <span class="keyword">case</span> <span class="string">'ISI Preceding'</span>,
+0230         vector = [NaN; diff(ssg.ss_object.spiketimes)];
+0231         
+0232     <span class="keyword">case</span> <span class="string">'Total Energy'</span>,
+0233         vector = sum(ssg.ss_object.waveforms.^2, 2);
+0234         
+0235     <span class="keyword">case</span> {<span class="string">'Height'</span>, <span class="string">'Width'</span>},  <span class="comment">% again, we might need to compute these the first time they're used</span>
+0236         <span class="keyword">if</span> (~isfield(ssg.ss_object, <span class="string">'heightwidth'</span>))
+0237             [hw.height, hw.width] = thresholded_peaks(ssg.ss_object);
+0238             ssg.ss_object.heightwidth = hw;
+0239         <span class="keyword">end</span>
+0240         vector = ssg.ss_object.heightwidth.(lower(choice));
+0241         
+0242 <span class="keyword">end</span> 
+0243 ssg.([axname <span class="string">'choice'</span>]) = choice;
+0244 ssg.([axname <span class="string">'param1'</span>]) = num2str(param1);
+0245 
+0246 <span class="comment">% ... then feed them to the appropriate group of data.</span>
+0247 <span class="keyword">for</span> gp = 1:length(ssg.group_handles)
+0248     set(ssg.group_handles(gp), [axname <span class="string">'Data'</span>], vector(ssg.group_indices{gp}));
+0249 <span class="keyword">end</span>
+0250 
+0251 <span class="comment">% Reset the camera in case the axis scales have changed dramatically.</span>
+0252 haxes = handles.axes_handle;
+0253 axis(haxes, <span class="string">'tight'</span>);
+0254 <span class="keyword">if</span> ~isempty(get(ssg.group_handles(1), <span class="string">'ZData'</span>))
+0255     campos(haxes,<span class="string">'auto'</span>); camtarget(haxes,<span class="string">'auto'</span>);  view(haxes,3);
+0256     camva(haxes,<span class="string">'auto'</span>);  camup(haxes,<span class="string">'auto'</span>);      camva(haxes,camva(haxes)); 
+0257 <span class="keyword">end</span>
+0258 daspect(haxes,<span class="string">'auto'</span>);   daspect(haxes,daspect(haxes));
+0259 
+0260 <span class="comment">% Change the axis labels to reflect the new reality.</span>
+0261 label = ssg.([axname <span class="string">'choice'</span>]);
+0262 <span class="keyword">if</span> (strcmp(get(handles.edit_param1, <span class="string">'Enable'</span>), <span class="string">'on'</span>))
+0263     label = [label ssg.([axname <span class="string">'param1'</span>])];
+0264 <span class="keyword">end</span>
+0265 set(get(haxes, [axname <span class="string">'Label'</span>]), <span class="string">'String'</span>, label);
+0266 
+0267 <span class="comment">% Store guidata's and raise this axis control to the top.</span>
+0268 guidata(handles.axes_handle, ssg);
+0269 guidata(handles.figure_ssg_featureselect, handles);
+0270 figure(handles.figure_ssg_featureselect);</pre></div>
+<hr><address>Generated on Fri 15-Aug-2008 11:35:42 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

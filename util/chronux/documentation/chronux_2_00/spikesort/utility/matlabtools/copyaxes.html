@@ -1,0 +1,80 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of copyaxes</title>
+  <meta name="keywords" content="copyaxes">
+  <meta name="description" content="COPYAXES          Duplicate axes in a new figure.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="#">chronux_2_00</a> &gt; <a href="../../index.html">spikesort</a> &gt; <a href="../index.html">utility</a> &gt; <a href="index.html">matlabtools</a> &gt; copyaxes.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for chronux_2_00\spikesort\utility\matlabtools&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>copyaxes
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>COPYAXES          Duplicate axes in a new figure.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function target = copyaxes(source) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">COPYAXES          Duplicate axes in a new figure.
+   COPYAXES(AX) makes a copy of the axes specified by the handle AX in a
+   new figure.  The copied axes are identical to the original except that
+   their position is modified to fill the new parent figure.  This can be
+   used to enlarge an axes in a figure subplot.
+
+   AX2 = COPYAXES(AX) returns a handle to the copied axes.
+
+   See also COPYOBJ, <a href="copyfig.html" class="code" title="function target = copyfig(source)">COPYFIG</a>.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function target = copyaxes(source)</a>
+0002 <span class="comment">%COPYAXES          Duplicate axes in a new figure.</span>
+0003 <span class="comment">%   COPYAXES(AX) makes a copy of the axes specified by the handle AX in a</span>
+0004 <span class="comment">%   new figure.  The copied axes are identical to the original except that</span>
+0005 <span class="comment">%   their position is modified to fill the new parent figure.  This can be</span>
+0006 <span class="comment">%   used to enlarge an axes in a figure subplot.</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">%   AX2 = COPYAXES(AX) returns a handle to the copied axes.</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">%   See also COPYOBJ, COPYFIG.</span>
+0011 
+0012 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%% Check Input %%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0013 <span class="keyword">if</span> (~ishandle(source) || ~strcmp(get(source,<span class="string">'Type'</span>), <span class="string">'axes'</span>))
+0014     error(<span class="string">'Input must be the handle to an existing axes.'</span>);
+0015 <span class="keyword">end</span>
+0016 
+0017 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%% Create Target Axes %%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0018 hfig = figure;
+0019 position = get(gca, <span class="string">'Position'</span>);  <span class="comment">% default axes position for single subplot</span>
+0020 delete(gca);
+0021 
+0022 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%% Make the Copy %%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0023 target = copyobj(source, hfig);
+0024 set(target, <span class="string">'Position'</span>, position);
+0025 
+0026 <span class="keyword">if</span> (nargout == 0),  clear target;  <span class="keyword">end</span>;</pre></div>
+<hr><address>Generated on Fri 15-Aug-2008 11:35:42 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

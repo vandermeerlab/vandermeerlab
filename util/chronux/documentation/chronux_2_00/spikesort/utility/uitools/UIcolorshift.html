@@ -1,0 +1,102 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of UIcolorshift</title>
+  <meta name="keywords" content="UIcolorshift">
+  <meta name="description" content="UIcolorshift      Creates an interactive colorbar.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="#">chronux_2_00</a> &gt; <a href="../../index.html">spikesort</a> &gt; <a href="../index.html">utility</a> &gt; <a href="index.html">uitools</a> &gt; UIcolorshift.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for chronux_2_00\spikesort\utility\uitools&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>UIcolorshift
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>UIcolorshift      Creates an interactive colorbar.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function h = UIcolorshift(varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">UIcolorshift      Creates an interactive colorbar.
+   UIcolorshift adds a (vertical) colorbar to the current axes.  This
+   colorbar can be used to shift or rescale the color mapping in the
+   current axes.  Clicking near the top of the colorbar axes
+   up or down (right or left for horizontal colorbars) changes the value
+   mapped to the top color scale limit. Similarly, clicking near the
+   bottom changes the value mapped to the bottom color scale limit.
+
+   Clicking elsewhere and dragging cyclically shifts the color map.  This
+   shift is applied to the whole figure.
+
+   UIcolorshift(ARG1,...) takes the same arguments as COLORBAR.
+
+   H = UIcolorshift(...) returns a handle to the colorbar axes.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="UImovieplayer.html" class="code" title="function hfig = UImovieplayer(data, Fs, frame)">UImovieplayer</a>	UImovieplayer        Show a 3-D matrix as an XY-T movie.</li></ul>
+<!-- crossreference -->
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function h = UIcolorshift(varargin)</a>
+0002 <span class="comment">%UIcolorshift      Creates an interactive colorbar.</span>
+0003 <span class="comment">%   UIcolorshift adds a (vertical) colorbar to the current axes.  This</span>
+0004 <span class="comment">%   colorbar can be used to shift or rescale the color mapping in the</span>
+0005 <span class="comment">%   current axes.  Clicking near the top of the colorbar axes</span>
+0006 <span class="comment">%   up or down (right or left for horizontal colorbars) changes the value</span>
+0007 <span class="comment">%   mapped to the top color scale limit. Similarly, clicking near the</span>
+0008 <span class="comment">%   bottom changes the value mapped to the bottom color scale limit.</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">%   Clicking elsewhere and dragging cyclically shifts the color map.  This</span>
+0011 <span class="comment">%   shift is applied to the whole figure.</span>
+0012 <span class="comment">%</span>
+0013 <span class="comment">%   UIcolorshift(ARG1,...) takes the same arguments as COLORBAR.</span>
+0014 <span class="comment">%</span>
+0015 <span class="comment">%   H = UIcolorshift(...) returns a handle to the colorbar axes.</span>
+0016 
+0017 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%% Create the Colorbar %%%%%%%%%%%%%%%%%%%%%%%%</span>
+0018 target = gca;
+0019 fighdl = gcf;
+0020 h = colorbar(varargin{:});  <span class="comment">% create or refresh an existing colorbar</span>
+0021 <span class="comment">%h = find_colorbar(target);  % &lt;=R13 only</span>
+0022 
+0023 <span class="comment">%%%%%%%%%%%%%%%%%%%%% Get a handle to the Colorbar %%%%%%%%%%%%%%%%%%%</span>
+0024 cimage = findobj(h, <span class="string">'Type'</span>, <span class="string">'image'</span>);
+0025 
+0026 cbar_pos = get(h, <span class="string">'Position'</span>);
+0027 ax_pos   = get(target, <span class="string">'Position'</span>);
+0028 <span class="keyword">if</span> (cbar_pos(1) &gt; sum(ax_pos([1,3]))),   mode = <span class="string">'V'</span>;
+0029 <span class="keyword">else</span>                                     mode = <span class="string">'H'</span>;
+0030 <span class="keyword">end</span>
+0031 
+0032 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%% Assign the Callback %%%%%%%%%%%%%%%%%%%%%%%%</span>
+0033 userdata = get(h,<span class="string">'UserData'</span>);
+0034 userdata.fighdl = fighdl;
+0035 userdata.cbrhdl = h;
+0036 userdata.target = target;
+0037 userdata.cimage = cimage;
+0038 userdata.mode   = mode;
+0039 set(h, <span class="string">'UserData'</span>, userdata, <span class="string">'ButtonDownFcn'</span>, @CB_colorshift);
+0040 
+0041 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Cleanup %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0042 <span class="keyword">if</span> (nargout == 0), clear h;  <span class="keyword">end</span>
+0043 axes(target);   <span class="comment">% reset current axes</span></pre></div>
+<hr><address>Generated on Fri 15-Aug-2008 11:35:42 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

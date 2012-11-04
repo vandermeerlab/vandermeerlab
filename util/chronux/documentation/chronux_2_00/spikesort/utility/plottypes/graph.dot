@@ -1,0 +1,8 @@
+/* Created by mdot for Matlab */
+digraph m2html {
+
+  anglehist [URL="anglehist.html"];
+  errorarea [URL="errorarea.html"];
+  linec [URL="linec.html"];
+  mplot [URL="mplot.html"];
+}

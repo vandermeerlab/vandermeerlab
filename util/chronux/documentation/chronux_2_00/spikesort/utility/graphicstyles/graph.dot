@@ -1,0 +1,18 @@
+/* Created by mdot for Matlab */
+digraph m2html {
+
+  Cdgy [URL="Cdgy.html"];
+  Clgy [URL="Clgy.html"];
+  Cmar [URL="Cmar.html"];
+  Cmbl [URL="Cmbl.html"];
+  Cmgr [URL="Cmgr.html"];
+  Cmrd [URL="Cmrd.html"];
+  fancy [URL="fancy.html"];
+  jetm [URL="jetm.html"];
+  maplecolor [URL="maplecolor.html"];
+  nice [URL="nice.html"];
+  saturate [URL="saturate.html"];
+  tintmap [URL="tintmap.html"];
+  top [URL="top.html"];
+  xray [URL="xray.html"];
+}

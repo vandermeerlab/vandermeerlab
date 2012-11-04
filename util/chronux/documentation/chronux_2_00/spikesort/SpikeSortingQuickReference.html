@@ -1,0 +1,90 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of SpikeSortingQuickReference</title>
+  <meta name="keywords" content="SpikeSortingQuickReference">
+  <meta name="description" content="%%%%%%%%%%%%%%%%%%%%%%%%%%%%% SORTING %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="#">chronux_2_00</a> &gt; <a href="index.html">spikesort</a> &gt; SpikeSortingQuickReference.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for chronux_2_00\spikesort&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>SpikeSortingQuickReference
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>%%%%%%%%%%%%%%%%%%%%%%%%%%%%% SORTING %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%% SORTING %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="ss_aggregate.html" class="code" title="function spikes = ss_aggregate(spikes, reintegrate_outliers)">ss_aggregate</a>	SS_AGGREGATE  ISI-restricted heirarchical cluster aggregation.</li><li><a href="ss_dejitter.html" class="code" title="function spikes = ss_dejitter(spikes, maxshift)">ss_dejitter</a>	SS_DEJITTER  Aligns waveform peaks.</li><li><a href="ss_energy.html" class="code" title="function spikes = ss_energy(spikes)">ss_energy</a>	SS_ENERGY  Interface energy based cluster similarity computation.</li><li><a href="ss_kmeans.html" class="code" title="function spikes = ss_kmeans(spikes, options)">ss_kmeans</a>	SS_KMEANS  K-means clustering.</li><li><a href="ss_outliers.html" class="code" title="function spikes = ss_outliers(spikes, reps)">ss_outliers</a>	SS_OUTLIERS  K-means based outlier detection.</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% SORTING %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0002 
+0003 load spikes2
+0004 
+0005 <span class="comment">%% The following commands run the Fee algorithm</span>
+0006 spikes = <a href="ss_dejitter.html" class="code" title="function spikes = ss_dejitter(spikes, maxshift)">ss_dejitter</a>(spikes);
+0007 spikes = <a href="ss_outliers.html" class="code" title="function spikes = ss_outliers(spikes, reps)">ss_outliers</a>(spikes);
+0008 spikes = <a href="ss_kmeans.html" class="code" title="function spikes = ss_kmeans(spikes, options)">ss_kmeans</a>(spikes);
+0009 spikes = <a href="ss_energy.html" class="code" title="function spikes = ss_energy(spikes)">ss_energy</a>(spikes);
+0010 spikes = <a href="ss_aggregate.html" class="code" title="function spikes = ss_aggregate(spikes, reintegrate_outliers)">ss_aggregate</a>(spikes);
+0011 
+0012 <span class="comment">%% The following commands merge/split clusters</span>
+0013 <span class="comment">% spikes = merge_clusters(spikes, clusternumber1, clusternumber2);</span>
+0014 <span class="comment">% spikes = split_cluster(spikes, clusternumber);</span>
+0015 
+0016 
+0017 <span class="comment">%% The following commands run Ken Harris' KlustKwik</span>
+0018 projection = pcasvd(spikes.waveforms);
+0019 [assigns,log] = kkm(spikes.waveforms(:,1:3),0);
+0020 
+0021 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%% VISUALIZATION %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0022 
+0023 <span class="comment">%% General visualization tools in 2 and 3 dimensions -- results depend on</span>
+0024 <span class="comment">%% whether you have run ss_kmeans or ss_aggregate.  Can also specify the</span>
+0025 <span class="comment">%% assignments list as in:  ssg_databrowse2d(spikes,assigns);</span>
+0026 ssg_databrowse2d(spikes);
+0027 ssg_databrowse3d(spikes);
+0028 
+0029 
+0030 <span class="comment">%% You can always look at:</span>
+0031 figure;  plot(spikes.waveforms');  axis tight;  title(<span class="string">'Spike Waveforms'</span>);
+0032 figure;  histxt(spikes.waveforms);  colormap jet(256);
+0033 
+0034 <span class="comment">%% After running the ss_outliers step, try</span>
+0035 figure; plot(spikes.outliers.waveforms'); axis tight;
+0036 
+0037 <span class="comment">%% After running the ss_kmeans step, try</span>
+0038 figure;  set(gcf, <span class="string">'Renderer'</span>, <span class="string">'OpenGL'</span>);  clusterXT(spikes, spikes.overcluster.assigns);  title(<span class="string">'Local Clusters'</span>);
+0039 
+0040 <span class="comment">%% After running the ss_energy step, try</span>
+0041 figure; set(gcf, <span class="string">'Renderer'</span>, <span class="string">'OpenGL'</span>);  clusterXT(spikes, spikes.hierarchy.assigns); title(<span class="string">'Final Clusters'</span>);
+0042 figure; showclust(spikes, spikes.hierarchy.assigns);
+0043 figure; correlations(spikes, spikes.hierarchy.assigns);
+0044 figure; aggtree(spikes); title(<span class="string">'Aggregation Tree'</span>);</pre></div>
+<hr><address>Generated on Fri 15-Aug-2008 11:35:42 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

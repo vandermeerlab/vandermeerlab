@@ -1,0 +1,301 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of ss_kmeans</title>
+  <meta name="keywords" content="ss_kmeans">
+  <meta name="description" content="SS_KMEANS  K-means clustering.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="#">chronux_2_00</a> &gt; <a href="index.html">spikesort</a> &gt; ss_kmeans.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for chronux_2_00\spikesort&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>ss_kmeans
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>SS_KMEANS  K-means clustering.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>function spikes = ss_kmeans(spikes, options) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> SS_KMEANS  K-means clustering.
+     SPIKES = SS_KMEANS(SPIKES) takes and returns a spike-sorting object SPIKES.
+     It k-means clusters the (M x N) matrix SPIKES.WAVEFORMS and stores the
+     resulting group assignments in SPIKES.OVERCLUSTER.ASSIGNS, the cluster
+     centroids in SPIKES.OVERCLUSTER.CENTROIDS, and the mean squared error in
+     SPIKES.OVERCLUSTER.MSE.  The W, B, and T matrices (within-cluster, between-
+     cluster, and total) covariance matrices are in SPIKES.OVERCLUSTER.W, etc.
+
+     K-means algorithm is an EM-like algorithm that finds K cluster centers in
+     N-dimensional space and assigns each of the M data vectors to one of these
+     K points.  The process is iterative: new cluster centers are calculated as
+     the mean of their previously assigned vectors and vectors are then each 
+     reassigned to their closest cluster center.  This finds a local minimum for
+     the mean squared distance from each point to its cluster center; this is
+     also a (local) MLE for the model of K isotropic gaussian clusters.
+ 
+     This method is highly outlier sensitive; MLE is not robust to the addition
+     of a few waveforms that are not like the others and will shift the 'true'
+     cluster centers (or add new ones) to account for these points.  See
+     SS_OUTLIERS for one solution.
+ 
+     The algorithm used here speeds convergence by first solving for 2 means,
+     then using these means (slightly jittered) as starting points for a 4-means
+     solution.  This continues for log2(K) steps until K-means have been found.
+
+     SPIKES = SS_KMEANS(SPIKES, OPTIONS) allows specification of clustering
+     parameters.  OPTIONS is a structure with some/all of the following fields
+     defined.  (Any OPTIONS fields left undefined (or all fields if no OPTIONS
+     structure is passed in) uses its default value.)
+
+         OPTIONS.DIVISIONS (default: round(log2(M/500)), clipped to be between
+               4 and 8) sets the desired number of clusters to 2^DIVISIONS.  The
+               actual number of clusters may be slightly more/less than this #.
+         OPTIONS.REPS (default: 1) specifies the number of runs of the full
+               k-means solution.  The function will return the assignments that
+               resulted in the minimum MSE.
+         OPTIONS.REASSIGN_CONVERGE (default: 0) defines a convergence condition
+               by specifying the max number of vectors allowed to be reassigned
+               in an EM step.  If &lt;= this number of vectors is reassigned, the
+               this condition is met.
+         OPTIONS.MSE_CONVERGE (default: 0) defines a second convergence condition.
+               If the fractional change in mean squared error from one iteration
+               to the next is smaller than this value, this condition is met.
+
+     NOTE: Iteration stops when either of the convergence conditions is met.
+  
+ References:
+     Duda RO et al (2001).  _Pattern Classification_, Wiley-Interscience</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="SpikeSortingDemo.html" class="code" title="">SpikeSortingDemo</a>	% Demonstration code for the spike sorter derived from the Fee et al.</li><li><a href="SpikeSortingQuickReference.html" class="code" title="">SpikeSortingQuickReference</a>	%%%%%%%%%%%%%%%%%%%%%%%%%%%%% SORTING %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</li><li><a href="ss_outliers.html" class="code" title="function spikes = ss_outliers(spikes, reps)">ss_outliers</a>	SS_OUTLIERS  K-means based outlier detection.</li></ul>
+<!-- crossreference -->
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function spikes = ss_kmeans(spikes, options)</a>
+0002 <span class="comment">% SS_KMEANS  K-means clustering.</span>
+0003 <span class="comment">%     SPIKES = SS_KMEANS(SPIKES) takes and returns a spike-sorting object SPIKES.</span>
+0004 <span class="comment">%     It k-means clusters the (M x N) matrix SPIKES.WAVEFORMS and stores the</span>
+0005 <span class="comment">%     resulting group assignments in SPIKES.OVERCLUSTER.ASSIGNS, the cluster</span>
+0006 <span class="comment">%     centroids in SPIKES.OVERCLUSTER.CENTROIDS, and the mean squared error in</span>
+0007 <span class="comment">%     SPIKES.OVERCLUSTER.MSE.  The W, B, and T matrices (within-cluster, between-</span>
+0008 <span class="comment">%     cluster, and total) covariance matrices are in SPIKES.OVERCLUSTER.W, etc.</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">%     K-means algorithm is an EM-like algorithm that finds K cluster centers in</span>
+0011 <span class="comment">%     N-dimensional space and assigns each of the M data vectors to one of these</span>
+0012 <span class="comment">%     K points.  The process is iterative: new cluster centers are calculated as</span>
+0013 <span class="comment">%     the mean of their previously assigned vectors and vectors are then each</span>
+0014 <span class="comment">%     reassigned to their closest cluster center.  This finds a local minimum for</span>
+0015 <span class="comment">%     the mean squared distance from each point to its cluster center; this is</span>
+0016 <span class="comment">%     also a (local) MLE for the model of K isotropic gaussian clusters.</span>
+0017 <span class="comment">%</span>
+0018 <span class="comment">%     This method is highly outlier sensitive; MLE is not robust to the addition</span>
+0019 <span class="comment">%     of a few waveforms that are not like the others and will shift the 'true'</span>
+0020 <span class="comment">%     cluster centers (or add new ones) to account for these points.  See</span>
+0021 <span class="comment">%     SS_OUTLIERS for one solution.</span>
+0022 <span class="comment">%</span>
+0023 <span class="comment">%     The algorithm used here speeds convergence by first solving for 2 means,</span>
+0024 <span class="comment">%     then using these means (slightly jittered) as starting points for a 4-means</span>
+0025 <span class="comment">%     solution.  This continues for log2(K) steps until K-means have been found.</span>
+0026 <span class="comment">%</span>
+0027 <span class="comment">%     SPIKES = SS_KMEANS(SPIKES, OPTIONS) allows specification of clustering</span>
+0028 <span class="comment">%     parameters.  OPTIONS is a structure with some/all of the following fields</span>
+0029 <span class="comment">%     defined.  (Any OPTIONS fields left undefined (or all fields if no OPTIONS</span>
+0030 <span class="comment">%     structure is passed in) uses its default value.)</span>
+0031 <span class="comment">%</span>
+0032 <span class="comment">%         OPTIONS.DIVISIONS (default: round(log2(M/500)), clipped to be between</span>
+0033 <span class="comment">%               4 and 8) sets the desired number of clusters to 2^DIVISIONS.  The</span>
+0034 <span class="comment">%               actual number of clusters may be slightly more/less than this #.</span>
+0035 <span class="comment">%         OPTIONS.REPS (default: 1) specifies the number of runs of the full</span>
+0036 <span class="comment">%               k-means solution.  The function will return the assignments that</span>
+0037 <span class="comment">%               resulted in the minimum MSE.</span>
+0038 <span class="comment">%         OPTIONS.REASSIGN_CONVERGE (default: 0) defines a convergence condition</span>
+0039 <span class="comment">%               by specifying the max number of vectors allowed to be reassigned</span>
+0040 <span class="comment">%               in an EM step.  If &lt;= this number of vectors is reassigned, the</span>
+0041 <span class="comment">%               this condition is met.</span>
+0042 <span class="comment">%         OPTIONS.MSE_CONVERGE (default: 0) defines a second convergence condition.</span>
+0043 <span class="comment">%               If the fractional change in mean squared error from one iteration</span>
+0044 <span class="comment">%               to the next is smaller than this value, this condition is met.</span>
+0045 <span class="comment">%</span>
+0046 <span class="comment">%     NOTE: Iteration stops when either of the convergence conditions is met.</span>
+0047 <span class="comment">%</span>
+0048 <span class="comment">% References:</span>
+0049 <span class="comment">%     Duda RO et al (2001).  _Pattern Classification_, Wiley-Interscience</span>
+0050 
+0051 <span class="comment">%   Last Modified By: sbm on Sun Aug 13 02:28:36 2006</span>
+0052 
+0053 <span class="comment">% Undocumented options:</span>
+0054 <span class="comment">%       OPTIONS.PROGRESS (default: 1) determines whether the progress</span>
+0055 <span class="comment">%                                     bar is displayed during the clustering.</span>
+0056 <span class="comment">%       OPTIONS.SPLITMORE (default: 1) determines whether to do extra cluster</span>
+0057 <span class="comment">%                                       splitting to try for smaller clusters</span>
+0058 
+0059 starttime = clock;
+0060 
+0061 <span class="comment">% save the random number seeds before we do anything, in case we want to</span>
+0062 <span class="comment">% replicate this run exactly ...</span>
+0063 randnstate = randn(<span class="string">'state'</span>);  randstate = rand(<span class="string">'state'</span>);
+0064 
+0065 <span class="comment">%%%%%%%%%% ARGUMENT CHECKING</span>
+0066 <span class="keyword">if</span> (~isfield(spikes, <span class="string">'waveforms'</span>) || (size(spikes.waveforms, 1) &lt; 1))
+0067     error(<span class="string">'SS:waveforms_undefined'</span>, <span class="string">'The SS object does not contain any waveforms!'</span>);
+0068 <span class="keyword">end</span>
+0069 
+0070 <span class="comment">%%%%%%%%%% CONSTANTS</span>
+0071 target_clustersize = 500;
+0072 waves = spikes.waveforms;         <span class="comment">% ref w/o struct is better for R13 acceleration</span>
+0073 [M,N] = size(waves);
+0074 jitter = meandist_estim(waves) / 100 / N;        <span class="comment">% heuristic</span>
+0075 
+0076 <span class="comment">%%%%%%%%%% DEFAULTS</span>
+0077 opts.divisions = round(log2(M / target_clustersize));  <span class="comment">% power of 2 that gives closest to target_clustersize, but in [4..7]</span>
+0078 opts.divisions = max(min(opts.divisions, 8), 4);       <span class="comment">%     restrict to 16-256 clusters; heuristic.</span>
+0079 opts.memorylimit = M;                   <span class="comment">% all spikes at once</span>
+0080 opts.memorylimit = 300;                 <span class="comment">%</span>
+0081 opts.reps = 1;                          <span class="comment">% just one repetition</span>
+0082 opts.reassign_converge = 0;             <span class="comment">% the last few stubborn ones are probably borderline cases anyway ...</span>
+0083 opts.reassign_rough = round(0.005*M);   <span class="comment">% (no need at all to get full convergence for intermediate runs)</span>
+0084 opts.mse_converge = 0;                  <span class="comment">% ... and by default, we don't use the mse convergence criterion</span>
+0085 opts.progress = 1;
+0086 opts.splitmore = 1;
+0087 <span class="keyword">if</span> (nargin &gt; 1)
+0088     supplied = lower(fieldnames(options));   <span class="comment">% which options did the user specify?</span>
+0089     <span class="keyword">for</span> op = 1:length(supplied)              <span class="comment">% copy those over the defaults</span>
+0090         opts.(supplied{op}) = options.(supplied{op});  <span class="comment">% this is the preferred syntax as of R13 --</span>
+0091     <span class="keyword">end</span>
+0092 <span class="keyword">end</span>
+0093 
+0094 <span class="comment">%%%%%%%%%% CLUSTERING</span>
+0095 normsq = sum(waves.^2, 2);
+0096 assigns = ones(M, opts.reps);
+0097 mse = Inf * ones(1, opts.reps);
+0098 clear fast_kmeans;
+0099 
+0100 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0101 <span class="comment">% IMPORTANT NOTE: For BLAS efficiency reasons,  %</span>
+0102 <span class="comment">%   the waveforms &amp; centroids matrices are      %</span>
+0103 <span class="comment">%   transposed from their ordinary orientation  %</span>
+0104 <span class="comment">%   in the following section of code.           %</span>
+0105 <span class="comment">%   E.g., waveforms is (D samples x N waveforms)%</span>
+0106 waves = waves';                                 <span class="comment">%</span>
+0107 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0108 <span class="keyword">for</span> rep = 1:opts.reps                                 <span class="comment">% TOTAL # REPETITIONS</span>
+0109     
+0110     centroid = mean(waves, 2);  <span class="comment">% always start here</span>
+0111     itercounter = zeros(1,opts.divisions);
+0112     <span class="keyword">for</span> iter = 1:opts.divisions                       <span class="comment">% # K-MEANS SPLITS</span>
+0113         itercounter(iter) = 0;
+0114         oldassigns = zeros(M, 1);  oldmse = Inf;
+0115         assign_converge = 0;       mse_converge = 0;
+0116         
+0117         <span class="keyword">if</span> (iter == opts.divisions)
+0118             progress = opts.progress;  reassign_criterion = opts.reassign_converge; 
+0119         <span class="keyword">else</span>
+0120             progress = 0;              reassign_criterion = opts.reassign_rough;
+0121         <span class="keyword">end</span>
+0122 
+0123         <span class="keyword">if</span> ((iter==opts.divisions) &amp;&amp; opts.splitmore)  <span class="comment">% do some extra splitting on clusters that look too big</span>
+0124             toobig = find(clustersizes &gt; 2*target_clustersize);
+0125             splitbig = centroid(:,toobig) + randn(length(toobig),size(centroid,1))';
+0126             centroid = [centroid splitbig];
+0127         <span class="keyword">end</span>
+0128 
+0129         centroid = [centroid centroid] + jitter * randn(2*size(centroid, 2),size(centroid,1))'; <span class="comment">% split &amp; jitter</span>
+0130         clustersizes = ones(1,size(centroid,2));  <span class="comment">% temporary placeholder to indicate no empty clusters at first</span>
+0131         
+0132         <span class="keyword">if</span> (opts.progress)
+0133             progressBar(0, 1, sprintf(<span class="string">'Calculating %d means.'</span>, size(centroid,2))); <span class="comment">% crude ...</span>
+0134         <span class="keyword">end</span>
+0135 
+0136         <span class="keyword">while</span> (~(assign_converge || mse_converge))     <span class="comment">% convergence?</span>
+0137             <span class="comment">%%%%% Clean out empty clusters</span>
+0138             centroid(:,(clustersizes == 0)) = [];
+0139                         
+0140             <span class="comment">%%%%% EM STEP</span>
+0141             [assignlist, bestdists, clustersizes, centroid] = <span class="keyword">...</span>
+0142                         fast_kmeans_step(waves, centroid, normsq, opts.memorylimit);
+0143                         
+0144             <span class="comment">%%%%% Compute convergence info</span>
+0145             mse(rep) = mean(bestdists);
+0146             mse_converge = ((1 - (mse(rep)/oldmse)) &lt;= opts.mse_converge);   <span class="comment">% fractional change</span>
+0147             oldmse = mse(rep);
+0148             
+0149             changed_assigns = sum(assignlist ~= oldassigns);
+0150             assign_converge = (changed_assigns &lt;= reassign_criterion);   <span class="comment">% num waveforms reassigned</span>
+0151             <span class="keyword">if</span> (progress)
+0152                 progressBar(((M - changed_assigns)/M).^10, 5); <span class="comment">% rough ...</span>
+0153             <span class="keyword">end</span>
+0154             oldassigns = assignlist;
+0155             itercounter(iter) = itercounter(iter) + 1;
+0156         <span class="keyword">end</span>
+0157     <span class="keyword">end</span>
+0158     
+0159     <span class="comment">% Finally, reassign spikes in singleton clusters to next best ...</span>
+0160     junkclust = find((clustersizes &lt;= 1));   junkspikes = ismember(assignlist, junkclust);
+0161     centroid(:,junkclust) = Inf;  <span class="comment">% take these out of the running &amp; recompute distances</span>
+0162     <span class="keyword">if</span> (any(junkspikes))
+0163         dist_to_rest = pairdist(waves(:,junkspikes)', centroid', <span class="string">'nosqrt'</span>);
+0164         [bestdists(junkspikes), assignlist(junkspikes)] = min(dist_to_rest, [], 2);
+0165     <span class="keyword">end</span>
+0166     mse(rep) = mean(bestdists);
+0167     
+0168     assigns(:,rep) = assignlist;
+0169 <span class="keyword">end</span>
+0170 
+0171 spikes.overcluster.iteration_count = itercounter;
+0172 spikes.overcluster.randn_state = randnstate;
+0173 spikes.overcluster.rand_state = randstate;
+0174 
+0175 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0176 <span class="comment">% Waves &amp; centroids now return to their usual   %</span>
+0177 <span class="comment">% orientation.  E.g., waveforms is again        %</span>
+0178 <span class="comment">%    N waveforms x D samples                    %</span>
+0179 waves = waves';                                 <span class="comment">%</span>
+0180 centroid = centroid';                           <span class="comment">%</span>
+0181 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0182 
+0183 
+0184 <span class="comment">% Finish up by selecting the lowest mse over repetitions.</span>
+0185 [bestmse, choice] = min(mse);
+0186 spikes.overcluster.assigns = sortAssignments(assigns(:,choice));
+0187 spikes.overcluster.mse = bestmse;
+0188 spikes.overcluster.sqerr = bestdists;
+0189 
+0190 <span class="comment">% We also save the winning cluster centers as a convenience</span>
+0191 numclusts = max(spikes.overcluster.assigns);
+0192 spikes.overcluster.centroids = zeros(numclusts, N);
+0193 <span class="keyword">for</span> clust = 1:numclusts
+0194     members = find(spikes.overcluster.assigns == clust);
+0195     spikes.overcluster.centroids(clust,:) = mean(waves(members,:), 1);
+0196 <span class="keyword">end</span>
+0197 
+0198 <span class="comment">% And W, B, T matrices -- easy since T &amp; B are fast to compute and T = W + B)</span>
+0199 spikes.overcluster.T = cov(waves);             <span class="comment">% normalize everything by M-1, not M</span>
+0200 spikes.overcluster.B = cov(spikes.overcluster.centroids(spikes.overcluster.assigns, :));
+0201 spikes.overcluster.W = spikes.overcluster.T - spikes.overcluster.B;
+0202 
+0203 <span class="comment">% Finally, assign colors to the spike clusters here for consistency ...</span>
+0204 cmap = jetm(numclusts);
+0205 spikes.overcluster.colors = cmap(randperm(numclusts),:);
+0206 
+0207 <span class="keyword">if</span> (opts.progress), progressBar(1.0, 1, <span class="string">''</span>); <span class="keyword">end</span>
+0208 spikes.tictoc.kmeans = etime(clock, starttime);</pre></div>
+<hr><address>Generated on Fri 15-Aug-2008 11:35:42 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

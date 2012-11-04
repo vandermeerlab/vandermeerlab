@@ -1,0 +1,13 @@
+/* Created by mdot for Matlab */
+digraph m2html {
+  CB_logmenu -> find_colorbar;
+  CB_movieplayer -> CB_movieplayer;
+  CB_subzoom -> find_uimenu;
+
+  CB_colorshift [URL="CB_colorshift.html"];
+  CB_logmenu [URL="CB_logmenu.html"];
+  CB_movieplayer [URL="CB_movieplayer.html"];
+  CB_subzoom [URL="CB_subzoom.html"];
+  find_colorbar [URL="find_colorbar.html"];
+  find_uimenu [URL="find_uimenu.html"];
+}

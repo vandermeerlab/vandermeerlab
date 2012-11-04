@@ -1,0 +1,8 @@
+/* Created by mdot for Matlab */
+digraph m2html {
+
+  aggtree [URL="aggtree.html"];
+  clusterXT [URL="clusterXT.html"];
+  correlations [URL="correlations.html"];
+  showclust [URL="showclust.html"];
+}

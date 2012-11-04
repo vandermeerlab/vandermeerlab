@@ -1,0 +1,88 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of callerfile</title>
+  <meta name="keywords" content="callerfile">
+  <meta name="description" content="CALLERFILE        Name of calling M-file.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="#">chronux_2_00</a> &gt; <a href="../../index.html">spikesort</a> &gt; <a href="../index.html">utility</a> &gt; <a href="index.html">matlabtools</a> &gt; callerfile.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for chronux_2_00\spikesort\utility\matlabtools&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>callerfile
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>CALLERFILE        Name of calling M-file.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function caller = callerfile(option) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">CALLERFILE        Name of calling M-file.
+   When called from within an M-file, CALLERFILE returns a string
+   containing the name of the preceding M-file on the call stack.  If the
+   M-file was invoked directly from the command line (or if CALLERFILE is 
+   itself invoked directly from the command line), CALLERFILE returns an
+   empty string.
+
+   P = CALLERFILE('fullpath') returns the full path and name of the
+   M-file preceding the M-file in which the call occurs, without the
+   extension.
+
+   If CALLERFILE is called with any argument other than 'fullpath', it
+   behaves as if it were called with no argument.
+
+   See also DBSTACK, INPUTNAME, MFILENAME.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function caller = callerfile(option)</a>
+0002 <span class="comment">%CALLERFILE        Name of calling M-file.</span>
+0003 <span class="comment">%   When called from within an M-file, CALLERFILE returns a string</span>
+0004 <span class="comment">%   containing the name of the preceding M-file on the call stack.  If the</span>
+0005 <span class="comment">%   M-file was invoked directly from the command line (or if CALLERFILE is</span>
+0006 <span class="comment">%   itself invoked directly from the command line), CALLERFILE returns an</span>
+0007 <span class="comment">%   empty string.</span>
+0008 <span class="comment">%</span>
+0009 <span class="comment">%   P = CALLERFILE('fullpath') returns the full path and name of the</span>
+0010 <span class="comment">%   M-file preceding the M-file in which the call occurs, without the</span>
+0011 <span class="comment">%   extension.</span>
+0012 <span class="comment">%</span>
+0013 <span class="comment">%   If CALLERFILE is called with any argument other than 'fullpath', it</span>
+0014 <span class="comment">%   behaves as if it were called with no argument.</span>
+0015 <span class="comment">%</span>
+0016 <span class="comment">%   See also DBSTACK, INPUTNAME, MFILENAME.</span>
+0017 
+0018 stack = dbstack;     <span class="comment">% get the call stack</span>
+0019 
+0020 <span class="keyword">if</span> (length(stack) &gt; 2)   <span class="comment">% if it goes beyond the requesting m-file</span>
+0021     [p,caller] = fileparts(stack(3).name);
+0022     <span class="keyword">if</span> ((nargin &gt; 0) &amp;&amp; (strcmp(option, <span class="string">'fullpath'</span>)))
+0023         caller = [p caller];
+0024     <span class="keyword">end</span>
+0025 <span class="keyword">else</span>
+0026     caller = <span class="string">''</span>;    
+0027 <span class="keyword">end</span>
+0028</pre></div>
+<hr><address>Generated on Fri 15-Aug-2008 11:35:42 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of histxt</title>
+  <meta name="keywords" content="histxt">
+  <meta name="description" content="HISTXT            Column-by-column Histograms.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="#">chronux_2_00</a> &gt; <a href="../../index.html">spikesort</a> &gt; <a href="../index.html">utility</a> &gt; <a href="index.html">datatools</a> &gt; histxt.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for chronux_2_00\spikesort\utility\datatools&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>histxt
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>HISTXT            Column-by-column Histograms.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function [counts,t_inds,x_inds] = histxt(x, varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">HISTXT            Column-by-column Histograms.
+   COUNTS = HISTXT(X,D), where X is an M x T matrix returns a D x T
+   matrix COUNTS in which each column contains the histogrammed (with D
+   bins) values from the corresponding column in X.  If D is not
+   specified (or is the empty matrix), it defaults to 100.
+
+   [COUNTS,T_INDS,X_INDS] = HISTXT(X,D) returns the column indices and
+   bin centers so that the density can be visualized with
+   IMAGESC(T_INDS,X_INDS,COUNTS).
+
+   [...] = HISTXT(...,'log') uses the log of the counts (0's yield -Inf).
+
+   HISTXT(...) without output arguments produces an image of the counts.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="rescale.html" class="code" title="function [values, oldmin, oldmax] = rescale(values, newmin, newmax)">rescale</a>	RESCALE           Rescales a data set.</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [counts,t_inds,x_inds] = histxt(x, varargin)</a>
+0002 <span class="comment">%HISTXT            Column-by-column Histograms.</span>
+0003 <span class="comment">%   COUNTS = HISTXT(X,D), where X is an M x T matrix returns a D x T</span>
+0004 <span class="comment">%   matrix COUNTS in which each column contains the histogrammed (with D</span>
+0005 <span class="comment">%   bins) values from the corresponding column in X.  If D is not</span>
+0006 <span class="comment">%   specified (or is the empty matrix), it defaults to 100.</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">%   [COUNTS,T_INDS,X_INDS] = HISTXT(X,D) returns the column indices and</span>
+0009 <span class="comment">%   bin centers so that the density can be visualized with</span>
+0010 <span class="comment">%   IMAGESC(T_INDS,X_INDS,COUNTS).</span>
+0011 <span class="comment">%</span>
+0012 <span class="comment">%   [...] = HISTXT(...,'log') uses the log of the counts (0's yield -Inf).</span>
+0013 <span class="comment">%</span>
+0014 <span class="comment">%   HISTXT(...) without output arguments produces an image of the counts.</span>
+0015 
+0016 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%% Parse Inputs %%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0017 D = 100;  logflag = 0;                        <span class="comment">% defaults</span>
+0018 
+0019 [M,T] = size(x);
+0020 <span class="keyword">if</span> (~isnumeric(x) || ndims(x)~=2 || any(isinf(x(:))))
+0021     error(<span class="string">'First input argument must be a 2-D numeric matrix with no +/- Inf elements.'</span>);
+0022 <span class="keyword">end</span>
+0023 mask = isnan(x);   nanflag = any(mask(:));
+0024 <span class="keyword">if</span> (nanflag),  warning(<span class="string">'Utils:Ignore_NaN'</span>, <span class="string">'NaN elements will be ignored.'</span>);  <span class="keyword">end</span>
+0025 
+0026 <span class="keyword">if</span> (length(varargin) &gt; 0)
+0027     tail = varargin{end};
+0028     <span class="keyword">if</span> (ischar(tail) &amp;&amp; strcmpi(tail,<span class="string">'log'</span>))  <span class="comment">% If the last arg was 'log' ...</span>
+0029         varargin = varargin(1:(end-1));       <span class="comment">% ... chomp it and set a flag.</span>
+0030         logflag = 1;
+0031     <span class="keyword">end</span>
+0032     <span class="keyword">if</span> (length(varargin) &gt; 0)
+0033         tail = varargin{end};
+0034         <span class="keyword">if</span> (isnumeric(tail) &amp;&amp; length(tail)==1)   <span class="comment">% If next to last arg was a scalar, ...</span>
+0035             varargin = varargin(1:end-1);         <span class="comment">% ... chomp it and set the bin count.</span>
+0036             D = tail;
+0037         <span class="keyword">end</span>
+0038     <span class="keyword">end</span>
+0039     <span class="keyword">if</span> (length(varargin) &gt; 0),  error(<span class="string">'Unknown syntax.'</span>);  <span class="keyword">end</span>;
+0040 <span class="keyword">end</span>
+0041 
+0042 
+0043 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%% Rescale Data %%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0044 <span class="comment">% Scale the data</span>
+0045 [x,oldmin,oldmax] = <a href="rescale.html" class="code" title="function [values, oldmin, oldmax] = rescale(values, newmin, newmax)">rescale</a>(x,1,D);  x = round(x);
+0046 
+0047 <span class="comment">% Make bin centers/column indices</span>
+0048 x_inds = linspace(oldmin,oldmax,D);
+0049 t_inds = 1:T;
+0050 
+0051 <span class="comment">% Mask NaNs</span>
+0052 <span class="keyword">if</span> (nanflag),  D = D+1;  x(mask) = D;  <span class="keyword">end</span>
+0053 
+0054 
+0055 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Histogram %%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0056 counts = CORE_histxt(x,D);
+0057 
+0058 
+0059 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Clean Up %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0060 <span class="keyword">if</span> (nanflag), counts(<span class="keyword">end</span>,:) = [];  D = D-1;  <span class="keyword">end</span>;
+0061 <span class="keyword">if</span> (logflag), o=warning(<span class="string">'MATLAB:log:logOfZero'</span>, <span class="string">'off'</span>);  counts=log(counts);  warning(o);  <span class="keyword">end</span>;
+0062     
+0063 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Graphics %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0064 <span class="keyword">if</span> (nargout == 0)
+0065      imagesc(t_inds, x_inds, counts);   axis xy;
+0066      clear counts t_inds x_inds  <span class="comment">% clear these so nothing is dumped to output</span>
+0067 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Fri 15-Aug-2008 11:35:42 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

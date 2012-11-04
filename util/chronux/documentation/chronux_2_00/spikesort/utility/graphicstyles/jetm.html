@@ -1,0 +1,142 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of jetm</title>
+  <meta name="keywords" content="jetm">
+  <meta name="description" content="JETM              Muted jet colormap.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="#">chronux_2_00</a> &gt; <a href="../../index.html">spikesort</a> &gt; <a href="../index.html">utility</a> &gt; <a href="index.html">graphicstyles</a> &gt; jetm.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for chronux_2_00\spikesort\utility\graphicstyles&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>jetm
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>JETM              Muted jet colormap.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function map = jetm(m) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">JETM              Muted jet colormap.
+   JETM(M), a variant of JET(M), returns an M-by-3 matrix containing a
+   muted version of the JET colormap.  
+   JETM, by itself, is the same length as the current colormap.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function map = jetm(m)</a>
+0002 <span class="comment">%JETM              Muted jet colormap.</span>
+0003 <span class="comment">%   JETM(M), a variant of JET(M), returns an M-by-3 matrix containing a</span>
+0004 <span class="comment">%   muted version of the JET colormap.</span>
+0005 <span class="comment">%   JETM, by itself, is the same length as the current colormap.</span>
+0006 
+0007 <span class="keyword">if</span> (nargin &lt; 1), m = size(colormap,1);  <span class="keyword">end</span>;
+0008 
+0009 <span class="comment">% This colormap was constructed manually by altering the JET colormap,</span>
+0010 <span class="comment">%  which is visually a little too bright and suffers from light blue and</span>
+0011 <span class="comment">%  yellow bands.  To obtain a muted version,</span>
+0012 <span class="comment">%    (1) map a jet colormap to HSV color space</span>
+0013 <span class="comment">%    (2) linearly rescale the saturation values from the</span>
+0014 <span class="comment">%               range [0.5 1.0] =&gt; [0.25 0.65] (softens the colors)</span>
+0015 <span class="comment">%    (3) linearly rescale the color value numbers from the</span>
+0016 <span class="comment">%               range [0.5 1.0] =&gt; [0.8 1.0]  (keeps the colors bright)</span>
+0017 <span class="comment">%    (4) use the colormapeditor to better space out the light blue/yellow</span>
+0018 <span class="comment">%               color points</span>
+0019 <span class="comment">%    (6) remap from HSV to RGB color space</span>
+0020 <span class="comment">%    (5) symmetrize the map by enforcing the red/blue values to be</span>
+0021 <span class="comment">%               inverted copies of one another and the green values</span>
+0022 <span class="comment">%               to be symmetric (evens out the manual colormapeditor results)</span>
+0023 <span class="comment">% The result (sampled at 64 color points) is:</span>
+0024 
+0025 map = <span class="keyword">...</span>
+0026 [<span class="keyword">...</span>
+0027 0.2800 0.2811 0.8062; <span class="keyword">...</span>
+0028 0.2912 0.2952 0.8547; <span class="keyword">...</span>
+0029 0.3024 0.3092 0.9031; <span class="keyword">...</span>
+0030 0.3136 0.3233 0.9516; <span class="keyword">...</span>
+0031 0.3248 0.3374 1.0000; <span class="keyword">...</span>
+0032 0.3360 0.3688 0.9946; <span class="keyword">...</span>
+0033 0.3472 0.4002 0.9893; <span class="keyword">...</span>
+0034 0.3508 0.4493 0.9839; <span class="keyword">...</span>
+0035 0.3519 0.5042 0.9785; <span class="keyword">...</span>
+0036 0.3530 0.5591 0.9731; <span class="keyword">...</span>
+0037 0.3541 0.6140 0.9678; <span class="keyword">...</span>
+0038 0.3552 0.6690 0.9624; <span class="keyword">...</span>
+0039 0.3563 0.7239 0.9570; <span class="keyword">...</span>
+0040 0.3519 0.7713 0.9516; <span class="keyword">...</span>
+0041 0.3419 0.7960 0.9494; <span class="keyword">...</span>
+0042 0.3320 0.8207 0.9472; <span class="keyword">...</span>
+0043 0.3220 0.8454 0.9450; <span class="keyword">...</span>
+0044 0.3121 0.8700 0.9428; <span class="keyword">...</span>
+0045 0.3021 0.8947 0.9406; <span class="keyword">...</span>
+0046 0.2922 0.9194 0.9384; <span class="keyword">...</span>
+0047 0.2837 0.9365 0.9290; <span class="keyword">...</span>
+0048 0.2797 0.9419 0.9126; <span class="keyword">...</span>
+0049 0.2757 0.9472 0.8962; <span class="keyword">...</span>
+0050 0.2717 0.9526 0.8797; <span class="keyword">...</span>
+0051 0.2677 0.9578 0.8589; <span class="keyword">...</span>
+0052 0.3005 0.9566 0.8251; <span class="keyword">...</span>
+0053 0.3456 0.9533 0.7912; <span class="keyword">...</span>
+0054 0.3907 0.9501 0.7574; <span class="keyword">...</span>
+0055 0.4358 0.9468 0.7235; <span class="keyword">...</span>
+0056 0.4809 0.9435 0.6896; <span class="keyword">...</span>
+0057 0.5260 0.9402 0.6558; <span class="keyword">...</span>
+0058 0.5627 0.9394 0.6219; <span class="keyword">...</span>
+0059 0.5965 0.9394 0.5880; <span class="keyword">...</span>
+0060 0.6304 0.9394 0.5542; <span class="keyword">...</span>
+0061 0.6642 0.9411 0.5147; <span class="keyword">...</span>
+0062 0.6981 0.9443 0.4696; <span class="keyword">...</span>
+0063 0.7320 0.9476 0.4245; <span class="keyword">...</span>
+0064 0.7658 0.9509 0.3794; <span class="keyword">...</span>
+0065 0.7997 0.9542 0.3343; <span class="keyword">...</span>
+0066 0.8336 0.9574 0.2892; <span class="keyword">...</span>
+0067 0.8674 0.9566 0.2687; <span class="keyword">...</span>
+0068 0.8838 0.9512 0.2727; <span class="keyword">...</span>
+0069 0.9003 0.9459 0.2767; <span class="keyword">...</span>
+0070 0.9167 0.9406 0.2807; <span class="keyword">...</span>
+0071 0.9331 0.9352 0.2847; <span class="keyword">...</span>
+0072 0.9389 0.9133 0.2947; <span class="keyword">...</span>
+0073 0.9411 0.8886 0.3046; <span class="keyword">...</span>
+0074 0.9433 0.8639 0.3146; <span class="keyword">...</span>
+0075 0.9456 0.8392 0.3245; <span class="keyword">...</span>
+0076 0.9478 0.8145 0.3345; <span class="keyword">...</span>
+0077 0.9500 0.7898 0.3444; <span class="keyword">...</span>
+0078 0.9530 0.7613 0.3544; <span class="keyword">...</span>
+0079 0.9584 0.7101 0.3560; <span class="keyword">...</span>
+0080 0.9637 0.6552 0.3549; <span class="keyword">...</span>
+0081 0.9691 0.6003 0.3538; <span class="keyword">...</span>
+0082 0.9745 0.5454 0.3527; <span class="keyword">...</span>
+0083 0.9798 0.4905 0.3516; <span class="keyword">...</span>
+0084 0.9852 0.4356 0.3505; <span class="keyword">...</span>
+0085 0.9906 0.3924 0.3444; <span class="keyword">...</span>
+0086 0.9960 0.3610 0.3332; <span class="keyword">...</span>
+0087 0.9879 0.3339 0.3220; <span class="keyword">...</span>
+0088 0.9395 0.3198 0.3108; <span class="keyword">...</span>
+0089 0.8910 0.3057 0.2996; <span class="keyword">...</span>
+0090 0.8426 0.2917 0.2884; <span class="keyword">...</span>
+0091 ];
+0092 
+0093 map = interp1(linspace(0,1,size(map,1)), map, linspace(0,1,m), <span class="string">'linear'</span>);</pre></div>
+<hr><address>Generated on Fri 15-Aug-2008 11:35:42 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

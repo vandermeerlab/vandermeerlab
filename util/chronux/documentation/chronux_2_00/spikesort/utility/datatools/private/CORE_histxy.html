@@ -1,0 +1,83 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of CORE_histxy</title>
+  <meta name="keywords" content="CORE_histxy">
+  <meta name="description" content="CORE_HISTXY       Core computational routine for HISTXY.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../../index.html">Home</a> &gt;  <a href="#">chronux_2_00</a> &gt; <a href="../../../index.html">spikesort</a> &gt; <a href="../../index.html">utility</a> &gt; <a href="../index.html">datatools</a> &gt; <a href="index.html">private</a> &gt; CORE_histxy.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../../index.html"><img alt="<" border="0" src="../../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for chronux_2_00\spikesort\utility\datatools\private&nbsp;<img alt=">" border="0" src="../../../../../right.png"></a></td></tr></table>-->
+
+<h1>CORE_histxy
+&nbsp;&nbsp;<img src="../../../../../c.png" alt="Windows" border="0" title="Windows"></h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>CORE_HISTXY       Core computational routine for HISTXY.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>function Z = CORE_histxy(c,r,cmax,rmax) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">CORE_HISTXY       Core computational routine for HISTXY.
+   Z = CORE_HISTXY(C,R,CMAX,RMAX) returns an RMAX x CMAX matrix Z such
+   that Z(i,j) = #[R(a)=i,C(b)=j].
+
+   CONDITIONS
+   ----------
+   R and C must be column vectors of the same length.
+   R and C must only contain integer values between 1 and RMAX or CMAX
+       respectively.
+   R and C must be of type DOUBLE.
+   RMAX and CMAX must be integer-valued and of type DOUBLE.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function Z = CORE_histxy(c,r,cmax,rmax)</a>
+0002 <span class="comment">%CORE_HISTXY       Core computational routine for HISTXY.</span>
+0003 <span class="comment">%   Z = CORE_HISTXY(C,R,CMAX,RMAX) returns an RMAX x CMAX matrix Z such</span>
+0004 <span class="comment">%   that Z(i,j) = #[R(a)=i,C(b)=j].</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">%   CONDITIONS</span>
+0007 <span class="comment">%   ----------</span>
+0008 <span class="comment">%   R and C must be column vectors of the same length.</span>
+0009 <span class="comment">%   R and C must only contain integer values between 1 and RMAX or CMAX</span>
+0010 <span class="comment">%       respectively.</span>
+0011 <span class="comment">%   R and C must be of type DOUBLE.</span>
+0012 <span class="comment">%   RMAX and CMAX must be integer-valued and of type DOUBLE.</span>
+0013 
+0014 Z = full(sparse(r,c,1,rmax,cmax));
+0015 
+0016 
+0017 <span class="keyword">return</span>;
+0018 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0019 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TEST CODE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0020 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0021 <span class="comment">% rows = ceil(256*rand(1e6,1));  cols = ceil(128*rand(1e6,1));</span>
+0022 <span class="comment">% tic; counts = CORE_histxy(cols,rows,128,256);  t(1) = toc;</span>
+0023 <span class="comment">% tic; counts2 = full(sparse(rows,cols,1,256,128));  t(2) = toc;</span>
+0024 <span class="comment">% printf('\nCORE_histxy took %5.3f sec and equivalent native code took %5.3f sec.', t(1), t(2));</span>
+0025 <span class="comment">% if (~isequal(counts,counts2))</span>
+0026 <span class="comment">%     printf('The two calls did not produce the same results.');</span>
+0027 <span class="comment">% end</span></pre></div>
+<hr><address>Generated on Fri 15-Aug-2008 11:35:42 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

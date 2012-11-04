@@ -1,0 +1,176 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of linelabel</title>
+  <meta name="keywords" content="linelabel">
+  <meta name="description" content="LINELABEL         Labels plotted lines.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="#">chronux_2_00</a> &gt; <a href="../../index.html">spikesort</a> &gt; <a href="../index.html">utility</a> &gt; <a href="index.html">uitools</a> &gt; linelabel.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for chronux_2_00\spikesort\utility\uitools&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>linelabel
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>LINELABEL         Labels plotted lines.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function linelabel(vectors) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">LINELABEL         Labels plotted lines.
+   LINELABEL(LIBRARY), allows the user to select points and labels each
+   with the row number of its closest (Euclidean) match among the rows of
+   the matrix LIBRARY.  When the mouse is clicked in the axis, the
+   nearest point is selected and labeled.  The function stops when either
+   the escape or the enter key is pressed.  For this usage, LIBRARY must
+   by an (P x N) matrix, where P is the number of line objects in the
+   current plot and N is the number of points per line.
+
+   LINELABEL(QUERIES), where QUERIES is (M x N) for M less than the
+   number of lines P in the current plot, skips the interactive step.  It
+   instead searches through the lines on the current plot and, for each
+   row of QUERIES, finds the closest (i.e., Euclidean) match.  This match
+   is then labeled on the plot with the index of the corresponding row
+   from QUERIES.
+
+   LINELABEL('reset') deletes all text objects from the current axes and
+   sets the 'LineWidth' of all lines to 1.  USE WITH CARE, since these
+   effects are not restricted to those changes made by LINELABEL.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function color = getcolor(datacolors, index)</a></li></ul>
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function linelabel(vectors)</a>
+0002 <span class="comment">%LINELABEL         Labels plotted lines.</span>
+0003 <span class="comment">%   LINELABEL(LIBRARY), allows the user to select points and labels each</span>
+0004 <span class="comment">%   with the row number of its closest (Euclidean) match among the rows of</span>
+0005 <span class="comment">%   the matrix LIBRARY.  When the mouse is clicked in the axis, the</span>
+0006 <span class="comment">%   nearest point is selected and labeled.  The function stops when either</span>
+0007 <span class="comment">%   the escape or the enter key is pressed.  For this usage, LIBRARY must</span>
+0008 <span class="comment">%   by an (P x N) matrix, where P is the number of line objects in the</span>
+0009 <span class="comment">%   current plot and N is the number of points per line.</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">%   LINELABEL(QUERIES), where QUERIES is (M x N) for M less than the</span>
+0012 <span class="comment">%   number of lines P in the current plot, skips the interactive step.  It</span>
+0013 <span class="comment">%   instead searches through the lines on the current plot and, for each</span>
+0014 <span class="comment">%   row of QUERIES, finds the closest (i.e., Euclidean) match.  This match</span>
+0015 <span class="comment">%   is then labeled on the plot with the index of the corresponding row</span>
+0016 <span class="comment">%   from QUERIES.</span>
+0017 <span class="comment">%</span>
+0018 <span class="comment">%   LINELABEL('reset') deletes all text objects from the current axes and</span>
+0019 <span class="comment">%   sets the 'LineWidth' of all lines to 1.  USE WITH CARE, since these</span>
+0020 <span class="comment">%   effects are not restricted to those changes made by LINELABEL.</span>
+0021 
+0022 <span class="comment">%%%%%%%%%% SPECIAL CASE</span>
+0023 <span class="keyword">if</span>(ischar(vectors) &amp;&amp; strcmp(vectors, <span class="string">'reset'</span>))
+0024     delete(findobj(gca, <span class="string">'Type'</span>, <span class="string">'Text'</span>));
+0025     set(findobj(gca, <span class="string">'Type'</span>, <span class="string">'Line'</span>), <span class="string">'LineWidth'</span>, 1);
+0026     <span class="keyword">return</span>;
+0027 <span class="keyword">end</span>
+0028 
+0029 <span class="comment">%%%%%%%%%% ARGUMENT CHECKING</span>
+0030 lines = findobj(gca, <span class="string">'Type'</span>, <span class="string">'Line'</span>); 
+0031 <span class="keyword">if</span> (isempty(lines)),  error(<span class="string">'The plot does not contain any line objects.'</span>);  <span class="keyword">end</span>
+0032 
+0033 ydatalines = get(lines, <span class="string">'YData'</span>);
+0034 xdatalines = get(lines, <span class="string">'XData'</span>);
+0035 datacolors = get(lines, <span class="string">'Color'</span>);
+0036 
+0037 L = unique(cellfun(<span class="string">'length'</span>, ydatalines));   <span class="comment">% set of lengths of line objects</span>
+0038 <span class="keyword">if</span> (length(L) &gt; 1)  <span class="comment">% all lines not same length?</span>
+0039     error(<span class="string">'LINELABEL requires all line objects in the current plot to have the same length.'</span>);
+0040 <span class="keyword">end</span>
+0041 P = size(ydatalines, 1);   [M,N] = size(vectors);
+0042 xdatalines = cat(1, xdatalines{:});
+0043 ydatalines = cat(1, ydatalines{:});
+0044 datacolors = cat(1, datacolors{:});
+0045 
+0046 <span class="keyword">if</span> (N ~= L)
+0047     error(<span class="string">'The input matrix must have the same number of columns as the lines in the current plot.'</span>);
+0048 <span class="keyword">elseif</span> (M &gt; P)
+0049     error(<span class="string">'The input matrix can not have more rows than the number of lines in the current plot.'</span>);
+0050 <span class="keyword">else</span>
+0051     X = unique(xdatalines, <span class="string">'rows'</span>);
+0052     <span class="keyword">if</span> (size(X, 1) &gt; 1)
+0053         error(<span class="string">'LINELABEL requires all line objects in the current plot to share the same XData'</span>);
+0054     <span class="keyword">end</span>
+0055 <span class="keyword">end</span>
+0056 <span class="keyword">if</span> ((xdatalines(1) ~= 1) || (~all(all(diff(xdatalines, 1, 2) == 1))))
+0057     warning([<span class="string">'This function is currently designed to work with XData that '</span> <span class="keyword">...</span><span class="comment"> </span>
+0058             <span class="string">'starts at 1 and is evenly spaced.  Behavior with current plot may be unexpected.'</span>]);
+0059 <span class="keyword">end</span>
+0060 
+0061 
+0062 xlim = get(gca, <span class="string">'XLim'</span>);  ylim = get(gca, <span class="string">'YLim'</span>);
+0063 <span class="keyword">if</span> (M == P)  <span class="comment">%%%%%%%%%% INTERACTIVE CASE: label requested points with index of matches from 'vectors'</span>
+0064     <span class="keyword">while</span> (true)
+0065         [x,y,key] = ginput(1);
+0066         <span class="keyword">if</span> (isempty(x) || isequal(key, 27)),  <span class="keyword">break</span>;   <span class="keyword">end</span>
+0067         nearestX = round(x);
+0068         [howgood, index] = min(abs(ydatalines(:, nearestX) - y));
+0069         <span class="keyword">if</span> ((abs(((nearestX - x)./(xlim(2)-xlim(1)))) &gt; 0.005) || <span class="keyword">...</span><span class="comment">  % too far from a valid x index</span>
+0070             (abs(((  howgood   )./(ylim(2)-ylim(1)))) &gt; 0.005))        <span class="comment">% or too far from a valid y index</span>
+0071             <span class="keyword">continue</span>;
+0072         <span class="keyword">end</span>
+0073         [dist,ind] = min(pairdist(vectors, ydatalines(index,:),<span class="string">'nosqrt'</span>), [], 1);
+0074         label = num2str(ind);
+0075         text(x, y, label, <span class="string">'FontWeight'</span>, <span class="string">'bold'</span>, <span class="string">'FontSize'</span>, 14, <span class="string">'Color'</span>, <a href="#_sub1" class="code" title="subfunction color = getcolor(datacolors, index)">getcolor</a>(datacolors, index));
+0076     <span class="keyword">end</span>
+0077 <span class="keyword">else</span>         <span class="comment">%%%%%%%%%% NONINTERACTIVE CASE: label closest matches to each row of 'vectors' with its index</span>
+0078     <span class="keyword">if</span> (M &gt; 100)
+0079         areyousure = input([<span class="string">'Warning.  You are trying to label &gt; 100 lines.\n'</span> <span class="keyword">...</span>
+0080                             <span class="string">'Enter y to continue or any other key to quit: '</span>], <span class="string">'s'</span>);
+0081         <span class="keyword">if</span> (lower(areyousure(1)) ~= y)
+0082             <span class="keyword">return</span>;
+0083         <span class="keyword">end</span>
+0084     <span class="keyword">end</span>
+0085     <span class="keyword">for</span> test = 1:M
+0086         match = sum((ydatalines - repmat(vectors(test,:), [size(ydatalines,1), 1])).^2, 2);
+0087         [mn,index] = min(match);
+0088         
+0089         <span class="comment">% Find the column that has the largest distance to the closest line (this'll</span>
+0090         <span class="comment">% help if the line is an outlier for at least one coordinate).</span>
+0091         ydatacopy = ydatalines;
+0092         ydatacopy(index,:) = Inf;        <span class="comment">% don't consider self distance</span>
+0093         dist_to_lines = abs(ydatacopy - repmat(ydatalines(index,:),[P,1]));
+0094         [junk,select] = max(min(dist_to_lines, [], 1), [], 2);    <span class="comment">% largest dist to closest line</span>
+0095         text(X(select)*1.01, ydatalines(index,select)*0.99, num2str(test), <span class="keyword">...</span><span class="comment">  % this needs to be visible</span>
+0096                <span class="string">'FontWeight'</span>, <span class="string">'bold'</span>, <span class="string">'FontSize'</span>, 20, <span class="string">'Color'</span>, <a href="#_sub1" class="code" title="subfunction color = getcolor(datacolors, index)">getcolor</a>(datacolors, index), <span class="keyword">...</span>
+0097                <span class="string">'VerticalAlignment'</span>, <span class="string">'baseline'</span>, <span class="string">'HorizontalAlignment'</span>, <span class="string">'right'</span>);
+0098         set(lines(index), <span class="string">'LineWidth'</span>, 3);
+0099         uistack(lines(index), <span class="string">'top'</span>);
+0100     <span class="keyword">end</span>
+0101 <span class="keyword">end</span>
+0102 
+0103 
+0104 <span class="comment">% Choose a color for the text label</span>
+0105 <a name="_sub1" href="#_subfunctions" class="code">function color = getcolor(datacolors, index)</a>
+0106 <span class="keyword">if</span> (size(unique(datacolors, <span class="string">'rows'</span>), 1) &gt; 1) <span class="comment">% if the lines aren't all the same color,</span>
+0107     color = brighten(datacolors(index,:), 0.5);
+0108 <span class="keyword">else</span>
+0109     color = [1 1 1] - get(gca, <span class="string">'Color'</span>);
+0110 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Fri 15-Aug-2008 11:35:42 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

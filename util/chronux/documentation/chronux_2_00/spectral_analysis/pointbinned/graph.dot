@@ -1,0 +1,35 @@
+/* Created by mdot for Matlab */
+digraph m2html {
+  CrossSpecMatpb -> mtfftpb;
+  coherencypb -> mtfftpb;
+  coherencysegpb -> coherencypb;
+  coherencysegpb -> createdatamatpb;
+  cohgrampb -> coherencypb;
+  cohmatrixpb -> mtfftpb;
+  mtdspecgrampb -> mtdspectrumpb;
+  mtdspectrumpb -> mtfftpb;
+  mtspecgrampb -> mtspectrumpb;
+  mtspecgramtrigpb -> createdatamatpb;
+  mtspecgramtrigpb -> mtspecgrampb;
+  mtspectrumpb -> mtfftpb;
+  mtspectrumsegpb -> createdatamatpb;
+  mtspectrumsegpb -> mtfftpb;
+  mtspectrumtrigpb -> createdatamatpb;
+  mtspectrumtrigpb -> mtspectrumpb;
+
+  CrossSpecMatpb [URL="CrossSpecMatpb.html"];
+  coherencypb [URL="coherencypb.html"];
+  coherencysegpb [URL="coherencysegpb.html"];
+  cohgrampb [URL="cohgrampb.html"];
+  cohmatrixpb [URL="cohmatrixpb.html"];
+  createdatamatpb [URL="createdatamatpb.html"];
+  extractdatapb [URL="extractdatapb.html"];
+  mtdspecgrampb [URL="mtdspecgrampb.html"];
+  mtdspectrumpb [URL="mtdspectrumpb.html"];
+  mtfftpb [URL="mtfftpb.html"];
+  mtspecgrampb [URL="mtspecgrampb.html"];
+  mtspecgramtrigpb [URL="mtspecgramtrigpb.html"];
+  mtspectrumpb [URL="mtspectrumpb.html"];
+  mtspectrumsegpb [URL="mtspectrumsegpb.html"];
+  mtspectrumtrigpb [URL="mtspectrumtrigpb.html"];
+}

@@ -1,0 +1,84 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of minmax</title>
+  <meta name="keywords" content="minmax">
+  <meta name="description" content="MINMAX            Simultaneous overall smallest and largest components.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="#">chronux_2_00</a> &gt; <a href="../../index.html">spikesort</a> &gt; <a href="../index.html">utility</a> &gt; <a href="index.html">datatools</a> &gt; minmax.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for chronux_2_00\spikesort\utility\datatools&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>minmax
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>MINMAX            Simultaneous overall smallest and largest components.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function [extrema,inds] = minmax(X) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">MINMAX            Simultaneous overall smallest and largest components.
+   Y = MINMAX(X) returns the minimum and maximum values, of the array X
+   such that Y(1) = MIN(X) and Y(2) = MAX(X).  For N-D arrays X,
+   MINMAX(X) is equivalent to MINMAX(X(:)).
+
+   [Y,I] = MINMAX(X) also returns the linear indices of the extrema such
+   that, Y(1) == X(I(1)) and Y(2) == X(I(2)).  When X has more than one
+   extremal element, the index of the first is returned.
+
+   X must be a real, double array.  +/- Inf values behave as greater/less
+   than all other finite values, respectively.  NaN's are ignored. 
+ 
+   The algorithm is significantly faster than sequentially calling
+   Matlab's min/max.  However, an already sorted input and/or a large
+   proportion of NaN values can decrease this advantage.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="rescale.html" class="code" title="function [values, oldmin, oldmax] = rescale(values, newmin, newmax)">rescale</a>	RESCALE           Rescales a data set.</li></ul>
+<!-- crossreference -->
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [extrema,inds] = minmax(X)</a>
+0002 <span class="comment">%MINMAX            Simultaneous overall smallest and largest components.</span>
+0003 <span class="comment">%   Y = MINMAX(X) returns the minimum and maximum values, of the array X</span>
+0004 <span class="comment">%   such that Y(1) = MIN(X) and Y(2) = MAX(X).  For N-D arrays X,</span>
+0005 <span class="comment">%   MINMAX(X) is equivalent to MINMAX(X(:)).</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">%   [Y,I] = MINMAX(X) also returns the linear indices of the extrema such</span>
+0008 <span class="comment">%   that, Y(1) == X(I(1)) and Y(2) == X(I(2)).  When X has more than one</span>
+0009 <span class="comment">%   extremal element, the index of the first is returned.</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">%   X must be a real, double array.  +/- Inf values behave as greater/less</span>
+0012 <span class="comment">%   than all other finite values, respectively.  NaN's are ignored.</span>
+0013 <span class="comment">%</span>
+0014 <span class="comment">%   The algorithm is significantly faster than sequentially calling</span>
+0015 <span class="comment">%   Matlab's min/max.  However, an already sorted input and/or a large</span>
+0016 <span class="comment">%   proportion of NaN values can decrease this advantage.</span>
+0017 
+0018 <span class="comment">%%%%% Argument checking.</span>
+0019 <span class="keyword">if</span> (~strcmp(class(X), <span class="string">'double'</span>) || ~isreal(X)), 
+0020     error(<span class="string">'X must be a real, double array.'</span>);  
+0021 <span class="keyword">end</span>;
+0022 
+0023 [extrema(1),extrema(2),inds(1),inds(2)] = CORE_minmax(X(:));
+0024</pre></div>
+<hr><address>Generated on Fri 15-Aug-2008 11:35:42 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

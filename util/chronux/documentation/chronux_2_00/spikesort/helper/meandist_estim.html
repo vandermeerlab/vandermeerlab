@@ -1,0 +1,93 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of meandist_estim</title>
+  <meta name="keywords" content="meandist_estim">
+  <meta name="description" content="MEANDIST_ESTIM  Estimate the average distance between vectors.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="#">chronux_2_00</a> &gt; <a href="../index.html">spikesort</a> &gt; <a href="index.html">helper</a> &gt; meandist_estim.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for chronux_2_00\spikesort\helper&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>meandist_estim
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>MEANDIST_ESTIM  Estimate the average distance between vectors.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function meandist = meandist_estim(data, use_data) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> MEANDIST_ESTIM  Estimate the average distance between vectors.
+    MEANDIST = MEANDIST_ESTIM(DATA) takes an (M x N) matrix DATA and returns
+    an estimate of the average Euclidean distance between the row vectors
+    of DATA.  The estimate is made by averaging the pairwise distances for
+    500 randomly selected rows.
+ 
+    MEANDIST = MEANDIST_ESTIM(DATA, USE_DATA), when USE_DATA is a scalar, uses
+    min(M, USE_DATA) rows for the estimate.  If USE_DATA is a vector, it is
+    taken as a set of indices into the rows of DATA and the distance estimate
+    is made with the specified rows.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function meandist = meandist_estim(data, use_data)</a>
+0002 
+0003 <span class="comment">% MEANDIST_ESTIM  Estimate the average distance between vectors.</span>
+0004 <span class="comment">%    MEANDIST = MEANDIST_ESTIM(DATA) takes an (M x N) matrix DATA and returns</span>
+0005 <span class="comment">%    an estimate of the average Euclidean distance between the row vectors</span>
+0006 <span class="comment">%    of DATA.  The estimate is made by averaging the pairwise distances for</span>
+0007 <span class="comment">%    500 randomly selected rows.</span>
+0008 <span class="comment">%</span>
+0009 <span class="comment">%    MEANDIST = MEANDIST_ESTIM(DATA, USE_DATA), when USE_DATA is a scalar, uses</span>
+0010 <span class="comment">%    min(M, USE_DATA) rows for the estimate.  If USE_DATA is a vector, it is</span>
+0011 <span class="comment">%    taken as a set of indices into the rows of DATA and the distance estimate</span>
+0012 <span class="comment">%    is made with the specified rows.</span>
+0013 
+0014 <span class="comment">%%%%%%%%%% CONSTANTS</span>
+0015 default_numrows = 800;
+0016 M = size(data, 1);
+0017 
+0018 <span class="comment">%%%%%%%%%% DEFAULTS &amp; ARGUMENT CHECKING</span>
+0019 <span class="keyword">if</span> ((nargin == 2) &amp;&amp; (numel(use_data) &gt; 1))
+0020     <span class="keyword">try</span>
+0021         data(use_data,:);    <span class="comment">% lazy way of checking the indices</span>
+0022     <span class="keyword">catch</span>
+0023         error(<span class="string">'The USE_DATA vector contains invalid indices.'</span>);
+0024     <span class="keyword">end</span>
+0025 <span class="keyword">else</span>
+0026     <span class="keyword">if</span> (nargin == 1)
+0027         use_data = min(M, default_numrows);
+0028     <span class="keyword">elseif</span> (use_data &gt; M)
+0029         error(<span class="string">'USE_DATA can not contain a scalar higher than the number of rows in DATA.'</span>);
+0030     <span class="keyword">end</span>
+0031     inds = randperm(M);   <span class="comment">% randomly shuffle row indices ...</span>
+0032     use_data = inds(1:use_data);      <span class="comment">% ... and take the number of indices we're going to use</span>
+0033 <span class="keyword">end</span>
+0034 
+0035 <span class="comment">%%%%%%%%%% MEAN DISTANCE ESTIMATION</span>
+0036 dists = pairdist(data(use_data,:));
+0037 meandist = mean(dists(triu(logical(dists ~= 0))));
+0038</pre></div>
+<hr><address>Generated on Fri 15-Aug-2008 11:35:42 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

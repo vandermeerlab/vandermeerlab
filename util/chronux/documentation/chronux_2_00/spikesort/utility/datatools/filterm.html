@@ -1,0 +1,192 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of filterm</title>
+  <meta name="keywords" content="filterm">
+  <meta name="description" content="FILTERM           One-dimensional digital filter (memory efficient).">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="#">chronux_2_00</a> &gt; <a href="../../index.html">spikesort</a> &gt; <a href="../index.html">utility</a> &gt; <a href="index.html">datatools</a> &gt; filterm.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for chronux_2_00\spikesort\utility\datatools&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>filterm
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>FILTERM           One-dimensional digital filter (memory efficient).</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function [Y, carry] = filterm(B, A, X, carry) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">FILTERM           One-dimensional digital filter (memory efficient).
+   Y = FILTERM(B,A,X) filters the data in vector X with the filter
+   described by vectors A and B to create the filtered data Y.  The
+   filter is a &quot;Direct Form II Transposed&quot; implementation of the standard
+   difference equation: 
+
+   a(1)*y(n) = b(1)*x(n) + b(2)*x(n-1) + ... + b(nb+1)*x(n-nb)
+                           - a(2)*y(n-1) - ... - a(na+1)*y(n-na)
+  
+   If a(1) is not equal to 1, FILTER normalizes the filter
+   coefficients by a(1).  
+
+   If X is a matrix, FILTERM operates along the columns.  X is not
+   allowed to be of dimension greater than 2.
+
+   [Y,Zf] = FILTERM(B,A,X,Zi) gives access to initial and final
+   conditions, Zi and Zf, of the delays.  Zi is a vector of length Q if
+   X is a vector or of length Q x N if X is an M x N matrix, where
+   Q = MAX(LENGTH(A),LENGTH(B))-1.  The returned Zf is always of type
+   double, although Zi can be of any numeric data type.
+
+   FILTERM is similar to Matlab's built-in FILTER except that it operates
+   on non-double data, avoiding the memory penalty of converting an
+   entire data array to double precision.  (The only difference in
+   calling the two functions is that FILTERM will not operate on arrays
+   of dimension greater than 2).
+
+   If X is of type DOUBLE, INT8, INT16 or INT32, Y will be of the same
+   type, with values clipped to the range of the original data type.  If
+   X is of an unsigned integer type (UINT8, UINT16, UINT32), Y will be of
+   the corresponding signed type.  For example, if X is of type UINT8, Y
+   will be of type INT8 and values larger than [-128,127] will be
+   clipped.  If the data X uses the full range of an unsigned data type,
+   it should be first converted to a data type with larger dynamic range.
+
+   Note that if A = 1, it is more efficient to use FILTERZM.
+
+   See also FILTER, <a href="filterzm.html" class="code" title="function Y = filterzm(B, X)">FILTERZM</a>.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [Y, carry] = filterm(B, A, X, carry)</a>
+0002 <span class="comment">%FILTERM           One-dimensional digital filter (memory efficient).</span>
+0003 <span class="comment">%   Y = FILTERM(B,A,X) filters the data in vector X with the filter</span>
+0004 <span class="comment">%   described by vectors A and B to create the filtered data Y.  The</span>
+0005 <span class="comment">%   filter is a &quot;Direct Form II Transposed&quot; implementation of the standard</span>
+0006 <span class="comment">%   difference equation:</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">%   a(1)*y(n) = b(1)*x(n) + b(2)*x(n-1) + ... + b(nb+1)*x(n-nb)</span>
+0009 <span class="comment">%                           - a(2)*y(n-1) - ... - a(na+1)*y(n-na)</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">%   If a(1) is not equal to 1, FILTER normalizes the filter</span>
+0012 <span class="comment">%   coefficients by a(1).</span>
+0013 <span class="comment">%</span>
+0014 <span class="comment">%   If X is a matrix, FILTERM operates along the columns.  X is not</span>
+0015 <span class="comment">%   allowed to be of dimension greater than 2.</span>
+0016 <span class="comment">%</span>
+0017 <span class="comment">%   [Y,Zf] = FILTERM(B,A,X,Zi) gives access to initial and final</span>
+0018 <span class="comment">%   conditions, Zi and Zf, of the delays.  Zi is a vector of length Q if</span>
+0019 <span class="comment">%   X is a vector or of length Q x N if X is an M x N matrix, where</span>
+0020 <span class="comment">%   Q = MAX(LENGTH(A),LENGTH(B))-1.  The returned Zf is always of type</span>
+0021 <span class="comment">%   double, although Zi can be of any numeric data type.</span>
+0022 <span class="comment">%</span>
+0023 <span class="comment">%   FILTERM is similar to Matlab's built-in FILTER except that it operates</span>
+0024 <span class="comment">%   on non-double data, avoiding the memory penalty of converting an</span>
+0025 <span class="comment">%   entire data array to double precision.  (The only difference in</span>
+0026 <span class="comment">%   calling the two functions is that FILTERM will not operate on arrays</span>
+0027 <span class="comment">%   of dimension greater than 2).</span>
+0028 <span class="comment">%</span>
+0029 <span class="comment">%   If X is of type DOUBLE, INT8, INT16 or INT32, Y will be of the same</span>
+0030 <span class="comment">%   type, with values clipped to the range of the original data type.  If</span>
+0031 <span class="comment">%   X is of an unsigned integer type (UINT8, UINT16, UINT32), Y will be of</span>
+0032 <span class="comment">%   the corresponding signed type.  For example, if X is of type UINT8, Y</span>
+0033 <span class="comment">%   will be of type INT8 and values larger than [-128,127] will be</span>
+0034 <span class="comment">%   clipped.  If the data X uses the full range of an unsigned data type,</span>
+0035 <span class="comment">%   it should be first converted to a data type with larger dynamic range.</span>
+0036 <span class="comment">%</span>
+0037 <span class="comment">%   Note that if A = 1, it is more efficient to use FILTERZM.</span>
+0038 <span class="comment">%</span>
+0039 <span class="comment">%   See also FILTER, FILTERZM.</span>
+0040 
+0041 <span class="comment">% Based on from TMW's FILTER.</span>
+0042 <span class="comment">%  The following commented code tests FILTERM against FILTER:</span>
+0043 <span class="comment">%   (also, monitor memory usage to see memory advantage)</span>
+0044 <span class="comment">% X = int8(randn(2^22,2)*32);   [B,A] = butter(6,0.1);</span>
+0045 <span class="comment">% disp('Running FILTER ...');   drawnow;  tic;</span>
+0046 <span class="comment">% Y  = int8(filter(B, A, double(X)));  t(1) = toc;</span>
+0047 <span class="comment">% disp('Running FILTERM ...');  drawnow;  tic;</span>
+0048 <span class="comment">% YM = filterm(B, A, X);               t(2) = toc;</span>
+0049 <span class="comment">% check = ceil(rand(1e6,1)*length(X));</span>
+0050 <span class="comment">% mse = sqrt(sum(double(Y(check))-double(YM(check)).^2));</span>
+0051 <span class="comment">% printf('FILTER: %4.3f sec   FILTERM: %4.3f sec     (APPROX) MSE: %5.3f', t(1), t(2), mse);</span>
+0052 
+0053 
+0054 <span class="comment">% # elements to process at once: for some reason ~2^11-2^13 seems to work</span>
+0055 <span class="comment">% best (probably cpu cache, although the range is similar on computers</span>
+0056 <span class="comment">% with different cache sizes ...) &amp; exact powers of 2 sometimes cause</span>
+0057 <span class="comment">% hiccups ... so heuristically, 2000 seems reasonable</span>
+0058 chunksize = 2000; 
+0059 
+0060 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%% Check Inputs %%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0061 <span class="comment">% filter coefficients check</span>
+0062 <span class="keyword">if</span> (A(1) ~= 1),  A = A ./ A(1);  <span class="keyword">end</span>;   <span class="comment">% normalize b/c FILTER does</span>
+0063 
+0064 <span class="comment">% input data check</span>
+0065 <span class="keyword">if</span> (ndims(X) &gt; 2), error(<span class="string">'FILTERM is undefined for arrays of dimension greater than 2.'</span>);  <span class="keyword">end</span>;
+0066 <span class="keyword">if</span> (isvectord(X) == 2), T = 1;  X = X';  <span class="keyword">else</span>  T = 0;  <span class="keyword">end</span>;  <span class="comment">% col vect for now</span>
+0067 [M,N] = size(X);
+0068 
+0069 <span class="comment">% initial conditions check</span>
+0070 Q = max(length(A), length(B)) - 1;
+0071 <span class="keyword">if</span> (nargin &gt; 3)
+0072     <span class="keyword">if</span> (isvectord(carry)), carry = carry(:);  <span class="keyword">end</span>;  <span class="comment">% force column vector</span>
+0073     [Qc,Nc] = size(carry);
+0074     <span class="keyword">if</span> (Q~=Qc || N~=Nc)
+0075         error(<span class="string">'Initial conditions array is not of the correct size.'</span>);
+0076     <span class="keyword">end</span>
+0077     carry = double(carry);
+0078 <span class="keyword">else</span>  carry = zeros(Q,N);
+0079 <span class="keyword">end</span>
+0080 
+0081 <span class="comment">% data type check</span>
+0082 <span class="keyword">switch</span> (class(X)),
+0083     <span class="keyword">case</span> <span class="string">'double'</span>,              convert = @double;
+0084     <span class="keyword">case</span> {<span class="string">'uint8'</span>,<span class="string">'int8'</span>},    convert = @int8;
+0085     <span class="keyword">case</span> {<span class="string">'uint16'</span>,<span class="string">'int16'</span>},  convert = @int16;
+0086     <span class="keyword">case</span> {<span class="string">'uint32'</span>,<span class="string">'int32'</span>},  convert = @int32;
+0087     <span class="keyword">otherwise</span>, error(<span class="string">'X must be a numeric data type.'</span>);
+0088 <span class="keyword">end</span>
+0089 
+0090 
+0091 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%% Do the Filtering %%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0092 <span class="keyword">if</span> (isa(X, <span class="string">'double'</span>) || M &lt; chunksize),  <span class="comment">% no point chunking if double</span>
+0093     [Y,carry] = filter(B, A, double(X), carry);
+0094     Y = feval(convert, Y);
+0095 <span class="keyword">else</span>
+0096     <span class="comment">% Perform the filtering in chunks so that only a portion of the data</span>
+0097     <span class="comment">% needs to be expanded to double at any given time.</span>
+0098     Y = repmat(feval(convert,0), size(X));
+0099     <span class="keyword">for</span> start = 1:chunksize:M
+0100         finish = min(M, start+chunksize-1);
+0101         [chunk,carry] = filter(B,A,double(X(start:finish,:)),carry);
+0102         Y(start:finish,:) = feval(convert, chunk);
+0103     <span class="keyword">end</span>
+0104 <span class="keyword">end</span>
+0105 
+0106 
+0107 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%% Clean Up Outputs %%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0108 <span class="keyword">if</span> (T),  Y = Y';  <span class="keyword">end</span>;   <span class="comment">% if input was row vect, keep same orientation</span>
+0109 <span class="keyword">if</span> (nargout &lt; 2), clear carry; <span class="keyword">end</span>;</pre></div>
+<hr><address>Generated on Fri 15-Aug-2008 11:35:42 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

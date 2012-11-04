@@ -1,0 +1,269 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of CB_movieplayer</title>
+  <meta name="keywords" content="CB_movieplayer">
+  <meta name="description" content="CB_MOVIEPLAYER    Callback for UImyfunc.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../../index.html">Home</a> &gt;  <a href="#">chronux_2_00</a> &gt; <a href="../../../index.html">spikesort</a> &gt; <a href="../../index.html">utility</a> &gt; <a href="../index.html">uitools</a> &gt; <a href="index.html">private</a> &gt; CB_movieplayer.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../../index.html"><img alt="<" border="0" src="../../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for chronux_2_00\spikesort\utility\uitools\private&nbsp;<img alt=">" border="0" src="../../../../../right.png"></a></td></tr></table>-->
+
+<h1>CB_movieplayer
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>CB_MOVIEPLAYER    Callback for UImyfunc.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>function CB_movieplayer(handle, events) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">CB_MOVIEPLAYER    Callback for UImyfunc.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+<li><a href="CB_movieplayer.html" class="code" title="function CB_movieplayer(handle, events)">CB_movieplayer</a>	CB_MOVIEPLAYER    Callback for UImyfunc.</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+<li><a href="CB_movieplayer.html" class="code" title="function CB_movieplayer(handle, events)">CB_movieplayer</a>	CB_MOVIEPLAYER    Callback for UImyfunc.</li></ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function check = togglecheck(handle)</a></li><li><a href="#_sub2" class="code">function updateframe(info, framenum)</a></li><li><a href="#_sub3" class="code">function info = redraw_timeseries(info)</a></li></ul>
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function CB_movieplayer(handle, events)</a>
+0002 <span class="comment">%CB_MOVIEPLAYER    Callback for UImyfunc.</span>
+0003 
+0004 <span class="keyword">persistent</span> running direction renderer;
+0005 <span class="keyword">if</span> (isempty(running)), running = 0;  <span class="keyword">end</span>;
+0006 <span class="keyword">if</span> (isempty(direction)), direction = 1;  <span class="keyword">end</span>;
+0007 
+0008 info  = guidata(handle);  <span class="comment">% get data &amp; associated info</span>
+0009 
+0010 <span class="comment">% Constants</span>
+0011 fpsupdate = 8;
+0012 
+0013 <span class="keyword">switch</span>(handle),
+0014     <span class="keyword">case</span> {info.menu.intp, info.menu.rndr}       <span class="comment">% TOGGLE COLOR INTERPOLATION</span>
+0015         <span class="comment">% OpenGL is sometimes faster, depending on hardware.</span>
+0016         <span class="comment">% However, OpenGL interpolates in RGB rather than through the colormap.</span>
+0017         <a href="#_sub1" class="code" title="subfunction check = togglecheck(handle)">togglecheck</a>(handle);
+0018         <span class="keyword">if</span> (onoff2bool(get(info.menu.intp,<span class="string">'Checked'</span>)) || info.hires),
+0019             shade = <span class="string">'interp'</span>;  xlim = [1,info.N];   ylim = [1,info.M];   <span class="comment">% don't need pad</span>
+0020         <span class="keyword">else</span>
+0021             shade = <span class="string">'flat'</span>;    xlim = [1,info.N+1]; ylim = [1,info.M+1]; <span class="comment">% need pad'd row/col</span>
+0022         <span class="keyword">end</span>
+0023         <span class="keyword">if</span> (onoff2bool(get(info.menu.rndr, <span class="string">'Checked'</span>))),
+0024             renderer = <span class="string">'opengl'</span>;
+0025         <span class="keyword">else</span>
+0026             renderer = <span class="string">'zbuffer'</span>;
+0027         <span class="keyword">end</span>
+0028         shading(info.haxs, shade);   set(info.hfig, <span class="string">'Renderer'</span>, renderer);
+0029         set(info.haxs, <span class="string">'XLim'</span>, xlim, <span class="string">'YLim'</span>, ylim);    
+0030         
+0031     <span class="keyword">case</span> ({info.menu.play, info.menu.rply}),   <span class="comment">% FORWARD OR REVERSE PLAY</span>
+0032         check = <a href="#_sub1" class="code" title="subfunction check = togglecheck(handle)">togglecheck</a>(handle);
+0033         renderer = get(info.hfig, <span class="string">'Renderer'</span>);        
+0034         <span class="keyword">if</span> (check)  <span class="comment">% starting to play</span>
+0035             <span class="keyword">if</span> (handle == info.menu.play)  <span class="comment">% prevent switching directions while playing</span>
+0036                 direction =  1;  set(info.menu.rply, <span class="string">'Enable'</span>, <span class="string">'off'</span>);
+0037             <span class="keyword">else</span>
+0038                 direction = -1;  set(info.menu.play, <span class="string">'Enable'</span>, <span class="string">'off'</span>);
+0039             <span class="keyword">end</span>;
+0040             set(info.menu.parm, <span class="string">'Enable'</span>, <span class="string">'off'</span>);
+0041             running = 1;   <span class="comment">% anyone else can set this to 0 to interrupt play</span>
+0042             counter = 1;   fps = 0;   tic;   <span class="comment">% keep track of display frame rate</span>
+0043             next = info.frame;
+0044             <span class="keyword">while</span> (running)
+0045                 next = next + direction*(info.skip);   <span class="comment">% try to increment ...</span>
+0046                 <span class="keyword">if</span> (next&gt;info.P), direction = -1;  <span class="keyword">break</span>;  <span class="keyword">end</span>;
+0047                 <span class="keyword">if</span> (next &lt; 1),    direction =  1;  <span class="keyword">break</span>; <span class="keyword">end</span>;
+0048                 <a href="#_sub2" class="code" title="subfunction updateframe(info, framenum)">updateframe</a>(info, next);   info.frame = next;
+0049                 set(info.hfig, <span class="string">'Name'</span>, sprintf(<span class="string">'%s  FPS: % 5.3f'</span>, renderer, fps));
+0050                 drawnow;  pause(info.slow);
+0051 
+0052                 <span class="keyword">if</span> (counter == fpsupdate)   <span class="comment">% frame rate updates</span>
+0053                     counter = 1;   fps = fpsupdate/toc;  tic;
+0054                 <span class="keyword">else</span>  counter = counter + 1;
+0055                 <span class="keyword">end</span>
+0056             <span class="keyword">end</span>
+0057             running = 0;
+0058             set([info.menu.play, info.menu.rply, info.menu.parm], <span class="string">'Enable'</span>, <span class="string">'on'</span>, <span class="string">'Checked'</span>, <span class="string">'off'</span>);
+0059             set(info.hfig, <span class="string">'Name'</span>, <span class="string">'UImovieplayer'</span>);
+0060             guidata(info.hfig, info);
+0061         <span class="keyword">else</span>
+0062             running = 0;   <span class="comment">% signal an interruption</span>
+0063         <span class="keyword">end</span>
+0064         
+0065     <span class="keyword">case</span> info.menu.parm,     <span class="comment">% TIMING PARAMETERS</span>
+0066         params = {<span class="string">'SKIP: frames advanced per step'</span>, <span class="keyword">...</span>
+0067                   <span class="string">'SLOW: pause interval during playback (msec)'</span>, <span class="keyword">...</span>
+0068                   <span class="string">'Fs:   temporal sampling rate (Hz)'</span>};
+0069         defaults = {sprintf(<span class="string">'%d'</span>, info.skip), sprintf(<span class="string">'%5.3f'</span>, info.slow), sprintf(<span class="string">'%8.6f'</span>, info.Fs)};
+0070         values = inputdlg(params, <span class="string">''</span>, 1, defaults);
+0071         <span class="keyword">if</span> (~isempty(values))   <span class="comment">% validate parameters</span>
+0072             skip = str2num(values{1});  skip = round(skip);
+0073             <span class="keyword">if</span> (~isempty(skip) &amp;&amp; skip &gt; 0 &amp;&amp; skip &lt; info.P), info.skip = skip;  <span class="keyword">end</span>;
+0074             slow = str2num(values{2});
+0075             <span class="keyword">if</span> (~isempty(slow) &amp;&amp; slow &gt; 0), info.slow = slow;  <span class="keyword">end</span>;
+0076             Fs   = str2num(values{3});
+0077             <span class="keyword">if</span> (~isempty(Fs) &amp;&amp; Fs &gt; 0), info.T = (1:info.P)/Fs;  info.Fs = Fs;  <span class="keyword">end</span>;
+0078         <span class="keyword">end</span>
+0079         <a href="#_sub2" class="code" title="subfunction updateframe(info, framenum)">updateframe</a>(info, info.frame);
+0080         info = <a href="#_sub3" class="code" title="subfunction info = redraw_timeseries(info)">redraw_timeseries</a>(info);
+0081         guidata(info.hfig, info);
+0082         
+0083     <span class="keyword">case</span> info.hfig,          <span class="comment">% KEY PRESS HANDLER</span>
+0084         key = get(info.hfig, <span class="string">'CurrentChar'</span>);
+0085         <span class="keyword">if</span> (key == <span class="string">' '</span>)   <span class="comment">% pause always works</span>
+0086             <span class="keyword">if</span> (running),  running = 0;
+0087             <span class="keyword">else</span> 
+0088                 <span class="keyword">if</span> (direction == 1),  <a href="CB_movieplayer.html" class="code" title="function CB_movieplayer(handle, events)">CB_movieplayer</a>(info.menu.play);
+0089                 <span class="keyword">else</span>                  <a href="CB_movieplayer.html" class="code" title="function CB_movieplayer(handle, events)">CB_movieplayer</a>(info.menu.rply);
+0090                 <span class="keyword">end</span>
+0091             <span class="keyword">end</span>
+0092         <span class="keyword">end</span>
+0093         <span class="keyword">if</span> (~running)     <span class="comment">% but other keypresses are ignored if movie is playing</span>
+0094             next = info.frame;
+0095             <span class="keyword">switch</span>(key)
+0096                 <span class="keyword">case</span> <span class="string">'&lt;'</span>,  next = 1;
+0097                 <span class="keyword">case</span> <span class="string">','</span>,  next = next - info.skip;
+0098                 <span class="keyword">case</span> <span class="string">'?'</span>,  <span class="comment">% next = next;</span>
+0099                 <span class="keyword">case</span> <span class="string">'.'</span>,  next = next + info.skip;
+0100                 <span class="keyword">case</span> <span class="string">'&gt;'</span>,  next = info.P;
+0101                 <span class="keyword">otherwise</span>, <span class="keyword">return</span>;
+0102             <span class="keyword">end</span>
+0103             <span class="keyword">if</span> (next &gt; 0 &amp;&amp; next &lt;= info.P)
+0104                 <a href="#_sub2" class="code" title="subfunction updateframe(info, framenum)">updateframe</a>(info, next);   info.frame = next;
+0105             <span class="keyword">end</span>
+0106             guidata(info.hfig, info);
+0107         <span class="keyword">end</span>
+0108         
+0109     <span class="keyword">case</span> info.hdat,         <span class="comment">% TIME SERIES HANDLER</span>
+0110         <span class="comment">% clicking in the image draws a time series for corresponding</span>
+0111         <span class="comment">% pixel in the lower time-series axes</span>
+0112         <span class="keyword">if</span> (~running &amp;&amp; strcmp(get(info.hfig, <span class="string">'SelectionType'</span>), <span class="string">'normal'</span>))
+0113              click = floor(get(info.haxs, <span class="string">'CurrentPoint'</span>));  click = click(1,1:2)';
+0114             <span class="keyword">if</span> (click(1)&gt;=1 &amp;&amp; click(1)&lt;=info.N &amp;&amp; click(2)&gt;=1 &amp;&amp; click(2)&lt;=info.M)
+0115                 info.tslist = unique([click info.tslist]', <span class="string">'rows'</span>)';
+0116                 info = <a href="#_sub3" class="code" title="subfunction info = redraw_timeseries(info)">redraw_timeseries</a>(info);
+0117                 guidata(info.hfig, info);
+0118             <span class="keyword">end</span>
+0119         <span class="keyword">end</span>
+0120         
+0121     <span class="keyword">case</span> info.hax2,         <span class="comment">% TIME SERIES AXES</span>
+0122         <span class="keyword">if</span> (~running)
+0123             <span class="keyword">switch</span>(get(info.hfig, <span class="string">'SelectionType'</span>)),
+0124                 <span class="keyword">case</span> <span class="string">'open'</span>,  <span class="comment">% dbl-click clears the axes</span>
+0125                     cla;   legend off;
+0126                     <span class="keyword">if</span> (ishandle(info.hdtx)),  delete(info.hdtx);  <span class="keyword">end</span>;
+0127                     info.tslist = [];   info.hcsr = [];   info.hdtx = [];
+0128                     guidata(info.hfig, info);
+0129                 <span class="keyword">otherwise</span>,
+0130             <span class="keyword">end</span>
+0131         <span class="keyword">end</span>
+0132     
+0133     <span class="keyword">case</span> {info.menu.dxdt, info.menu.legd}    <span class="comment">% TIME SERIES AXES -- special functions</span>
+0134         <span class="keyword">if</span> (~running)
+0135             check = <a href="#_sub1" class="code" title="subfunction check = togglecheck(handle)">togglecheck</a>(handle);
+0136             info = <a href="#_sub3" class="code" title="subfunction info = redraw_timeseries(info)">redraw_timeseries</a>(info);
+0137             guidata(info.hfig, info);
+0138         <span class="keyword">end</span>
+0139         
+0140     <span class="keyword">case</span> info.hcsr,
+0141         <span class="keyword">if</span> (~running &amp;&amp; strcmp(get(info.hfig,<span class="string">'SelectionType'</span>),<span class="string">'normal'</span>))
+0142             wide = get(info.hax2, <span class="string">'Position'</span>);  wide = wide(3);                
+0143             xlim = get(info.hax2, <span class="string">'XLim'</span>);
+0144             dataperpixel = (xlim(2)-xlim(1)) ./ wide;  <span class="comment">% cursor motion scale</span>
+0145             
+0146             time = get(handle, <span class="string">'XData'</span>);    time = time(1);  <span class="comment">% starting pt</span>
+0147             
+0148             info.buttondown = 1;   guidata(handle, info);
+0149             pntA = get(info.hfig, <span class="string">'CurrentPoint'</span>);
+0150             <span class="keyword">while</span> (info.buttondown)
+0151                 running = 1;  <span class="comment">% make sure that we're not interrupted</span>
+0152                 pntB = get(info.hfig, <span class="string">'CurrentPoint'</span>);
+0153                 newtime = time + (pntB(1)-pntA(1))*dataperpixel;  
+0154                 newtime = max(min(newtime, xlim(2)), xlim(1));  <span class="comment">% clip to axes</span>
+0155                 newframe = round(newtime*info.Fs);
+0156                 newframe = max(min(newframe,info.P),1);
+0157 
+0158                 set(info.hcsr, <span class="string">'XData'</span>,  [newtime newtime]);
+0159                 <a href="#_sub2" class="code" title="subfunction updateframe(info, framenum)">updateframe</a>(info, newframe);     drawnow;
+0160                 info = guidata(handle);
+0161             <span class="keyword">end</span>
+0162             running = 0;  info.frame = newframe;
+0163             guidata(handle, info);
+0164         <span class="keyword">end</span>
+0165         
+0166     <span class="keyword">otherwise</span>,
+0167         error(<span class="string">'Error in UImovieplayer callback: unknown function.'</span>);
+0168 <span class="keyword">end</span>
+0169 
+0170 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0171 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%% HELPER Functions %%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0172 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0173 
+0174 <a name="_sub1" href="#_subfunctions" class="code">function check = togglecheck(handle)</a>
+0175 <span class="comment">% When HANDLE is a handle to a UI menu, its 'Checked' property</span>
+0176 <span class="comment">%  is toggled between 'off' and 'on', and a boolean value representing</span>
+0177 <span class="comment">%  the new state ('off'-&gt;0, 'on'-&gt;1) is returned.</span>
+0178 check = ~onoff2bool(get(handle,<span class="string">'Checked'</span>));
+0179 set(handle, <span class="string">'Checked'</span>, bool2onoff(check));
+0180 
+0181 <a name="_sub2" href="#_subfunctions" class="code">function updateframe(info, framenum)</a>
+0182 <span class="comment">% Updates data and title/time displays</span>
+0183 set(info.httl, <span class="string">'String'</span>, sprintf(<span class="string">'Time: % 8.3f'</span>, info.T(framenum)));
+0184 set(info.hdat, <span class="string">'CData'</span>,  [double(info.data(:,:,framenum)) info.COLpad; info.ROWpad]);
+0185 <span class="keyword">if</span> (~isempty(info.hcsr))
+0186     set(info.hcsr, <span class="string">'XData'</span>,  [info.T(framenum) info.T(framenum)]);
+0187 <span class="keyword">end</span>
+0188 
+0189 
+0190 <a name="_sub3" href="#_subfunctions" class="code">function info = redraw_timeseries(info)</a>
+0191 <span class="comment">% Redraw the time-series axes</span>
+0192 <span class="keyword">if</span> (~isempty(info.tslist))
+0193     N = size(info.tslist,2);
+0194     
+0195     axes(info.hax2);
+0196     subdata = [];  leg = {};
+0197     <span class="keyword">for</span> k = 1:N    <span class="comment">% extract pixel time series; do this fresh each time</span>
+0198         subdata = cat(2, subdata, squeeze(info.data(info.tslist(2,k), info.tslist(1,k), :)));
+0199         leg = cat(2, leg, {sprintf(<span class="string">'R:%d/C:%d'</span>,info.tslist(2,k),info.tslist(1,k))}); <span class="comment">% legend</span>
+0200     <span class="keyword">end</span>
+0201     
+0202     clim = info.CLIM;
+0203     <span class="keyword">if</span> (onoff2bool(get(info.menu.dxdt, <span class="string">'Checked'</span>))),
+0204         subdata = diff(double([subdata(1,:); subdata]), [], 1);
+0205         clim = minmax(subdata);
+0206     <span class="keyword">end</span>
+0207     axes(info.hax2);  plot(info.T, subdata);  set(info.hax2, <span class="string">'XLim'</span>, [info.T(1), info.T(end)]);
+0208     <span class="keyword">if</span> (onoff2bool(get(info.menu.legd, <span class="string">'Checked'</span>))), legend(leg);  <span class="keyword">end</span>;
+0209     
+0210     <span class="comment">% reset the button down callback &amp; draw reference line</span>
+0211     info.hcsr = line([0 0], clim, <span class="string">'LineWidth'</span>, 2, <span class="string">'Color'</span>, [0.6 0.6 0.6], <span class="string">'LineStyle'</span>, <span class="string">'--'</span>);
+0212     set([info.hcsr,info.hax2], <span class="string">'ButtonDownFcn'</span>, @<a href="CB_movieplayer.html" class="code" title="function CB_movieplayer(handle, events)">CB_movieplayer</a>);
+0213     
+0214     <span class="comment">% Draw markers on the data to show time series source points</span>
+0215     axes(info.haxs);  hold on;
+0216     <span class="keyword">if</span> (ishandle(info.hdtx)),  delete(info.hdtx);  <span class="keyword">end</span>;
+0217     pts = cat(1, mat2cell(info.tslist(1,:),1, ones(N,1)), <span class="keyword">...</span><span class="comment">  % dirty trick to plot pts in diff colors</span>
+0218                mat2cell(info.tslist(2,:),1,ones(N,1)), mat2cell(repmat(<span class="string">'x'</span>,1,N),1,ones(N,1)));
+0219     hold on;  info.hdtx = plot(pts{:});  hold off;
+0220     set(info.hax2, <span class="string">'YLim'</span>, clim);
+0221 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Fri 15-Aug-2008 11:35:42 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of CORE_histxt</title>
+  <meta name="keywords" content="CORE_histxt">
+  <meta name="description" content="CORE_HISTXT       Core computational routine for HISTXT.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../../index.html">Home</a> &gt;  <a href="#">chronux_2_00</a> &gt; <a href="../../../index.html">spikesort</a> &gt; <a href="../../index.html">utility</a> &gt; <a href="../index.html">datatools</a> &gt; <a href="index.html">private</a> &gt; CORE_histxt.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../../index.html"><img alt="<" border="0" src="../../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for chronux_2_00\spikesort\utility\datatools\private&nbsp;<img alt=">" border="0" src="../../../../../right.png"></a></td></tr></table>-->
+
+<h1>CORE_histxt
+&nbsp;&nbsp;<img src="../../../../../c.png" alt="Windows" border="0" title="Windows"></h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>CORE_HISTXT       Core computational routine for HISTXT.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="box"><strong>function C = CORE_histxt(X,d) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">CORE_HISTXT       Core computational routine for HISTXT. 
+   C = CORE_HISTXT(X,D), where X is an M x N matrix, returns a D x N
+   matrix C such that C(i,j) = #[X(:,j)=i].
+
+   CONDITIONS
+   ----------
+   X must only contain integer values between 1 and D.
+   X must be of type double.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function C = CORE_histxt(X,d)</a>
+0002 <span class="comment">%CORE_HISTXT       Core computational routine for HISTXT.</span>
+0003 <span class="comment">%   C = CORE_HISTXT(X,D), where X is an M x N matrix, returns a D x N</span>
+0004 <span class="comment">%   matrix C such that C(i,j) = #[X(:,j)=i].</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">%   CONDITIONS</span>
+0007 <span class="comment">%   ----------</span>
+0008 <span class="comment">%   X must only contain integer values between 1 and D.</span>
+0009 <span class="comment">%   X must be of type double.</span>
+0010 
+0011 C = hist(X,1:d);
+0012 
+0013 
+0014 <span class="keyword">return</span>;
+0015 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0016 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TEST CODE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0017 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0018 <span class="comment">% data = ceil(256*rand(1e5,10));</span>
+0019 <span class="comment">% tic; counts = CORE_histxt(data,256);  t(1) = toc;</span>
+0020 <span class="comment">% tic; counts2 = hist(data,1:256); t(2) = toc;</span>
+0021 <span class="comment">% printf('\nCORE_histxt took %5.3f sec and equivalent native code took %5.3f sec.', t(1), t(2));</span>
+0022 <span class="comment">% if (~isequal(counts,counts2))</span>
+0023 <span class="comment">%     printf('The two calls did not produce the same results.');</span>
+0024 <span class="comment">% end</span></pre></div>
+<hr><address>Generated on Fri 15-Aug-2008 11:35:42 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

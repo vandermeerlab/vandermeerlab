@@ -1,0 +1,107 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of UIsubzoom</title>
+  <meta name="keywords" content="UIsubzoom">
+  <meta name="description" content="UIsubzoom        Adds a context menu for zooming subplots to full figure.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="#">chronux_2_00</a> &gt; <a href="../../index.html">spikesort</a> &gt; <a href="../index.html">utility</a> &gt; <a href="index.html">uitools</a> &gt; UIsubzoom.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for chronux_2_00\spikesort\utility\uitools&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>UIsubzoom
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>UIsubzoom        Adds a context menu for zooming subplots to full figure.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function ax = UIsubzoom(ax) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">UIsubzoom        Adds a context menu for zooming subplots to full figure.
+   UIsubzoom creates a context menu for the current axes that allows the
+   user to move the current axes to a zoomed position filling (most of)
+   the parent figure.  Unchecking the zoom option restores axes to their
+   position before the most recent zoom.
+
+   If the targeted axes contain one or more image objects, the context 
+   menu is added to all image objects in addition to the axes.  If
+   UIsubzoom is called on axes that already have this context menu, it
+   will further link the context menu to any image objects that do not
+   already have it.
+
+   UIsubzoom(HANDLE) associates the menu with the axes specified by
+   HANDLE.
+
+   AXHANDLE = UIsubzoom(...) returns a handle to the parent axes
+   associated with the new context menu.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="UImovieplayer.html" class="code" title="function hfig = UImovieplayer(data, Fs, frame)">UImovieplayer</a>	UImovieplayer        Show a 3-D matrix as an XY-T movie.</li></ul>
+<!-- crossreference -->
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function ax = UIsubzoom(ax)</a>
+0002 <span class="comment">%UIsubzoom        Adds a context menu for zooming subplots to full figure.</span>
+0003 <span class="comment">%   UIsubzoom creates a context menu for the current axes that allows the</span>
+0004 <span class="comment">%   user to move the current axes to a zoomed position filling (most of)</span>
+0005 <span class="comment">%   the parent figure.  Unchecking the zoom option restores axes to their</span>
+0006 <span class="comment">%   position before the most recent zoom.</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">%   If the targeted axes contain one or more image objects, the context</span>
+0009 <span class="comment">%   menu is added to all image objects in addition to the axes.  If</span>
+0010 <span class="comment">%   UIsubzoom is called on axes that already have this context menu, it</span>
+0011 <span class="comment">%   will further link the context menu to any image objects that do not</span>
+0012 <span class="comment">%   already have it.</span>
+0013 <span class="comment">%</span>
+0014 <span class="comment">%   UIsubzoom(HANDLE) associates the menu with the axes specified by</span>
+0015 <span class="comment">%   HANDLE.</span>
+0016 <span class="comment">%</span>
+0017 <span class="comment">%   AXHANDLE = UIsubzoom(...) returns a handle to the parent axes</span>
+0018 <span class="comment">%   associated with the new context menu.</span>
+0019 
+0020 <span class="comment">%state = warning;  warning off;</span>
+0021 
+0022 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Setup %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0023 <span class="keyword">if</span> (nargin &lt; 1),  ax = gca;  <span class="keyword">end</span>;
+0024 <span class="keyword">if</span> (isempty(ax)), error(<span class="string">'No object currently selected.'</span>); <span class="keyword">end</span>;
+0025 <span class="keyword">switch</span> get(ax, <span class="string">'Type'</span>),   <span class="comment">% restrict to valid objects ...</span>
+0026     <span class="keyword">case</span> <span class="string">'axes'</span>,    <span class="comment">% do something here</span>
+0027     <span class="keyword">otherwise</span>,      error([<span class="string">'UIsubzoom not defined for objects of type '</span> get(h, <span class="string">'Type'</span>) <span class="string">'.'</span>]);
+0028 <span class="keyword">end</span>
+0029 
+0030 info.targetaxs = ax;
+0031 info.targetfig = get(ax, <span class="string">'Parent'</span>);
+0032 
+0033 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%% Create Context Menu %%%%%%%%%%%%%%%%%%%%%%%%</span>
+0034 imgkids = findobj(ax, <span class="string">'Type'</span>, <span class="string">'image'</span>);  <span class="comment">% remember image objs</span>
+0035 <span class="keyword">for</span> h = [imgkids(:)' ax];
+0036     menu = find_uimenu(h, <span class="string">'subzoom'</span>, <span class="string">'Expand axes'</span>, @CB_subzoom);
+0037     <span class="keyword">if</span> (isempty(get(menu, <span class="string">'UserData'</span>))),
+0038         set(menu, <span class="string">'UserData'</span>, info);
+0039     <span class="keyword">end</span>
+0040 <span class="keyword">end</span>
+0041 
+0042 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Cleanup %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0043 <span class="keyword">if</span> (nargout == 0), clear ax;  <span class="keyword">end</span>
+0044 
+0045 <span class="comment">%warning(state);</span></pre></div>
+<hr><address>Generated on Fri 15-Aug-2008 11:35:42 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

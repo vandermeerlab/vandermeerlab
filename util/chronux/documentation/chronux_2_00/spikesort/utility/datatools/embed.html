@@ -1,0 +1,80 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of embed</title>
+  <meta name="keywords" content="embed">
+  <meta name="description" content="EMBED             Time-series lag embedding.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="#">chronux_2_00</a> &gt; <a href="../../index.html">spikesort</a> &gt; <a href="../index.html">utility</a> &gt; <a href="index.html">datatools</a> &gt; embed.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for chronux_2_00\spikesort\utility\datatools&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>embed
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>EMBED             Time-series lag embedding.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function embedded = embed(timeseries, lag, D) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">EMBED             Time-series lag embedding.
+   EMBEDDED = EMBED(TIMESERIES, LAG_SAMPLES, DIMENSION) takes a scalar
+   (M x 1) time series and returns a vector time series of dimension
+   ((M - lag_samples*(dimension-1)) x dimension) time series by lag
+   embedding the time series.  E.g.,
+             embed([x(1); x(2); x(3); ... ; x(N)], 1, 3)
+   returns
+             [x(1), x(2), x(3); x(2), x(3), x(4); ... ; x(N-1), x(N)]
+
+   NOTE: A matrix input 'timeseries' is treated as 'timeseries(:)'</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function embedded = embed(timeseries, lag, D)</a>
+0002 <span class="comment">%EMBED             Time-series lag embedding.</span>
+0003 <span class="comment">%   EMBEDDED = EMBED(TIMESERIES, LAG_SAMPLES, DIMENSION) takes a scalar</span>
+0004 <span class="comment">%   (M x 1) time series and returns a vector time series of dimension</span>
+0005 <span class="comment">%   ((M - lag_samples*(dimension-1)) x dimension) time series by lag</span>
+0006 <span class="comment">%   embedding the time series.  E.g.,</span>
+0007 <span class="comment">%             embed([x(1); x(2); x(3); ... ; x(N)], 1, 3)</span>
+0008 <span class="comment">%   returns</span>
+0009 <span class="comment">%             [x(1), x(2), x(3); x(2), x(3), x(4); ... ; x(N-1), x(N)]</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">%   NOTE: A matrix input 'timeseries' is treated as 'timeseries(:)'</span>
+0012 
+0013 <span class="keyword">if</span> (nargin &lt; 3)
+0014     error(<span class="string">'Incorrect number of arguments.'</span>);
+0015 <span class="keyword">end</span>
+0016 
+0017 <span class="comment">% Column-ize the time series.</span>
+0018 timeseries = timeseries(:);
+0019 
+0020 M = length(timeseries);  <span class="comment">% length of input time series</span>
+0021 N = M - lag * (D-1);     <span class="comment">% length of output time series</span>
+0022 
+0023 <span class="comment">% Now do the embedding efficiently by indexing into the original timeseries</span>
+0024 embedded = timeseries(repmat((1:N)', 1, D) + repmat(lag * (0:(D-1)), N, 1));
+0025</pre></div>
+<hr><address>Generated on Fri 15-Aug-2008 11:35:42 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

@@ -1,0 +1,10 @@
+/* Created by mdot for Matlab */
+digraph m2html {
+
+  ddt [URL="ddt.html"];
+  plx_ad [URL="plx_ad.html"];
+  plx_event_ts [URL="plx_event_ts.html"];
+  plx_info [URL="plx_info.html"];
+  plx_ts [URL="plx_ts.html"];
+  plx_waves [URL="plx_waves.html"];
+}

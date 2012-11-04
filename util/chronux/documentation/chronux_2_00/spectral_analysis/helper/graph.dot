@@ -1,0 +1,16 @@
+/* Created by mdot for Matlab */
+digraph m2html {
+  cohmathelper -> coherr;
+  den_jack -> jackknife;
+
+  change_row_to_column [URL="change_row_to_column.html"];
+  check_consistency [URL="check_consistency.html"];
+  coherr [URL="coherr.html"];
+  cohmathelper [URL="cohmathelper.html"];
+  den_jack [URL="den_jack.html"];
+  dpsschk [URL="dpsschk.html"];
+  getfgrid [URL="getfgrid.html"];
+  getparams [URL="getparams.html"];
+  jackknife [URL="jackknife.html"];
+  specerr [URL="specerr.html"];
+}

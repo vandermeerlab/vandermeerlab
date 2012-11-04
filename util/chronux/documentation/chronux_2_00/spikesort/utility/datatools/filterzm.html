@@ -1,0 +1,145 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of filterzm</title>
+  <meta name="keywords" content="filterzm">
+  <meta name="description" content="FILTERZM          Zero-phase 1-D digital filter (memory efficient).">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="#">chronux_2_00</a> &gt; <a href="../../index.html">spikesort</a> &gt; <a href="../index.html">utility</a> &gt; <a href="index.html">datatools</a> &gt; filterzm.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for chronux_2_00\spikesort\utility\datatools&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>filterzm
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>FILTERZM          Zero-phase 1-D digital filter (memory efficient).</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function Y = filterzm(B, X) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">FILTERZM          Zero-phase 1-D digital filter (memory efficient).
+   Y = FILTERZ(B, X) filters the data in vector X with the FIR filter
+   given by the vector B to create the filtered data Y, shifting the
+   filter to give zero-phase delay.  The process is equivalent to
+   convolution with the time-reversed and shifted filter B:
+   For P = ceil((length(B)+1)/2),
+     y(n) = ... + x(n-1)*b(P+1) + x(n)*b(P) + x(n+1)*b(P-1) + ...
+
+   If X is a matrix, FILTERZM operates along the columns.  X is not
+   allowed to be of dimension greater than 2.
+
+   FILTERZM(B, X) is similar to FILTER2(B,X,'same'), except that FILTERZM
+   operates on non-double data, avoiding the memory penalty of converting
+   an entire data array to double precision.  It is analogous in this
+   respect to FILTERM and follows the same datatype conventions as that
+   function.  However, by restricting usage only to FIR filters, FILTERZM
+   provides zero-phase delay filtering and is faster than FILTERM(B,1,X).
+
+   See also <a href="filterm.html" class="code" title="function [Y, carry] = filterm(B, A, X, carry)">FILTERM</a>, FILTER2.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function Y = filterzm(B, X)</a>
+0002 <span class="comment">%FILTERZM          Zero-phase 1-D digital filter (memory efficient).</span>
+0003 <span class="comment">%   Y = FILTERZ(B, X) filters the data in vector X with the FIR filter</span>
+0004 <span class="comment">%   given by the vector B to create the filtered data Y, shifting the</span>
+0005 <span class="comment">%   filter to give zero-phase delay.  The process is equivalent to</span>
+0006 <span class="comment">%   convolution with the time-reversed and shifted filter B:</span>
+0007 <span class="comment">%   For P = ceil((length(B)+1)/2),</span>
+0008 <span class="comment">%     y(n) = ... + x(n-1)*b(P+1) + x(n)*b(P) + x(n+1)*b(P-1) + ...</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">%   If X is a matrix, FILTERZM operates along the columns.  X is not</span>
+0011 <span class="comment">%   allowed to be of dimension greater than 2.</span>
+0012 <span class="comment">%</span>
+0013 <span class="comment">%   FILTERZM(B, X) is similar to FILTER2(B,X,'same'), except that FILTERZM</span>
+0014 <span class="comment">%   operates on non-double data, avoiding the memory penalty of converting</span>
+0015 <span class="comment">%   an entire data array to double precision.  It is analogous in this</span>
+0016 <span class="comment">%   respect to FILTERM and follows the same datatype conventions as that</span>
+0017 <span class="comment">%   function.  However, by restricting usage only to FIR filters, FILTERZM</span>
+0018 <span class="comment">%   provides zero-phase delay filtering and is faster than FILTERM(B,1,X).</span>
+0019 <span class="comment">%</span>
+0020 <span class="comment">%   See also FILTERM, FILTER2.</span>
+0021 
+0022 <span class="comment">% Based on from TMW's FILTER.</span>
+0023 <span class="comment">%  The following commented code tests FILTERMZ against FILTER:</span>
+0024 <span class="comment">%   (also, monitor memory usage to see memory advantage)</span>
+0025 <span class="comment">% X = int8(rand(2^22,2)*64);   B = fir1(6, 0.1);</span>
+0026 <span class="comment">% disp('Running FILTER ...');   drawnow;  tic;</span>
+0027 <span class="comment">% Y  = int8(filter(B, 1, double(X)));  t(1) = toc;</span>
+0028 <span class="comment">% disp('Running FILTERZM ...');  drawnow;  tic;</span>
+0029 <span class="comment">% YM = filterzm(B, X);                 t(2) = toc;</span>
+0030 <span class="comment">% check = ceil(rand(1e6,1)*length(X));</span>
+0031 <span class="comment">% mse = sqrt(sum(double(Y(check))-double(YM(check)).^2));</span>
+0032 <span class="comment">% printf('FILTER: %4.3f sec   FILTERZM: %4.3f sec    (APPROX) MSE: %5.3f', t(1), t(2), mse);</span>
+0033 
+0034 
+0035 <span class="comment">% # elements to process at once: for some reason ~2^11-2^13 seems to work</span>
+0036 <span class="comment">% best (probably cpu cache, although the range is similar on computers</span>
+0037 <span class="comment">% with different cache sizes ...) &amp; exact powers of 2 sometimes cause</span>
+0038 <span class="comment">% hiccups ... so heuristically, 2000 seems reasonable</span>
+0039 chunksize = 2000; 
+0040 
+0041 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%% Check Inputs %%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0042 <span class="comment">% input data check</span>
+0043 <span class="keyword">if</span> (ndims(X) &gt; 2), error(<span class="string">'FILTERZM is undefined for arrays of dimension greater than 2.'</span>);  <span class="keyword">end</span>;
+0044 <span class="keyword">if</span> (isvectord(X) == 2), T = 1;  X = X';  <span class="keyword">else</span>  T = 0;  <span class="keyword">end</span>;  <span class="comment">% col vect for now</span>
+0045 [M,N] = size(X);
+0046 
+0047 <span class="comment">% Massage filter into proper shape</span>
+0048 <span class="keyword">if</span> (~isvectord(B)),  error(<span class="string">'The FIR filter B must be 1-dimensional.'</span>);  <span class="keyword">end</span>;
+0049 <span class="keyword">if</span> (isvectord(B) == 2), B = B';  <span class="keyword">end</span>;  <span class="comment">% force column vector</span>
+0050 B = flipud(B); 
+0051 P = (length(B)-1)/2;  Pt = floor(P);  Pb = ceil(P);  <span class="comment">% top/bot filter overhang</span>
+0052 
+0053 <span class="comment">% data type check</span>
+0054 <span class="keyword">switch</span> (class(X)),
+0055     <span class="keyword">case</span> <span class="string">'double'</span>,              convert = @double;
+0056     <span class="keyword">case</span> {<span class="string">'uint8'</span>,<span class="string">'int8'</span>},    convert = @int8;
+0057     <span class="keyword">case</span> {<span class="string">'uint16'</span>,<span class="string">'int16'</span>},  convert = @int16;
+0058     <span class="keyword">case</span> {<span class="string">'uint32'</span>,<span class="string">'int32'</span>},  convert = @int32;
+0059     <span class="keyword">otherwise</span>, error(<span class="string">'X must be a numeric data type.'</span>);
+0060 <span class="keyword">end</span>
+0061 
+0062 
+0063 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%% Do the Filtering %%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0064 <span class="keyword">if</span> (isa(X, <span class="string">'double'</span>) || M &lt; chunksize),  <span class="comment">% no point chunking if double</span>
+0065     Y = conv2(double(X), B, <span class="string">'same'</span>);
+0066     Y = feval(convert, Y);
+0067 <span class="keyword">else</span>
+0068     <span class="comment">% Perform the filtering in chunks so that only a portion of the data</span>
+0069     <span class="comment">% needs to be expanded to double at any given time.</span>
+0070     Y = repmat(feval(convert,0), size(X));
+0071     X = [repmat(feval(convert,0), [Pt+1, N]);  X;  repmat(feval(convert,0), [Pb+1, N])];
+0072     <span class="keyword">for</span> start = 1:chunksize:M
+0073         finish = min(M, start+chunksize-1);
+0074         chunk = conv2(double((X(start:(finish+Pt+Pb+2),:))),B,<span class="string">'same'</span>);
+0075         Y(start:finish,:) = feval(convert, chunk((Pt+2):(end-Pb-1),:));
+0076     <span class="keyword">end</span>
+0077 <span class="keyword">end</span>
+0078 
+0079 
+0080 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%% Clean Up Outputs %%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0081 <span class="keyword">if</span> (T),  Y = Y';  <span class="keyword">end</span>;   <span class="comment">% if input was row vect, keep same orientation</span></pre></div>
+<hr><address>Generated on Fri 15-Aug-2008 11:35:42 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

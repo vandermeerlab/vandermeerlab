@@ -1,0 +1,200 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of triggerevents</title>
+  <meta name="keywords" content="triggerevents">
+  <meta name="description" content="TRIGGEREVENTS     Extracts data samples before/after a trigger signal.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="#">chronux_2_00</a> &gt; <a href="../../index.html">spikesort</a> &gt; <a href="../index.html">utility</a> &gt; <a href="index.html">datatools</a> &gt; triggerevents.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for chronux_2_00\spikesort\utility\datatools&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>triggerevents
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>TRIGGEREVENTS     Extracts data samples before/after a trigger signal.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function [events,trigger] = triggerevents(trace, trigger, pre, post, gap) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">TRIGGEREVENTS     Extracts data samples before/after a trigger signal.
+   E = TRIGGEREVENTS(X, TRIGGER, PRE, POST), where X is an M x 1 vector
+   and TRIGGER is a length M vector with P 0-&gt;~0 transitions, returns a
+   P x (PRE+1+POST) matrix E.  The j-th row of E contains values of X
+   before and after the index of the j-th 0-&gt;~0 transition in TRIGGER;
+   PRE and POST specify the number pre- and post-transition samples,
+   respectively.  While X and TRIGGER can be of any numeric type, E will
+   always be of type double.
+
+   E = TRIGGEREVENTS(X, TRIGGER, PRE, POST, GAP) ignores 0-&gt;~0
+   transitions in TRIGGER which occur &lt;= GAP samples after a previous  
+   unignored transition.
+
+   [E,TRIGLIST] = TRIGGEREVENTS(X, TRIGGER, ...) also returns indices
+   of TRIGGER at which 0-&gt;~0 transitions occur.
+
+   E = TRIGGEREVENTS(X, TRIGLIST, PRE, POST) directly specifies trigger
+   crossing indices rather than inferring them from 0-&gt;~0 transitions.
+   Here, TRIGLIST is a length P vector (P ~= M) containing only values
+   between 1 and M that are interpreted as row indices into X.  The j-th
+   row of the resulting E matrix contains values of X indexed relative to
+   the j-th index in TRIGLIST.  The GAP syntax described above is not
+   allowed in this case.
+
+   In all of the above cases, if X is an M x N matrix, E will be of size
+   P x (PRE+1+POST) x N and E(:,:,k) will be equal to the result of
+   TRIGGEREVENTS(X(:,k), ...).
+
+   When a trigger is fewer than PRE samples after the start of the X or
+   fewer than POST samples before the end, NaN values are returned for
+   the invalid X samples.
+
+   Examples:
+       triggerevents([1 2 3 4 5 6 7 8 9]', [1 1 0 0 1 1 1 1 1]', 2, 3)
+   and triggerevents([1 2 3 4 5 6 7 8 9]', [1 5], 2, 3)
+              both return   [NaN NaN 1 2 3 4;  3 4 5 6 7 8].
+
+       triggerevents([1 2 3 4 5 6 7 8 9]', [1 1 0 0 1 0 1 1 1]', 2, 3, 4)
+                   returns  [NaN NaN 1 2 3 4;  5 6 7 8 9 NaN].
+
+       triggerevents([1 2 3 4 ; 5 6 7 8]', [2], 1, 1)
+                   returns  cat(3, [1 2 3], [5 6 7]).
+
+   See also <a href="leadingedges.html" class="code" title="function markers = leadingedges(data)">LEADINGEDGES</a>.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+<li><a href="leadingedges.html" class="code" title="function markers = leadingedges(data)">leadingedges</a>	LEADINGEDGES      Marks 0 -> NONZERO transitions along data columns.</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [events,trigger] = triggerevents(trace, trigger, pre, post, gap)</a>
+0002 <span class="comment">%TRIGGEREVENTS     Extracts data samples before/after a trigger signal.</span>
+0003 <span class="comment">%   E = TRIGGEREVENTS(X, TRIGGER, PRE, POST), where X is an M x 1 vector</span>
+0004 <span class="comment">%   and TRIGGER is a length M vector with P 0-&gt;~0 transitions, returns a</span>
+0005 <span class="comment">%   P x (PRE+1+POST) matrix E.  The j-th row of E contains values of X</span>
+0006 <span class="comment">%   before and after the index of the j-th 0-&gt;~0 transition in TRIGGER;</span>
+0007 <span class="comment">%   PRE and POST specify the number pre- and post-transition samples,</span>
+0008 <span class="comment">%   respectively.  While X and TRIGGER can be of any numeric type, E will</span>
+0009 <span class="comment">%   always be of type double.</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">%   E = TRIGGEREVENTS(X, TRIGGER, PRE, POST, GAP) ignores 0-&gt;~0</span>
+0012 <span class="comment">%   transitions in TRIGGER which occur &lt;= GAP samples after a previous</span>
+0013 <span class="comment">%   unignored transition.</span>
+0014 <span class="comment">%</span>
+0015 <span class="comment">%   [E,TRIGLIST] = TRIGGEREVENTS(X, TRIGGER, ...) also returns indices</span>
+0016 <span class="comment">%   of TRIGGER at which 0-&gt;~0 transitions occur.</span>
+0017 <span class="comment">%</span>
+0018 <span class="comment">%   E = TRIGGEREVENTS(X, TRIGLIST, PRE, POST) directly specifies trigger</span>
+0019 <span class="comment">%   crossing indices rather than inferring them from 0-&gt;~0 transitions.</span>
+0020 <span class="comment">%   Here, TRIGLIST is a length P vector (P ~= M) containing only values</span>
+0021 <span class="comment">%   between 1 and M that are interpreted as row indices into X.  The j-th</span>
+0022 <span class="comment">%   row of the resulting E matrix contains values of X indexed relative to</span>
+0023 <span class="comment">%   the j-th index in TRIGLIST.  The GAP syntax described above is not</span>
+0024 <span class="comment">%   allowed in this case.</span>
+0025 <span class="comment">%</span>
+0026 <span class="comment">%   In all of the above cases, if X is an M x N matrix, E will be of size</span>
+0027 <span class="comment">%   P x (PRE+1+POST) x N and E(:,:,k) will be equal to the result of</span>
+0028 <span class="comment">%   TRIGGEREVENTS(X(:,k), ...).</span>
+0029 <span class="comment">%</span>
+0030 <span class="comment">%   When a trigger is fewer than PRE samples after the start of the X or</span>
+0031 <span class="comment">%   fewer than POST samples before the end, NaN values are returned for</span>
+0032 <span class="comment">%   the invalid X samples.</span>
+0033 <span class="comment">%</span>
+0034 <span class="comment">%   Examples:</span>
+0035 <span class="comment">%       triggerevents([1 2 3 4 5 6 7 8 9]', [1 1 0 0 1 1 1 1 1]', 2, 3)</span>
+0036 <span class="comment">%   and triggerevents([1 2 3 4 5 6 7 8 9]', [1 5], 2, 3)</span>
+0037 <span class="comment">%              both return   [NaN NaN 1 2 3 4;  3 4 5 6 7 8].</span>
+0038 <span class="comment">%</span>
+0039 <span class="comment">%       triggerevents([1 2 3 4 5 6 7 8 9]', [1 1 0 0 1 0 1 1 1]', 2, 3, 4)</span>
+0040 <span class="comment">%                   returns  [NaN NaN 1 2 3 4;  5 6 7 8 9 NaN].</span>
+0041 <span class="comment">%</span>
+0042 <span class="comment">%       triggerevents([1 2 3 4 ; 5 6 7 8]', [2], 1, 1)</span>
+0043 <span class="comment">%                   returns  cat(3, [1 2 3], [5 6 7]).</span>
+0044 <span class="comment">%</span>
+0045 <span class="comment">%   See also LEADINGEDGES.</span>
+0046 
+0047 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%% Parse Inputs %%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0048 <span class="keyword">if</span> (ndims(trace) &gt; 2),    error(<span class="string">'TRACE can not have more than 2 dimensions.'</span>);  <span class="keyword">end</span>;
+0049 <span class="keyword">if</span> ((length(trigger) &gt; 1) &amp;&amp; ~isvectord(trigger)),  error(<span class="string">'TRIGGER can not be a matrix.'</span>);  <span class="keyword">end</span>;
+0050 <span class="keyword">if</span> (pre &lt; 0 || post &lt; 0), error(<span class="string">'PRE and POST must be non-negative.'</span>);  <span class="keyword">end</span>;
+0051 
+0052 [M,N] = size(trace);
+0053 trigger = trigger(:);   <span class="comment">% force column vector</span>
+0054 
+0055 <span class="keyword">if</span> (length(trigger) == M)  <span class="comment">% if we haven't been given a trigger list ...</span>
+0056     trigger = find(<a href="leadingedges.html" class="code" title="function markers = leadingedges(data)">leadingedges</a>(trigger));    <span class="comment">% ... find them</span>
+0057 <span class="keyword">else</span>
+0058     <span class="keyword">if</span> (~all((trigger &gt;= 1) &amp; (trigger &lt;= M)))
+0059         error(<span class="string">'All entries in a TRIGLIST must be between 1 and the # of rows in TRACE.'</span>);
+0060     <span class="keyword">end</span>
+0061     <span class="keyword">if</span> (nargin &gt; 4), error(<span class="string">'GAP can not be used with a TRIGLIST.'</span>);  <span class="keyword">end</span>;
+0062 <span class="keyword">end</span>
+0063 P = length(trigger);
+0064 Q = pre + post + 1;
+0065 
+0066 <span class="keyword">if</span> ((nargin &gt; 4) &amp;&amp; (gap &lt; 0)),  error(<span class="string">'GAP must be non-negative.'</span>);  <span class="keyword">end</span>;
+0067 
+0068 <span class="comment">%%%%%%%%%%%%%%%%%%%%%% Filter out events too close %%%%%%%%%%%%%%%%%%%</span>
+0069 <span class="keyword">if</span> (nargin &gt; 4)
+0070     A = 1;  B = 2;   skip = repmat(false, size(trigger));
+0071     <span class="keyword">while</span> (B &lt;= P)   <span class="comment">% skip trigs too close to last unskipped trig</span>
+0072         <span class="keyword">if</span> ((trigger(B)-trigger(A)) &lt;= gap),  skip(B) = 1;
+0073         <span class="keyword">else</span>                                  A = B;
+0074         <span class="keyword">end</span>
+0075         B = B + 1;
+0076     <span class="keyword">end</span>
+0077     trigger(skip) = [];
+0078     P = length(trigger);  <span class="comment">% this might have changed</span>
+0079 <span class="keyword">end</span>
+0080 
+0081 
+0082 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%% Extract Events %%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0083 events = repmat(0, [P, Q, N]);    <span class="comment">% Force events to be type double</span>
+0084 
+0085 <span class="comment">% Do each of these cases separately for efficiency; wasteful to</span>
+0086 <span class="comment">% check for overruns when we don't need to.</span>
+0087 left = trigger &lt;= pre;       right = trigger &gt; M-post;
+0088 leftevents  = find(left)';   rightevents = find(right)';
+0089 safeevents  = find(~(left | right))';
+0090 
+0091 window = (-pre:post);
+0092 <span class="keyword">for</span> k = leftevents
+0093     inds = window + trigger(k);    mask = (inds &lt; 1);   inds(mask) = 1;
+0094     events(k,:,:) = trace(inds,:);
+0095     events(k,mask,:) = NaN;
+0096 <span class="keyword">end</span>
+0097 <span class="keyword">for</span> k = safeevents
+0098     inds = window + trigger(k);
+0099     events(k,:,:) = trace(inds,:);
+0100 <span class="keyword">end</span>
+0101 <span class="keyword">for</span> k = rightevents
+0102     inds = window + trigger(k);    mask = (inds &gt; M);   inds(mask) = M;
+0103     events(k,:,:) = trace(inds,:);
+0104     events(k,mask,:) = NaN;
+0105 <span class="keyword">end</span>
+0106 
+0107 <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Clean Up %%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0108 <span class="comment">% Screwy Matlab indexing: if inds is N x M, trace(inds) will be N x M ...</span>
+0109 <span class="comment">%   ... unless inds is 1 x M, in which case the dimensions of trace(inds)</span>
+0110 <span class="comment">%   are M x 1 if trace is a column vector.  So ...</span>
+0111 <span class="keyword">if</span> (size(events,2) == 1),  events = events';  <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Fri 15-Aug-2008 11:35:42 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

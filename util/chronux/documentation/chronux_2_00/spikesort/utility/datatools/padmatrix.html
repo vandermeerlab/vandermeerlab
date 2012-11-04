@@ -1,0 +1,90 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of padmatrix</title>
+  <meta name="keywords" content="padmatrix">
+  <meta name="description" content="PADMATRIX         Pad a matrix.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="#">chronux_2_00</a> &gt; <a href="../../index.html">spikesort</a> &gt; <a href="../index.html">utility</a> &gt; <a href="index.html">datatools</a> &gt; padmatrix.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for chronux_2_00\spikesort\utility\datatools&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>padmatrix
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>PADMATRIX         Pad a matrix.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function padded = padmatrix(input, wherepad, padval) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">PADMATRIX         Pad a matrix.
+   PADDED = PADMATRIX(INPUT, WHEREPAD) adds zero rows/columns to the
+   matrix INPUT.  WHEREPAD is a four element vector specifying the number
+   of pad rows/cols beyond [left col, right col, top row, bottom row].
+
+   PADDED = PADMATRIX(INPUT, WHEREPAD, PADVAL) pads with PADVAL elements
+   rather than zeros.
+
+   Simplified version of Matlab's Image Processing Toolbox' PADARRAY.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function padded = padmatrix(input, wherepad, padval)</a>
+0002 <span class="comment">%PADMATRIX         Pad a matrix.</span>
+0003 <span class="comment">%   PADDED = PADMATRIX(INPUT, WHEREPAD) adds zero rows/columns to the</span>
+0004 <span class="comment">%   matrix INPUT.  WHEREPAD is a four element vector specifying the number</span>
+0005 <span class="comment">%   of pad rows/cols beyond [left col, right col, top row, bottom row].</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">%   PADDED = PADMATRIX(INPUT, WHEREPAD, PADVAL) pads with PADVAL elements</span>
+0008 <span class="comment">%   rather than zeros.</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">%   Simplified version of Matlab's Image Processing Toolbox' PADARRAY.</span>
+0011 
+0012 <span class="comment">%%%%%%%%%% ARGUMENT CHECKING</span>
+0013 <span class="keyword">if</span> (nargin &lt; 3),  padval = 0;  <span class="keyword">end</span>;
+0014 
+0015 <span class="keyword">if</span> (ndims(input) &gt; 2)
+0016     error(<span class="string">'PADMATRIX currently does not handle arrays of dimension greater than 2.'</span>);
+0017 <span class="keyword">elseif</span> ((numel(wherepad) ~= 4) &amp;&amp; (length(wherepad) ~= 4))
+0018     error(<span class="string">'Second argument must be a four-element vector.'</span>);
+0019 <span class="keyword">elseif</span> (numel(padval) &gt; 1)
+0020     error(<span class="string">'Third argument, when specified, must be a scalar.'</span>);
+0021 <span class="keyword">end</span>
+0022 
+0023 [M,N] = size(input);
+0024 newN = N + sum(wherepad(1:2));
+0025 
+0026 <span class="comment">%%%%%%%%%% DO THE PAD</span>
+0027 <span class="comment">% columns first</span>
+0028 padleft = repmat(padval, [M, wherepad(1)]);
+0029 padright = repmat(padval, [M, wherepad(2)]);
+0030 padded = [padleft input padright];
+0031 
+0032 <span class="comment">% then rows</span>
+0033 padtop = repmat(padval, [wherepad(3), newN]);
+0034 padbottom = repmat(padval, [wherepad(4), newN]);
+0035 padded = [padtop; padded; padbottom];
+0036</pre></div>
+<hr><address>Generated on Fri 15-Aug-2008 11:35:42 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

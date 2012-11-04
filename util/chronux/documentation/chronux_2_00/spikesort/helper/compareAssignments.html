@@ -1,0 +1,198 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of compareAssignments</title>
+  <meta name="keywords" content="compareAssignments">
+  <meta name="description" content="COMPAREASSIGNMENTS   Computes a quality measure of the similarity between assignments.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../index.html">Home</a> &gt;  <a href="#">chronux_2_00</a> &gt; <a href="../index.html">spikesort</a> &gt; <a href="index.html">helper</a> &gt; compareAssignments.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../index.html"><img alt="<" border="0" src="../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for chronux_2_00\spikesort\helper&nbsp;<img alt=">" border="0" src="../../../right.png"></a></td></tr></table>-->
+
+<h1>compareAssignments
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>COMPAREASSIGNMENTS   Computes a quality measure of the similarity between assignments.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="box"><strong>function [score, scoreIndep, p] = compareAssignments(assigns1, assigns2, showTables) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> COMPAREASSIGNMENTS   Computes a quality measure of the similarity between assignments.
+
+ [score, scoreIfIndependent] = compareAssignments(assignments1, assignments2)
+     The inputs, 'assignments1' and 'assignments2', must be two column vectors of
+     the same length where each row contains an integer category label for the
+     corresponding sample.  The integer labels used in the assignment vectors need
+     have no intrinsic meaning (in particular, e.g., category 1 in 'assignments1'
+     has no relationship to category 1 in 'assignments2').
+
+     The first output, 'score', is a scalar between 0 and 1 that measures the
+     similarity between the two classifications.  A 'score' of 1 implies perfect
+     correspondance, ignoring actual labels.  For example, if all samples in
+     'assignments1' are labelled by 1 and relabelled as 2 in 'assignments2', the
+     'score' would be 1.  Deviations from this correspondance are penalized in a
+     a fashion that recognizes category splitting/merging and penalizes these less
+     than completely random redistribution.
+
+     The algorithm is motivated by a Chi^2 two-way classification; however, here we
+     return a similarity score rather than simply testing the hypothesis that the
+     classifications are independent.  The expected score if the classifications
+     were independent is returned as the second output, 'scoreIfIndependent', with
+     the standard Chi^2 two-way p-value returned as an optional third output (this
+     requires the statistics toolbox).  This p-value represents the probability that
+     the two assignments were independent.
+
+     Conceptually (though not computationally), the algorithm considers all N*(N-1)
+     pairs of data samples and counts pairs that cosegregate, where a pair of samples
+     is defined as cosegregating if they either share the same category in both
+     assignments or if they do not share category in either assignment.  For example,
+     consider the following assignments:
+            sample #          assignments1         assignments2
+               1                   1                     2
+               2                   1                     2
+               3                   2                     3
+               4                   1                     3
+     The pairs (1,2) and (1,3) cosegregate while the pair (1,4) does not (since they
+     share a label in 'assignments1' but not in 'assignments2').  'score' is the fraction
+     of pairs that cosegregate between the two assignments.
+
+     (An optional third boolean input argument 'showTables' (default 0) produces a graphical
+     output with the contingency table, conditional probabilities and marginals for the
+     assignments.  The 'score' described above is calculated efficiently using these matrices).</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [score, scoreIndep, p] = compareAssignments(assigns1, assigns2, showTables)</a>
+0002 
+0003 <span class="comment">% COMPAREASSIGNMENTS   Computes a quality measure of the similarity between assignments.</span>
+0004 <span class="comment">%</span>
+0005 <span class="comment">% [score, scoreIfIndependent] = compareAssignments(assignments1, assignments2)</span>
+0006 <span class="comment">%     The inputs, 'assignments1' and 'assignments2', must be two column vectors of</span>
+0007 <span class="comment">%     the same length where each row contains an integer category label for the</span>
+0008 <span class="comment">%     corresponding sample.  The integer labels used in the assignment vectors need</span>
+0009 <span class="comment">%     have no intrinsic meaning (in particular, e.g., category 1 in 'assignments1'</span>
+0010 <span class="comment">%     has no relationship to category 1 in 'assignments2').</span>
+0011 <span class="comment">%</span>
+0012 <span class="comment">%     The first output, 'score', is a scalar between 0 and 1 that measures the</span>
+0013 <span class="comment">%     similarity between the two classifications.  A 'score' of 1 implies perfect</span>
+0014 <span class="comment">%     correspondance, ignoring actual labels.  For example, if all samples in</span>
+0015 <span class="comment">%     'assignments1' are labelled by 1 and relabelled as 2 in 'assignments2', the</span>
+0016 <span class="comment">%     'score' would be 1.  Deviations from this correspondance are penalized in a</span>
+0017 <span class="comment">%     a fashion that recognizes category splitting/merging and penalizes these less</span>
+0018 <span class="comment">%     than completely random redistribution.</span>
+0019 <span class="comment">%</span>
+0020 <span class="comment">%     The algorithm is motivated by a Chi^2 two-way classification; however, here we</span>
+0021 <span class="comment">%     return a similarity score rather than simply testing the hypothesis that the</span>
+0022 <span class="comment">%     classifications are independent.  The expected score if the classifications</span>
+0023 <span class="comment">%     were independent is returned as the second output, 'scoreIfIndependent', with</span>
+0024 <span class="comment">%     the standard Chi^2 two-way p-value returned as an optional third output (this</span>
+0025 <span class="comment">%     requires the statistics toolbox).  This p-value represents the probability that</span>
+0026 <span class="comment">%     the two assignments were independent.</span>
+0027 <span class="comment">%</span>
+0028 <span class="comment">%     Conceptually (though not computationally), the algorithm considers all N*(N-1)</span>
+0029 <span class="comment">%     pairs of data samples and counts pairs that cosegregate, where a pair of samples</span>
+0030 <span class="comment">%     is defined as cosegregating if they either share the same category in both</span>
+0031 <span class="comment">%     assignments or if they do not share category in either assignment.  For example,</span>
+0032 <span class="comment">%     consider the following assignments:</span>
+0033 <span class="comment">%            sample #          assignments1         assignments2</span>
+0034 <span class="comment">%               1                   1                     2</span>
+0035 <span class="comment">%               2                   1                     2</span>
+0036 <span class="comment">%               3                   2                     3</span>
+0037 <span class="comment">%               4                   1                     3</span>
+0038 <span class="comment">%     The pairs (1,2) and (1,3) cosegregate while the pair (1,4) does not (since they</span>
+0039 <span class="comment">%     share a label in 'assignments1' but not in 'assignments2').  'score' is the fraction</span>
+0040 <span class="comment">%     of pairs that cosegregate between the two assignments.</span>
+0041 <span class="comment">%</span>
+0042 <span class="comment">%     (An optional third boolean input argument 'showTables' (default 0) produces a graphical</span>
+0043 <span class="comment">%     output with the contingency table, conditional probabilities and marginals for the</span>
+0044 <span class="comment">%     assignments.  The 'score' described above is calculated efficiently using these matrices).</span>
+0045 
+0046 <span class="keyword">if</span> ((size(assigns1, 2) &gt; 1) || (size(assigns2, 2) &gt; 1) || (size(assigns1,1) ~= size(assigns2, 1)))
+0047     error(<span class="string">'Error in assignment vectors.  The first two inputs must be column vectors of equal length.'</span>);
+0048 <span class="keyword">end</span>
+0049 
+0050 <span class="keyword">if</span> ((nargin &lt; 3) || (showTables == 0))    <span class="comment">% if we're not doing graphics, this is more memory efficient.</span>
+0051     assigns1 = sortassignments(assigns1);
+0052     assigns2 = sortassignments(assigns2);
+0053     showTables = 0;
+0054 <span class="keyword">end</span>
+0055 
+0056 s = warning(<span class="string">'MATLAB:divideByZero'</span>, <span class="string">'off'</span>);
+0057 
+0058 numSamples = size(assigns1, 1);
+0059 numCategories1 = length(unique(assigns1));
+0060 numCategories2 = length(unique(assigns2));
+0061 
+0062 <span class="comment">%  Construct classification table and marginals</span>
+0063 joint = full(sparse(assigns1, assigns2, 1, max(assigns1), max(assigns2))) ./ numSamples;
+0064 marginal1 = sum(joint, 2);
+0065 marginal2 = sum(joint, 1);
+0066 
+0067 <span class="comment">% This somewhat cryptic expression computes the score described above.  i'll comment it</span>
+0068 <span class="comment">% later to explain.</span>
+0069 score = (2 * joint(:)' * joint(:)) - sum(sum(joint' * joint)) - sum(sum(joint * joint'));
+0070 score = 1 + (numSamples / (numSamples - 1)) * score;
+0071 
+0072 <span class="comment">% Now get the score expected if the classifications were independent; we do this by</span>
+0073 <span class="comment">% reconstructing a joint under the assumption of independent classifications (i.e.,</span>
+0074 <span class="comment">% p(x,y) = p(x)p(y)) and then using the same mystery expression to find the score.</span>
+0075 jointIndep = (marginal1 * marginal2);
+0076 scoreIndep = (2 * jointIndep(:)' * jointIndep(:)) <span class="keyword">...</span>
+0077              - sum(sum(jointIndep' * jointIndep)) - sum(sum(jointIndep * jointIndep'));
+0078 scoreIndep = 1 + (numSamples / (numSamples-1)) * scoreIndep;
+0079 
+0080 <span class="comment">% if a p-value was requested, compute Chi^2</span>
+0081 <span class="keyword">if</span> (nargout &gt; 2)
+0082     X2 = numSamples .* (((joint - jointIndep).^2)./jointIndep);  <span class="comment">% chi^2</span>
+0083     X2(isnan(X2)) = 0;  <span class="comment">% (clean up divide by zeros)</span>
+0084     X2 = sum(X2(:));
+0085     df = (numCategories1 - 1) * (numCategories2 - 1);  <span class="comment">% degrees of freedom</span>
+0086     p = 1 - chi2cdf(X2,df);
+0087 <span class="keyword">end</span>
+0088 
+0089 <span class="comment">% Optional graphical output</span>
+0090 <span class="keyword">if</span> (showTables)
+0091     <span class="comment">% construct conditional tables</span>
+0092     oneGivenTwo = joint ./ repmat(marginal2, [size(joint,1), 1]);
+0093     oneGivenTwo(find(isnan(oneGivenTwo))) = 0;  <span class="comment">% (deal with divide by zeros)</span>
+0094     twoGivenOne = joint ./ repmat(marginal1, [1, size(joint,2)]);
+0095     twoGivenOne(find(isnan(twoGivenOne))) = 0; <span class="comment">% (deal with divide by zeros)</span>
+0096 
+0097     figure;
+0098     subplot(2,2,1);  imagesc(joint);
+0099     title(<span class="string">'Two-Way Classification Table'</span>); ylabel(<span class="string">'Assignments 1'</span>); xlabel(<span class="string">'Assignments 2'</span>);
+0100     subplot(2,2,2);  imagesc(oneGivenTwo);
+0101     title(<span class="string">'Assignments 1  given  Assignments 2'</span>); ylabel(<span class="string">'Assignments 1'</span>); xlabel(<span class="string">'Assignments 2'</span>);
+0102     subplot(2,2,3);  imagesc(twoGivenOne);
+0103     title(<span class="string">'Assignments 2  given  Assignments 1'</span>); ylabel(<span class="string">'Assignments 1'</span>); xlabel(<span class="string">'Assignments 2'</span>);
+0104     subplot(4,2,6);  bar(marginal1); axis tight;
+0105     title(<span class="string">'Assignments 1 Marginal'</span>);
+0106     subplot(4,2,8);  bar(marginal2); axis tight;
+0107     title(<span class="string">'Assignments 2 Marginal'</span>);
+0108     pixval on;
+0109 <span class="keyword">end</span>
+0110 
+0111 warning(s);</pre></div>
+<hr><address>Generated on Fri 15-Aug-2008 11:35:42 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

@@ -1,0 +1,23 @@
+/* Created by mdot for Matlab */
+digraph m2html {
+  SpikeSortingDemo -> ss_aggregate;
+  SpikeSortingDemo -> ss_dejitter;
+  SpikeSortingDemo -> ss_energy;
+  SpikeSortingDemo -> ss_kmeans;
+  SpikeSortingDemo -> ss_outliers;
+  SpikeSortingQuickReference -> ss_aggregate;
+  SpikeSortingQuickReference -> ss_dejitter;
+  SpikeSortingQuickReference -> ss_energy;
+  SpikeSortingQuickReference -> ss_kmeans;
+  SpikeSortingQuickReference -> ss_outliers;
+  ss_outliers -> ss_kmeans;
+
+  SpikeSortingDemo [URL="SpikeSortingDemo.html"];
+  SpikeSortingQuickReference [URL="SpikeSortingQuickReference.html"];
+  ss_aggregate [URL="ss_aggregate.html"];
+  ss_dejitter [URL="ss_dejitter.html"];
+  ss_energy [URL="ss_energy.html"];
+  ss_kmeans [URL="ss_kmeans.html"];
+  ss_outliers [URL="ss_outliers.html"];
+  startup [URL="startup.html"];
+}

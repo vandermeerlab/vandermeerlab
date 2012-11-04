@@ -1,0 +1,127 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of linec</title>
+  <meta name="keywords" content="linec">
+  <meta name="description" content="LINEC             Plots a line with color varying along its length.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../../../index.html">Home</a> &gt;  <a href="#">chronux_2_00</a> &gt; <a href="../../index.html">spikesort</a> &gt; <a href="../index.html">utility</a> &gt; <a href="index.html">plottypes</a> &gt; linec.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../../../index.html"><img alt="<" border="0" src="../../../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for chronux_2_00\spikesort\utility\plottypes&nbsp;<img alt=">" border="0" src="../../../../right.png"></a></td></tr></table>-->
+
+<h1>linec
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>LINEC             Plots a line with color varying along its length.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="box"><strong>function h = linec(x,y,z,c) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre class="comment">LINEC             Plots a line with color varying along its length.
+   LINEC(X,Y,C) draws the parametric plot Y(k) versus vector X(k) for
+   k = 1:length(X) with colors at each vertex given by the vector C
+   (scaled into the figure colormap).  The color between vertices is
+   interpolated.
+
+   LINEC(Y,C) is equivalent to LINEC(1:length(Y), Y, C).
+
+   LINEC(X,Y,Z,C) plots [X(k), Y(k), Z(k)] with colors given by C(k).
+
+   A patch object is used to actually render the line.  Note that a flaw
+   in the Matlab 'painters' renderer causes extremely slow execution on
+   some machines when zooming in on these patch 'lines'; for this reason,
+   LINEC sets the renderer of the current figure to 'OpenGL'. 
+
+   H = LINEC(...) returns a handle to the line.  The 'line' is actually
+   a patch object, so the standard parameter/value pairs used with
+   Matlab's builtin PLOT command are not supported.
+
+   Matrix arguments for X,Y are currently not supported.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../../../../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../../../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function h = linec(x,y,z,c)</a>
+0002 <span class="comment">%LINEC             Plots a line with color varying along its length.</span>
+0003 <span class="comment">%   LINEC(X,Y,C) draws the parametric plot Y(k) versus vector X(k) for</span>
+0004 <span class="comment">%   k = 1:length(X) with colors at each vertex given by the vector C</span>
+0005 <span class="comment">%   (scaled into the figure colormap).  The color between vertices is</span>
+0006 <span class="comment">%   interpolated.</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">%   LINEC(Y,C) is equivalent to LINEC(1:length(Y), Y, C).</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">%   LINEC(X,Y,Z,C) plots [X(k), Y(k), Z(k)] with colors given by C(k).</span>
+0011 <span class="comment">%</span>
+0012 <span class="comment">%   A patch object is used to actually render the line.  Note that a flaw</span>
+0013 <span class="comment">%   in the Matlab 'painters' renderer causes extremely slow execution on</span>
+0014 <span class="comment">%   some machines when zooming in on these patch 'lines'; for this reason,</span>
+0015 <span class="comment">%   LINEC sets the renderer of the current figure to 'OpenGL'.</span>
+0016 <span class="comment">%</span>
+0017 <span class="comment">%   H = LINEC(...) returns a handle to the line.  The 'line' is actually</span>
+0018 <span class="comment">%   a patch object, so the standard parameter/value pairs used with</span>
+0019 <span class="comment">%   Matlab's builtin PLOT command are not supported.</span>
+0020 <span class="comment">%</span>
+0021 <span class="comment">%   Matrix arguments for X,Y are currently not supported.</span>
+0022 
+0023 <span class="comment">%%%%%%%%%%%%%%%%% ARGUMENT CHECKING %%%%%%%%%%%%%%%%%</span>
+0024 <span class="keyword">if</span> (nargin &gt; 4),        error(<span class="string">'Only (x,y,z,c) arguments supported.'</span>);
+0025 <span class="keyword">elseif</span> (nargin == 4),
+0026 <span class="keyword">elseif</span> (nargin == 3),   c = z;  z = repmat(0,[1,0]);
+0027 <span class="keyword">elseif</span> (nargin == 2),   c = y;  y = x;  x = (1:length(y))';  z = repmat(0,[1,0]);
+0028 <span class="keyword">else</span>                    error(<span class="string">'At least two arguments are required.'</span>);
+0029 <span class="keyword">end</span>
+0030 
+0031 xlen = length(x);  ylen = length(y);  zlen = length(z);  clen = length(c);
+0032 
+0033 <span class="keyword">if</span> (isempty(z))
+0034     <span class="keyword">if</span> (~isequal(xlen,ylen,clen)), error(<span class="string">'Vector dimensions must agree.'</span>); <span class="keyword">end</span>;
+0035 <span class="keyword">else</span>
+0036     <span class="keyword">if</span> (~isequal(xlen,ylen,zlen,clen)), error(<span class="string">'Vector dimensions must agree.'</span>);  <span class="keyword">end</span>;
+0037 <span class="keyword">end</span>
+0038     
+0039 <span class="keyword">if</span> ((ndims(x) &gt; 2) || (~any(size(x) == 1)) || (ndims(y) &gt; 2) || (~any(size(y) == 1)) || <span class="keyword">...</span>
+0040     (ndims(z) &gt; 2) || (~any(size(z) == 1)) || (ndims(c) &gt; 2) || (~any(size(c) == 1)))
+0041     error(<span class="string">'Arguments must be row or column vectors.'</span>);
+0042 <span class="keyword">end</span>
+0043 
+0044 x = x(:); y = y(:);  z = z(:);  c = c(:);    <span class="comment">% Force column vectors</span>
+0045 
+0046 <span class="comment">%%%%%%%%%%%%%%%%%%% DO THE WORK %%%%%%%%%%%%%%%%%%%%%</span>
+0047 xdata = [x; flipud(x)];
+0048 ydata = [y; flipud(y)];
+0049 cdata = [c; flipud(c)];
+0050 zdata = [z; flipud(z)];
+0051 
+0052 <span class="keyword">if</span> (isempty(zdata))
+0053     h = patch(<span class="string">'XData'</span>, xdata, <span class="string">'YData'</span>, ydata, <span class="string">'CData'</span>, cdata);  view(2);
+0054 <span class="keyword">else</span>
+0055     h = patch(<span class="string">'XData'</span>, xdata, <span class="string">'YData'</span>, ydata, <span class="string">'ZData'</span>, zdata, <span class="string">'CData'</span>, cdata');   view(3);
+0056 <span class="keyword">end</span>
+0057 set(h, <span class="string">'EdgeColor'</span>, <span class="string">'interp'</span>, <span class="string">'LineWidth'</span>, 2);
+0058 set(gcf, <span class="string">'Renderer'</span>, <span class="string">'OpenGL'</span>);
+0059 
+0060 <span class="keyword">if</span> (nargout == 0)
+0061     clear h
+0062 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Fri 15-Aug-2008 11:35:42 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

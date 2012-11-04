@@ -1,0 +1,7 @@
+/* Created by mdot for Matlab */
+digraph m2html {
+
+  significant-spike-field-coherenceMBL2005 [URL="significant-spike-field-coherenceMBL2005.html"];
+  spectraMBL2005 [URL="spectraMBL2005.html"];
+  spike-field-coherenceMBL2005 [URL="spike-field-coherenceMBL2005.html"];
+}

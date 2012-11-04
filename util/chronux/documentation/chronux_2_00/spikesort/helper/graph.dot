@@ -1,0 +1,12 @@
+/* Created by mdot for Matlab */
+digraph m2html {
+  merge_clusters -> isiQuality;
+
+  compareAssignments [URL="compareAssignments.html"];
+  isiQuality [URL="isiQuality.html"];
+  meandist_estim [URL="meandist_estim.html"];
+  merge_clusters [URL="merge_clusters.html"];
+  sortAssignments [URL="sortAssignments.html"];
+  split_cluster [URL="split_cluster.html"];
+  thresholded_peaks [URL="thresholded_peaks.html"];
+}
