@@ -14,9 +14,9 @@ eventList = {'1 pellet cue','c1',...
     'Feeder 0 nosepoke','n0',...
     'Feeder 1 nosepoke','n1'};
 
-eventListAlt = {0,'n0',1,'n1',20,'c1',21,'c3',22,'c5',30,'d1',31,'d3',32,'d5'}; % not used, for checking...
-    
+convertToSamples = 0;
 getPredictionErrorEvents = 0;
+rawTimeStamps = 0;
 extract_varargin;
 
 fn = FindFile('*Events.nev');
@@ -31,22 +31,18 @@ for iEvent = 1:2:length(eventList)
     ev_target = eventList{iEvent+1};
     
     ev_id = strncmp(ev_string,EventStrings,length(ev_string));
-    ev_t = EVTimeStamps(ev_id)*10^-6;
+    
+    if rawTimeStamps
+        ev_t = EVTimeStamps(ev_id);
+    elseif convertToSamples
+        ev_t = EVTimeStamps(ev_id)*10^-6;
+        for j = numel(ev_t):-1:1
+            ev_t(j) = nearest(tvec,ev_t(j));
+        end
+    else
+        ev_t = EVTimeStamps(ev_id)*10^-6;
+    end
     
     events.(ev_target) = ev_t;
-    
-end
-
-eventsAlt = [];
-
-for iEvent = 1:2:length(eventList)
-   
-    ev_string = eventListAlt{iEvent};
-    ev_target = eventListAlt{iEvent+1};
-    
-    ev_id = find(EventIDs == ev_string);
-    ev_t = EVTimeStamps(ev_id)*10^-6;
-    
-    eventsAlt.(ev_target) = ev_t;
     
 end
