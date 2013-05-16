@@ -50,6 +50,10 @@ function [dat] = ft_read_data(filename, varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id: ft_read_data.m 8053 2013-04-18 15:17:53Z roboos $
+%
+%
+% MvdM edit 2013-04-20 to deal with neuralynx csc data with less than 512
+% samples per block
 
 persistent cachedata     % for caching
 persistent db_blob       % for fcdc_mysql
@@ -762,7 +766,7 @@ switch dataformat
   case 'neuralynx_sdma'
     dat = read_neuralynx_sdma(filename, begsample, endsample, chanindx);
     
-  case 'neuralynx_ncs'
+  case 'neuralynx_ncs' % MvdM edit 2013-04-20
     NRecords  = hdr.nSamples/512;
     begrecord = ceil(begsample/512);
     endrecord = ceil(endsample/512);
