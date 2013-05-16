@@ -55,7 +55,7 @@ switch nargin
             if isempty(strmatch('units',fieldnames(qT0)))
                 warning('ctsd:Units','units not specified' )
             else
-                tsa.units=units(qT0);
+                tsa.units=Units(qT0);
             end
  
         elseif isa(qT0, 'ctsd')

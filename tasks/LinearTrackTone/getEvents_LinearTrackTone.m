@@ -1,5 +1,5 @@
-function events = getEvents_value(varargin)
-% events = getEvents_value(varargin)
+function events = getEvents_LinearTrackTone(varargin)
+% events = getEvents_LinearTrackTone(varargin)
 %
 % get events for LinearTrackTone task
 %

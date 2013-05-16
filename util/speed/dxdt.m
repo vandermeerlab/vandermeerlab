@@ -17,7 +17,7 @@ function dx = dxdt(x,varargin)
 
 window = 1; % seconds
 postSmoothing = 0.5; % seconds --- 0 means don't
-Extract_varargin;
+extract_varargin;
 
 x = ctsd(x);
 xD = Data(x);
