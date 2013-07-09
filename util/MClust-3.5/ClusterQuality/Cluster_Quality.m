@@ -30,4 +30,4 @@ ClusSep.nSpikes = length(ClusterSpikes);
 CluSep.IsolationDist = IsolationDistance(Fet,ClusterSpikes,m);
 
 % Get L_ratio
-[CluSep.L CluSep.Lratio CluSep.df] = L_ratio(Fet,ClusterSpikes,m);
+[CluSep.L CluSep.Lratio CluSep.df] = L_Ratio(Fet,ClusterSpikes,m);

@@ -587,7 +587,7 @@ set(gca, 'ZLim', [min(MClust_CurrentFeatureData(:,3)) max(MClust_CurrentFeatureD
 xlabel(MClust_FeatureNames{xdim});
 ylabel(MClust_FeatureNames{ydim});
 zlabel(MClust_FeatureNames{zdim});
-rotate3D on
+rotate3d on
 
 %--------------------------------------------------
 function RedrawContour(figHandle)

@@ -95,14 +95,14 @@ for iFC = 1:length(fc)
 		% Look for the tetrode using known tetrode naming formats
 		fc_TT = {};
 		for iFT = 1:length(FileFormats)
-			fc_TT = cat(1, Findfiles(strrep(FileFormats{iFT}, '_ID_', Tetrode)));
+			fc_TT = cat(1, FindFiles(strrep(FileFormats{iFT}, '_ID_', Tetrode)));
 		end
 		
 		% if we did not find a TT file
 		if isempty(fc_TT) && isempty(strmatch(fd_TT,' ')) % if a directory was supplied to check for the tetrode file (like from a CD) move to that dir
 			pushdir(fd_TT);
 			for iFT = 1:length(FileFormats)
-				fc_TT = cat(1, Findfiles(strrep(FileFormats{iFT}, '_ID_', Tetrode)));
+				fc_TT = cat(1, FindFiles(strrep(FileFormats{iFT}, '_ID_', Tetrode)));
 			end
 			popdir;
 	

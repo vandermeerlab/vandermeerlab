@@ -30,7 +30,7 @@ global MClust_Clusters MClust_FeatureData MClust_TTdn MClust_TTfn MClust_Channel
 ClustTT = [];
 NoiseTT = [];
 
-Extract_varargin;
+extract_varargin;
 
 if isempty(ClustTT) || isempty(NoiseTT)
 

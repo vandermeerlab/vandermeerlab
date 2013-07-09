@@ -35,6 +35,10 @@ for iCh = 1:nCh
     l2norms = sqrt(sum(w.^2,2));
     w = w./l2norms(:,ones(1,nSamp));
     
+    % remove NaNs (MvdM)
+    nan_idx = isnan(w);
+    w(nan_idx) = 0;
+    
     [pc,wpc,variances,t2] = princomp(w);
     
     % Get the first principal component coefficients for each spike
