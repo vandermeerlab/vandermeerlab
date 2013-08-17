@@ -207,7 +207,7 @@ for iB = 1:nB
 			% 			load(FDfname,'-mat');
 			% 		end
 			disp(['  Calculating ' FeaturesToUse{iF}])
-			if ~isempty(strmatch('WavePC',FeaturesToUse{iF}))  %added ncst 17 Jan 02 to use wavePCA pars if this is not the first block
+			if ~isempty(strmatch('wavePC',FeaturesToUse{iF}))  %added ncst 17 Jan 02 to use wavePCA pars if this is not the first block
 				                       % updated adr 26 oct 2008 to correct
 				                       % for capitalization
 				if exist('wavePCApars','var')   % Currently works for at least wavePC1,2,&3

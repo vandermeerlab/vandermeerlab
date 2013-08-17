@@ -74,6 +74,8 @@ for iC = 1:lf
         w(isnan(w(:,1)),:) = 0;
     end
     if recalcParams
+        w(isnan(w(:,1)),:) = 0; % MvdM needed for data with not all channels active
+        
         cv = cov(w);
         sd = sqrt(diag(cv))';        % row std vector
         av = mean(w);                % row mean vector
