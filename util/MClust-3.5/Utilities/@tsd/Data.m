@@ -18,7 +18,7 @@ function v = Data(tsa, ix)
 
 switch nargin
 case 2
-   f = findAlignment(tsa, ix);
+   f = findalignment(tsa, ix);
    v = SelectAlongFirstDimension(tsa.data,f);
   case 1
     v = tsa.data;

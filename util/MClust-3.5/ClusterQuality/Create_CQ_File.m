@@ -26,12 +26,12 @@ function Create_CQ_File(fc,recalc,fd_TT)
 % modified ADR Feb 2008
 
 % replace with formats you use. _ID_ will be replaced with the tetrode number
-FileFormats = {'R*TT_ID_.ntt'};
+FileFormats = {'R*TT_ID_.ntt','R*TT_ID_r.ntt'};
 %FileFormats = {'R*TT_ID_.ntt', 'TT_ID_.ntt', 'R*TT_ID_.dat*','R*Sc_ID_.ntt*', 'TT_ID_.dat*' 'Sc_ID_.ntt*', 'TT_ID_.tt*', 'TT0_ID_.tt*'};
 
 
 % initialize variables which were not passed in.
-if ~exist('fc','var'); fc = FindFiles('*.t'); end;
+if ~exist('fc','var'); fc = FindFiles('*.t'); fc = cat(1,fc,FindFiles('*._t')); end;
 if ~exist('recalc','var'); recalc = 0; end;
 if ~exist('fd_TT','var'); fd_TT = ' '; end;
 
@@ -90,7 +90,7 @@ for iFC = 1:length(fc)
 	else 
 		nAttempted = nAttempted + 1; 
 		removeYN = 0;
-		Tetrode = num2str(str2num(Name.Tetrode), '%02d');  %#ok<ST2NM>
+		Tetrode = num2str(str2num(Name.Tetrode(1:2)), '%02d');  %#ok<ST2NM>
 	
 		% Look for the tetrode using known tetrode naming formats
 		fc_TT = {};
