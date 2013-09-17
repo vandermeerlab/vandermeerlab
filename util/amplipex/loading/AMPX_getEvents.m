@@ -1,1 +1,1 @@
-function APX_getEvents(data)
+function AMPX_getEvents()
