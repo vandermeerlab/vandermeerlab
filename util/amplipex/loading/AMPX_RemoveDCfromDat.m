@@ -1,15 +1,20 @@
-function [returnVar,msg] = RemoveDCfromDat(fname,nbChan)
+function [returnVar,msg] = AMPX_RemoveDCfromDat(fname)
 
 % USAGE:
-%     RemoveDCfromDat(fbasename,shankIx,chanIx)
+%     AMPX_RemoveDCfromDat(fname)
 %     This function removes DC from dat files by computing the average of
 %     the first 1e6 samples (or less if file is smaller)
 % INPUTS:
-%     fname: dat file name
+%     fname: .dat file name
 %     nbChan: total number of channels in dat file
-%     chanIx: vectors of channel indices
 % 
-% Adrien Peyrache 2011
+% Adrien Peyrache 2011, edits by MvdM 2013
+
+% first load .meta file
+meta_fname = strrep(fname,'dat','meta');
+hdr = AMPX_loadMetaFile(meta_fname);
+
+nbChan = hdr.nChannels;
 
 fprintf('Removing baseline from %s\n',fname)
 %try
