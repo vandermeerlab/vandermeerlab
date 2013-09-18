@@ -19,6 +19,9 @@ function data = AMPX_loadData(fname,varargin)
 % .hdr: [1 x 1 struct] header read from .meta file
 % .tvec: [nSamples x 1 double] time axis
 %
+% NOTE AMPX .dat file format is a_1 b_1 c_1 ... a_n b_n c_n
+% where a, b, c are signal channels and 1...n are samples (int16)
+%
 % MvdM 2013
 
 if ~exist(fname,'file')
@@ -45,12 +48,21 @@ else
 end
 data.hdr.Fs = str2double(data.hdr.Fs) ./ decimate_factor;
 
-m = memmapfile(fname,'Format','int16','writable',false);
+% amount of bytes to skip after reading each sample
+szINT16 = 2;  % sizeof(int16)=2
+skipBytes = (nbChan-1)*szINT16;
+nSamples = Inf; % number of samples to read, Inf for all
+
+fid = fopen(fname,'rb');
 
 % loop through channels to load
 for iC = length(iChan):-1:1
         
-    data.channels{iC} = m.Data(iChan(iC):nbChan:end);
+    offset = (iChan(iC)-1)*szINT16; % compute how many bytes to skip
+    fseek(fid, offset, 'bof'); % move reading head to first sample of desired signal
+    
+    data.channels{iC} = fread(fid,nSamples,'*int16',skipBytes);
+    
     data.labels(iC) = iChan(iC);
     
     % check if we need to decimate
@@ -64,3 +76,6 @@ end
 
 % construct tvec
 data.tvec = 0:1./data.hdr.Fs:str2double(data.hdr.filelength_sec);
+data.tvec = data.tvec(1:end-1)';
+
+fclose(fid);
