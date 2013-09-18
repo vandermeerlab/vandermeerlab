@@ -32,7 +32,7 @@ end
 meta_fname = strrep(fname,'dat','meta');
 data.hdr = AMPX_loadMetaFile(meta_fname);
 
-nbChan = str2double(data.hdr.nChannels); % this is clumsy, should be fixed in AMPX_loadMetaFile
+nbChan = data.hdr.nChannels;
 
 % figure out what to load
 if nargin == 1 % read all channels
@@ -46,7 +46,7 @@ if nargin == 3
 else
     decimate_factor = 1;
 end
-data.hdr.Fs = str2double(data.hdr.Fs) ./ decimate_factor;
+data.hdr.Fs = data.hdr.Fs ./ decimate_factor;
 
 % amount of bytes to skip after reading each sample
 szINT16 = 2;  % sizeof(int16)=2
@@ -75,7 +75,7 @@ for iC = length(iChan):-1:1
 end
 
 % construct tvec
-data.tvec = 0:1./data.hdr.Fs:str2double(data.hdr.filelength_sec);
+data.tvec = 0:1./data.hdr.Fs:data.hdr.filelength_sec;
 data.tvec = data.tvec(1:end-1)';
 
 fclose(fid);
