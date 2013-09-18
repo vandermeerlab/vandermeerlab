@@ -56,13 +56,17 @@ while 1
    tokens = regexp(line,'(.*)=(.*)','tokens');
    tokens = strtrim(tokens{1});
    
+   if ~isnan(str2double(tokens{2})) % check if convertible to numeric
+       tokens{2} = str2double(tokens{2});
+   end
+   
    for iK = 1:length(keys)
        
        idx = strmatch(tokens{1},keys); % check if this key is on the list
        
-       if ~isempty(idx) % not on list, use literally
+       if ~isempty(idx) % on list, replace
            hdr = setfield(hdr,values{idx},tokens{2});
-       else % on list, replace
+       else % not on list, use literally
            hdr = setfield(hdr,tokens{1},tokens{2});
        end
       
