@@ -48,6 +48,10 @@ else
 end
 data.hdr.Fs = data.hdr.Fs ./ decimate_factor;
 
+% status
+fprintf('AMPX_loadData(): loading %d channels...\n',length(iChan));
+tic;
+
 % amount of bytes to skip after reading each sample
 szINT16 = 2;  % sizeof(int16)=2
 skipBytes = (nbChan-1)*szINT16;
@@ -71,6 +75,9 @@ for iC = length(iChan):-1:1
         data.channels{iC} = decimate(double(data.channels{iC}),decimate_factor);
         
     end
+    
+    % remove DC component (note this could also be done in the raw file..)
+    data.channels{iC} = data.channels{iC}-mean(data.channels{iC});
        
 end
 
@@ -79,3 +86,5 @@ data.tvec = 0:1./data.hdr.Fs:data.hdr.filelength_sec;
 data.tvec = data.tvec(1:end-1)';
 
 fclose(fid);
+
+fprintf('AMPX_loadData(): that took %.2f seconds.\n',toc);
