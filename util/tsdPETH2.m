@@ -16,7 +16,7 @@ debug = 0;
 window = [-2 5];
 dt = 0.25;
 interp = 'linear';
-Extract_varargin;
+extract_varargin;
 
 x = window(1):dt:window(2);
 

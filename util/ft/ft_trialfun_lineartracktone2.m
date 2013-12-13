@@ -124,20 +124,45 @@ for iE = 1:length(pb0_idx)
     if strcmp(next_event,'Feeder 0 nosepoke') | strcmp(next_event,f0_string)
         pb0_correct_idx(iCorrect) = curr_event_idx;
         
-        % preceding cue
-        preceding_events_idx = 1:curr_event_idx-1;
+        % find preceding cue
+        
+        % first need preceding feeder fire
+        preceding_f = cat(1,f0_idx,f1_idx);
+        preceding_f = preceding_f(preceding_f < curr_event_idx);
+        if ~isempty(preceding_f)
+            preceding_f = max(preceding_f);
+        else
+            preceding_f = 1;
+        end
+        
+        preceding_events_idx = preceding_f:curr_event_idx-1;
         preceding_cue_idx = intersect(preceding_events_idx,all_cue_idx);
+        
+        if ~isempty(preceding_cue_idx)
+        
         cue0_correct_idx(iCorrect) = preceding_cue_idx(end);
         
         % latency
         cue0_correct_lat(iCorrect) = EVTimeStamps(cue0_correct_idx(iCorrect))-EVTimeStamps(pb0_correct_idx(iCorrect));
         cue0_correct_lat(iCorrect) = cue0_correct_lat(iCorrect)*10^-6;
         
+        else % should not happen -- no preceding cue
+            fprintf('WARNING: no preceding cue found for event %d\n',iE);
+            cue0_correct_idx(iCorrect) = NaN;
+            cue0_correct_lat(iCorrect) = NaN;           
+        end
+        
         iCorrect = iCorrect + 1;
     end
     
 end
 fprintf('f0: %d correct pokes found (%d feeder fires)\n',iCorrect-1,length(f0_idx));
+
+% if number of pokes and fires is not equal, correct
+if iCorrect-1 ~= length(f0_idx)
+   fprintf('WARNING: inserting missing events\n');
+   [pb0_correct_idx,f0_idx] = equalize_pbf(pb0_correct_idx,f0_idx);
+end
 
 iCorrect = 1;
 for iE = 1:length(pb1_idx)
@@ -148,20 +173,45 @@ for iE = 1:length(pb1_idx)
     if strcmp(next_event,'Feeder 1 nosepoke') | strcmp(next_event,f1_string)
         pb1_correct_idx(iCorrect) = curr_event_idx;
         
-        % preceding cue
-        preceding_events_idx = 1:curr_event_idx-1;
-        preceding_cue_idx = intersect(preceding_events_idx,all_cue_idx);
-        cue1_correct_idx(iCorrect) = preceding_cue_idx(end);
+        % find preceding cue
         
-        % latency
-        cue1_correct_lat(iCorrect) = EVTimeStamps(cue1_correct_idx(iCorrect))-EVTimeStamps(pb1_correct_idx(iCorrect));
-        cue1_correct_lat(iCorrect) = cue1_correct_lat(iCorrect)*10^-6;
+        % first need preceding feeder fire
+        preceding_f = cat(1,f0_idx,f1_idx);
+        preceding_f = preceding_f(preceding_f < curr_event_idx);
+        if ~isempty(preceding_f)
+            preceding_f = max(preceding_f);
+        else
+            preceding_f = 1;
+        end
+        
+        preceding_events_idx = preceding_f:curr_event_idx-1;
+        preceding_cue_idx = intersect(preceding_events_idx,all_cue_idx);
+        
+        if ~isempty(preceding_cue_idx)
+            
+            cue1_correct_idx(iCorrect) = preceding_cue_idx(end);
+            
+            % latency
+            cue1_correct_lat(iCorrect) = EVTimeStamps(cue1_correct_idx(iCorrect))-EVTimeStamps(pb1_correct_idx(iCorrect));
+            cue1_correct_lat(iCorrect) = cue1_correct_lat(iCorrect)*10^-6;
+            
+        else % should not happen -- no preceding cue
+            fprintf('WARNING: no preceding cue found for event %d\n',iE);
+            cue0_correct_idx(iCorrect) = NaN;
+            cue0_correct_lat(iCorrect) = NaN;
+        end
         
         iCorrect = iCorrect + 1;
     end
     
 end
 fprintf('f1: %d correct pokes found (%d feeder fires)\n',iCorrect-1,length(f1_idx));
+
+% if number of pokes and fires is not equal, correct
+if iCorrect-1 ~= length(f1_idx)
+   fprintf('WARNING: inserting missing events\n');
+   [pb1_correct_idx,f1_idx] = equalize_pbf(pb1_correct_idx,f1_idx);
+end
 
 cue_correct_idx = cat(2,cue0_correct_idx,cue1_correct_idx);
 cue_correct_lat = cat(2,cue0_correct_lat,cue1_correct_lat);
@@ -510,6 +560,16 @@ for iCue = 1:length(cfg.trialdef.cue)
     
 end
 
+% exclude cues based on location
+load(FindFile('*vt.mat'))
+x_interp = interp1(Range(x),Data(x),EVTimeStamps(eligible_cue_idx)*10^-6);
+keep_idx = find(x_interp > 150 & x_interp < 450);
+if length(keep_idx) ~= length(eligible_cue_idx)
+   fprintf('WARNING: %d cues removed based on location.\n',length(eligible_cue_idx)-length(keep_idx));
+end
+eligible_cue_idx = eligible_cue_idx(keep_idx);
+
+
 switch cfg.trialdef.eventtype
     
     case 'nosepoke'
@@ -561,6 +621,7 @@ switch cfg.trialdef.eventtype
 end
 
 %% finally, generate output
+keep_idx = keep_idx(~isnan(keep_idx)); % can be nan if e.g. a cue or feeder fire is somehow missing but lengths need to be maintained
 event.idx = keep_idx;
 switch OutputFormat
    
@@ -609,3 +670,21 @@ else
     
     trl = [];
 end
+
+
+function [pb_out,f_out] = equalize_pbf(pb_in,f_in)
+% add in missing feeder fires, can happen for certain sessions
+next_pb = cat(2,pb_in(2:end),Inf);
+for iPB = 1:length(pb_in)
+    
+   % check if a feeder fire comes before the next pb 
+   next_f = find(f_in > pb_in(iPB) & f_in < next_pb(iPB));
+   
+   if ~isempty(next_f) % correct
+       pb_out(iPB) = pb_in(iPB); f_out(iPB) = f_in(next_f(1));
+   else % no feeder fire
+       pb_out(iPB) = pb_in(iPB); f_out(iPB) = NaN;
+   end
+    
+end
+f_out = f_out';
