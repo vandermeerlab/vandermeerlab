@@ -27,6 +27,7 @@ for ii = 1:54
 end  
   
 imagesc(corrMat);
+grid on;
 toc
 
 %% do the re-referencing // note this should be based on sensible channels
