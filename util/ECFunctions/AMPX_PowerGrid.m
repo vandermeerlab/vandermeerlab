@@ -31,7 +31,7 @@ nFFT_vec = 1:32;
 nFFT_vec = 2.^nFFT_vec;
 nFFT_ind = nFFT_vec > windowSize;
 %%  Extract the PSD and then create a master plot for all the channels
-PSD_all = figure(3);
+PSD_all = figure(1);
 data.PSD = cell(1,64); data.Freq = cell(1,64);
 for iChan = 1:size(data.channels,2)
     subplot(8,8,iChan)

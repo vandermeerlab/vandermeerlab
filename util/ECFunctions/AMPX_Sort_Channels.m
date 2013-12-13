@@ -50,11 +50,11 @@ if strcmp(probe,'Buz64')
     temp_channels = cell(1,64);
     for iChan = 1:size(data.channels,2)
         temp_channels{iChan} = data.channels{1,Input_labels(iChan)};
-        Imp_temp(iChan) = data.Imp_channels(1,Input_labels(iChan));
+%         Imp_temp(iChan) = data.Imp_channels(1,Input_labels(iChan));
     end
     data.channels =  temp_channels;
     data.sorted = 'yes';
-    data.Imp_labels = Imp_temp;
+%     data.Imp_labels = Imp_temp;
 end
 
 
@@ -74,11 +74,11 @@ if strcmp(probe,'A8x8')
     temp_channels = cell(1,64);
     for iChan = 1:size(data.channels,2)
         temp_channels{iChan} = data.channels{1,Input_labels(iChan)};
-        Imp_temp(iChan) = data.Imp_channels(1,Input_labels(iChan));
+%         Imp_temp(iChan) = data.Imp_channels(1,Input_labels(iChan));
     end
     data.channels =  temp_channels;
     data.sorted = 'yes';
-    data.Imp_labels = Imp_temp;
+%     data.Imp_labels = Imp_temp;
 end
 
 end
