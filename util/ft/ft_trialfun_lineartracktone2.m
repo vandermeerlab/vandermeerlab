@@ -25,6 +25,24 @@ fn = FindFile('*Events.nev');
 
 [EVTimeStamps, EventIDs, TTLs, EVExtras, EventStrings, EVHeader] = Nlx2MatEV(fn,[1 1 1 1 1],1,1,[]);
 
+%% restrict to block
+switch cfg.trialdef.block
+    case 'value'
+        disp('ft_trialfun_lineartracktone2.m: VALUE blocks selected, removing events...');  
+        
+        keep = EVTimeStamps*10^-6 > cfg.ExpKeys.TimeOnTrack(1) & EVTimeStamps*10^-6 <= cfg.ExpKeys.TimeOffTrack(1);
+        EVTimeStamps = EVTimeStamps(keep); EventStrings = EventStrings(keep); EventIDs = EventIDs(keep); TTLs = TTLs(keep); EVExtras = EVExtras(keep);
+        
+    case 'risk'
+        disp('ft_trialfun_lineartracktone2.m: RISK blocks selected, removing events...'); 
+        
+        keep = EVTimeStamps*10^-6 > cfg.ExpKeys.TimeOnTrack(2) & EVTimeStamps*10^-6 <= cfg.ExpKeys.TimeOffTrack(2);
+        EVTimeStamps = EVTimeStamps(keep); EventStrings = EventStrings(keep); EventIDs = EventIDs(keep); TTLs = TTLs(keep); EVExtras = EVExtras(keep);
+         
+    case 'both'
+        disp('ft_trialfun_lineartracktone2.m: BOTH blocks selected, keeping all events...');     
+end
+
 %% determine event strings to detect
 
 % first check if an unused photobeam is on (from Rob's task, which ran in
@@ -435,7 +453,7 @@ switch LeftRightMode
             
         end
         
-        iLeft = 1; iRight = 1; clear lo_idx_left lo_idx_right
+        iLeft = 1; iRight = 1; lo_idx_left = []; lo_idx_right = [];
         for iE = 1:length(lo_idx)
             
             curr_event_idx = lo_idx(iE);
@@ -455,7 +473,7 @@ switch LeftRightMode
             
         end
         
-        iLeft = 1; iRight = 1; clear hi_idx_left hi_idx_right
+        iLeft = 1; iRight = 1; hi_idx_left = []; hi_idx_right = [];
         for iE = 1:length(hi_idx)
             
             curr_event_idx = hi_idx(iE);
