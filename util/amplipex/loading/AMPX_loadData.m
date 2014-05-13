@@ -24,6 +24,10 @@ function data = AMPX_loadData(fname,varargin)
 %
 % MvdM 2013
 
+% set some constants
+szINT16 = 2;  % sizeof(int16)=2
+rgINT16 = (2^16)./2;
+
 if ~exist(fname,'file')
     error('File not found')
 end
@@ -53,7 +57,6 @@ fprintf('AMPX_loadData(): loading %d channels...\n',length(iChan));
 tic;
 
 % amount of bytes to skip after reading each sample
-szINT16 = 2;  % sizeof(int16)=2
 skipBytes = (nbChan-1)*szINT16;
 nSamples = Inf; % number of samples to read, Inf for all
 
@@ -65,14 +68,19 @@ for iC = length(iChan):-1:1
     offset = (iChan(iC)-1)*szINT16; % compute how many bytes to skip
     fseek(fid, offset, 'bof'); % move reading head to first sample of desired signal
     
-    data.channels{iC} = fread(fid,nSamples,'*int16',skipBytes);
+    data.channels{iC} = fread(fid,nSamples,'*int16',skipBytes); % this is now a signed 16bit integer
     
     data.labels(iC) = iChan(iC);
+    
+    % convert to microvolts
+    data.channels{iC} = double(data.channels{iC})./rgINT16; % convert to fraction of full range
+    data.channels{iC} = data.channels{iC}.*data.hdr.range1_volts*10^6; % convert to microvolts
+    data.channels{iC} = data.channels{iC}./data.hdr.Gain; % correct for amplifier gain
     
     % check if we need to decimate
     if decimate_factor > 1
        
-        data.channels{iC} = decimate(double(data.channels{iC}),decimate_factor);
+        data.channels{iC} = decimate(data.channels{iC},decimate_factor);
         
     end
     
