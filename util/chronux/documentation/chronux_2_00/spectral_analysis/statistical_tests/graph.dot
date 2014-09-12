@@ -1,6 +1,0 @@
-/* Created by mdot for Matlab */
-digraph m2html {
-
-  two_group_test_coherence [URL="two_group_test_coherence.html"];
-  two_group_test_spectrum [URL="two_group_test_spectrum.html"];
-}

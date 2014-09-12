@@ -1,5 +1,0 @@
-/* Created by mdot for Matlab */
-digraph m2html {
-
-  readdat [URL="readdat.html"];
-}
