@@ -1,9 +1,0 @@
-/* Created by mdot for Matlab */
-digraph m2html {
-
-  isvectord [URL="isvectord.html"];
-  structcat [URL="structcat.html"];
-  structindex [URL="structindex.html"];
-  structpack [URL="structpack.html"];
-  structunpack [URL="structunpack.html"];
-}
