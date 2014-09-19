@@ -83,6 +83,15 @@ keep_idx = iv_len > cfg.minlen;
 iv_out.tstart = up_t(keep_idx);
 iv_out.tend = down_t(keep_idx);
 
+% ensure column vectors
+if ~iscolumn(iv_out.tstart)
+    iv_out.tstart = iv_out.tstart';
+end
+
+if ~iscolumn(iv_out.tend)
+    iv_out.tend = iv_out.tend';
+end
+
 % housekeeping
 iv_out.cfg.history.mfun = cat(1,iv_out.cfg.history.mfun,mfun);
 iv_out.cfg.history.cfg = cat(1,iv_out.cfg.history.cfg,{cfg});
