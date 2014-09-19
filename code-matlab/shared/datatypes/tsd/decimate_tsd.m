@@ -10,10 +10,19 @@ ProcessConfig;
 
 mfun = mfilename;
 
-tsd_in.data = decimate(tsd_in.data,cfg.decimateFactor);
-tsd_in.tvec = downsample(tsd_in.tvec,cfg.decimateFactor);
+if ~CheckTSD(tsd_in)
+   error('Input data is not correctly formed.');
+end
 
-tsd_in.cfg.hdr{1}.SamplingFrequency = tsd_in.cfg.hdr{1}.SamplingFrequency ./ cfg.decimateFactor;
+for iData = size(tsd_in.data,1):-1:1
+    
+    data_temp(iData,:) = decimate(tsd_in.data(iData,:),cfg.decimateFactor);
+    tsd_in.cfg.hdr{iData}.SamplingFrequency = tsd_in.cfg.hdr{iData}.SamplingFrequency ./ cfg.decimateFactor;
+    
+end
+
+tsd_in.data = data_temp;
+tsd_in.tvec = downsample(tsd_in.tvec,cfg.decimateFactor);
 
 % housekeeping
 tsd_in.cfg.history.mfun = cat(1,tsd_in.cfg.history.mfun,mfun);
