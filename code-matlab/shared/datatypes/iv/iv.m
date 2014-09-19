@@ -28,6 +28,15 @@ elseif nargin == 2
     
 end
 
+% ensure column vectors
+if ~iscolumn(iv_out.tstart)
+    iv_out.tstart = iv_out.tstart';
+end
+
+if ~iscolumn(iv_out.tend)
+    iv_out.tend = iv_out.tend';
+end
+
 % housekeeping
 iv_out.cfg.history.mfun{1} = mfilename;
 iv_out.cfg.history.cfg{1} = [];
