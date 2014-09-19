@@ -45,6 +45,12 @@ switch cfg.mode
         tstart_idx = nearest_idx3(iv.tstart,tsd_in.tvec);
         tend_idx = nearest_idx3(iv.tend,tsd_in.tvec);
     case 'center'
+        
+        if size(iv.tstart,1) < size(iv.tstart,2)
+            iv.tstart = iv.tstart';
+            iv.tend = iv.tend';
+        end
+
         ctr = mean(cat(2,iv.tstart,iv.tend),2);
         tstart_idx = nearest_idx3(ctr-cfg.width/2,tsd_in.tvec);
         tend_idx = nearest_idx3(ctr+cfg.width/2,tsd_in.tvec);

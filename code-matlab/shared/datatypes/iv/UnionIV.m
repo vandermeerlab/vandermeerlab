@@ -15,7 +15,13 @@ cfg = [];
 ProcessConfig;
 
 mfun = mfilename;
-if length(iv1.tstart)>1 && length(iv2.tstart)>1
+<<<<<<< HEAD
+
+iv1.tstart = cat(1,iv1.tstart,iv2.tstart);
+iv1.tend = cat(1,iv1.tend,iv2.tend);
+
+=======
+if length(iv1.tstart)==1 && length(iv2.tstart)==1
     iv1.tstart = cat(1,iv1.tstart',iv2.tstart');
     iv1.tend = cat(1,iv1.tend',iv2.tend');
 else
@@ -23,6 +29,7 @@ else
     iv1.tstart = cat(1,iv1.tstart,iv2.tstart);
     iv1.tend = cat(1,iv1.tend,iv2.tend);
 end
+>>>>>>> 2aa906bd5cb066c450d8c15ec82bfc1fe260ad47
 [iv1.tstart,sort_idx] = sort(iv1.tstart,'ascend');
 iv1.tend = iv1.tend(sort_idx);
 
