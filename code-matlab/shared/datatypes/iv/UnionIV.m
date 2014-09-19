@@ -15,7 +15,7 @@ cfg = [];
 ProcessConfig;
 
 mfun = mfilename;
-if length(iv1.tstart)>1 && length(iv2.tstart)>1
+if length(iv1.tstart)==1 && length(iv2.tstart)==1
     iv1.tstart = cat(1,iv1.tstart',iv2.tstart');
     iv1.tend = cat(1,iv1.tend',iv2.tend');
 else
