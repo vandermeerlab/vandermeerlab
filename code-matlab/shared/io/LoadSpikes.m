@@ -18,12 +18,12 @@ function S = LoadSpikes(cfg_in)
 %
 % MvdM 2014-06-17 based on ADR LoadSpikes(), 25 edit to use cfg_in
 
-cfg.tsflag = 'sec';
-cfg.load_questionable_cells = 0;
-cfg.min_cluster_quality = 5;
-cfg.useClustersFile = 1;
+cfg_def.tsflag = 'sec';
+cfg_def.load_questionable_cells = 0;
+cfg_def.min_cluster_quality = 5;
+cfg_def.useClustersFile = 1;
 
-ProcessConfig; % this takes fields from cfg_in and puts them into cfg
+cfg = ProcessConfig2(cfg_def,cfg_in); % this takes fields from cfg_in and puts them into cfg
 
 mfun = mfilename;
 

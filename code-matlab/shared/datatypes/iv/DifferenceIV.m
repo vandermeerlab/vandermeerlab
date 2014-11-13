@@ -16,9 +16,9 @@ function iv1 = DifferenceIV(cfg_in,iv1,iv2)
 %
 % MvdM 2014-06-28
 
-cfg = [];
+cfg_def = [];
 
-ProcessConfig; % should take whatever is in cfg_in and put it into cfg!
+cfg = ProcessConfig2(cfg_def,cfg_in); % should take whatever is in cfg_in and put it into cfg!
 mfun = mfilename;
 
 keep = ones(length(iv1.tstart),1);

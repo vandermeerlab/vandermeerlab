@@ -19,9 +19,9 @@ function iv = AddTSDtoIV(cfg_in,iv,tsd_in)
 %
 % MvdM 2014-06-24
 
-cfg.method = 'max';
+cfg_def.method = 'max';
 
-ProcessConfig; % should take whatever is in cfg_in and put it into cfg!
+cfg = ProcessConfig2(cfg_def,cfg_in); % should take whatever is in cfg_in and put it into cfg!
 mfun = mfilename;
 
 % check for well formed input
@@ -37,8 +37,8 @@ else
 end
 
 % find indices for iv
-tstart_idx = nearest_idx(iv.tstart,tsd_in.tvec);
-tend_idx = nearest_idx(iv.tend,tsd_in.tvec);
+tstart_idx = nearest_idx3(iv.tstart,tsd_in.tvec);
+tend_idx = nearest_idx3(iv.tend,tsd_in.tvec);
 
 % collect data
 data_temp = nan(size(tstart_idx));

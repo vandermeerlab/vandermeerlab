@@ -8,8 +8,8 @@ function iv = addIV(cfg_in,iv)
 % MvdM 2014-08-28 initial version
 
 
-cfg = [];
-ProcessConfig;
+cfg_def = [];
+cfg = ProcessConfig2(cfg_def,cfg_in);
 
 mfun = mfilename;
 

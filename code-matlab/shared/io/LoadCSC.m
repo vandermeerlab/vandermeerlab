@@ -16,10 +16,10 @@ function csc_tsd = LoadCSC(cfg_in)
 %
 % MvdM 2014-06-18, 25 (use cfg_in)
 
-cfg.TimeConvFactor = 10^-6; % 10^-6 means convert nlx units to seconds
-cfg.VoltageConvFactor = 1; % 1 means output in volts, 1000 in mV, 10^6 in uV
+cfg_def.TimeConvFactor = 10^-6; % 10^-6 means convert nlx units to seconds
+cfg_def.VoltageConvFactor = 1; % 1 means output in volts, 1000 in mV, 10^6 in uV
 
-ProcessConfig; % this takes fields from cfg_in and puts them into cfg
+cfg = ProcessConfig2(cfg_def,cfg_in); % this takes fields from cfg_in and puts them into cfg
 
 mfun = mfilename;
 

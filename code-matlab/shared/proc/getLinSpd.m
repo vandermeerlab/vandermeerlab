@@ -13,8 +13,8 @@ function spd = getLinSpd(cfg_in,pos)
 %
 % MvdM 2014-07-29
 
-cfg = [];
-ProcessConfig;
+cfg_def = [];
+cfg = ProcessConfig2(cfg_def,cfg_in);
 mfun = mfilename;
 
 vx = dxdt(pos.tvec,getd(pos,'x'));

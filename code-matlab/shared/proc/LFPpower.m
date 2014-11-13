@@ -13,9 +13,9 @@ function lfp_tsd = LFPpower(cfg_in,lfp_tsd)
 %
 % MvdM 2014-06-25
 
-cfg = [];
+cfg_def = [];
 
-ProcessConfig; % this takes fields from cfg_in and puts them into cfg
+cfg = ProcessConfig2(cfg_def,cfg_in); % this takes fields from cfg_in and puts them into cfg
 mfun = mfilename;
 
 % do some checks on the data

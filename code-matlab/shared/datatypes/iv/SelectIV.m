@@ -18,11 +18,11 @@ function iv = SelectIV(cfg_in,iv)
 %
 % MvdM 2014-06-24
 
-cfg.usrlabel = []; % which label to use
-cfg.dcn = '>';
-cfg.threshold = 5;
+cfg_def.usrlabel = []; % which label to use
+cfg_def.dcn = '>';
+cfg_def.threshold = 5;
 
-ProcessConfig; % should take whatever is in cfg_in and put it into cfg!
+cfg = ProcessConfig2(cfg_def,cfg_in); % should take whatever is in cfg_in and put it into cfg!
 mfun = mfilename;
 
 if ~isfield(iv,'usr')

@@ -21,14 +21,14 @@ function iv_out = TSDtoIV(cfg_in,tsd_in)
 %
 % MvdM 2014-06-24
 
-cfg.method = 'zscore';
-cfg.threshold = 5;
-cfg.dcn =  '>'; % return intervals where threshold is exceeded
-cfg.merge_thr = 0.05; % merge events closer than this
-cfg.target = [];
-cfg.minlen = 0.05; % minimum interval length
+cfg_def.method = 'zscore';
+cfg_def.threshold = 5;
+cfg_def.dcn =  '>'; % return intervals where threshold is exceeded
+cfg_def.merge_thr = 0.05; % merge events closer than this
+cfg_def.target = [];
+cfg_def.minlen = 0.05; % minimum interval length
 
-ProcessConfig; % should take whatever is in cfg_in and put it into cfg!
+cfg = ProcessConfig2(cfg_def,cfg_in); % should take whatever is in cfg_in and put it into cfg!
 mfun = mfilename;
 
 iv_out = iv; % initialize new iv struct

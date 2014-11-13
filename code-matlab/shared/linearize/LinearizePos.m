@@ -13,8 +13,8 @@ function linpos_tsd = LinearizePos(cfg_in,pos_tsd)
 %
 % cfg.Coord: Coord file geneated by makeCoord, if not defined tries to load
 
-cfg.Coord = [];
-ProcessConfig; % remember this will overwrite Coord if defined in cfg
+cfg_def.Coord = [];
+cfg = ProcessConfig2(cfg_def,cfg_in); % remember this will overwrite Coord if defined in cfg
 
 mfun = mfilename;
 

@@ -17,14 +17,14 @@ function PlotTSDfromIV(cfg_in,iv,tsd_in)
 %
 % MvdM 2014-06-24
 
-cfg.display = 'tsd'; % 'iv'
-cfg.mode = 'edges'; % 'center'
-cfg.width = 0.2; % in s
-cfg.subplotdim = [10 8];
-cfg.bgcol = 'k';
-cfg.fgcol = 'r';
+cfg_def.display = 'tsd'; % 'iv'
+cfg_def.mode = 'edges'; % 'center'
+cfg_def.width = 0.2; % in s
+cfg_def.subplotdim = [10 8];
+cfg_def.bgcol = 'k';
+cfg_def.fgcol = 'r';
 
-ProcessConfig; % should take whatever is in cfg_in and put it into cfg!
+cfg = ProcessConfig2(cfg_def,cfg_in); % should take whatever is in cfg_in and put it into cfg!
 mfun = mfilename;
 
 % check if conditions are in place

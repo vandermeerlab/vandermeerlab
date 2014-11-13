@@ -17,17 +17,15 @@ function lfp_tsd = FilterLFP(cfg_in,lfp_tsd)
 % cfg.f = [6 10]; filter range to use (in Hz)
 %
 % MvdM 2014-06-24, 25 (update cfg_in)
-% NOTE: when using theta (7-10Hz) use the Cheby1 filter type with cfg.order
-% = 3
 
-cfg.type = 'butter';
-cfg.order = 4;
-cfg.display_filter = 0;
-cfg.band = 'bandpass'; % not used
-cfg.R = 0.5; % passband ripple (in dB) for Chebyshev filters only
-cfg.f = [45 55];
+cfg_def.type = 'butter';
+cfg_def.order = 4;
+cfg_def.display_filter = 0;
+cfg_def.band = 'bandpass'; % not used
+cfg_def.R = 0.5; % passband ripple (in dB) for Chebyshev filters only
+cfg_def.f = [6 10];
 
-ProcessConfig; % this takes fields from cfg_in and puts them into cfg
+cfg = ProcessConfig2(cfg_def,cfg_in); % this takes fields from cfg_in and puts them into cfg
 mfun = mfilename;
 
 % do some checks on the data

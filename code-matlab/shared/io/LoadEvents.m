@@ -16,8 +16,8 @@ function events_ts = LoadEvents(cfg_in)
 %
 % MvdM 2014-06-18, 25 (use cfg_in)
 
-cfg = [];
-ProcessConfig; % this takes fields from cfg_in and puts them into cfg
+cfg_def = [];
+cfg = ProcessConfig2(cfg_def,cfg_in); % this takes fields from cfg_in and puts them into cfg
 
 mfun = mfilename;
 

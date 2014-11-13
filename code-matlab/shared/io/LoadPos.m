@@ -9,17 +9,19 @@ function pos_tsd = LoadPos(cfg_in)
 %   if no filename is specified, loads *.nvt file in current dir
 % cfg.tsflag = 'sec';
 % cfg.removeZeros = 1;
+% cfg.realTrackDims = [167 185]; %default for R042 T-maze
 %
 % output:
 %
 % pos_tsd: position data tsd struct
 %
 % MvdM 2014-06-17
+% youkitan 2014-11-05
 
-cfg.removeZeros = 1;
-cfg.tsflag = 'sec';
+cfg_def.removeZeros = 1;
+cfg_def.tsflag = 'sec';
 
-ProcessConfig; % note: this converts cfg fields into workspace variables!
+cfg = ProcessConfig2(cfg_def,cfg_in); % note: this converts cfg fields into workspace variables!
 
 mfun = mfilename;
 
@@ -60,6 +62,18 @@ pos_tsd.label{1} = 'x';
 
 pos_tsd.data(2,:) = Y;
 pos_tsd.label{2} = 'y';
+
+% Convert data from pixels to cm
+if isfield(cfg,'realTrackDims')
+    X_pixelsize = max(pos_tsd.data(1,:)) - min(pos_tsd.data(1,:));
+    Y_pixelsize = max(pos_tsd.data(2,:)) - min(pos_tsd.data(2,:));
+    
+    XConvFactor = X_pixelsize / cfg.realTrackDims(1);
+    YConvFactor = Y_pixelsize / cfg.realTrackDims(2);
+    
+    pos_tsd.data(1,:) = pos_tsd.data(1,:)./XConvFactor; 
+    pos_tsd.data(2,:) = pos_tsd.data(2,:)./YConvFactor; 
+end
 
 % check if ExpKeys available
 keys_f = FindFiles('*keys.m');

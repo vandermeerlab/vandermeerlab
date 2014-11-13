@@ -16,12 +16,12 @@ function MUA = getMUA(cfg_in,S)
 %
 % MvdM 2014-06-25
 
-cfg.sigma = 0.05;
-cfg.tvec = [];
-cfg.dt = 0.001; % internal timebase
-cfg.removenan = 1;
+cfg_def.sigma = 0.05;
+cfg_def.tvec = [];
+cfg_def.dt = 0.001; % internal timebase
+cfg_def.removenan = 1;
 
-ProcessConfig; % this takes fields from cfg_in and puts them into cfg
+cfg = ProcessConfig2(cfg_def,cfg_in); % this takes fields from cfg_in and puts them into cfg
 mfun = mfilename;
 
 if ~isfield(cfg,'tvec')
