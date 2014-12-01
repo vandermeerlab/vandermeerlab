@@ -24,7 +24,7 @@ cfg_def.method       = 'mtmconvol';
 cfg_def.taper        = 'hanning';
 cfg_def.foi          = 1:1:100; % frequencies of interest
 cfg_def.subplotdim   = [4 5];
-cfg_def.clim         = [0 500]; % sets the caxis for the imagesc plots.  These default [0 500]
+cfg_def.clim         = [0 500]; % sets the caxis for the imagesc plots. default [0 500]
 
 cfg = ProcessConfig2(cfg_def,cfg_in); % should take whatever is in cfg_in and put it into cfg!
 
