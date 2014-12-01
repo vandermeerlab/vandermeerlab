@@ -12,6 +12,7 @@ function PlotTSDfromIV_TFR(cfg_in,iv_in,ft_in)
 %
 % cfg.target = []; % if ft_in has multiple data dimensions (labels)
 % cfg.twin = [-0.5 0.5];
+% cfg.clim = [lower_lim upper_lim] used to make the caxis in the imagesc plots even. default is [0 500]
 % ...and a bunch more
 %
 % MvdM 2014-11-12
@@ -23,6 +24,7 @@ cfg_def.method       = 'mtmconvol';
 cfg_def.taper        = 'hanning';
 cfg_def.foi          = 1:1:100; % frequencies of interest
 cfg_def.subplotdim   = [4 5];
+cfg_def.clim         = [0 500]; % sets the caxis for the imagesc plots.  These default [0 500]
 
 cfg = ProcessConfig2(cfg_def,cfg_in); % should take whatever is in cfg_in and put it into cfg!
 
@@ -82,12 +84,12 @@ for iI = 1:length(ft_in.trial)
     subtightplot(cfg.subplotdim(1),cfg.subplotdim(2),plotno);
     
     imagesc(TFR.time,TFR.freq,sq(TFR.powspctrm(iI,1,:,:))); axis xy
+    caxis(cfg.clim)
     hold on;
     
     temp_data = rescale(ft_in.trial{iI},cfg.foi(1),cfg.foi(end));
     % note, may need alternative option that doesn't rescale
     plot(ft_in.time{iI},temp_data,'LineWidth',1,'Color',[1 1 1]);
 
-    axis off; axis tight;
-    
+    axis off; axis tight; 
 end
