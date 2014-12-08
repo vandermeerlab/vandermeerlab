@@ -29,9 +29,9 @@ for iC = 1:nCells
    
     curr_tc = tc(:,iC);
     
-    if max(curr_tc) > cfg.p_thr & mean(curr_tc) < cfg.max_meanfr % possible place cell
+    if max(curr_tc) > cfg.p_thr & nanmean(curr_tc) < cfg.max_meanfr % possible place cell
     
-        pf_z = zscore(curr_tc);
+        pf_z = (curr_tc-nanmean(curr_tc))./nanstd(curr_tc);
 
         pks.loc = find_fields(pf_z,cfg.p_thr_sd,'min_size',15);
         
@@ -51,7 +51,7 @@ for iC = 1:nCells
         
     end % of initial threshold
 end
-
+disp(peak_idx)
 [~,sort_idx] = sort(peak_idx,'ascend');
 idx = idx(sort_idx);
 peak_idx = peak_idx(sort_idx);
