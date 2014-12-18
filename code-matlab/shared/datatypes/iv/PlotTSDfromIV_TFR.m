@@ -56,6 +56,9 @@ cfg.hdr = ft_in.hdr;
 
 trl_cfg = cfg;
 trl_cfg.twin = trl_cfg.twin + [-2 2]; % padding for spectrogram
+trl_cfg.hdr.FirstTimeStamp = ft_in.time{1}(1); 
+trl_cfg.tvec = ft_in.time{1}; % For neuralynx data conversion
+
 trl = ft_maketrl(trl_cfg);
 
 temp_cfg = []; temp_cfg.trl = trl;
