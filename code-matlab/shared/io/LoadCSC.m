@@ -30,7 +30,7 @@ if ~isfield(cfg,'fc') % no filelist provided, load everything
 else
     
     if ~isa(cfg.fc,'cell')
-        error('LoadSpikes: cfg.fc should be a cell array.');
+        error('LoadCSC: cfg.fc should be a cell array.');
     end
     
 end

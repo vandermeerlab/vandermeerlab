@@ -51,7 +51,6 @@ for iC = 1:nCells
         
     end % of initial threshold
 end
-disp(peak_idx)
 [~,sort_idx] = sort(peak_idx,'ascend');
 idx = idx(sort_idx);
 peak_idx = peak_idx(sort_idx);
