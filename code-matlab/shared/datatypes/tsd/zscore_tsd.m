@@ -1,4 +1,4 @@
-function tsd_in = zscore_tsd(tsd_in)
+function [tsd_in,mu,sigma] = zscore_tsd(tsd_in)
 % function tsd_in = zscore_tsd(tsd_in)
 %
 %
@@ -9,7 +9,7 @@ mfun = mfilename;
 
 keep_idx = ~isnan(tsd_in.data);
 
-tsd_in.data(keep_idx) = zscore(tsd_in.data(keep_idx));
+[tsd_in.data(keep_idx),mu,sigma] = zscore(tsd_in.data(keep_idx));
 
 % housekeeping
 tsd_in.cfg.history.mfun = cat(1,tsd_in.cfg.history.mfun,mfun);
