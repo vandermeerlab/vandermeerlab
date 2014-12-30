@@ -21,9 +21,9 @@ function trl = ft_maketrl(cfg_in)
 %
 % MvdM 2014-07-03
 
-cfg.twin = [-2 2];
-cfg.mode = 'ft';
-ProcessConfig;
+cfg_def.twin = [-2 2];
+cfg_def.mode = 'ft';
+cfg = ProcessConfig2(cfg_def,cfg_in);
 
 if ~isfield(cfg,'t')
     error('cfg.t (trial times) must be specified.');
@@ -34,15 +34,16 @@ if ~isfield(cfg,'hdr')
     error('cfg.hdr (cfg.hdr of ft data structure to get idxs for) must be specified.');
 end
     
+% construct tvec based on mode
 if strcmp(cfg.mode,'nlx')
-    
     % times are on Neuralynx timebase, subtract time of first sample
-    cfg.t = cfg.t - double(cfg.hdr.FirstTimeStamp).*10^-6;
+    cfg.t = cfg.t - double(cfg.hdr.FirstTimeStamp);
+    tvec = cfg.tvec-cfg.hdr.FirstTimeStamp; %minus first time to align to zero
+    
+else %equivalent to elseif cfg.mode = 'ft'
+    tvec = cat(2,0,cumsum(repmat(1./cfg.hdr.Fs,[1 cfg.hdr.nSamples-1])));
 end
 
-% construct tvec
- tvec = cat(2,0,cumsum(repmat(1./cfg.hdr.Fs,[1 cfg.hdr.nSamples-1])));
- 
 % fill in trl
 trl(:,3) = nearest_idx3(cfg.t,tvec);
 trl(:,2) = nearest_idx3(cfg.t+cfg.twin(2),tvec);
