@@ -1,22 +1,32 @@
 function Coord = MakeCoord(x, y, varargin)
 % function Coord = MakeCoord(x,y,varargin)
 %
-% Returns an array containing the x and y positions of points on an
-% idealized path, input by the user
+% Opens a figure and prompts the user to draw an idealized path. Returns an 
+% array containing the x and y positions of points on the path. Commonly
+% used for drawing paths or trajectories over position data.
 %
 % Each point is separated from the next by approximately 1 pixel (in practice it ranges
 % from 1.0 to 1.1 pixels of separation between points)
 %
 % Output variable Coord should be saved in data folder for later use
 %
+% VARARGINS
+%    titl: string; the figure title. Default: 'Select Linearized Path'
+%    XDir / YDir: 'normal'(default) or 'reverse'; direction of increasing 
+%                values on the specified axis
+%
 % original by NCST
 % modified MvdM 08, 2014-06-24
+% modified ACarey, 2014-12-31 (added YDir and XDir varargins)
 
+%%
 MaxDist = 1; % Maximum separation between Coord points, used to linearly interpolate between user selected points.
 newX = [];
 newY = [];
 titl = 'Select Linearized Path';
 wraparound = 0;
+YDir = 'normal'; % 'reverse' flips the y axis
+XDir = 'normal'; % 'reverse' flips the x axis
 extract_varargin;
 
 if isempty(x)
@@ -24,8 +34,9 @@ if isempty(x)
 end
 
 figure
-plot(y,x,'.','Color',[0.7 0.7 0.7],'MarkerSize',4)
+plot(x,y,'.','Color',[0.7 0.7 0.7],'MarkerSize',4)
 title(titl);
+set(gca,'YDir',YDir,'XDir',XDir);
 maximize;
 hold on
 

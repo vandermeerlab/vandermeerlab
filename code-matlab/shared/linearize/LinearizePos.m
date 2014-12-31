@@ -9,7 +9,7 @@ function linpos_tsd = LinearizePos(cfg_in,pos_tsd)
 %
 % OUTPUTS:
 %
-% linpos_tsd: tsd with lineariezed position (z field) and distance (z_dist)
+% linpos_tsd: tsd with linearized position (z field) and distance (z_dist)
 %
 % cfg.Coord: Coord file geneated by makeCoord, if not defined tries to load
 
