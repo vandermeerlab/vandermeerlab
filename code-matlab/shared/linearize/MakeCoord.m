@@ -115,6 +115,7 @@ figure
 plot(x,y,'.','Color',[0.7 0.7 0.7],'MarkerSize',4)
 title(titl);
 set(gca,'YDir',YDir,'XDir',XDir); view(rot,90); % view(az,el) zaxis is rot and elevation is 90.
+xlabel('X data'); ylabel('Y data');
 maximize;
 hold on
 
