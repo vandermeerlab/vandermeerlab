@@ -52,6 +52,12 @@ for iF = 1:nFiles
     
     % load raw data
     [Timestamps, ~, SampleFrequencies, NumberOfValidSamples, Samples, Header] = Nlx2MatCSC(fname, [1 1 1 1 1], 1, 1, []);
+     
+    % disabled channels cannot be loaded
+    if Timestamps == 0 
+        message = ['No csc data (disabled tetrode channel). Considering deleting ',cfg.fc{1},'.'];
+        error(message);
+    end
     
     % check for constant sampling frequency
     Fs = unique(SampleFrequencies);
