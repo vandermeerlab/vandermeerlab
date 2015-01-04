@@ -19,7 +19,7 @@ function iv = SelectIV(cfg_in,iv)
 % MvdM 2014-06-24
 
 cfg_def.usrlabel = []; % which label to use
-cfg_def.dcn = '>';
+cfg_def.dcn = '>'; %'<','exact'
 cfg_def.threshold = 5;
 
 cfg = ProcessConfig2(cfg_def,cfg_in); % should take whatever is in cfg_in and put it into cfg!
@@ -33,7 +33,7 @@ end
 if length(iv.usr) == 1
     temp_data = iv.usr.data;
 else
-    idx = strmatch(cfg.usrlabel,iv.usr.label); % NOTE: THIS IS UNTESTED
+    idx = strcmp(cfg.usrlabel,iv.usr.label); % NOTE: THIS IS UNTESTED
     
     if ~isempty(idx)
         temp_data = iv.usr(idx).data;
@@ -48,6 +48,8 @@ switch cfg.dcn
         keep_idx = temp_data > cfg.threshold;
     case '<'
         keep_idx = temp_data < cfg.threshold;
+    case 'exact' %selecting ivs by the index for logical input
+        keep_idx = temp_data;
 end
 
 iv.tstart = iv.tstart(keep_idx);

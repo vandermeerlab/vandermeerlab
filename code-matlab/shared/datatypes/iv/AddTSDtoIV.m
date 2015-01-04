@@ -50,7 +50,7 @@ switch cfg.method
         end
     case 'mean'
         for iI = 1:length(data_temp)
-            data_temp(iI) = max(data_in(tstart_idx(iI):tend_idx(iI)));
+            data_temp(iI) = mean(data_in(tstart_idx(iI):tend_idx(iI)));
         end
 end
 

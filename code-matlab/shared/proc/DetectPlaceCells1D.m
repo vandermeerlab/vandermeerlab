@@ -18,7 +18,7 @@ function [idx,peak_idx,peak_loc] = DetectPlaceCells1D(cfg_in,tc)
 cfg_def = [];
 cfg_def.p_thr = 5; % threshold for detecting place field, in Hz
 cfg_def.p_thr_sd = 2; % in SD
-cfg_def.max_meanfr = 10;
+cfg_def.max_meanfr = 5;
 cfg = ProcessConfig2(cfg_def,cfg_in);
 
 nCells = size(tc,2);

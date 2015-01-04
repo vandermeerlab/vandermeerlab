@@ -1,5 +1,6 @@
-function out = MultiPlotSpikeRaster(cfg_in,S)
-% function MultiPlotSpikeRaster(cfg,S)
+function out = MultiRaster(cfg_in,S)
+% function MultiRaster(cfg,S) plots the spiketrain S with optional inputs for lfps and
+% iv or ts event objects. 
 %
 %   INPUTS:
 %       cfg_in: input cfg
@@ -44,9 +45,39 @@ cfg_def.axisflag = 'tight';
 cfg_def.spkColor = 'k';
 cfg_def.lfpColor = 'r';
 cfg_def.axislabel = 'on';
+cfg_def.windowSize = 1;
 cfg = ProcessConfig2(cfg_def,cfg_in);
 
-%% Extra plotting
+%% Setup navigate
+global evtTimes windowSize time
+windowSize = cfg.windowSize;
+
+if ~isfield(cfg,'time')
+    %create internal tvec
+    spktimes = [];
+    for iC = 1:length(S.t)
+       spktimes = cat(1,spktimes,S.t{iC}); 
+    end
+    spktimes = sort(spktimes);
+
+    tstart = spktimes(1);
+    tend = spktimes(end);
+
+    binSize = 0.01;
+    time = tstart:binSize:tend;
+end
+
+if isfield(cfg,'evtTimes')
+    evtTimes = cfg.evtTimes;
+elseif ~isfield(cfg.evt,'tstart')
+    %set time vector as evtTimes
+    evtTimes = time;
+end
+
+figure('KeyPressFcn',@navigate)
+hold on;    
+
+%% Error checking and plot type setup
 % Check to see what datatypes we need to plot besides spikes and do error checking. 
 
 ts_only = @(x) isfield(x,'t') && ~isfield(x,'tstart');
@@ -90,8 +121,7 @@ else %default (spikes only)
 
 end
 
-
-%% Plotting extra data
+%% Choose Plotting mode
 switch plotMode        
     case 1 % just spikes
         ylims = PlotSpikeRaster2(cfg,S);
@@ -101,20 +131,14 @@ switch plotMode
         PlotTSEvt(cfg,cfg.evt)
         
     case 3 % iv data only
+        evtTimes = (cfg.evt.tstart + cfg.evt.tend)./2;
         S_iv = restrict(S,cfg.evt.tstart,cfg.evt.tend);
         ylims = PlotSpikeRaster2(cfg,S);
         cfg.spkColor = 'r';
         ylims = PlotSpikeRaster2(cfg,S_iv);
                     
     case 4 % ts + iv data NOT WORKING YET
-        for i = 1:length(cfg.evt)
-        end
-        
-        S_iv = restrict(S,cfg.evt.tstart,cfg.evt.tend);
-        PlotSpikeRaster2(cfg,S);
-        cfg.spkColor = 'r';
-        [xvals,yvals,ylims] = PlotSpikeRaster2(cfg,S_iv);
-        PlotTSEvt(cfg.evt,ylims)
+        error('ts + iv event data NOT WORKING YET')
         
     case 5 % lfp data only
         numLFP = length(cfg.lfp);        
@@ -137,13 +161,14 @@ switch plotMode
         PlotTSEvt([],cfg.evt)
 
     case 7 % lfp + iv data
+        evtTimes = (cfg.evt.tstart + cfg.evt.tend)./2;
         cfg.lfp.data = rescale(cfg.lfp.data,-10,0);
-        PlotTSDfromIV([],cfg.evt,cfg.lfp);
+        cfg_temp.display = 'tsd';
+        PlotTSDfromIV(cfg_temp,cfg.evt,cfg.lfp);
         ylims(1) = -10;
     
     case 8 % lfp + iv + ts data
-        [xvals,yvals,ylims] = PlotSpikeRaster2(cfg,S);
-
+        error('ts + iv event data NOT WORKING YET')
 end 
 
 %% Helper Functions

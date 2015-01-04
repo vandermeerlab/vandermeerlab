@@ -1,5 +1,5 @@
-%% MULTIPLOT EXAMPLE
-% This script just shows how you can use the MultiPlot function. It takes a variety of
+%% MULTRASTER EXAMPLE
+% This script just shows how you can use the MultiRaster function. It takes a variety of
 % event type objects (both iv and ts) as well as multiple tsd type data to create an
 % interpertable plot. 
 
@@ -95,14 +95,7 @@ posRrs = restrict(posR,evtR.run_start,evtR.run_end);
 clear left_trials leftruns right_trials prerecord_end prerecord_start t_end t_start 
 clear ped_end ped_start run_end run_start iRun posL posR
 
-%% TEST MULTIPLOTSPIKERASTER
-
-% Setup Navigate function -- the navigate function is not necessary but VERY useful!
-global evtTimes windowSize time
-evtTimes = (evtL.run_start+evtL.run_end)./2;
-windowSize = 10;
-time = lfp.tvec;
-figure('KeyPressFcn',@navigate)
+%% TEST MULTIRASTER
 
 % Create an iv for left runs
 temp_iv = iv;
@@ -121,44 +114,45 @@ lfpC = restrict2(lfp,splits(3),splits(4));
 % I've setup some example situations that one might come across when examining data. Try
 % each and see! (Currently working on case 4 & 8).
 
-plotmode = 1;
+plotmode = 7;
 cfg = [];
+cfg.windowSize = 10;
+cfg.evtTimes = (evtL.run_start+evtL.run_end)./2;
 
 tic;
 switch plotmode
     case 1%original (just spikes)
-        MultiPlotSpikeRaster(cfg,S)
+        MultiRaster(cfg,S)
         
     case 2%ts events
         cfg.evt = evtL;
         cfg.legend = 'on';
-        MultiPlotSpikeRaster(cfg,S)
+        MultiRaster(cfg,S)
         
     case 3%iv events
         cfg.evt = temp_iv;
-        MultiPlotSpikeRaster(cfg,S)
+        MultiRaster(cfg,S)
         
     case 4%ts + iv events -- NOT WORKING
-        cfg.evt = temp_iv;
-        cfg.evt
+        error('Not working!')    
         
     case 5%lfp UPDATE -- can plot multiple lfps
         cfg.lfp(1) = lfpA;
         cfg.lfp(2) = lfpB;
         cfg.lfp(3) = lfpC;
-        MultiPlotSpikeRaster(cfg,S)
+        MultiRaster(cfg,S)
         
     case 6%lfp + ts
         cfg.lfp = lfp;
         cfg.evt = evtL;
-        MultiPlotSpikeRaster(cfg,S)
+        MultiRaster(cfg,S)
         
     case 7%lfp + iv
         cfg.lfp = lfp;
         cfg.evt = temp_iv;
-        MultiPlotSpikeRaster(cfg,S)
+        MultiRaster(cfg,S)
         
     case 8%lfp + ts + iv -- NOT WORKING
-
+        error('Not working!')
 end
 toc;
