@@ -35,6 +35,10 @@ else
     
 end
 
+if isempty(FindFiles(cfg.fc{1}))
+    error('File does not exist in directory. Check spelling.');
+end
+
 fc = sort(cfg.fc);
 nFiles = length(fc);
 
