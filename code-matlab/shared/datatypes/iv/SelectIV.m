@@ -17,6 +17,7 @@ function iv = SelectIV(cfg_in,iv)
 % iv_out: output interval data
 %
 % MvdM 2014-06-24
+% youkitan 2015-01-20
 
 cfg_def.usrlabel = []; % which label to use
 cfg_def.dcn = '>'; %'<','exact'
@@ -33,7 +34,7 @@ end
 if length(iv.usr) == 1
     temp_data = iv.usr.data;
 else
-    idx = strcmp(cfg.usrlabel,iv.usr.label); % NOTE: THIS IS UNTESTED
+    idx = strcmp(cfg.usrlabel,[iv.usr.label]); % FIXED -- works now
     
     if ~isempty(idx)
         temp_data = iv.usr(idx).data;

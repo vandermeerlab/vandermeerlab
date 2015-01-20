@@ -57,7 +57,7 @@ function navigate(src,event)
 % There is likely a better way to do this, but I am a novice. - ACarey
 %% Declare global variables
 
-global evtTimes windowSize zoom time
+global evtTimes windowSize zoom time usrfield
 
 
 %%
@@ -172,13 +172,13 @@ evtTitle = 0; %this controls whether we display an event title, which
                 next_idx = current_index + 1;
                 next_location = evtTimes(next_idx);
                 evtTitle = 1;
-                
+
         elseif shiftPressed == 1 && strcmp(event.Key,'a') == 1
                 %shift figure axes ten events left
                 next_idx = current_index - 10; 
                 next_location = evtTimes(next_idx);
                 evtTitle = 1;
-            
+
         elseif shiftPressed == 1 && strcmp(event.Key,'d') == 1 
             %shift figure axes ten events right
                 next_idx = current_index + 10;
@@ -202,7 +202,6 @@ evtTitle = 0; %this controls whether we display an event title, which
                 next_idx = 1; 
                 next_location = evtTimes(next_idx);
                 evtTitle = 1;
-
             
         elseif strcmp(event.Key,'leftarrow')==0 && strcmp(event.Key,'l') == 1 
             %shift figure axes to last event
@@ -220,7 +219,6 @@ evtTitle = 0; %this controls whether we display an event title, which
             permission = 0; % can't enter the "permission" if statement if the wrong key is pressed
             evtTitle = 1; % ** if you press an unassigned key while viewing an event, the title will 
                           % diappear unless evtTitle is something other than 0
-                  
         end
   
 % Do not show a title if the user is navigating based on the time axis
@@ -230,7 +228,7 @@ evtTitle = 0; %this controls whether we display an event title, which
     if evtTitle == 0 % evtTitle will be blank if you are using the move window keys rather than the find event keys
         title(sprintf('')); 
     end
- 
+
 %% LIMITS ASSIGNMENT
     % "permission" if statement: allows only type 2 to enter -- converts
     % next_location into a new set of limits, and also prints the event
@@ -239,11 +237,26 @@ evtTitle = 0; %this controls whether we display an event title, which
         leftLim = next_location - flank;
         rightLim = next_location + flank;
         limits = [leftLim rightLim];
-        if evtTitle == 1
+        
+        if ~isempty(usrfield)
+            str_title = sprintf('event %d/%d',next_idx,length(evtTimes));
+
+            for iU = 1:length(usrfield)  
+                str_font = '\fontsize{8}';
+                str_usr{iU} = [str_font,sprintf('%s: %.3f',usrfield(iU).label,usrfield(iU).data(next_idx))];
+            end
+            
+            str = [{str_title},str_usr];
+            title(str)
+           
+        % no usr field input for events
+        elseif evtTitle == 1
             title(sprintf('event %d/%d',next_idx,length(evtTimes)));
+            
         end
     end
-    
+            
     % this is where the new limits are assigned to the viewing window
        set(gca,'XLim',limits)
+
     

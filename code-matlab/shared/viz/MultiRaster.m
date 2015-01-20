@@ -38,6 +38,7 @@ function out = MultiRaster(cfg_in,S)
 %
 %
 % youkitan 2014-11-06 
+% edit 2015-01-20
 
 %% Set cfg parameters and check inputs
 cfg_def.SpikeHeight = 0.4;
@@ -49,9 +50,11 @@ cfg_def.windowSize = 1;
 cfg = ProcessConfig2(cfg_def,cfg_in);
 
 %% Setup navigate
-global evtTimes windowSize time
+
+global evtTimes windowSize time usrfield
 windowSize = cfg.windowSize;
 
+% Initialize time vector for navigating
 if ~isfield(cfg,'time')
     %create internal tvec
     spktimes = [];
@@ -67,6 +70,7 @@ if ~isfield(cfg,'time')
     time = tstart:binSize:tend;
 end
 
+% Initialize events
 if isfield(cfg,'evtTimes')
     evtTimes = cfg.evtTimes;
 elseif ~isfield(cfg.evt,'tstart')
@@ -74,6 +78,13 @@ elseif ~isfield(cfg.evt,'tstart')
     evtTimes = time;
 end
 
+% Initialize usr input text
+if isfield(cfg.evt,'usr')
+    usrfield = cfg.evt.usr;
+else
+    usrfield = [];
+end
+    
 figure('KeyPressFcn',@navigate)
 hold on;    
 
@@ -136,7 +147,7 @@ switch plotMode
         ylims = PlotSpikeRaster2(cfg,S);
         cfg.spkColor = 'r';
         ylims = PlotSpikeRaster2(cfg,S_iv);
-                    
+        
     case 4 % ts + iv data NOT WORKING YET
         error('ts + iv event data NOT WORKING YET')
         

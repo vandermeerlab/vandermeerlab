@@ -1,10 +1,10 @@
 %% Load data
 clear all; clc;
-cd('D:\My_Documents\data\inProcess\R042-2013-08-18_recording');
+cd('D:\My_Documents\data\inProcess\R042-2013-08-18_recording'); %your data path
 profile on;
 
 % load a CSC 
-cfg = []; cfg.fc = {'CSC11.Ncs'};
+cfg = []; cfg.fc = {'R042-2013-08-18_recording-CSC11b.Ncs'}; %whatever you call it
 lfp = LoadCSC(cfg);
 
 % Load spikes
@@ -130,13 +130,13 @@ clear iC tc_temp trial_ID x yl ylims
 %% Designate place cells
 field_order = TC.template_idx;
 S_pc = S_orig;
-S_pc.t = S_pc.t(field_order); %only use place cells
-S_pc.label = S_pc.label(field_order); %only use place cells
+S_pc.t = S_pc.t(field_order); %arrange spike train by place cell ordering
+S_pc.label = S_pc.label(field_order);
 
 %% Exract SWR events
 cfg = [];
 cfg.threshold = 3;
-cfg.max_thr = 5;
+cfg.max_thr = 3;
 spwr_iv = getSWR(cfg,S_pc,lfp);
 
 %% plot SWR events
@@ -164,22 +164,25 @@ MultiRaster(cfg,S_pc)
 
 %% Score candidate events
 cfg = [];
-cfg.display = 1;
+cfg.display = 0;
 scores = scoreCandSeq(cfg,CAND_iv,S_pc);
 
 %% Plot significant events
 
-% add signifance to usr field of candidate ivs
-CAND_iv.usr.data = scores.significance;
-CAND_iv.usr.label = 'significance';
+% add scores to usr field of candidate ivs. N.B.- this can be done in scoreCandSeq() but
+% for now we have a "scores" output which we can append back onto the candidate ivs.
+datas = struct2cell(scores);
+label = fieldnames(scores);
+for f = 1:length(label)
+    CAND_iv.usr(f).data = datas{f}'; %transpose to make it a column vector
+    CAND_iv.usr(f).label = label{f};
+end
 
-% select significant events
-cfg.dcn = 'exact';
-replay_iv = SelectIV(cfg,CAND_iv);
-
+% The navigate function now includes usr field text in the title for each event so
+% MultiRaster will show the replay scores for each event. 
 cfg = [];
 cfg.lfp = lfp;
-cfg.evt = replay_iv;
+cfg.evt = CAND_iv;
 MultiRaster(cfg,S_pc)
 
 
