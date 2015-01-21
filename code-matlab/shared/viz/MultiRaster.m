@@ -1,6 +1,7 @@
 function out = MultiRaster(cfg_in,S)
 % function MultiRaster(cfg,S) plots the spiketrain S with optional inputs for lfps and
 % iv or ts event objects. 
+% User can move viewing window via keyboard input (type "help navigate" in command window).
 %
 %   INPUTS:
 %       cfg_in: input cfg
@@ -33,18 +34,30 @@ function out = MultiRaster(cfg_in,S)
 %       cfg.lfpColor - default 'r' (red)
 %           Color specifier for lfp signal. Can be any MATLAB string color specifier.
 %
+%       cfg.lfpHeight - default 5 
+%           The height of the lfp from maximum to minium in y-axis units. Vertically 
+%           stretches the lfp to improve visibility of oscillations. lfp + iv mode only. 
+%
+%       cfg.lfpMax - default 15
+%           Values greater than lfpMax times above mean(abs(lfp.data)) will be plotted 
+%           as NaNs. Improves visibilty by cutting off high-amplitude [noise] blips 
+%           in raw lfp. lfp + iv mode only.
+%
 %       cfg.axislabel - default 'on'
 %           Automatically creates labels for the axes. Can be turned off.
 %
 %
 % youkitan 2014-11-06 
 % edit 2015-01-20
+% ACarey edit, 2015-01-20 (lfpHeight and lfpMax)
 
 %% Set cfg parameters and check inputs
 cfg_def.SpikeHeight = 0.4;
 cfg_def.axisflag = 'tight';
 cfg_def.spkColor = 'k';
 cfg_def.lfpColor = 'r';
+cfg_def.lfpHeight = 5;
+cfg_def.lfpMax = 15;
 cfg_def.axislabel = 'on';
 cfg_def.windowSize = 1;
 cfg = ProcessConfig2(cfg_def,cfg_in);
@@ -173,10 +186,14 @@ switch plotMode
 
     case 7 % lfp + iv data
         evtTimes = (cfg.evt.tstart + cfg.evt.tend)./2;
-        cfg.lfp.data = rescale(cfg.lfp.data,-10,0);
+        abslfp = abs(cfg.lfp.data);
+        nans_here = abslfp > cfg.lfpMax*mean(abslfp);
+        cfg.lfp.data(nans_here) = NaN;
+        cfg.lfp.data = rescale(cfg.lfp.data,-cfg.lfpHeight,0);
         cfg_temp.display = 'tsd';
+        
         PlotTSDfromIV(cfg_temp,cfg.evt,cfg.lfp);
-        ylims(1) = -10;
+        ylims(1) = -cfg.lfpHeight - 1;
     
     case 8 % lfp + iv + ts data
         error('ts + iv event data NOT WORKING YET')

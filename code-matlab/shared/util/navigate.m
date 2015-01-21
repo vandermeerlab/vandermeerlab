@@ -1,8 +1,9 @@
 function navigate(src,event)
 % function navigate(src,event)
 % 
-% Use: Navigate is used by plotting functions such as fasteraster or
-% neurplot like so: figure('KeyPressFcn',@navigate)
+% Use: Navigate is used by plotting functions such as MultiRaster by sending 
+% data in via global variables, and calling on the function like so: 
+% figure('KeyPressFcn',@navigate). See MultiRaster for an example.
 % Purpose: Moves viewing window according to keyboard input.
 %
 % FIND EVENT
@@ -27,8 +28,6 @@ function navigate(src,event)
 % m:           move to the midpoint of the recording
 % e:           move to the end of the recording
 %
-% Note that navigate uses global variables 
-%
 % SHORTCOMINGS:
 % **If you are inbetween events, navigate will skip the nearest left or
 % right event; in this case, just hit 'd' or 'a' to get the one you missed.
@@ -37,6 +36,7 @@ function navigate(src,event)
 % combination or the arrow keys.
 %
 % ACarey. Aug 2014. 
+% youkitan edit, 2015-01-20 (can display candidate score).
 
 %% ****Some notes on how this function works internally****
 
