@@ -60,6 +60,7 @@ cfg_def.lfpHeight = 5;
 cfg_def.lfpMax = 15;
 cfg_def.axislabel = 'on';
 cfg_def.windowSize = 1;
+cfg_def.openInAxes = 0; % replace with axes handle to open in axes instead of figure
 cfg = ProcessConfig2(cfg_def,cfg_in);
 
 %% Setup navigate
@@ -84,22 +85,28 @@ if ~isfield(cfg,'time')
 end
 
 % Initialize events
-if isfield(cfg,'evtTimes')
-    evtTimes = cfg.evtTimes;
-elseif ~isfield(cfg.evt,'tstart')
+if isfield(cfg,'evt')
+    evtTimes = cfg.evt;
+    % Initialize usr input text
+    if isfield(cfg.evt,'usr')
+        usrfield = cfg.evt.usr;
+    else
+        usrfield = [];
+    end
+else
     %set time vector as evtTimes
     evtTimes = time;
-end
-
-% Initialize usr input text
-if isfield(cfg.evt,'usr')
-    usrfield = cfg.evt.usr;
-else
     usrfield = [];
 end
     
-figure('KeyPressFcn',@navigate)
-hold on;    
+% open in appropriate fig or axes
+if ~cfg.openInAxes
+    figure('KeyPressFcn',@navigate)
+    hold on;
+else
+    axes(cfg.openInAxes);
+    hold on;
+end
 
 %% Error checking and plot type setup
 % Check to see what datatypes we need to plot besides spikes and do error checking. 

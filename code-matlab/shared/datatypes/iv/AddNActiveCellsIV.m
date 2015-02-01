@@ -42,8 +42,8 @@ for iIV = length(iv_in.tstart):-1:1
 end
 
 % NOTE adding usr fields to ivs needs to be handled better
-iv_in.usr = nC;
-iv_in.label = {'nActiveCells'};
+iv_in.usr(1).data = nC;
+iv_in.usr(1).label = 'nActiveCells';
 
 % housekeeping
 iv_in.cfg.history.mfun = cat(1,iv_in.cfg.history.mfun,mfun);
