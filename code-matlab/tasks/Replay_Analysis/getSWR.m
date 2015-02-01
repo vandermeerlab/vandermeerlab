@@ -24,11 +24,13 @@ function spwr_iv_out = getSWR(cfg_in,S,lfp)
 % youkitan 2014-12-28
 
 %% Parse cfg parameters
-cfg_def.f = [140 200]; %in Hz
-cfg_def.threshold = 3; %in std, determines size of ivs
-cfg_def.max_thr = 5;
-cfg_def.methods = 'raw';
-cfg_def.merge_thr = 0.03;
+cfg_def.f = [140 200]; % ripple-band power passband (Hz)
+cfg_def.threshold = 2; % iv edge threshold for ripple-band power (z-score)
+cfg_def.max_thr = 5; % iv max threshold for ripple-band power (z-score)
+%cfg_def.methods = 'raw'; % not used?
+cfg_def.merge_thr = 0.02; % merge ivs closer together than this (s)
+cfg_def.minlen = 0.02; % iv minimum length (s)
+
 cfg_def.viewMUA = 0;
 cfg_def.useMUA = 0;
 cfg_def.overlap_thr = 0.01; %in seconds
@@ -72,7 +74,7 @@ muaIV = TSDtoIV(cfg,mua_z);
 % to each event, add a field with the max z-scored power
 cfg_temp = [];
 cfg_temp.method = 'max'; % 'min', 'mean'
-cfg_temp.label = 'maxz'; % what to call this in iv, i.e. usr.label
+cfg_temp.label = 'MUA_maxz'; % what to call this in iv, i.e. usr.label
 muaIV = AddTSDtoIV(cfg_temp,muaIV,mua_z);
 
 % select only those events of >5 z-scored power
