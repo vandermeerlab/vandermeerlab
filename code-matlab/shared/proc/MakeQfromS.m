@@ -45,7 +45,7 @@ tvec_centers = cfg.tvec_edges(1:end-1)+cfg.dt/2;
 if cfg.smooth
     gauss_window = cfg_def.gausswin_size./cfg.dt; % 1 second window
     gauss_SD = cfg_def.gausswin_sd./cfg.dt; % 0.02 seconds (20ms) SD
-    gk = gausskernel(gauss_window,gauss_SD); gk = gk./cfg.dt; % normalize by binsize
+    gk = gausskernel(gauss_window,gauss_SD)'; %gk = gk./cfg.dt; % normalize by binsize
 end
 
 % construct Q-matrix

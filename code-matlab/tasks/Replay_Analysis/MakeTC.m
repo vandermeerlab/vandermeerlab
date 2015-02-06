@@ -65,6 +65,11 @@ end
 % get spiking counts and firing rates
 nCells = length(S.t);
 for iC = 1:nCells
+    if isempty(S.t{iC}) % no spikes
+       all_tc(iC,:) = 0;
+       continue;
+    end
+    
     spk_z = interp1(pos.tvec,pos_mat,S.t{iC},'linear');
     spk_hist = histc(spk_z,edges,1);
     spk_hist = spk_hist(1:end-1);
