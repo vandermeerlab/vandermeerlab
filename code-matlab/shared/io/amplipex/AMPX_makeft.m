@@ -33,6 +33,14 @@ data_ft.hdr.nSamplesPre = 0;
 data_ft.hdr.nSamples = length(data_ft.trial{1});
 data_ft.hdr.chantype = {'unknown'};
 data_ft.hdr.chanunit = {'unknown'};
+data_ft.hdr.FirstTimeStamp = 0;
+data_ft.hdr.TimeStampPerSample = (1./data_ft.hdr.Fs) * 10^6;
 data_ft.hdr.orig = data.hdr;
 
+% these options are generally set by ft_preprocessing, ft_read_data and so
+% on, need to fake it
 data_ft.cfg = cfg;
+data_ft.cfg.dataset = 'AMPX_makeft.m';
+data_ft.cfg.continuous = 'yes';
+data_ft.cfg.trl = [1 data_ft.hdr.nSamples 0];
+
