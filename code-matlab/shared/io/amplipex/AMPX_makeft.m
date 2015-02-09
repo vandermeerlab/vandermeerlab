@@ -17,24 +17,11 @@ data_ft = [];
 data_ft.time = {data.tvec'};
 data_ft.fsample = data.hdr.Fs;
 
-%% Quick check to make sure all the data is the same length
-all_lengths =[];
-for iC = 1:length(data.channels)
-    lengths = length(data.channels{iC}');
-    all_lengths = [all_lengths ; lengths];
-end
-min_data_len = min(lengths);
-
-%% Continue to reformat the data into the fieldtrip format.
-
 for iC = length(data.channels):-1:1
-    if length(data.channels{iC}) > min_data_len
-        data_len_diff = length(data.channels{iC}) - min_data_len;
-        data.channels{iC} = data.channels{iC}(1:end-data_len_diff);
-        if data_len_diff > 10; error('The data is not the same length between channels (accepable is 10 units).') ; end
-    end
+   
     data_ft.trial{1}(iC,:) = data.channels{iC}';
     data_ft.label{iC} = num2str(data.labels(iC)); % may need to change this based on mapping
+    
 end
 
 data_ft.sampleinfo = [1 length(data_ft.trial{1})];
