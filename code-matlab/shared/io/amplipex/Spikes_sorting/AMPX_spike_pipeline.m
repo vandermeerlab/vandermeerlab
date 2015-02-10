@@ -14,7 +14,7 @@ function [] = AMPX_spike_pipeline(fname, varargin)
 %% initialze some variables.
 
 cfg.phases = {'pre','left','right', 'post'};
-cfg.tts_to_process = 4:7;
+cfg.tts_to_process = [5:8, 9:13, 15];
 current_dir =(['G:\Naris\' fname(1:4) '\' fname(1:15)]);
 cd(current_dir);
 extract_varargin
@@ -32,7 +32,7 @@ end
 for iphase = 1%:length(cfg.phases)
     fprintf(['Precprocessing ' cfg.phases{iphase} '...\n'])
 %     mkdir([cfg.phases{iphase}]); mkdir([current_dir '\' cfg.phases{iphase} '\FD'])
-    AMPX_to_ntt_JG([fname '-' cfg.phases{iphase} '.dat'])
+    AMPX_to_ntt_JG([fname '-' cfg.phases{iphase} '.dat'], cfg)
     fprintf(fid, [datestr(now),cfg.phases{iphase} ' ntt Files created for channels' cfg.tts_to_process ' \n'])
     mkdir([cfg.phases{iphase} '_ntt\FD'])
     for ii = 1:length(cfg.tts_to_process)

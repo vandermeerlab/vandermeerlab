@@ -1,4 +1,4 @@
-function AMPX_to_ntt_JG(fname)
+function AMPX_to_ntt_JG(fname, cfg)
 
 %% load data of interest
 % fname = 'R053-2015-01-11-right.dat';
@@ -6,14 +6,14 @@ cd(['G:\Naris\' fname(1:4) '\' fname(1:15)]);
 
 addpath(genpath('C:\Users\mvdm\Documents\GitHub\vandermeerlab\code-matlab\toolboxes\ums2k_02_23_2012'));
 
-tts_to_process = [4:7];
-
+tts_to_process = cfg.tts_to_process;
+cfg = [];
 cfg.ref_tt = 0;
 cfg.useAverage = 0;
 
 cfg.showData = 0;
 
-mkdir(['G:\Naris\' fname(1:4) '\' fname(1:end-9) '\FD'])
+mkdir(['G:\Naris\' fname(1:4) '\' fname(1:end-8) '\FD'])
 clear av;
 for iTT = 1:length(tts_to_process)
     
@@ -77,7 +77,7 @@ for iTT = 1:length(tts_to_process)
     %% detect spikes and align spikes
     spikes = ss_default_params(new_Fs);
     spikes.params.detect_method = 'manual'; % could be 'auto'
-    spikes.params.thresh = [-120 -120 -120 -120]; % set this carefully
+    spikes.params.thresh = [-100 -100 -100 -100]; % set this carefully
     spikes.params.window_size = 1;
     spikes.params.cross_time = 0.4;
     

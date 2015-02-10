@@ -14,10 +14,12 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% get ExpKeys info
+fn = FindFiles('*keys.m');
+[~,name,~] = fileparts(fn{1});
+run(name)
 
-ncs = 'R050-2014-04-02-CSC15a.ncs';
-
-cfg.fc = {ncs};  
+cfg.fc = ExpKeys.goodSWR(1);  
 
 csc = LoadCSC(cfg);
 
@@ -26,8 +28,8 @@ data = csc.data;
 
 %epochs = defineEpochs(tvec); % the rest of the script uses variable names "pre","task", and "post" so use those here
 
-% get ExpKeys info
-run(FindFile('*keys.m')); % this is how you access the expkeys info
+
+
 pre_idx = nearest_idx3(ExpKeys.prerecord,tvec); % [start stop] indices for prerecord
 task_idx = nearest_idx3(ExpKeys.task,tvec); % " for task
 post_idx = nearest_idx3(ExpKeys.postrecord,tvec); % " for postrecord
@@ -77,6 +79,7 @@ plot(xpos(task_tidx),ypos(task_tidx),'g');
 plot(xpos(post_tidx),ypos(post_tidx),'b');
 
 %% plot 3D, incl time (visual check)
+figure;
 plot3(xpos(pre_tidx),ypos(pre_tidx),pre_tidx,'r');hold on;
 plot3(xpos(task_tidx),ypos(task_tidx),task_tidx,'g');
 plot3(xpos(post_tidx),ypos(post_tidx),post_tidx,'b');
