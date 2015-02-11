@@ -25,16 +25,23 @@ function [S_out,vals] = FieldOrderCCF(cfg_in,S_in)
 %
 % cfg.PlotOutput = 0;
 % cfg_def.reorder = 1; % if > 0 reversed lags, flip them
+% cfg_def.InteractiveMode = 0; % if 1, use interactive mode (user input y/n
+%  to swap)
 %
 % MvdM 2015-01-29 initial version
 
 cfg_def.PlotOutput = 0;
 cfg_def.reorder = 1; % if > 0 reversed lags, flip them
+cfg_def.InteractiveMode = 0;
+
 cfg = ProcessConfig2(cfg_def,cfg_in);
 
 nCells = length(S_in.t);
 pk_lag = nan(nCells); % make full matrix in case we want to do non-consecutive flips later
 asy = nan(nCells); % make full matrix in case we want to do non-consecutive flips later
+
+prm = 1:nCells; % new index for swapped order
+swap_count = 0;
 
 %% check place cell ordering
 for iC = 1:nCells-1
@@ -56,7 +63,7 @@ for iC = 1:nCells-1
     
     
     if cfg.PlotOutput
-        figure;
+        fh = figure;
         plot(tvec,cc,'k','LineWidth',2);
         hold on;
         if pk_lag(c1,c2) >= 0
@@ -65,6 +72,34 @@ for iC = 1:nCells-1
             plot(pk_lag(c1,c2),pk_val,'.g','MarkerSize',40);
         end
         title(sprintf('%d-%d, lag %.2f, asy %.2f',c1,c2,pk_lag(c1,c2),asy(c1,c2)));
+        
+        if cfg.InteractiveMode
+           
+            % set TC color
+           if isfield(cfg,'tch')
+              set([cfg.tch(c1) cfg.tch(c2)],'FaceColor',[1 0 0]); 
+           end
+            
+           swp = input(sprintf('%d-%d swap (y/n): ',c1,c2),'s');
+           
+           switch swp
+               case 'y'
+                   x(swap_count + 1) = c1;
+                   y(swap_count + 1) = c2;
+                   swap_count = swap_count + 1;
+               otherwise
+                   disp('Not swapped');
+           end
+           
+           % unset TC color
+           if isfield(cfg,'tch')
+              set([cfg.tch(c1) cfg.tch(c2)],'FaceColor',[0 0 0]); 
+           end
+           
+           close(fh);
+           
+        end
+        
     end
     
 end
@@ -72,16 +107,14 @@ end
 %%
 % try to improve
 
-[x,y] = ind2sub(size(pk_lag),find(pk_lag > 0 & asy > 0));
+if ~cfg.InteractiveMode
+    [x,y] = ind2sub(size(pk_lag),find(pk_lag > 0 & asy > 0));
+end
+
 vals.N = length(x);
-vals.pk_lag = pk_lag;
-
-vals.asy = asy;
-
 fprintf('** There are %d consecutive pairs with positive lags & asymmetric CCFs.\n',vals.N);
 
 S_out = S_in;
-prm = 1:nCells;
 
 if (vals.N > 0) & cfg.reorder
     
@@ -98,4 +131,6 @@ if (vals.N > 0) & cfg.reorder
     
 end
 
+vals.pk_lag = pk_lag;
+vals.asy = asy;
 vals.perm_idx = prm;
