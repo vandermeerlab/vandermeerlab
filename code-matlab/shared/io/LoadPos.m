@@ -9,7 +9,8 @@ function pos_tsd = LoadPos(cfg_in)
 %   if no filename is specified, loads *.nvt file in current dir
 % cfg.tsflag = 'sec';
 % cfg.removeZeros = 1;
-% cfg.realTrackDims = [167 185]; %default for R042 T-maze
+% cfg.convFact = [xConvFact yConvFact]; % output from PosCon() function,
+%                converts position data units from pixels to centimeters
 %
 % output:
 %
@@ -17,6 +18,7 @@ function pos_tsd = LoadPos(cfg_in)
 %
 % MvdM 2014-06-17
 % youkitan 2014-11-05
+% A.Carey 2015-02-11 (added convFact)
 
 cfg_def.removeZeros = 1;
 cfg_def.tsflag = 'sec';
@@ -64,15 +66,9 @@ pos_tsd.data(2,:) = Y;
 pos_tsd.label{2} = 'y';
 
 % Convert data from pixels to cm
-if isfield(cfg,'realTrackDims')
-    X_pixelsize = max(pos_tsd.data(1,:)) - min(pos_tsd.data(1,:));
-    Y_pixelsize = max(pos_tsd.data(2,:)) - min(pos_tsd.data(2,:));
-    
-    XConvFactor = X_pixelsize / cfg.realTrackDims(1);
-    YConvFactor = Y_pixelsize / cfg.realTrackDims(2);
-    
-    pos_tsd.data(1,:) = pos_tsd.data(1,:)./XConvFactor; 
-    pos_tsd.data(2,:) = pos_tsd.data(2,:)./YConvFactor; 
+if isfield(cfg,'convFact') 
+    pos_tsd.data(1,:) = pos_tsd.data(1,:)./cfg.convFact(1); 
+    pos_tsd.data(2,:) = pos_tsd.data(2,:)./cfg.convFact(2); 
 end
 
 % check if ExpKeys available
