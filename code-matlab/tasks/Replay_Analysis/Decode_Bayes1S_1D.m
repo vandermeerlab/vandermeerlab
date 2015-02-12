@@ -1,17 +1,46 @@
 function iv_out = Decode_Bayes1S_1D(cfg_in,S,tc)
 % function iv_out = Decode_Bayes1S_1D(cfg_in,S,tc)
 %
-
+% one-step (naive) Bayesian decoder for one-dimensional variables
+%
+% INPUTS:
+%
+% S: ts with spike data (e.g. from LoadSpikes())
+% tc: tuning curves (e.g. from MakeTC())
+%
+% *cfg_in must contain the evt field with time intervals to decode
+%
+% OUTPUTS:
+%
+% iv_out: intervals with various usr fields of interest
+% .Decode_Bayes1S_1D: posterior (decoded) probability p(variable=value | spikes)
+% .Decode_Bayes1S_1D_Qmat: Q-matrix
+% .Decode_Bayes1S_1D_pshuf: posterior for each of nShuffles shuffles
+%
+% OPTIONS:
+%
+% cfg_def.dt = 0.025; % time step (in seconds)
+% cfg_def.smooth = 1; % smooth rows of Q-matrix with Gaussian kernel if set to 1
+% cfg_def.gwin = 1; % Gaussian smoothing kernel for Q-matrix, width in seconds
+% cfg_def.gsd = 0.02; % smoothing kernel SD (in seconds)
+% cfg_def.trim = 1; % trim leading and trailing zeros in Q-matrix (for speed later)
+% cfg_def.returnQ = 0; % return full Q-matrix in output
+% cfg_def.regularizeTC = 0; % regularize tuning curves by replacing zero values with this
+% cfg_def.shuffle_mode = 0; % if ~= 0, perform shuffles (see help ShuffleTS to see the options)
+% cfg_def.nShuffles = 100; % number of shuffles to perform
+%
+% MvdM Feb 2015
 
 cfg_def = [];
-cfg_def.dt = 0.025; % in ms
-cfg_def.smooth = 1;
-cfg_def.gwin = 1; % s
-cfg_def.gsd = 0.02; % s
-cfg_def.returnQ = 0;
-cfg_def.regularizeTC = 0;
-cfg_def.shuffle_mode = 0;
-cfg_def.nShuffles = 100;
+cfg_def.dt = 0.025; % time step (in seconds)
+cfg_def.smooth = 0; % smooth rows of Q-matrix with Gaussian kernel if set to 1
+cfg_def.gwin = 1; % Gaussian smoothing kernel for Q-matrix, width in seconds
+cfg_def.gsd = 0.02; % smoothing kernel SD (in seconds)
+cfg_def.trim = 1; % trim leading and trailing zeros in Q-matrix (for speed later)
+cfg_def.returnQ = 0; % return full Q-matrix in output
+cfg_def.regularizeTC = 0; % regularize tuning curves by replacing zero values with this
+cfg_def.shuffle_mode = 0; % if ~= 0, perform shuffles (see help ShuffleTS to see the options)
+cfg_def.nShuffles = 100; % number of shuffles to perform
 
 cfg = ProcessConfig2(cfg_def,cfg_in);
 mfun = mfilename;
@@ -68,12 +97,19 @@ for iIV = nIV:-1:1 % NOTE: just decoding the whole thing and restricting later m
     if cfg.shuffle_mode ~= 0
         
         cfg_shuf = []; cfg_shuf.mode = cfg.shuffle_mode;
-        cfg_shuf.t0 = cfg.evt.tstart(iIV); cfg_shuf.t1 = cfg.evt.tend(iIV); 
+        %cfg_shuf.t0 = cfg.evt.tstart(iIV); cfg_shuf.t1 = cfg.evt.tend(iIV); 
+        % start and end times of shuffle should match edges used to make
+        % Q and p matrices -- this is very important!
+        tvec_centers = iv_out.usr(nUsr).data{iIV}.tvec;
+        cfg_shuf.t0 = tvec_centers(1)-cfg_Q.dt/2;
+        cfg_shuf.t1 = tvec_centers(end)+cfg_Q.dt/2;
+        
+        cfg_Qshuf = cfg_Q; cfg_Qshuf.trim = 0; % don't trim shuffled spikes!
         
         for iShuf = cfg.nShuffles:-1:1
                    
             S_shuf = ShuffleTS(cfg_shuf,S);
-            p = dec_function(cfg_Q,S_shuf,tc);
+            p = dec_function(cfg_Qshuf,S_shuf,tc);
             
             iv_out.usr(nUsr+2).data{iIV}(iShuf,:,:) = p;
             
@@ -107,9 +143,17 @@ nActiveNeurons = sum(Q.data > cfg_Q.regularizeTC); % this affects the regression
 
 % decode
 tvec_centers = cfg_Q.tvec_edges(1:end-1)+cfg_Q.dt/2;
-len = length(tvec_centers);
+
+if cfg_Q.trim
+    keep_idx = find(nActiveNeurons,1,'first'):find(nActiveNeurons,1,'last');
+    nActiveNeurons = nActiveNeurons(keep_idx);
+    tvec_centers = tvec_centers(keep_idx);
+    Q.data = Q.data(:,keep_idx);
+    Q.tvec = Q.tvec(keep_idx);
+end
 
 nBins = size(tc,1);
+len = length(tvec_centers);
 p = nan(length(tvec_centers),nBins);
 
 occUniform = ones(nBins,1);
