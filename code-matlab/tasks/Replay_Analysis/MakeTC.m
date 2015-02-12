@@ -64,6 +64,7 @@ end
     
 % get spiking counts and firing rates
 nCells = length(S.t);
+all_tc = nan(nCells,nBins);
 for iC = 1:nCells
     if isempty(S.t{iC}) % no spikes
        all_tc(iC,:) = 0;
