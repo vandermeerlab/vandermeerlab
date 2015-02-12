@@ -37,6 +37,42 @@ function convFact = PosCon(pos,realTrackDims,varargin)
 %
 % A.Carey, Feb 2015.
 
+%% Measuring your track dimensions 
+
+% You need to know the dimensions of your track, but these dimensions must
+% be as if the track fits perfectly into a box that has the same orientation
+% as the camera's field of view (the box has to be orthogonal to the field
+% of view, or whatever)
+
+% rhombus track ex: you don't want lengths a and b, you want x and y (I think, right?)
+
+%    ..... x ..... 
+%  _ _ _ _ _ _ _ _ _ 
+% |                  |
+% |        .         |  .
+% |      .   .  a    |  .
+% |    .       .     |  .
+% |  .           .   |  y 
+% |    .       .     |  .
+% |      .   .  b    |  .
+% |        .         |  .
+% |                  |
+% |_ _ _ _ _ _ _ _ _ |
+%   field of view
+
+% The T-maze is already approx lined up with the camera's field of view, so x = a and y = b
+%     ......x.......
+%  _ _ _ _ _ _ _ _ _ _ 
+% |         a          |
+% |    ____________    | .             
+% |   |     |      |   | .
+% |   |     |      |   | .
+% |   |     |      |   | y
+% |         | b        | .  
+% |         |          | .
+% |         |          | .
+% |_ _ _ _ _ _ _ _ _ _ |
+
 %%
 
 YDir = 'normal'; % 'reverse' flips the y axis
@@ -56,18 +92,21 @@ xlabel('X data'); ylabel('Y data');
 maximize;
 hold on
 
-[x,yX] = ginput(2);
+[x,~] = ginput(2);
 
-plot([x(1) x(2)],[yX(1) yX(2)],'LineWidth',4,'Color','g');
+xlims = get(gca,'xlim');
+ylims = get(gca,'ylim');
 
+plot([x(1) x(1)],ylims,'LineWidth',4,'Color','k');
+plot([x(2) x(2)],ylims,'LineWidth',4,'Color','k');
 %pause(1);
 
 title('Define Y boundary with two mouse clicks');
 
-[xY,y] = ginput(2);
+[~,y] = ginput(2);
 
-plot([xY(1) xY(2)],[y(1) y(2)],'LineWidth',4,'Color','b');
-
+plot(xlims,[y(1) y(1)],'LineWidth',4,'Color','k');
+plot(xlims,[y(2) y(2)],'LineWidth',4,'Color','k');
 pause(1);
 close
 
