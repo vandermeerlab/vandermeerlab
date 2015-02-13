@@ -7,7 +7,7 @@ function tc_out = MakeTC(cfg_in,S,pos)
 %   INPUT:
 %       cfg - input cfg parameters
 %       S - input spiketrain
-%       Pos - input Position vector binned in cm
+%       pos - input position vector (assumed in cm)
 %
 %   OUTPUT:
 %       tc - tuning curve object
@@ -23,16 +23,17 @@ function tc_out = MakeTC(cfg_in,S,pos)
 % youkitan 2014-12-28
 
 %% Parse cfg parameters
-cfg_def.binSize = 1; %position bins in cms
+cfg_def.binSize = 1; % how many cm in a bin
 cfg_def.gkSD = 3; % standard deviation for gaussian kernel (in cm)
-cfg_def.gkWidth = 20; % width of gaussian kernel in cm (size of place field)
+cfg_def.gkWidth = 25; % width of gaussian kernel window (in cm)
 cfg_def.conv2Sec = 1; % convert to seconds/bin
 cfg_def.min_fr = 1; % threshold for detecting place fields in Hz
 cfg_def.max_meanfr = 5; % mean fr to rule out interneurons
+cfg_def.edges = []; % edge vector to use for binning; defaults to min(pos):binSize:max(pos)
 
 cfg = ProcessConfig2(cfg_def,cfg_in);
 
-%% Detect Place cells and get tuning curves
+%% Detect place cells and get tuning curves
 
 % Check input data
 if any(strcmp(pos.label,'z'))
@@ -43,23 +44,23 @@ else
     error('Not a valid position vector')    
 end
 
-% Make gaussian kernel and occupancy map 
-if isfield(cfg,'rundist')
-    nBins = cfg.rundist;
-else
-    nBins = max(pos_mat);
+% define bin edges
+if isempty(cfg.edges)
+    cfg.edges = min(pos_mat)-0.5:cfg.binSize:max(pos_mat)+0.5;
 end
+nBins = length(cfg.edges)-1;
 
+% smoothing kernel
 kernel = gausskernel(cfg.gkWidth/cfg.binSize,cfg.gkSD/cfg.binSize);
-edges = 0.5:nBins+0.5;
 
 % get occupancy
-[occ_hist,pos_idx] = histc(pos_mat,edges);
-occ_hist = occ_hist(1:end-1); % ignore last edge bin
+[occ_hist,pos_idx] = histc(pos_mat,cfg.edges);
+occ_hist = trim_histc(occ_hist); % ignore last edge bin
 occ_hist = conv(occ_hist,kernel,'same');
 if cfg.conv2Sec
-    sampling_rate = median(diff(pos.tvec)); 
-    occ_hist = occ_hist .* sampling_rate;
+    Fs = median(diff(pos.tvec));
+    fprintf('MakeTC.m: video Fs %.2f detected.\n',1./Fs);
+    occ_hist = occ_hist .* Fs;
 end
     
 % get spiking counts and firing rates
@@ -72,7 +73,7 @@ for iC = 1:nCells
     end
     
     spk_z = interp1(pos.tvec,pos_mat,S.t{iC},'linear');
-    spk_hist = histc(spk_z,edges,1);
+    spk_hist = histc(spk_z,cfg.edges,1);
     spk_hist = spk_hist(1:end-1);
     spk_hist_mat(iC,:) = conv(spk_hist,kernel,'same');
 
@@ -83,7 +84,11 @@ end
 tc = all_tc'; % for compatibility with 2d version
 spk_hist = spk_hist_mat;
 
-[template_idx,peak_idx,peak_loc] = DetectPlaceCells1D([],tc);
+% detect place fields
+detect_cfg = [];
+detect_cfg.S = S;
+detect_cfg.pos = pos;
+[template_idx,peak_idx,peak_loc] = DetectPlaceCells1D(detect_cfg,tc);
 
 %store all data in a single struct
 tc_out.tc = tc;

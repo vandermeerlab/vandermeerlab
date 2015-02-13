@@ -18,7 +18,11 @@ function [idx,peak_idx,peak_loc] = DetectPlaceCells1D(cfg_in,tc)
 cfg_def = [];
 cfg_def.p_thr = 5; % threshold for detecting place field, in Hz
 cfg_def.p_thr_sd = 2; % in SD
-cfg_def.max_meanfr = 5;
+cfg_def.max_meanfr = 2;
+cfg_def.S = []; % optionally provide actual spike data for computing true mean frate, nSpikes per field etc.
+cfg_def.pos = []; % optionally provide position data for getting nSpikes per field
+cfg_def.nSpikesInField = [];
+
 cfg = ProcessConfig2(cfg_def,cfg_in);
 
 nCells = size(tc,2);
@@ -26,31 +30,61 @@ nCells = size(tc,2);
 ctr = 1; % counter for detected cells
 
 for iC = 1:nCells
-   
-    curr_tc = tc(:,iC);
-    
-    if max(curr_tc) > cfg.p_thr & nanmean(curr_tc) < cfg.max_meanfr % possible place cell
-    
-        pf_z = (curr_tc-nanmean(curr_tc))./nanstd(curr_tc);
 
-        pks.loc = find_fields(pf_z,cfg.p_thr_sd,'min_size',15);
+    this_tc = tc(:,iC);
+    
+    % first, decide if we are considering this cell at all based on average
+    % firing rate
+    if ~isempty(cfg.S) % we have spike data to get good estimate
+        this_frate = length(S.t{iC})./(S.cfg.ExpKeys.postrecord(end)-S.cfg.ExpKeys.prerecord(1));
+    else
+        this_frate = nanmean(this_tc);
+    end
+    
+    if ~(max(this_tc) > cfg.p_thr & this_frate < cfg.max_meanfr) % too low or too high firing, reject
+        continue;
+    end
+    
+    pf_z = (this_tc-nanmean(this_tc))./nanstd(this_tc);
+    
+    [pks.loc,pks.full] = find_fields(pf_z,cfg.p_thr_sd,'min_size',15);
+    
+    if ~isempty(pks.loc) % some peaks were detected
+        pks.val = this_tc(pks.loc); % get firing rate at peak
         
-        if ~isempty(pks.loc)
-            pks.val = curr_tc(pks.loc);
-            
-            keep = pks.val > cfg.p_thr;
-            pks.loc = pks.loc(keep);
-            pks.val = pks.val(keep);
-            
-            idx(ctr) = iC;
-            [~,peak_idx(ctr)] = max(curr_tc);
-            peak_loc{ctr} = pks.loc;
-            
-            ctr = ctr + 1;
-        end % of detection
+        keep = pks.val > cfg.p_thr;
+        pks.loc = pks.loc(keep); pks.val = pks.val(keep); pks.full = pks.full(keep);
+    end
+    
+    if ~isempty(pks.loc) & ~isempty(cfg.nSpikesInField) % get number of spikes in field
         
-    end % of initial threshold
+        for iF = 1:length(pks.loc)
+            
+           field_start = pks.full{iF}(1);
+           field_end = pks.full{iF}(end);
+           
+           % get field entries and exits as an iv
+           cfg_infield = [];
+           cfg_infield.method = 'raw'; cfg_infield.threshold = [field_start field_end]; 
+           cfg_infield.dcn = 'range'; cfg_infield.target = 'z';
+           infield_iv = TSDtoIV(cfg_infield,cfg.pos);
+           
+           % now get number of spikes
+            
+        end
+        
+    end
+        
+    if ~isempty(pks.loc) % field still lives, process
+        idx(ctr) = iC;
+        [~,peak_idx(ctr)] = max(this_tc);
+        peak_loc{ctr} = pks.loc;
+        
+        ctr = ctr + 1;
+    end % of detection
+    
 end
+
 [~,sort_idx] = sort(peak_idx,'ascend');
 idx = idx(sort_idx);
 peak_idx = peak_idx(sort_idx);

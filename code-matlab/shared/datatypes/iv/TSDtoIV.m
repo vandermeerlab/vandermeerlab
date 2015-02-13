@@ -57,6 +57,8 @@ switch cfg.dcn
         detec = temp_data > cfg.threshold;
     case '<'
         detec = temp_data < cfg.threshold;
+    case 'range'
+        detec = temp_data > cfg.threshold(1) & temp_data < cfg.threshold(2);
 end
 
 % pad the detection so we can deal with cases where first or last samples are detects
