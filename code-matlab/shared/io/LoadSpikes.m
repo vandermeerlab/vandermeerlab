@@ -9,8 +9,9 @@ function S = LoadSpikes(cfg_in)
 %   if no file_list field is specified, loads all *.t files in current dir
 % cfg.load_questionable_cells = 0; % load *._t files if set to 1
 % cfg.min_cluster_quality = 5; % minimum cluster quality
-% cfg.useClustersFile = 1;
-% cfg.tsflag = 'sec';
+% cfg.useClustersFile = 0; % use .clusters file
+% cfg.tsflag = 'sec'; % units to use
+% cfg.getTTnumbers = 0; add usr field with tetrode number for each cell
 %
 % output:
 %
@@ -21,7 +22,8 @@ function S = LoadSpikes(cfg_in)
 cfg_def.tsflag = 'sec';
 cfg_def.load_questionable_cells = 0;
 cfg_def.min_cluster_quality = 5;
-cfg_def.useClustersFile = 1;
+cfg_def.useClustersFile = 0;
+cfg_def.getTTnumbers = 1;
 
 cfg = ProcessConfig2(cfg_def,cfg_in); % this takes fields from cfg_in and puts them into cfg
 
@@ -152,6 +154,23 @@ if ~isempty(keys_f)
        disp('Failed to load keys file.'); 
     end
     S.cfg.ExpKeys = ExpKeys;
+end
+
+% add tt numbers
+if cfg_def.getTTnumbers
+    for iC = length(S.t):-1:1
+    
+        out = regexp(S.label{iC},'TT(\d\d)','tokens');
+        
+        if isempty(out)
+            error('Filename %s does not contain TTxx, cannot extract tetrode number.',S.label{iC});
+        else
+           S.usr(1).data(iC) = str2num(cell2mat(out{1}));
+        end
+        
+    end
+    
+    S.usr(1).label = 'tt_num';
 end
 
 % add sessionID
