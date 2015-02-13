@@ -24,27 +24,58 @@ function tch = TCPlot(cfg_in,TC)
 
 cfg_def = [];
 cfg_def.ax = []; % if specified, plot here; otherwise create new figure
+cfg_def.order = 1; % if 1, order by template_idx
+cfg_def.mode = 'area'; % 'line'
+cfg_def.color = [0 0 0];
+cfg_def.alpha = 0;
+
 cfg = ProcessConfig2(cfg_def,cfg_in);
 
+%
 if isempty(cfg.ax)
     figure;
 else
     axes(cfg.ax);
 end
 
-tc_temp = TC.tc(:,TC.template_idx)';
+%
+if cfg.order
+    tc_temp = TC.tc(:,TC.template_idx)';
+else
+    tc_temp = TC.tc';
+end
+
+x_end = size(tc_temp,2);
+
 clear tch;
-for iC = size(tc_temp,1):-1:1       
+for iC = 1:size(tc_temp,1)      
+    
     subaxis(size(tc_temp,1),1,iC,'SpacingVert',0);
-    tch(iC) = area(tc_temp(iC,:)); hold on; set(tch(iC),'FaceColor',[0 0 0]);
-    ylims = get(gca,'Ylim');
-    plot([TC.peak_idx(iC) TC.peak_idx(iC)],[ylims(1) ylims(2)],'r:');
-    set(gca, 'XTick', [],'YTick',[]); 
+    
+    switch cfg.mode
+        case 'area'
+            tch(iC) = area(tc_temp(iC,:)); set(tch(iC),'FaceColor',cfg.color,'EdgeColor',[1 1 1]); 
+            if cfg.alpha > 0 % attempt at transparency doesn't work
+                patchobjs = findobj(get(tch(iC),'children'), '-property', 'AlphaData');
+                set(patchobjs, 'AlphaData', cfg.alpha);
+            end
+        case 'line'
+            tch(iC) = plot(tc_temp(iC,:),'Color',cfg.color,'LineWidth',1);
+    end
+    hold on; 
+        
+    %ylims = get(gca,'Ylim');
+    %plot([TC.peak_idx(iC) TC.peak_idx(iC)],[ylims(1) ylims(2)],'r:');
+    
+    set(gca, 'XTick', [],'YTick',[],'XLim',[1 x_end],'LineWidth',0.5,'XColor',[0.5 0.5 0.5],'YColor',[0.5 0.5 0.5]); 
+    box off;
+    
     yl = ylabel(iC); 
     set(yl,'Rotation',0,'Fontsize',8);
     %if iC == 1; title(ENC_data(iT).trial_type); end
+    %axis off;
 end
-x = size(tc_temp,2);
-%set(gca,'XTick',[1 ceil(x/2) x],'XTicklabel',[1 137 274],'Ticklength', [0 0],'Fontsize',8);
+
+set(gca,'XTick',[1 ceil(x_end/2) x_end],'XTicklabel',[1 137 274],'Ticklength', [0 0],'Fontsize',8);
 
 
