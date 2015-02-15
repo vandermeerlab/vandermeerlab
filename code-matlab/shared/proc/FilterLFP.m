@@ -67,6 +67,11 @@ switch cfg.type
         %[z,p,k] = cheby1(cfg.order,cfg.R,Wn);
         [b,a] = cheby1(cfg.order,cfg.R,Wn);
     
+    case 'fdesign'
+        
+        d = fdesign.bandpass('N,F3dB1,F3dB2',cfg.order,cfg.f(1),cfg.f(2),Fs);
+        Hd = design(d,'butter');
+        b = Hd.sosMatrix; a = Hd.scaleValues;
 end
 
 % convert to SOS format
@@ -76,7 +81,11 @@ end
 if cfg.display_filter
     %h = dfilt.df2sos(sos,g);
     %fvtool(h);
-    fvtool(b,a);
+    if exist('Hd','var')
+        fvtool(Hd);
+    else
+        fvtool(b,a);
+    end
     fprintf('FilterLFP.m: paused, press key to continue...\n');
     pause;
 end
