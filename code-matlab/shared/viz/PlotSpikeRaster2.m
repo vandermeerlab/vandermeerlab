@@ -2,7 +2,7 @@
     %% Plot spikes
     % Converting the data to (x,y) coordinates is significantly faster to plot than calling on
     % cell arrays directly. Also, it removes the issue of drawing diagonals for cells with
-    % only 2 points of data. This method is based off Jefferey Chiou's raster function.
+    % only 2 points of data. This method is based on Jefferey Chiou's raster function.
     %
     %
     % youkitan 2014-11-20
@@ -13,6 +13,7 @@
     cfg_def.spkColor = 'k';
     cfg_def.lfpColor = 'r';
     cfg_def.axislabel = 'on';
+    cfg_def.openInAxes = 0;
     cfg = ProcessConfig2(cfg_def,cfg_in);
     
     % Check inputs
@@ -20,6 +21,11 @@
     for i = 1:length(S_in.t)
         assert(size(S_in.t{i},2) == 1,...
             'Poorly constructed ts! Cell %d has incorrect dimensions.',i)
+    end
+    
+    %
+    if cfg.openInAxes % user defined axes
+        axes(cfg.openInAxes);
     end
     
     % Plot spikes

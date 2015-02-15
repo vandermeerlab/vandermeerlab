@@ -19,6 +19,7 @@
     %% Set cfg parameters and check inputs
     cfg_def = [];
     cfg_def.legend = 'off';
+    cfg_def.openInAxes = 0; % may not need this, but is more transparent?
     cfg = ProcessConfig2(cfg_def,cfg_in);
     
     %% Plot

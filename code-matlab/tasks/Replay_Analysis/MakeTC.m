@@ -30,6 +30,7 @@ cfg_def.conv2Sec = 1; % convert to seconds/bin
 cfg_def.min_fr = 1; % threshold for detecting place fields in Hz
 cfg_def.max_meanfr = 5; % mean fr to rule out interneurons
 cfg_def.edges = []; % edge vector to use for binning; defaults to min(pos):binSize:max(pos)
+cfg_def.nSpikesInField = 20;
 
 cfg = ProcessConfig2(cfg_def,cfg_in);
 
@@ -88,6 +89,7 @@ spk_hist = spk_hist_mat;
 detect_cfg = [];
 detect_cfg.S = S;
 detect_cfg.pos = pos;
+detect_cfg.nSpikesInField = cfg.nSpikesInField;
 [template_idx,peak_idx,peak_loc] = DetectPlaceCells1D(detect_cfg,tc);
 
 %store all data in a single struct
