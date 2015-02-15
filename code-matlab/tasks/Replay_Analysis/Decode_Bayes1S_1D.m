@@ -105,6 +105,12 @@ for iIV = nIV:-1:1 % NOTE: just decoding the whole thing and restricting later m
         % start and end times of shuffle should match edges used to make
         % Q and p matrices -- this is very important!
         tvec_centers = iv_out.usr(nUsr).data{iIV}.tvec;
+        
+        if isempty(tvec_centers)
+            iv_out.usr(nUsr+2).data{iIV} = [];
+            continue;
+        end
+        
         cfg_shuf.t0 = tvec_centers(1)-cfg_Q.dt/2;
         cfg_shuf.t1 = tvec_centers(end)+cfg_Q.dt/2;
         
@@ -155,6 +161,11 @@ if cfg_Q.trim
     Q.data = Q.data(:,keep_idx);
     Q.tvec = Q.tvec(keep_idx);
 end
+
+if isempty(tvec_centers)
+    p.data = []; p.tvec = []; Q.data = []; Q.tvec = [];
+    return;
+end;
 
 nBins = size(tc,1);
 len = length(tvec_centers);
