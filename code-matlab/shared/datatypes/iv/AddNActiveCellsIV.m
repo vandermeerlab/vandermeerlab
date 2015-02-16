@@ -20,6 +20,7 @@ function iv_in = AddNActiveCellsIV(cfg_in,iv_in,S)
 % parse cfg parameters
 cfg_def = [];
 cfg_def.dt = 0.005;
+cfg_def.label = 'nActiveCells';
 
 cfg = ProcessConfig2(cfg_def,cfg_in);
 mfun = mfilename;
@@ -42,8 +43,14 @@ for iIV = length(iv_in.tstart):-1:1
 end
 
 % NOTE adding usr fields to ivs needs to be handled better
-iv_in.usr(1).data = nC;
-iv_in.usr(1).label = 'nActiveCells';
+if isfield(iv_in,'usr')
+    iUsr = length(iv_in.usr)+1;
+else
+    iUsr = 1;
+end
+
+iv_in.usr(iUsr).data = nC;
+iv_in.usr(iUsr).label = cfg.label;
 
 % housekeeping
 iv_in.cfg.history.mfun = cat(1,iv_in.cfg.history.mfun,mfun);
