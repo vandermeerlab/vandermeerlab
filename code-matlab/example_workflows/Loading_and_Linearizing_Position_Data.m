@@ -92,7 +92,7 @@ title('This mazeis rightside up')
 figure; plot(getd(pos,'x'),getd(pos,'y'),'.','Color',[0.7 0.7 0.7],'MarkerSize',4); xlabel('x data'); ylabel('y data');
 set(gca,'YDir','reverse') % this flips the Y axis
 view(270,90); % the number 270 rotates the plot 270 degrees CLOCKWISE
-set(gca,'YDir','reverse'); title('Figure rotated AND flipped')
+title('Figure rotated AND flipped')
 
 % Note that you can also perform this flip rotation by plotting (y,x), but
 % this also transposes the data and works only for mazes that are bilaterally 
