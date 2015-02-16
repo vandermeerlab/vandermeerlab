@@ -48,7 +48,7 @@ for iF = 1:nFiles
 		end
 		
 		ReadHeader(tfp);    
-		S{iF} = fread(tfp,inf,'uint64');	%read as 32 bit ints
+		S{iF} = fread(tfp,inf,'uint32');	%read as 32 bit ints
 		
 		% Set appropriate time units.
 		switch (tsflag)
