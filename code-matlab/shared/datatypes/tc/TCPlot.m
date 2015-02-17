@@ -15,6 +15,12 @@ function tch = TCPlot(cfg_in,TC)
 % CONFIGS
 %
 % cfg_def.ax = []; % if specified, plot here; otherwise create new figure
+% cfg_def.order = 1; % if 1, order by template_idx; 2, order by field_template_idx
+% cfg_def.mode = 'area'; % 'line'
+% cfg_def.color = [0 0 0];
+% cfg_def.alpha = 0;
+% cfg_def.binsize = 1; % how many cm in each bin
+% cfg_def.cp = []; % location of choice point
 %
 % disclaimer:
 % 
@@ -24,10 +30,12 @@ function tch = TCPlot(cfg_in,TC)
 
 cfg_def = [];
 cfg_def.ax = []; % if specified, plot here; otherwise create new figure
-cfg_def.order = 1; % if 1, order by template_idx
+cfg_def.order = 1; % if 1, order by template_idx; 2, order by field_template_idx
 cfg_def.mode = 'area'; % 'line'
 cfg_def.color = [0 0 0];
 cfg_def.alpha = 0;
+cfg_def.binsize = 1;
+cfg_def.cp = [];
 
 cfg = ProcessConfig2(cfg_def,cfg_in);
 
@@ -39,10 +47,13 @@ else
 end
 
 %
-if cfg.order
-    tc_temp = TC.tc(:,TC.template_idx)';
-else
-    tc_temp = TC.tc';
+switch cfg.order
+    case 1
+        tc_temp = TC.tc(:,TC.template_idx)';
+    case 2
+        tc_temp = TC.tc(:,TC.field_template_idx)';
+    otherwise
+        tc_temp = TC.tc';
 end
 
 x_end = size(tc_temp,2);
@@ -76,6 +87,6 @@ for iC = 1:size(tc_temp,1)
     %axis off;
 end
 
-set(gca,'XTick',[1 ceil(x_end/2) x_end],'XTicklabel',[1 137 274],'Ticklength', [0 0],'Fontsize',8);
+set(gca,'XTick',[1 cfg.cp x_end],'XTicklabel',[1 cfg.cp*cfg.binsize x_end*cfg.binsize],'Ticklength', [0 0],'Fontsize',8);
 
 
