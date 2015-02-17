@@ -1,12 +1,22 @@
-function AnotherTCplotTwin(cfg_in,S,TC1,TC2,pos)
-% function AnotherTCplotTwin(cfg_in,S,TC1,TC2,pos)
+function fh = AnotherTCplotTwin(cfg_in,S,TC1,TC2,pos)
+% function fh = AnotherTCplotTwin(cfg_in,S,TC1,TC2,pos)
 %
 % plot some linearized tuning tuning curves with their scatterfields
+%
+% INPUTS:
+%
+% self-explanatory
+%
+% OUTPUT:
+%
+% fh: array of figure handles
 %
 % configs:
 %
 % cfg_def.npf = 6; % number of subplots per figure
 % cfg_def.write_output = 0;
+%
+% MvdM in a hurry Feb 2015
 
 cfg_def.npf = 6; % number of subplots per figure
 cfg_def.write_output = 0;
@@ -24,7 +34,7 @@ for iC = 1:length(S.t)
     fno = floor((iC-1)/cfg.npf) + 1;
     sno = mod(iC,cfg.npf); if sno == 0, sno = cfg.npf; end
     
-    fh = figure(fno); set(fh,'Color',[0 0 0]);
+    fh(fno) = figure(fno); set(fh(fno),'Color',[0 0 0]);
     
     % plot tuning curve
     subplot(2,6,1+(sno-1)*2);
