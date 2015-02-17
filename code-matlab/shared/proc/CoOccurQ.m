@@ -1,5 +1,5 @@
-function out = CoOccurQ(cfg_in,Q)
-% function out = CoOccurQ(cfg_in,Q)
+function [out,tt_mask] = CoOccurQ(cfg_in,Q)
+% function [out,tt_mask] = CoOccurQ(cfg_in,Q)
 %
 % obtain expected and observed co-occurrence probabilities from Q-matrix
 %
@@ -20,11 +20,16 @@ function out = CoOccurQ(cfg_in,Q)
 %
 % cfg_def.nShuffle = 0; % 0 means no shuffle, >0 specifies number of
 %  shuffles (time bins within each cell independently)
+% cfg_def.num_tt = []; % if specified, specialtreat pairs from same tt (see
+%   below)
+% cfg_def.tt_repl = NaN; % multiply elements from same tt with thi
 %
 % MvdM Feb 2015
 
 cfg_def = [];
 cfg_def.nShuffle = 0;
+cfg_def.num_tt = []; % if specified, specialtreat pairs from same tt (see below)
+cfg_def.tt_repl = NaN; % multiply elements from same tt with this
 
 cfg = ProcessConfig2(cfg_def,cfg_in);
 
@@ -121,3 +126,30 @@ if cfg.nShuffle > 0
     out.p4 = p4;
     
 end % of shuffle conditional
+
+
+%
+tt_mask = [];
+if ~isempty(cfg.num_tt)
+   % construct same-tetrode mask
+   if length(cfg.num_tt) ~= nCells
+       error('tt_num has unexpected number of cells.');
+   end
+    
+   tt_mask = ones(nCells);
+   
+   for iC = 1:nCells
+       
+      tt_mask(iC,cfg.num_tt == cfg.num_tt(iC)) = cfg.tt_repl;
+       
+   end
+   
+   out.p1 = out.p1.*tt_mask;
+   out.p2 = out.p2.*tt_mask;
+   out.p3 = out.p3.*tt_mask;
+   
+   if cfg.nShuffle > 0
+       out.p4 = out.p4.*tt_mask;
+   end
+end
+
