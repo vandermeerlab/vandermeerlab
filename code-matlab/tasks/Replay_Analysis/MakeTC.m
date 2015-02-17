@@ -92,9 +92,23 @@ detect_cfg.pos = pos;
 detect_cfg.nSpikesInField = cfg.nSpikesInField;
 [template_idx,peak_idx,peak_loc] = DetectPlaceCells1D(detect_cfg,tc);
 
+% create field template
+fpeak_val = []; fpeak_idx = [];
+iPeak = 1;
+for iP = 1:length(peak_loc)
+    fpeak_val(iPeak:iPeak+length(peak_loc{iP})-1) = peak_loc{iP};
+    fpeak_idx(iPeak:iPeak+length(peak_loc{iP})-1) = template_idx(iP);
+    
+    iPeak = iPeak + length(peak_loc{iP});
+end
+[fpeak_val,sort_idx] = sort(fpeak_val,'ascend');
+fpeak_idx = fpeak_idx(sort_idx);
+
 %store all data in a single struct
 tc_out.tc = tc;
 tc_out.template_idx = template_idx;
+tc_out.field_template_idx = fpeak_idx;
+tc_out.field_loc = fpeak_val;
 tc_out.peak_idx = peak_idx;
 tc_out.peak_loc = peak_loc;
 tc_out.occ_hist = occ_hist;
