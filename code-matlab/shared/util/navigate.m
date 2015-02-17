@@ -57,7 +57,7 @@ function navigate(src,event)
 % There is likely a better way to do this, but I am a novice. - ACarey
 %% Declare global variables
 
-global evtTimes windowSize zoom time usrfield
+global evtTimes windowSize time usrfield
 
 
 %%
@@ -65,7 +65,7 @@ limits = get(gca,'XLim'); %get current limits; exists as limits(1) and limits(2)
 current_location = mean(limits); % finds center of current viewing window
 
 modifier = get(gcf,'currentmodifier'); %checks for modifiers, such as Shift or Ctrl
-%disp(modifier)
+
 shiftPressed = ismember('shift',modifier);
 ctrlPressed = ismember('control',modifier);
 %altPressed = ismember('alt',modifier); % if alt is pressed while on a figure, the focus is moved elsewhere, so the figure has to be clicked on again
@@ -74,17 +74,37 @@ ctrlPressed = ismember('control',modifier);
 %strcmp(event.Modifier{:},'control')
 
 flank = 0.5*windowSize;
+
 permission = 1; %this controls whether or not the outputs from the if statements can enter the  
 % "permission" if statements, or whether they go directly towards changing
 % the limits at the very end of the function
 
+evtTitle = 0; %this controls whether we display an event title, which 
+% occurs only when we use the "find event" functionality of navigate;
+% "move window" changes the current view regardless of the presence of an
+% event, so we don't want to display an event title if an event is not the
+% central focus of the viewing window! 
 
+%% CHANGE WINDOW SIZE
 
+if strcmp(event.Key,'w')
+    win = inputdlg('Input new window size (in seconds):');
+    if ~isempty(win) && ~isnan(str2double(win{1})) && isscalar(str2double(win{1}))
+        windowSize = str2double(win{1});
+        flank = 0.5*windowSize;
+    end
+    limits = [current_location-flank current_location+flank];
+end
 
-%% ZOOM
+%% JUMP TO TIME INPUT BY USER
 
-%could add a way to take user input for where they want to zoom to next, w/o
-%having to rerun the plotting function
+if strcmp(event.Key,'j')
+    jumpHere = inputdlg('Jump to time = ');
+    if ~isempty(jumpHere) && ~isnan(str2double(jumpHere{1})) && isscalar(str2double(jumpHere{1}))
+        next_location = str2double(jumpHere{1});
+        limits = [next_location-flank next_location+flank];
+    end 
+end
 
 
 %% MOVE WINDOW
@@ -95,7 +115,7 @@ window = (limits(2)-limits(1));
                 shift = window*0.5;
                 limits = limits - shift;
                 permission = 0;
-                %disp('left')
+                evtTitle = 0;
          
         %type 1: output is a new set of limits        
         elseif shiftPressed == 0 && ctrlPressed == 0 && strcmp(event.Key,'rightarrow')==1 
@@ -103,7 +123,7 @@ window = (limits(2)-limits(1));
                 shift = window*0.5;
                 limits = limits + shift;
                 permission = 0;
-                %disp('right')
+                evtTitle = 0;
          
         %type 1: output is a new set of limits        
         elseif shiftPressed == 1 && strcmp(event.Key,'leftarrow') == 1
@@ -111,6 +131,7 @@ window = (limits(2)-limits(1));
                 shift = window*10;
                 limits = limits - shift;
                 permission = 0;
+                evtTitle = 0;
          
         %type 1: output is a new set of limits        
         elseif shiftPressed == 1 && strcmp(event.Key,'rightarrow') == 1
@@ -118,6 +139,7 @@ window = (limits(2)-limits(1));
                 shift = window*10;
                 limits = limits + shift;
                 permission = 0;
+                evtTitle = 0;
         
         %type 1: output is a new set of limits
         elseif ctrlPressed == 1 && strcmp(event.Key,'leftarrow') == 1
@@ -125,6 +147,7 @@ window = (limits(2)-limits(1));
                 shift = window*50;
                 limits = limits - shift;
                 permission = 0;
+                evtTitle = 0;
         
         %type 1: output is a new set of limits        
         elseif ctrlPressed == 1 && strcmp(event.Key,'rightarrow') == 1
@@ -132,33 +155,41 @@ window = (limits(2)-limits(1));
                 shift = window*50;
                 limits = limits + shift;
                 permission = 0;
+                evtTitle = 0;
          
         %type 2: output is a next_location, which later is converted to new limits        
         elseif strcmp(event.Key,'m')==1  
                 %shift figure axes to the midpoint of recording
                 next_location = time(ceil(end/2));
+                limits = [next_location-flank next_location+flank];
+                evtTitle = 0;
           
         %type 2: output is a next_location, which later is converted to new limits        
         elseif strcmp(event.Key,'b')==1
             %shift figure axes to beginning of recording
                 next_location = time(1)+flank;
+                limits = [next_location-flank next_location+flank];
+                evtTitle = 0;
 
         %type 2: output is a next_location, which later is converted to new limits        
         elseif strcmp(event.Key,'e') == 1
             %shift figure axes to end of recording
                 next_location = time(end)-flank;
-                  
+                limits = [next_location-flank next_location+flank];  
+                evtTitle = 0;
         end
+        
+% Do not show a title if the user is navigating based on the time axis
+% (i.e. "move window" key commands) rather than based on event locations
+% (i.e. "find event" key commands).
     
+    if evtTitle == 0 % evtTitle will be blank if you are using the move window keys rather than the find event keys
+        title(sprintf('')); 
+    end
         
 %% FIND EVENT
 current_index = nearest_idx3(current_location,evtTimes); % find where we're located with respect to time. Take that index. 
 next_idx = current_index;
-evtTitle = 0; %this controls whether we display an event title, which 
-% occurs only when we use the "find event" functionality of navigate;
-% "move window" changes the current view regardless of the presence of an
-% event, so we don't want to display an event title if an event is not the
-% central focus of the viewing window! 
 
 %all type 2: output is a next_location, which later is converted to new limits
         if shiftPressed == 0 && ctrlPressed == 0 && strcmp(event.Key,'a')==1 %string comparison
@@ -218,16 +249,9 @@ evtTitle = 0; %this controls whether we display an event title, which
         else
             permission = 0; % can't enter the "permission" if statement if the wrong key is pressed
             evtTitle = 1; % ** if you press an unassigned key while viewing an event, the title will 
-                          % diappear unless evtTitle is something other than 0
+                          % disappear unless evtTitle is something other than 0
         end
   
-% Do not show a title if the user is navigating based on the time axis
-% (i.e. "move window" key commands) rather than based on event locations
-% (i.e. "find event" key commands).
-    
-    if evtTitle == 0 % evtTitle will be blank if you are using the move window keys rather than the find event keys
-        title(sprintf('')); 
-    end
 
 %% LIMITS ASSIGNMENT
     % "permission" if statement: allows only type 2 to enter -- converts
@@ -255,8 +279,10 @@ evtTitle = 0; %this controls whether we display an event title, which
             
         end
     end
+    
+    if permission == 0
+        title(' ')
+    end
             
     % this is where the new limits are assigned to the viewing window
        set(gca,'XLim',limits)
-
-    
