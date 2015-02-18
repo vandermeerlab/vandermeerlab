@@ -1,10 +1,6 @@
 function [left,right] = GetMatchedTrials(cfg_in,metadata)
 % function [left,right] = GetMatchedTrials(cfg_in,metadata)
-%
-% get set of matched (for count) left and right trials
-%
-%
-% MvdM quick initial version 2015-02-16
+
 cfg_def = [];
 
 cfg = ProcessConfig2(cfg_def,cfg_in);
@@ -43,14 +39,16 @@ for iT = 1:length(min_trial_no)
     
     this_no = min_trial_no(iT);
     
-    max_trial_idx = nearest_idx(this_no,max_trial_no);
+    max_trial_idx = nearest_idx3(this_no,max_trial_no); % nearest_idx errors when matching last idx 
     matched_trial(iT) = max_trial_no(max_trial_idx);
+    
+    max_trial_no(max_trial_idx) = []; % remove matched trial from available pool to prevent duplicates
     
 end
 
 %
-if length(unique(matched_trial)) < length(matched_trial) % doubles
-    error('Could not determine matched trial sequence.');
+if length(unique(matched_trial)) < length(matched_trial) % things somehow got messed up
+    warning('*** Could not determine matched trial sequence.');
 end
 
 %
