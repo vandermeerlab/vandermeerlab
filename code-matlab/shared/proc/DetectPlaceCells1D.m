@@ -16,10 +16,13 @@ function [idx,peak_idx,peak_loc] = DetectPlaceCells1D(cfg_in,tc)
 %
 
 cfg_def = [];
+cfg_def.debug = 0;
 cfg_def.p_thr = 7; % threshold for detecting place field, in Hz
 cfg_def.p_thr_sd = 1; % in SD
+cfg_def.mean_norm = 0.33; % max mean firing rate (peak is 1)
 cfg_def.minSize = 4;
-cfg_def.max_meanfr = 2;
+%cfg_def.maxSize = 20;
+cfg_def.max_meanfr = 10;
 cfg_def.S = []; % optionally provide actual spike data for computing true mean frate, nSpikes per field etc.
 cfg_def.pos = []; % optionally provide position data for getting nSpikes per field
 cfg_def.nSpikesInField = [];
@@ -35,18 +38,23 @@ for iC = 1:nCells
     this_tc = tc(:,iC);
     
     % first, decide if we are considering this cell at all based on average
+    % firing rate -- could improve by having knowledge of whole-session
     % firing rate
-    if ~isempty(cfg.S) % we have spike data to get good estimate
-        this_frate = length(cfg.S.t{iC})./(cfg.S.cfg.ExpKeys.postrecord(end)-cfg.S.cfg.ExpKeys.prerecord(1));
-    else
-        this_frate = nanmean(this_tc);
-    end
-    
+    this_frate = nanmean(this_tc);
+
     if ~(max(this_tc) > cfg.p_thr & this_frate < cfg.max_meanfr) % too low or too high firing, reject
+        if cfg.debug, fprintf('Cell %d rejected: max TC %.1f, mean FR %.1f\n',iC,max(this_tc),this_frate); end
         continue;
     end
     
-    pf_z = (this_tc-nanmean(this_tc))./nanstd(this_tc);
+    pf_z = zscore(this_tc);
+    pf_norm = this_tc./max(this_tc);
+    mean_norm = mean(pf_norm);
+    %
+    if mean_norm > cfg.mean_norm
+        if cfg.debug, fprintf('Cell %d rejected: mean norm %.2f\n',iC,mean_norm); end
+        continue;
+    end
     
     %[pks.loc,pks.full] = find_fields(pf_z,cfg.p_thr_sd,'min_size',cfg.minSize);
     [pks.loc,pks.full] = find_fields(this_tc,cfg.p_thr,'min_size',cfg.minSize);
@@ -56,6 +64,9 @@ for iC = 1:nCells
         
         keep = pks.val > cfg.p_thr;
         pks.loc = pks.loc(keep); pks.val = pks.val(keep); pks.full = pks.full(keep);
+        if cfg.debug & isempty(keep), fprintf('Cell %d, no peaks passed threshold.\n',iC); end
+    else
+        if cfg.debug, fprintf('Cell %d, no peaks detected.\n',iC); end
     end
     
     if ~isempty(pks.loc) & ~isempty(cfg.nSpikesInField) % get number of spikes in field
@@ -76,6 +87,8 @@ for iC = 1:nCells
            this_s = restrict(cfg.S,infield_iv);
            nSpikes(iF) = length(this_s.t{iC});
             
+           if cfg.debug & nSpikes(iF) < cfg.nSpikesInField, fprintf('Cell %d, field %d rejected (nSpikes = %d).\n',iC,iF,nSpikes(iF)); end
+           
         end
         
         keep = nSpikes > cfg.nSpikesInField;
@@ -83,9 +96,9 @@ for iC = 1:nCells
         
     end
         
-    if ~isempty(pks.loc) % field still lives, process
+    if ~isempty(pks.loc) %  some fields remain, process
         idx(ctr) = iC;
-        [~,peak_idx(ctr)] = max(this_tc);
+        [~,peak_idx(ctr)] = max(this_tc); % to determine where this cell appears in overall ordering of TC
         peak_loc{ctr} = pks.loc;
         
         ctr = ctr + 1;

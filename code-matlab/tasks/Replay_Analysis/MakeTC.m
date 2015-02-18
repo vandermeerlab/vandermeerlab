@@ -16,21 +16,23 @@ function tc_out = MakeTC(cfg_in,S,pos)
 %    cfg_def.gkSD = 2;
 %    cfg_def.gkWidth = 10;
 %    cfg_def.conv2Sec = 1;
-%    cfg_def.min_fr = 1; % threshold for detecting place fields in Hz
+%    cfg_def.p_thr = 5; % threshold for detecting place fields in Hz
 %    cfg_def.max_meanfr = 5; % mean fr to rule out interneurons
-%    cfg_def.maxSpd = 5; % max animal velocity in cm/s
 %
-% youkitan 2014-12-28
+% youkitan 2014-12-28, MvdM edits
 
 %% Parse cfg parameters
 cfg_def.binSize = 1; % how many cm in a bin
+cfg_def.debug = 0;
 cfg_def.gkSD = 3; % standard deviation for gaussian kernel (in cm)
 cfg_def.gkWidth = 25; % width of gaussian kernel window (in cm)
 cfg_def.conv2Sec = 1; % convert to seconds/bin
-cfg_def.min_fr = 1; % threshold for detecting place fields in Hz
-cfg_def.max_meanfr = 5; % mean fr to rule out interneurons
+cfg_def.p_thr = 5; % min threshold for detecting candidate place fields in Hz
+cfg_def.max_meanfr = 10; % mean fr to rule out interneurons
+cfg_def.minSize = 4; % minimum size of field (in bins)
+%cfg_def.maxSize = 20; % maximum size of field (in bins)
 cfg_def.edges = []; % edge vector to use for binning; defaults to min(pos):binSize:max(pos)
-cfg_def.nSpikesInField = 20;
+cfg_def.nSpikesInField = 20; % minimum number of spikes in field
 
 cfg = ProcessConfig2(cfg_def,cfg_in);
 
@@ -90,6 +92,11 @@ detect_cfg = [];
 detect_cfg.S = S;
 detect_cfg.pos = pos;
 detect_cfg.nSpikesInField = cfg.nSpikesInField;
+detect_cfg.p_thr = cfg.p_thr; % threshold for detecting place fields in Hz
+detect_cfg.max_meanfr = cfg.max_meanfr;
+detect_cfg.minSize = cfg.minSize;
+%detect_cfg.maxSize = cfg.maxSize; 
+detect_cfg.debug = cfg.debug;
 [template_idx,peak_idx,peak_loc] = DetectPlaceCells1D(detect_cfg,tc);
 
 % create field template

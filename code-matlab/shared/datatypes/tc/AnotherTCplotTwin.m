@@ -46,7 +46,7 @@ for iC = 1:length(S.t)
         smoo_pfR{iC} = TC.tc(:,iC);
         
         plot(smoo_pfR{iC},'Color',c,'LineWidth',1); hold on;
-        set(gca,'Color',[0 0 0],'XColor',[0.3 0.3 0.3],'YColor',[0.3 0.3 0.3],'XTick',[],'YTick',[]); axis tight; box off;
+        set(gca,'Color',[0 0 0],'XColor',[0.3 0.3 0.3],'YColor',[0.3 0.3 0.3],'XTick',[],'YTick',[],'XLim',[1 length(smoo_pfR{iC})]); box off;
         
         th = text(1,max(smoo_pfR{iC}),num2str(round(max(smoo_pfR{iC})))); set(th,'Color',c);
              
@@ -63,6 +63,7 @@ for iC = 1:length(S.t)
         end
         
     end
+    yl = ylim; ylim([0 ceil(yl(2))+1]); % make sure we can see peak highlights
     
     % plot scatterfield
     subplot(2,6,sno*2);
