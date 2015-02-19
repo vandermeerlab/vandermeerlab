@@ -20,9 +20,10 @@ function iv_out = Decode_Bayes1S_1D(cfg_in,S,tc)
 % OPTIONS:
 %
 % cfg_def.dt = 0.025; % time step (in seconds)
-% cfg_def.smooth = 1; % smooth rows of Q-matrix with Gaussian kernel if set to 1
-% cfg_def.gwin = 1; % Gaussian smoothing kernel for Q-matrix, width in seconds
-% cfg_def.gsd = 0.02; % smoothing kernel SD (in seconds)
+% cfg_def.smooth = 0; % % [], 'gauss', 'boxcar'
+% cfg_def.gausswin_size = 1; % Gaussian smoothing kernel for Q-matrix, width in seconds
+% cfg_def.gausswin_sd = 0.02; % smoothing kernel SD (in seconds)
+% cfg_def.boxcar_size = 5; % boxcar size in bins
 % cfg_def.trim = 1; % trim leading and trailing zeros in Q-matrix (for speed later)
 % cfg_def.returnQ = 0; % return full Q-matrix in output
 % cfg_def.regularizeTC = 0; % regularize tuning curves by replacing zero values with this
@@ -34,8 +35,9 @@ function iv_out = Decode_Bayes1S_1D(cfg_in,S,tc)
 cfg_def = [];
 cfg_def.dt = 0.025; % time step (in seconds)
 cfg_def.smooth = 0; % smooth rows of Q-matrix with Gaussian kernel if set to 1
-cfg_def.gwin = 1; % Gaussian smoothing kernel for Q-matrix, width in seconds
-cfg_def.gsd = 0.02; % smoothing kernel SD (in seconds)
+cfg_def.gausswin_size = 1; % Gaussian smoothing kernel for Q-matrix, width in seconds
+cfg_def.gausswin_sd = 0.02; % smoothing kernel SD (in seconds)
+cfg_def.boxcar_size = 5; % boxcar size in bins
 cfg_def.trim = 1; % trim leading and trailing zeros in Q-matrix (for speed later)
 cfg_def.returnQ = 0; % return full Q-matrix in output
 cfg_def.regularizeTC = 0; % regularize tuning curves by replacing zero values with this
@@ -74,6 +76,8 @@ end
 nIV = length(cfg.evt.tstart);
 for iIV = nIV:-1:1 % NOTE: just decoding the whole thing and restricting later may be faster...
 
+    fprintf('Event %d/%d...\n',iIV,nIV);
+    
     % make Q-matrix (spike counts as nCells x nTimeBins) for this iv
     
     cfg_Q = cfg;
@@ -101,6 +105,12 @@ for iIV = nIV:-1:1 % NOTE: just decoding the whole thing and restricting later m
         % start and end times of shuffle should match edges used to make
         % Q and p matrices -- this is very important!
         tvec_centers = iv_out.usr(nUsr).data{iIV}.tvec;
+        
+        if isempty(tvec_centers)
+            iv_out.usr(nUsr+2).data{iIV} = [];
+            continue;
+        end
+        
         cfg_shuf.t0 = tvec_centers(1)-cfg_Q.dt/2;
         cfg_shuf.t1 = tvec_centers(end)+cfg_Q.dt/2;
         
@@ -151,6 +161,11 @@ if cfg_Q.trim
     Q.data = Q.data(:,keep_idx);
     Q.tvec = Q.tvec(keep_idx);
 end
+
+if isempty(tvec_centers)
+    p.data = []; p.tvec = []; Q.data = []; Q.tvec = [];
+    return;
+end;
 
 nBins = size(tc,1);
 len = length(tvec_centers);

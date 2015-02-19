@@ -9,11 +9,12 @@ function lfp_tsd = LFPpower(cfg_in,lfp_tsd)
 %
 % CFG OPTIONS with defaults:
 %
-% (none)
+% cfg_def.output = 'envelope'; % 'power'
 %
 % MvdM 2014-06-25
 
 cfg_def = [];
+cfg_def.output = 'envelope';
 
 cfg = ProcessConfig2(cfg_def,cfg_in); % this takes fields from cfg_in and puts them into cfg
 mfun = mfilename;
@@ -43,7 +44,13 @@ for iS = 1:nSignals
     
     % obtain power
     temp_sig = hilbert(temp_sig);
-    temp_sig = abs(temp_sig).^2;
+    
+    switch cfg.output
+        case 'power'
+            temp_sig = abs(temp_sig).^2;
+        case 'envelope'
+            temp_sig = abs(temp_sig);
+    end
     
     % reinstate NaNs and put signal back into tsd
     temp_sig(nan_idx) = NaN;

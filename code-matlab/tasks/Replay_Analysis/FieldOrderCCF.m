@@ -44,6 +44,7 @@ prm = 1:nCells; % new index for swapped order
 swap_count = 0;
 
 %% check place cell ordering
+x = []; y = [];
 for iC = 1:nCells-1
 
     c1 = iC; c2 = c1 + 1;
