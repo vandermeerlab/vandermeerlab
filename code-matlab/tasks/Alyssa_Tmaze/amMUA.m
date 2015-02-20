@@ -54,14 +54,15 @@ cfg = ProcessConfig2(cfg_def,cfg_in);
 
 %%
 
+if isempty(S.t) 
+    error('No spikes: cannot perform detection.')
+end
 
 if cfg.verbose
     tic
     cprintf(-[0 0 1],'amMUA: Looking for multi-unit activity...');
     disp(' ');
 end
-
-
 
 %% muascore: regions of higher multi-unit activity
 %tic

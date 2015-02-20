@@ -70,7 +70,7 @@ post_tidx = post_idx_pos(1):post_idx_pos(2);
 
 %% Plot position data (visual check)
 
-plot(xpos(pre_tidx),ypos(pre_tidx),'r');hold on; set(gca,'YDir','reverse');
+plot(xpos(pre_tidx),ypos(pre_tidx),'r');hold on; set(gca,'YDir','reverse'); view(270,90)
 plot(xpos(task_tidx),ypos(task_tidx),'g');
 plot(xpos(post_tidx),ypos(post_tidx),'b');
 
@@ -92,7 +92,7 @@ plot3(xpos(post_tidx),ypos(post_tidx),post_tidx,'b');
 %% Polygon alternative: left pedestal
 xtask = xpos(task_idx_pos(1):task_idx_pos(2));
 ytask = ypos(task_idx_pos(1):task_idx_pos(2));
-plot(xtask,ytask,'k'); hold on; set(gca,'YDir','reverse');
+plot(xtask,ytask,'k'); hold on; set(gca,'YDir','reverse'); view(270,90)
 maximize
 title('Define n-point boundary containing left pedestal. Press Enter to commit.');
 [xL,yL] = ginput;
@@ -139,7 +139,7 @@ clear xStart yStart xLstop yLstop xRstop yRstop xL yL xR yR
 
 %% To view above final plot again without having to re-run the cell:
 figure; hold on;
-plot(xtask,ytask,'k'); set(gca,'YDir','reverse');
+plot(xtask,ytask,'k'); set(gca,'YDir','reverse'); view(270,90)
 plot(xtask(onPedL),ytask(onPedL),'g');
 plot(xtask(onPedR),ytask(onPedR),'r');
 plot(xtask(onTrack),ytask(onTrack),'b');
@@ -273,7 +273,7 @@ end
 % omfg what a pain this whole section was
 
 
-%
+%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                   Get trial intervals                               %%%
@@ -342,7 +342,7 @@ figure; %hold on;
 for iTrial = 1:length(tidx_onTrack)
     iv_temp = tidx_onTrack(iTrial,:);
     subplot(numRow,numCol,iTrial); hold on;
-    plot(xtask,ytask,'k');set(gca,'YDir','reverse');
+    plot(xtask,ytask,'k');set(gca,'YDir','reverse'); view(270,90)
     color = 'g'; % plot on green for normal trials
     type = ''; % empty string for normal trials
     if trialType(iTrial) == 1 % set variables for plotting forced trials
@@ -374,7 +374,7 @@ end
 for iRest = 1:length(tidx_onPed)
     iv_temp = tidx_onPed(iRest,:);
     subplot(numRow,numCol,iRest); hold on;
-    plot(xtask,ytask,'k');set(gca,'YDir','reverse');
+    plot(xtask,ytask,'k');set(gca,'YDir','reverse'); view(270,90)
     dur = (ttask(iv_temp(2))-ttask(iv_temp(1)))/60;
     plot(xtask(iv_temp(1):iv_temp(2)),ytask(iv_temp(1):iv_temp(2)),'m','LineWidth',3);
     dir = sequence{iRest}; % direction (L or R); need to use {} instead of () or plot title is weird
