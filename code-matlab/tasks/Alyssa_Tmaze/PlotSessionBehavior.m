@@ -72,4 +72,4 @@ set(gca,'YLim',[0.5 length(cfg.order)+0.5],'FontSize',cfg.fs,'YTick',1:length(cf
     'XLim',[ExpKeys.prerecord(1) ExpKeys.postrecord(2)]);
 box off; xlabel('time(s)');
 
-title(ExpKeys.goodSWR{1}(1:15));
+title(sprintf('%s (%s-restricted)',ExpKeys.goodSWR{1}(1:15),ExpKeys.RestrictionType));
