@@ -1,40 +1,69 @@
-function [left,right] = GetMatchedTrials(cfg_in,metadata)
+function [left,right] = GetMatchedTrials(cfg_in,metadata,ExpKeys)
 % function [left,right] = GetMatchedTrials(cfg_in,metadata)
+
+
+% MvdM
+% AC edit, handles bad trials
 
 cfg_def = [];
 
-cfg = ProcessConfig2(cfg_def,cfg_in);
+[~] = ProcessConfig2(cfg_def,cfg_in);
 
-nLtrials = length(metadata.taskvars.trial_iv_L.tstart);
-nRtrials = length(metadata.taskvars.trial_iv_R.tstart);
 
-match = '';
+%% account for bad (discarded) trials:
+
+if ~isempty(ExpKeys.badTrials)
+    
+    sequence = metadata.taskvars.sequence;
+    sequence(ExpKeys.badTrials) = [];
+    
+    L_trial_numbers = find(strcmp('L',sequence));
+    R_trial_numbers = find(strcmp('R',sequence));
+    
+else 
+    
+    sequence = metadata.taskvars.sequence;
+
+    L_trial_numbers = find(strcmp('L',sequence));
+    R_trial_numbers = find(strcmp('R',sequence));
+    
+end
+
+%% Return trial iv sets
+
+% get trial counts
+nLtrials = length(L_trial_numbers);
+nRtrials = length(R_trial_numbers);
+
+% choose which set to downsize
 if nLtrials == nRtrials
-    fprintf('Trial numbers equal (%d), trials returned as is.\n',nLtrials);
+    fprintf('Equal good trials: nLtrials %d, nRTrials %d...\n',nLtrials,nRtrials);
     left = metadata.taskvars.trial_iv_L;
     right = metadata.taskvars.trial_iv_R;
     return;
+
 elseif nLtrials > nRtrials
-    fprintf('nLtrials %d, nRTrials %d...\n',nLtrials,nRtrials);
+    fprintf('Good trial counts: nLtrials %d, nRTrials %d...\n',nLtrials,nRtrials);
     match = 'R';
+     
+    min_trial_no = R_trial_numbers;
     
-    min_trial_iv = metadata.taskvars.trial_iv_R;
-    min_trial_no = find(strcmp('R',metadata.taskvars.sequence));
+    max_trial_no = L_trial_numbers; 
     
-    max_trial_iv = metadata.taskvars.trial_iv_L;
-    max_trial_no = find(strcmp('L',metadata.taskvars.sequence));
 else
-    fprintf('nLtrials %d, nRTrials %d...\n',nLtrials,nRtrials);
+    fprintf('Good trial counts: nLtrials %d, nRTrials %d...\n',nLtrials,nRtrials);
     match = 'L';
     
-    min_trial_iv = metadata.taskvars.trial_iv_L;
-    min_trial_no = find(strcmp('L',metadata.taskvars.sequence));
+    min_trial_no = L_trial_numbers;
     
-    max_trial_iv = metadata.taskvars.trial_iv_R;
-    max_trial_no = find(strcmp('R',metadata.taskvars.sequence));
+    max_trial_no = R_trial_numbers;
 end
 
-%
+
+% choose nearest trials
+
+matched_trial = zeros(size(min_trial_no));
+
 for iT = 1:length(min_trial_no)
     
     this_no = min_trial_no(iT);
@@ -51,7 +80,7 @@ if length(unique(matched_trial)) < length(matched_trial) % things somehow got me
     warning('*** Could not determine matched trial sequence.');
 end
 
-%
+% choose subsets
 switch match
     case 'L'
         left = metadata.taskvars.trial_iv_L;
@@ -64,5 +93,7 @@ switch match
         left.tstart = left.tstart(matched_trial); left.tend = left.tend(matched_trial);
         
         right = metadata.taskvars.trial_iv_R;
+end
+
 end
 
