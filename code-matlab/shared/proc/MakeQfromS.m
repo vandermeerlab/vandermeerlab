@@ -33,6 +33,12 @@ cfg_def.tvec_edges = [];
 cfg = ProcessConfig2(cfg_def,cfg_in);
 mfun = mfilename;
 
+% check inputs
+if isempty(S.t)
+    Q = tsd([],[]); warning('S.t is empty!');
+    return;
+end
+
 % assemble tvecs
 if isempty(cfg.tvec_edges)
     cfg.tvec_edges = firstSpike(S):cfg.dt:lastSpike(S);

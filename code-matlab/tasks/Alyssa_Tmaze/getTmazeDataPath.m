@@ -19,6 +19,7 @@ function fd = getTmazeDataPath(cfg_in)
 
 cfg_def.rats = {'R042','R044','R050'};
 cfg_def.requireMetadata = 1;
+cfg_def.requireCandidates = 0;
 
 cfg = ProcessConfig2(cfg_def,cfg_in);
 
@@ -35,9 +36,9 @@ switch machinename
     case 'ISIDRO'
         base_fp = 'C:\data\';
     case 'EQUINOX'
-        base_fp = 'D:\vandermeerlab\data\';
-    case 'ATHENA'
-        base_fp = 'D:\vandermeerlab\data\';
+        base_fp = 'D:\data\';
+    case 'MVDMLAB-ATHENA'
+        base_fp = 'D:\vandermeerlab\';
 end
 
 fd = {};
@@ -59,6 +60,14 @@ for iRat = 1:length(cfg.rats)
         
         if cfg.requireMetadata
            m = FindFiles('*metadata.mat');
+           if isempty(m)
+               cd ..
+               continue;
+           end
+        end
+        
+        if cfg.requireCandidates
+           m = FindFiles('*candidates.mat');
            if isempty(m)
                cd ..
                continue;

@@ -33,6 +33,7 @@ nCells = size(tc,2);
 
 ctr = 1; % counter for detected cells
 
+peak_idx = []; peak_loc = []; idx = [];
 for iC = 1:nCells
 
     this_tc = tc(:,iC);
