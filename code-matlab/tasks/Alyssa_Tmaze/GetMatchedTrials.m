@@ -1,6 +1,8 @@
-function [left,right] = GetMatchedTrials(cfg_in,metadata,ExpKeys)
+function [left,right,left_indices,right_indices] = GetMatchedTrials(cfg_in,metadata,ExpKeys)
 % function [left,right] = GetMatchedTrials(cfg_in,metadata)
 
+% left_indices and right_indices are the trial numbers for left and right
+% trials in the full original sequence (which includes bad trials). 
 
 % MvdM
 % AC edit, handles bad trials
@@ -44,6 +46,8 @@ if nLtrials == nRtrials
     fprintf('Equal good trials: nLtrials %d, nRTrials %d...\n',nLtrials,nRtrials);
     left = metadata.taskvars.trial_iv_L;
     right = metadata.taskvars.trial_iv_R;
+    left_indices = L_trial_numbers;
+    right_indices = R_trial_numbers;
     return;
 
 elseif nLtrials > nRtrials
@@ -93,12 +97,18 @@ switch match
         right.tstart = metadata.taskvars.trial_iv.tstart(matched_trial);
         right.tend = metadata.taskvars.trial_iv.tend(matched_trial);
         
+        left_indices = L_trial_numbers;
+        right_indices = matched_trial;
+        
     case 'R'
         left.tstart = metadata.taskvars.trial_iv.tstart(matched_trial);
         left.tend = metadata.taskvars.trial_iv.tend(matched_trial);
         
         right.tstart = metadata.taskvars.trial_iv.tstart(R_trial_numbers);
         right.tend = metadata.taskvars.trial_iv.tend(R_trial_numbers);
+        
+        left_indices = matched_trial;
+        right_indices = R_trial_numbers;
 end
 
 end

@@ -132,8 +132,10 @@ chp_cm = [x/convFact(1); y/convFact(2)];
 coord = struct('coordL',coordL,'coordL_cm',coordL_cm,'coordR',coordR,'coordR_cm',coordR_cm,'chp',chp,'chp_cm',chp_cm);
 
 %% plot cm coord and cp
-
+cfg.convFact = ExpKeys.convFact;
+pos_cm = LoadPos(cfg);
 figure;set(gca,'YDir','reverse'); view(270,90); hold on; title('Your coords in centimeters')
+plot(getd(pos_cm,'x'),getd(pos_cm,'y'),'k');
 plot(coordL_cm(1,:),coordL_cm(2,:),'ob'); plot(coordR_cm(1,:),coordR_cm(2,:),'og'); plot(chp_cm(1),chp_cm(2),'or','MarkerSize',10,'LineWidth',4)
 
 %% Save coord field in metadata
