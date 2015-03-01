@@ -93,9 +93,11 @@ switch match
     case 'L'
         left.tstart = metadata.taskvars.trial_iv.tstart(L_trial_numbers);
         left.tend = metadata.taskvars.trial_iv.tend(L_trial_numbers);
+        left = iv(left.tstart,left.tend);
        
         right.tstart = metadata.taskvars.trial_iv.tstart(matched_trial);
         right.tend = metadata.taskvars.trial_iv.tend(matched_trial);
+        right = iv(right.tstart,right.tend);
         
         left_indices = L_trial_numbers;
         right_indices = matched_trial;
@@ -103,9 +105,11 @@ switch match
     case 'R'
         left.tstart = metadata.taskvars.trial_iv.tstart(matched_trial);
         left.tend = metadata.taskvars.trial_iv.tend(matched_trial);
+        left = iv(left.tstart,left.tend);
         
         right.tstart = metadata.taskvars.trial_iv.tstart(R_trial_numbers);
         right.tend = metadata.taskvars.trial_iv.tend(R_trial_numbers);
+        right = iv(right.tstart,right.tend);
         
         left_indices = matched_trial;
         right_indices = R_trial_numbers;
