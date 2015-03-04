@@ -27,7 +27,7 @@ out.nFood = nan(nSessions,1);
 
 out.fullChoice = nan(nSessions,nMaxTrials);
 
-this_pwd = pwd; % store curr dir so can revert to later
+curr_pwd = pwd; % store curr dir so can revert to later
 
 %% collect data
 for iSession = 1:nSessions
@@ -105,7 +105,7 @@ end
 set(gca,'XTick',xi,'XTickLabel',{'food','water','food','water'}, ...
     'YLim',[0 1],'LineWidth',1,'YTick',0:0.25:1,'FontSize',18);
 
-ylabel('choice ratio');
+ylabel('p(choice)');
 xlabel('(food restricted)               (water restricted)');
 title(sprintf('%d rats, %d sessions, %d food trials, %d water trials',length(cfg.rats),nSessions,nFoodTrials,nWaterTrials));
 
@@ -127,7 +127,7 @@ h(2) = plot(nanmean(out.fullChoice(type == 1,:)),'r'); % food restrict
 plot(nanmean(out.fullChoice(type == 1,:)),'.r','MarkerSize',20);
 
 set(gca,'XTick',0:5:25, ...
-    'YLim',[0 1],'LineWidth',1,'YTick',0:0.25:1,'FontSize',18);
+    'YLim',[0 1.01],'LineWidth',1,'YTick',0:0.25:1,'FontSize',18);
 box off;
 
 xlabel('trial number'); ylabel('p(choose food)');
