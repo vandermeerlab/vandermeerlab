@@ -177,8 +177,13 @@ switch plotMode
 
         for iLFP = 1:numLFP
             lfp = cfg.lfp(iLFP);
-            lower_val = -iLFP*5;
-            upper_val = lower_val+5;
+            
+            abslfp = abs(lfp.data);
+            nans_here = abslfp > cfg.lfpMax*mean(abslfp);
+            lfp.data(nans_here) = NaN;
+            
+            lower_val = -iLFP*cfg.lfpHeight;
+            upper_val = lower_val+cfg.lfpHeight;
 
             lfp.data = rescale(lfp.data,lower_val,upper_val);
             plot(lfp.tvec,lfp.data,'Color',cmap(iLFP,:))
@@ -186,9 +191,13 @@ switch plotMode
         ylims(1) = lower_val;
 
     case 6 % lfp + ts data
-        cfg.lfp.data = rescale(cfg.lfp.data,-10,0);
+        abslfp = abs(cfg.lfp.data);
+        nans_here = abslfp > cfg.lfpMax*mean(abslfp);
+        cfg.lfp.data(nans_here) = NaN;
+        
+        cfg.lfp.data = rescale(cfg.lfp.data,-cfg.lfpHeight,0);
         plot(cfg.lfp.tvec,cfg.lfp.data,'Color',cfg.lfpColor);
-        ylims(1) = -10;
+        ylims(1) = -cfg.lfpHeight;
         PlotTSEvt([],cfg.evt)
 
     case 7 % lfp + iv data

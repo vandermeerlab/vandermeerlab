@@ -35,8 +35,8 @@ cfg = ProcessConfig2(cfg_def,cfg_in);
 if cfg.smooth % SDF (spike density function) version
 
     % guarantee vectoricity
-    if isvectord(ts1) ~= 1, ts1 = ts1'; end
-    if isvectord(ts2) ~= 1, ts2 = ts2'; end
+    if ~isempty(ts1) & isvectord(ts1) ~= 1, ts1 = ts1'; end
+    if ~isempty(ts2) & isvectord(ts2) ~= 1, ts2 = ts2'; end
     
     % construct timebase for binarized spike trains
     tbin_edges = min(cat(1,ts1,ts2)):cfg.binsize:max(cat(1,ts1,ts2));
