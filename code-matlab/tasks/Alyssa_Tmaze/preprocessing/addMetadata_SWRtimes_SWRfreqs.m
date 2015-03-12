@@ -5,11 +5,11 @@ clear
 % First get a set of SWRfreqs from a past session to help find good SWRs more
 % quickly:
 originalFolder = pwd;
-cd('D:\data\R050\R050-2014-04-02')
+% cd('D:\data\R050\R050-2014-04-02')
 
-LoadMetadata
+% LoadMetadata
 
-SWRfreqs_temp = metadata.SWRfreqs;
+% SWRfreqs_temp = metadata.SWRfreqs;
 
 clear metadata
 
