@@ -6,6 +6,7 @@
     %
     %
     % youkitan 2014-11-20
+    %   ACarey edit (Mar 2015) for colormaps
     
     % Process cfg input
     cfg_def.SpikeHeight = 0.4;
@@ -28,6 +29,16 @@
         axes(cfg.openInAxes);
     end
     
+    
+    spkColor = cfg.spkColor; colorType = 'single color';
+   
+    % make colour matrix if user specifies a colormap like 'jet' or 'summer'
+    if ischar(cfg.spkColor) && length(cfg.spkColor) > 1 % if spikeColor is a multicharacter array
+        nCells = length(S_in.t);
+        spkColor = colormap(eval([cfg.spkColor '(' num2str(nCells) ')'])); % turn the string into a matrix of RGB values
+        colorType = 'color matrix';
+    end
+
     % Plot spikes
     [nTrials,nCells] = size(S_in.t);
 
@@ -42,8 +53,12 @@
 
             xvals = xvals(:);
             yvals = yvals(:);
-
-            plot(xvals,yvals,'Color',cfg.spkColor)
+            switch colorType
+                case 'single color'
+                    plot(xvals,yvals,'Color',spkColor)
+                case 'color matrix'
+                    plot(xvals,yvals,'Color',spkColor(iC,:))
+            end
         end
 
         if strcmp(cfg.axislabel,'on')

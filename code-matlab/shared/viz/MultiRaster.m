@@ -27,12 +27,19 @@ function out = MultiRaster(cfg_in,S)
 %           the x-axis to cover the whole experiment.
 %
 %       cfg.spkColor - default 'k' (black)
-%           Color specifier for spikes in a single trial. Can be any MATLAB string color
-%           specifier. NOTE: multiple trials will call upon a function to create a good
+%           Color specifier for spikes in a single trial. Can be 1x3 vector of RGB values 
+%           [1 0 0], or a string specifying the short name of a color ('r'), or a string 
+%           specifying a colormap ('linspecer'). 
+%           NOTE: multiple trials will call upon a function to create a good
 %           colormap to distinguish cells.
 %
-%       cfg.lfpColor - default 'r' (red)
-%           Color specifier for lfp signal. Can be any MATLAB string color specifier.
+%       cfg.ivColor - default 'r' (red)
+%           Color specifier for iv. Can be 1x3 vector of RGB values [1 0 0], or a string 
+%           specifying the short name of a color ('r').
+%
+%       cfg.lfpColor - default 'k' (black)
+%           Color specifier for lfp signal. Can be 1x3 vector of RGB values [1 0 0], or a string 
+%           specifying the short name of a color ('r').
 %
 %       cfg.lfpHeight - default 5 
 %           The height of the lfp from maximum to minium in y-axis units. Vertically 
@@ -55,8 +62,9 @@ function out = MultiRaster(cfg_in,S)
 cfg_def.SpikeHeight = 0.4;
 cfg_def.axisflag = 'tight';
 cfg_def.spkColor = 'k';
-cfg_def.lfpColor = 'r';
-cfg_def.lfpHeight = 5;
+cfg_def.ivColor = 'r';
+cfg_def.lfpColor = 'k'; 
+cfg_def.lfpHeight = 15;
 cfg_def.lfpMax = 15;
 cfg_def.axislabel = 'on';
 cfg_def.windowSize = 1;
@@ -198,6 +206,8 @@ switch plotMode
         cfg.lfp.data(nans_here) = NaN;
         cfg.lfp.data = rescale(cfg.lfp.data,-cfg.lfpHeight,0);
         cfg_temp.display = 'tsd';
+        cfg_temp.bgcol = cfg.lfpColor;
+        cfg_temp.fgcol = cfg.ivColor;
         
         PlotTSDfromIV(cfg_temp,cfg.evt,cfg.lfp);
         ylims(1) = -cfg.lfpHeight - 1;

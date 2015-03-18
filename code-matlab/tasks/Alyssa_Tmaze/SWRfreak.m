@@ -84,7 +84,7 @@ end
         freqs = (SWRsum - SWRnoise);
         freqs = conv(freqs,[0.1,0.2,0.4,0.2,0.1]);
         freqs = freqs(3:length(freqs)-2);
-        %SWRfreqs = max(SWRfreqs,zeros(size(SWRfreqs))); %%%%%%%%%%%%%%%%%%%%%%
+        %freqs = max(freqs,zeros(size(freqs))); %%%%%%%%%%%%%%%%%%%%%%
         %figure;plot(SWRfreqs);
     end
 
