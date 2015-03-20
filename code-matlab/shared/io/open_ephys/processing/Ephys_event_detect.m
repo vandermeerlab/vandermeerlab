@@ -15,7 +15,7 @@ function [data, events, cfg] = Ephys_event_detect(data, cfg)
 %% Gather the variables
 
 cfg.pre_event = 0.01; % 10ms before the event. used for averaging.
-cfg.post_event = .05; % 50ms post the stim 
+cfg.post_event = .08; % 50ms post the stim 
 if isfield(cfg, 'stat_chan') == 0
     warning('You need to specify  channel to use for event detection as cfg.stat_chan ...setting to default first channel')
     cfg.stat_chan = 1;
@@ -25,8 +25,9 @@ end
 
 dif = diff(data.Channels{cfg.stat_chan}.data);
 dif(dif>1000) =1000;
-[pow, pos] = findpeaks(dif, 'MINPEAKHEIGHT', 100, 'MINPEAKDISTANCE', 10*data.Channels{cfg.stat_chan, 1}.info.header.sampleRate);
-
+[pow, pos] = findpeaks(dif, 'MINPEAKHEIGHT', 100, 'MINPEAKDISTANCE', 30000);%.04*data.Channels{cfg.stat_chan, 1}.info.header.sampleRate);
+% pos = pos(1:2:end);
+% pow = pow(1:2:end);
 %% extract the events
 events.data = cell(length(pos),1);
 events.tvec = cell(length(pos),1);

@@ -29,7 +29,6 @@ if isempty(figHandles) ==0 || sum(figHandles == 10) > 0
     close(10)
 end
 figure(10)
-maximize
 hold on
 loop= 1;
 for iChan = 1:length(cfg.chan_to_view)

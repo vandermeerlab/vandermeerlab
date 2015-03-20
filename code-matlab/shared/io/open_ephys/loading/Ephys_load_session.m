@@ -15,10 +15,12 @@ data_dir = data_dir{1,1};
 disp(['Folder to load: ' fname])
 cd(data_dir);
 listings = dir;
-if isempty(FindFiles('115*'))==0 && isempty(FindFiles('110*'))
+if isempty(FindFiles('115*'))==0 && isempty(FindFiles('110*')) && isempty(FindFiles('100*'))
     prefix = '115_CH';
-else
+elseif isempty(FindFiles('110*')) ==0  && isempty(FindFiles('100*'))
     prefix = '110_CH';
+elseif isempty(FindFiles('110*')) ==1  && isempty(FindFiles('100*'))==0
+    prefix = '100_CH';
 end
 
 %% load the data
