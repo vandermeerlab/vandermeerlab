@@ -3,7 +3,7 @@
 %% load and process some data
 clear all; close all
 data_dir = 'G:\Acute\';
-fname = 'R059-12';
+fname = 'R058-66';
 cfg.decimate_factor = 1;
 cfg.chan_to_view = [1 5 25 29];
 [data, cfg] = Ephys_load_session(data_dir, fname, cfg);

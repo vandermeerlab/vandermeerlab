@@ -15,7 +15,7 @@ function [data, events, cfg] = Ephys_event_detect(data, cfg)
 %% Gather the variables
 
 cfg.pre_event = 0.01; % 10ms before the event. used for averaging.
-cfg.post_event = .08; % 50ms post the stim 
+cfg.post_event = .08; % 50ms post the stim
 if isfield(cfg, 'stat_chan') == 0
     warning('You need to specify  channel to use for event detection as cfg.stat_chan ...setting to default first channel')
     cfg.stat_chan = 1;
@@ -31,7 +31,10 @@ dif(dif>1000) =1000;
 %% extract the events
 events.data = cell(length(pos),1);
 events.tvec = cell(length(pos),1);
-events.data_norm = cell(length(pos),1);
+events.channel = cell(length(cfg.chan_to_view),1);
+for iChan = 1:length(cfg.chan_to_view)
+    events.channel{iChan}.data_norm = cell(length(pos),1);
+end
 
 for ii  = 1:length(pos)
     ts = data.Channels{cfg.stat_chan}.tvec(pos(ii))-cfg.pre_event;
@@ -40,15 +43,19 @@ for ii  = 1:length(pos)
     [~, i_post] =min(abs(data.Channels{cfg.stat_chan}.tvec-tend));
     events.data{ii} = data.Channels{cfg.stat_chan}.data(i_pre:i_post);
     events.tvec{ii} = data.Channels{cfg.stat_chan}.tvec(i_pre:i_post);
-    events.data_norm{ii} = data.Channels{cfg.stat_chan}.data(i_pre:i_post)/(nanmean(data.Channels{cfg.stat_chan}.data(i_pre:pos(ii)-10))); 
+    for iChan = 1:length(cfg.chan_to_view);
+        events.channel{iChan}.data_norm{ii} = data.Channels{iChan}.data(i_pre:i_post)/(nanmean(data.Channels{iChan}.data(i_pre:pos(ii)-10)));
+    end
     events.t_pre = pos(ii)-i_pre;
     events.t_post = i_post-pos(ii);
     
 end
 events_all = [];
 for ii = 1:length(pos)
-    events.all = [events_all, events.data_norm{ii}];
+    for iChan = 1:length(cfg.chan_to_view);
+    events.all = [events_all, events.channel{iChan}.data_norm{ii}];
+    end
 end
 events.data_avg = nanmean(events_all,2);
-cfg.events_pos = pos; 
+cfg.events_pos = pos;
 cfg.events_pow = pow;
