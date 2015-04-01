@@ -73,7 +73,6 @@ for ii = 1:length(cfg.events_pos);
     vline([.015 .025 .035], {'--r' '--b' '--g'}, {'5ms' '15ms' '25ms'})
     
     xlabel('Average')
-    beep
 end
 if isfield(events_to_keep, 'tvec') ==0
     events_to_keep.tvec = tvec;

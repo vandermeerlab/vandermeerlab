@@ -40,3 +40,7 @@ save(['G:\Acute\' fname(1:4) '\all_data\' strrep(fname, '-', '_') '_all_data'], 
 
 print(2000, ['G:\Acute\' fname(1:4) '\all_data\' strrep(fname, '-', '_') '_all_data.png']);
 saveas(2000, ['G:\Acute\' fname(1:4) '\all_data\' strrep(fname, '-', '_') '_all_data.fig']);
+print(3000, ['G:\Acute\' fname(1:4) '\all_data\' strrep(fname, '-', '_') '_all_data_closeup.png']);
+saveas(3000, ['G:\Acute\' fname(1:4) '\all_data\' strrep(fname, '-', '_') '_all_data_closeup.fig']);
+
+close all
