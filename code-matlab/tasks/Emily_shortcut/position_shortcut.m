@@ -76,6 +76,6 @@ ypos_time_title = sprintf('Y position of %s over time', unique_id);
 title(ypos_time_title,'FontSize',14);
 
 % Make tsd
-make_tsd(pos_x,pos_y,Timestamps);
+[pos_tsd,tvec] = make_tsd(pos_x,pos_y,Timestamps);
 
 
