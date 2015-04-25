@@ -14,6 +14,7 @@
     cfg_def.lfpColor = 'r';
     cfg_def.axislabel = 'on';
     cfg_def.openInAxes = 0;
+    cfg_def.LineWidth = 1;
     cfg = ProcessConfig2(cfg_def,cfg_in);
     
     % Check inputs
@@ -43,7 +44,7 @@
             xvals = xvals(:);
             yvals = yvals(:);
 
-            plot(xvals,yvals,'Color',cfg.spkColor)
+            plot(xvals,yvals,'Color',cfg.spkColor,'LineWidth',cfg.LineWidth)
         end
 
         if strcmp(cfg.axislabel,'on')
@@ -69,7 +70,7 @@
             xvals = xvals(:);
             yvals = yvals(:);
 
-            plot(xvals,yvals,'Color',cmap(iC,:))
+            plot(xvals,yvals,'Color',cmap(iC,:),'LineWidth',cfg.LineWidth)
 
             end %iterate trials
         end %iterate cells

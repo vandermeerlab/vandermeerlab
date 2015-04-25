@@ -61,6 +61,7 @@ cfg_def.lfpHeight = 5;
 cfg_def.lfpMax = 15;
 cfg_def.axislabel = 'on';
 cfg_def.windowSize = 1;
+cfg_def.LineWidth = 1;
 cfg_def.openInAxes = 0; % replace with axes handle to open in axes instead of figure
 cfg = ProcessConfig2(cfg_def,cfg_in);
 
