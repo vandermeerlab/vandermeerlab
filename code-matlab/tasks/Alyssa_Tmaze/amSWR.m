@@ -11,6 +11,7 @@ function [SWR,swr1,swr2] = amSWR(cfg_in,SWRfreqs,csc)
 %
 %   CONFIGS (with defaults):
 %   cfg.fs = 2000; in Hz, the sampling frequency
+%   cfg.hiPassCutoff = 100; in Hz, disregard all frequencies below 
 %
 %   OUTPUTS
 %   SWR - [nSamples x 1 double] timestamped data struct 
@@ -24,6 +25,7 @@ function [SWR,swr1,swr2] = amSWR(cfg_in,SWRfreqs,csc)
 
 cfg_def.fs = 2000;
 cfg_def.verbose = 1;
+cfg_def.hiPassCutoff = 100; % frequency in Hz; delete all freqs below
 cfg = ProcessConfig2(cfg_def,cfg_in);
 
 %% Tell the user you're doing something
@@ -43,7 +45,8 @@ end
  
         sampwin = win*fs; % the window size in nSamples = win * sampling frequency
  
-        hiPassCutoff = 100; %We want to delete all frequencies below 100 Hz
+        %hiPassCutoff = 100; %We want to delete all frequencies below 100 Hz
+        hiPassCutoff = cfg.hiPassCutoff;
         fourierCoeffCutoff = round(hiPassCutoff*win);
  
         swrscore = zeros(length(csc.data),1);

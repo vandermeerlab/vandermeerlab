@@ -6,28 +6,41 @@ function navigate(src,event)
 % figure('KeyPressFcn',@navigate). See MultiRaster for an example.
 % Purpose: Moves viewing window according to keyboard input.
 %
-% FIND EVENT
-% a:       1 event left
-% d:       1 event right
-% Shift+a: 10 events left
-% Shift+d: 10 events right
-% Ctrl+a:  50 events left
-% Ctrl+d:  50 events right
-% f:       first event
-% c:       center event
-% l:       last event
+% KEYBOARD COMMANDS:
 %
-% MOVE WINDOW
-% leftarrow:   move a half-window left
-% rightarrow:  move a half-window right
-% Shift+left:  move 10 windows left
-% Shift+right: move 10 windows right
-% Ctrl+left:   move 50 windows left
-% Ctrl+right:  move 50 windows right
-% b:           move to the beginning of the recording
-% m:           move to the midpoint of the recording
-% e:           move to the end of the recording
+%    Help
+%    h: display a message box with all keyboard commands (please update
+%    commandList if new features added)
 %
+%    Zoom 
+%    w:              user inputs a new windowSize (seconds)
+%    Crtl+equal:     zoom in (aka control plus); resets windowSize (/2) 
+%    Ctrl+hyphen:    zoom out (aka control minus); resets windowSize (*2) 
+%    Ctrl+backslash: view entire session; does not reset windowSize 
+%
+%    Event-Based Navigation
+%    a:       1 event left
+%    d:       1 event right
+%    Shift+a: 10 events left
+%    Shift+d: 10 events right
+%    Ctrl+a:  50 events left
+%    Ctrl+d:  50 events right
+%    f:       first event
+%    c:       center event
+%    l:       last event
+%
+%    Move Viewing Window
+%    j:           user inputs a timepoint to "jump" to (seconds)
+%    leftarrow:   0.5 windows left
+%    rightarrow:  0.5 windows right
+%    Shift+left:  10 windows left
+%    Shift+right: 10 windows right
+%    Ctrl+left:   50 windows left
+%    Ctrl+right:  50 windows right
+%    b:           beginning of the recording
+%    m:           middle of the recording
+%    e:           end of the recording
+%    
 % SHORTCOMINGS:
 % **If you are inbetween events, navigate will skip the nearest left or
 % right event; in this case, just hit 'd' or 'a' to get the one you missed.
@@ -37,6 +50,7 @@ function navigate(src,event)
 %
 % ACarey. Aug 2014. 
 % youkitan edit, 2015-01-20 (can display candidate score).
+% ACarey edit, Feb 2015 (added j and w commands), Mar 2015 (added zoom and h)
 
 %% ****Some notes on how this function works internally****
 
@@ -79,27 +93,83 @@ permission = 1; %this controls whether or not the outputs from the if statements
 % "permission" if statements, or whether they go directly towards changing
 % the limits at the very end of the function
 
-evtTitle = 0; %this controls whether we display an event title, which 
+% evtTitle variable: this controls whether we display an event title, which 
 % occurs only when we use the "find event" functionality of navigate;
 % "move window" changes the current view regardless of the presence of an
 % event, so we don't want to display an event title if an event is not the
 % central focus of the viewing window! 
 
-%% CHANGE WINDOW SIZE
+%% HELP
 
-if strcmp(event.Key,'w')
-    win = inputdlg('Input new window size (in seconds):');
+if strcmp(event.Key,'h')
+commandList = ...
+{'Make sure figure window is in focus (click window)';
+' ';
+'    Zoom'; 
+'    w:              user inputs a new windowSize (seconds)';
+'    Crtl+equal:     zoom in (aka control plus); resets windowSize (/2)'; 
+'    Ctrl+hyphen:    zoom out (aka control minus); resets windowSize (*2) ';
+'    Ctrl+backslash: view entire session; does not reset windowSize'; 
+' ';
+'    Event-Based Navigation';
+'    a:       1 event left';
+'    d:       1 event right';
+'    Shift+a: 10 events left';
+'    Shift+d: 10 events right';
+'    Ctrl+a:  50 events left';
+'    Ctrl+d:  50 events right';
+'    f:       first event';
+'    c:       center event';
+'    l:       last event';
+' '
+'    Move Viewing Window';
+'    j:           user inputs a timepoint to "jump" to (seconds)';
+'    leftarrow:   0.5 windows left';
+'    rightarrow:  0.5 windows right';
+'    Shift+left:  10 windows left';
+'    Shift+right: 10 windows right';
+'    Ctrl+left:   50 windows left';
+'    Ctrl+right:  50 windows right';
+'    b:           beginning of the recording';
+'    m:           middle of the recording';
+'    e:           end of the recording'};
+
+msgbox(commandList,'How to Navigate');
+end
+%% CHANGE WINDOW SIZE (ZOOM)
+
+if strcmp(event.Key,'w') 
+    win = inputdlg('New window size = ____ seconds');
     if ~isempty(win) && ~isnan(str2double(win{1})) && isscalar(str2double(win{1}))
         windowSize = str2double(win{1});
         flank = 0.5*windowSize;
+        limits = [current_location-flank current_location+flank];
     end
+end
+
+if ctrlPressed && strcmp(event.Key,'backslash')
+    limits = [time(1)-200 time(end)+200]; % adding the constant is for margins
+    % note: this doesn't actually reset windowSize, and it's probably better this way 
+end
+
+if ctrlPressed && strcmp(event.Key,'equal') % then zoom in
+    windowSize = windowSize./2;
+    flank = 0.5*windowSize;
     limits = [current_location-flank current_location+flank];
 end
+
+if ctrlPressed && strcmp(event.Key,'hyphen') % then zoom out
+    windowSize = windowSize.*2;
+    flank = 0.5*windowSize;
+    limits = [current_location-flank current_location+flank];
+end
+
+%disp(event.Key)
 
 %% JUMP TO TIME INPUT BY USER
 
 if strcmp(event.Key,'j')
-    jumpHere = inputdlg('Jump to time = ');
+    jumpHere = inputdlg('Jump to time = ___ seconds');
     if ~isempty(jumpHere) && ~isnan(str2double(jumpHere{1})) && isscalar(str2double(jumpHere{1}))
         next_location = str2double(jumpHere{1});
         limits = [next_location-flank next_location+flank];
@@ -177,6 +247,8 @@ window = (limits(2)-limits(1));
                 next_location = time(end)-flank;
                 limits = [next_location-flank next_location+flank];  
                 evtTitle = 0;
+        else
+            evtTitle = 1; % if a non-assigned key was pressed, don't set the title to blank
         end
         
 % Do not show a title if the user is navigating based on the time axis
@@ -252,7 +324,6 @@ next_idx = current_index;
                           % disappear unless evtTitle is something other than 0
         end
   
-
 %% LIMITS ASSIGNMENT
     % "permission" if statement: allows only type 2 to enter -- converts
     % next_location into a new set of limits, and also prints the event
@@ -280,7 +351,7 @@ next_idx = current_index;
         end
     end
     
-    if permission == 0
+    if permission == 0 && evtTitle == 0
         title(' ')
     end
             
