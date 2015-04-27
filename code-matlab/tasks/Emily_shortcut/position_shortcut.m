@@ -9,14 +9,12 @@
 
 clear all;
 
-unique_folder = 'R068-2014-12-01_recording';
-cd(['H:\data-working\Shortcut\R068_EI\',unique_folder]);
-
-unique_id = unique_folder(1:15);
+fd = 'D:\data\R066\R066-2014-11-27';
+[~,fc,~] = fileparts(fd); 
 % position_file = sprintf('position-xy-%s',unique_id);
 % load(position_file);
 
-[pos_x,pos_y,Timestamps] = xy_targets_chunks(unique_folder,5000,400);
+[pos_x,pos_y,Timestamps] = xy_targets_chunks(fd,5000,400);
 
 % Finding indices when lights are on (based on Event file)
 light1_idx = light_on(pos_x,pos_y,Timestamps,'*Events.nev',10);
@@ -59,20 +57,20 @@ fig = figure('Position',[100, 100, 950, 950]);
 subaxis(3,6,[2:5], 'Spacing', 0.04, 'Padding', 0.01, 'Margin', 0.04);
 axis tight;
 plot(pos_x,pos_y,'b.','MarkerSize',4);
-pos_title = sprintf('Maze position of %s', unique_id);
+pos_title = sprintf('Maze position of %s', fc);
 set(gca,'xtick',[],'ytick',[]);
 title(pos_title,'FontSize',14);
 
 subaxis(3,1,2, 'Spacing', 0.04, 'Padding', 0.01, 'Margin', 0.04);
 axis tight;
 plot(Timestamps,pos_x,'k.','MarkerSize',4);
-xpos_time_title = sprintf('X position of %s over time', unique_id);
+xpos_time_title = sprintf('X position of %s over time', fc);
 title(xpos_time_title,'FontSize',14);
 
 subaxis(3,1,3, 'Spacing', 0.04, 'Padding', 0.01, 'Margin', 0.04);
 axis tight;
 plot(Timestamps,pos_y,'k.','MarkerSize',4);
-ypos_time_title = sprintf('Y position of %s over time', unique_id);
+ypos_time_title = sprintf('Y position of %s over time', fc);
 title(ypos_time_title,'FontSize',14);
 
 % Make tsd
