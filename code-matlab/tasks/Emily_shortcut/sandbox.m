@@ -1,6 +1,6 @@
 %%
 cd('D:\data\R066\R066-2014-11-27');
-nTargets = 4;
+nTargets = 2;
 
 %% load raw data
 cfg = [];
@@ -9,6 +9,10 @@ cfg.mode = 'raw';
 
 [ x_avg,y_avg,t_avg ] = xy_targets_chunks(cfg);
 t_avg = t_avg * 10^-6; % convert to s
+
+if ~exist('temp_pos.mat','file'); % speed up processing later
+    save('temp_pos.mat','x_avg','y_avg','t_avg');
+end
 
 %% plot each target individually (raw)
 figure(1)

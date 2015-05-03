@@ -45,8 +45,13 @@ cfg_loading = [];
 cfg_loading.targets = 1:cfg.nTargets;
 cfg_loading.mode = 'raw';
 
-[x_avg,y_avg,t_avg] = xy_targets_chunks(cfg_loading);
-t_avg = t_avg * 10^-6; % convert to s
+if exist('temp_pos.mat','file');
+    fprintf('temp_pos.mat file found, loading...\n');
+    load temp_pos;
+else
+    [x_avg,y_avg,t_avg] = xy_targets_chunks(cfg_loading);
+    t_avg = t_avg * 10^-6; % convert to s
+end
 
 % plot each target individually (raw)
 if cfg.plot
@@ -220,7 +225,7 @@ if ~CheckTSD(pos)
    error('TSD check NOT passed!'); 
 end
 
-if cfg_def.write_output
+if cfg.write_output
     f_out = cat(2,fd,'-vt.mat');
     save(f_out,'pos');
 end
