@@ -29,7 +29,7 @@ cfg = ProcessConfig2(cfg_def,cfg_in);
 
 
 % 
-if ~exist('VT1.nvt','file')
+if isempty(FindFile('*VT1.nvt'))
    error('No VT1.nvt file found.'); 
 end
 

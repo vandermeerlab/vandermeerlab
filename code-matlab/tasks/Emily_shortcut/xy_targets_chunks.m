@@ -32,7 +32,7 @@ cfg = ProcessConfig2(cfg_default,cfg_in);
 
 % load raw data
 [Timestamps, X, Y, Angles, Targets, Points, Header] = ...
-    Nlx2MatVT('VT1.nvt', [1 1 1 1 1 1], 1, 1, []);
+    Nlx2MatVT(FindFile('*VT1.nvt'), [1 1 1 1 1 1], 1, 1, []);
 
 % report some stuff about outputs
 TargetRowAllZeros = all(Targets' == 0);
