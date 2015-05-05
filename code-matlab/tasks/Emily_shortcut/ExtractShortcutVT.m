@@ -1,4 +1,4 @@
-function ExtractShortcutVT(cfg_in)
+function [ pos ] = ExtractShortcutVT(cfg_in)
 % function ExtractShortcutVT(cfg_in)
 %
 % extract VT data from Emily's shortcut task raw data
