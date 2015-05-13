@@ -45,10 +45,13 @@ end
 % construct tvec based on mode
 if strcmp(cfg.mode,'nlx')
     % times are on Neuralynx timebase, subtract time of first sample
-    tcent = tcent - double(hdr.FirstTimeStamp);
-    if ~isa(hdr.FirstTimeStamp,'double')
-        hdr.FirstTimeStamp = double(hdr.FirstTimeStamp);
-    end
+ 
+    % convert to double; also convert FirstTimeStamp to have same units
+    % as csc.tvec
+    convFact = hdr.FirstTimeStamp/tvec(1);
+    hdr.FirstTimeStamp = double(hdr.FirstTimeStamp/convFact);
+    
+    tcent = tcent - hdr.FirstTimeStamp;
     tvec = tvec-hdr.FirstTimeStamp; %minus first time to align to zero
     
 else %equivalent to elseif cfg.mode = 'ft'
