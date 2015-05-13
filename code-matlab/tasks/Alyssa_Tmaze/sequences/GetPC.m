@@ -34,7 +34,7 @@ if strcmp(S_orig.cfg.SessionID(1:4),'R042')
     metadata = TrimTrialTimes([],metadata); % R042 only!!
 end
 %[L_trl,R_trl] = GetMatchedTrials([],metadata,ExpKeys); % AC version - errors?
-[L_trl,R_trl] = GetMatchedTrials_old([],metadata); % MvdM old version that includes bad trials...
+[L_trl,R_trl] = GetMatchedTrials([],metadata); % MvdM old version that includes bad trials...
 
 S_left = restrict(S_orig,L_trl); posL = restrict(pos,L_trl);
 S_right = restrict(S_orig,R_trl); posR = restrict(pos,R_trl);

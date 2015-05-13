@@ -1,9 +1,9 @@
 function [left,right,left_indices,right_indices] = GetMatchedTrials(cfg_in,metadata,ExpKeys)
-% function [left,right] = GetMatchedTrials(cfg_in,metadata,ExpKeys)
-%
+% function [left,right] = GetMatchedTrials(cfg_in,metadata)
+
 % left_indices and right_indices are the trial numbers for left and right
 % trials in the full original sequence (which includes bad trials). 
-%
+
 % MvdM
 % AC edit, handles bad trials
 

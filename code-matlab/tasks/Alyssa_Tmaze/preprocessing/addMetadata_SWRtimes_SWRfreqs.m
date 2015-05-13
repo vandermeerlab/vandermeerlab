@@ -22,7 +22,7 @@ S = LoadSpikes(cfg);
 
 LoadExpKeys
 cfg.fc = ExpKeys.goodSWR(1);
-%cfg.fc = {'R044-2013-12-22-CSC02a.ncs'};
+%cfg.fc = {'R042-2013-08-20-CSC11a.ncs'};
 csc = LoadCSC(cfg);
 
 [SWR,~,~] = amSWR([],SWRfreqs_temp,csc);
@@ -33,19 +33,23 @@ evt = precand(cfg_can,csc.tvec,SWR,MUA,S);
 
 %% manually identify SWRs 
 
-cfg_duck.num = 50;
-%cfg_duck.evt = evt;
+num2catch = 50;
+cfg_duck.evt = evt;
 cfg_duck.lfpHeight = 30;
 
-SWRtimes = ducktrap(cfg_duck,S,csc);
+SWRtimes = ducktrap(cfg_duck,S,csc,num2catch);
 
 %test.tcent = ducktrap_backup;
 %test.label = 'blah';
 
 %% get SWR Fourier coefficients
-cfg.showfig = 1;
-cfg.weightby = 'amplitude';
-SWRfreqs = SWRfreak(cfg,metadata.SWRtimes,csc);
+cfg.fs = 2000; %1./median(diff(csc.tvec));
+SWRfreqs = SWRfreak([],SWRtimes,csc);
+
+figure;
+plot(SWRfreqs.freqs1); title('80 ms window')
+figure;
+plot(SWRfreqs.freqs2); title('60 ms window')
 
 %% Save fields in metadata
 

@@ -1,4 +1,4 @@
-function SWRtimes = ducktrap(cfg_in,S,csc)
+function SWRtimes = ducktrap(cfg_in,S,csc,num2catch)
 % DUCKTRAP Manually identify windows containing sharp wave-ripple
 % complexes. The default window is 0.08 seconds (80 milliseconds).
 %
@@ -8,11 +8,10 @@ function SWRtimes = ducktrap(cfg_in,S,csc)
 % plotted on the figure as a blue horizontal line. To keep the SWR time,
 % press enter. Trapwin will change to green and remain on the plot. The
 % function will return output when the user collects the number of SWR
-% times specified by cfg.num.
+% times specified by num2catch.
 %
 % User can move viewing window via keyboard input in the same general manner as 
-% MultiRaster (type "help navigate" in command window). *** some navigate
-% features may not compatible with ducktrap.
+% MultiRaster (type "help navigate" in command window).
 %
 % For more information, open ducktrap and the read the section "About ducktrap".
 %
@@ -21,12 +20,14 @@ function SWRtimes = ducktrap(cfg_in,S,csc)
 %       cfg_in: input cfg
 %       S: spiketrain struct. Output from LoadSpikes.
 %       csc: tsd object (LFP). Output from LoadCSC.
+%       num2catch: the number of SWRs you would like to manually identify.
 %
 %   OUTPUT
 %       SWRtimes: iv struct with fields:
-%           .tcent   - actual click times; this is the important one
-%           .tstart  - [num x 1 double] start times
-%           .tend    - [num x 1 double] end times
+%           tcent.   - actual click times; this is the important one
+%           .tstart  - [num2catch x 1 double] start times
+%           .tend    - [num2catch x 1 double] end times
+%           .cfg     - ...
 %           .trapwin - window width used to "catch" SWRs.
 %           .label   - the csc used for identification
 %
@@ -41,14 +42,12 @@ function SWRtimes = ducktrap(cfg_in,S,csc)
 %           containing individual SWRs manually identified by the user. It
 %           is the same window that will be used in SWRfreak and detectSWR.
 %
-%       cfg.num - default 50. The number of SWRs you would like to
-%           manually identify.
-%
 %       cfg.evt - default NONE
 %           Event data in iv format. The output from getSWR or a similar function.
 %           Useful for viewing "loud" SWRs with few false positives if the
 %           detection threshold was properly set; may help identify
-%           positives. 
+%           positives. However, navigation in MultiRaster is better when
+%           evt is not specified.
 %
 %       cfg.lfpHeight - default 15 
 %           The height of the lfp (csc) from maximum to minium in y-axis units. Vertically 
@@ -104,7 +103,7 @@ function SWRtimes = ducktrap(cfg_in,S,csc)
 %
 % Because AC sucks at programming, and couldn't get the function to work
 % unless there was some way to terminate the while loop cleanly. If you
-% don't know how many SWRs you want to get, then specify a large num
+% don't know how many SWRs you want to get, then specify a large num2catch
 % and close the figure when you're done. This will generate errors. But you
 % can still get the SWR center times from ducktrap_backup in the base workspace.
 %
@@ -228,7 +227,7 @@ trapwin = duckplotter(cfg_in,S,csc);
 hold on;
 
 numKept = 0;
-while numKept < cfg.num
+while numKept < num2catch
     
     [x,y] = ginput_ax(gca,1);
     x_window = [x-trapwin/2 x+trapwin/2];
@@ -244,7 +243,7 @@ while numKept < cfg.num
             set(H(2),'Color','g') 
             numKept = numKept + 1;
             clicktimes(numKept) = x;
-            legmess = [num2str(numKept),'/',num2str(cfg.num)];
+            legmess = [num2str(numKept),'/',num2str(num2catch)];
             legend(legmess);
             assignin('base','ducktrap_backup',clicktimes);
         
@@ -261,7 +260,7 @@ end
 
 clicktimes = sort(clicktimes);
 SWRtimes = iv(clicktimes-trapwin/2,clicktimes+trapwin/2);
-SWRtimes.tcent = clicktimes';
+SWRtimes.tcent = clicktimes;
 SWRtimes.trapwin = trapwin;
 SWRtimes.label = csc.label;
 

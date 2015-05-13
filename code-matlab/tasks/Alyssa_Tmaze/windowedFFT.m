@@ -1,13 +1,9 @@
-function fftedData = windowedFFT(cfg,data,sampwin,idx)
-%WINDOWEDFFT helper function for SWRfreak and amSWR
+function fftedData = windowedFFT(data,fs,sampwin,idx)
 
 %   Elyot Grant, Jan 2015
 
-fs = cfg.fs;
-hiPassCutoff = cfg.hiPassCutoff;
-
-%hiPassCutoff = 100; %We want to delete all frequencies below 100 Hz %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-numSmoothingSamples = round(1*fs/hiPassCutoff); % Number of samples in the wavelength (frequency) specified by hiPassCutoff
+hiPassCutoff = 100; %We want to delete all frequencies below 100 Hz %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+numSmoothingSamples = round(1*fs/hiPassCutoff); % Number of samples in a wavelength of 100 Hz
 newSampwin = sampwin - numSmoothingSamples;
 smoothingWin1 = 0.5 - 0.5*cos(pi/numSmoothingSamples*(0:numSmoothingSamples-1));
 smoothingWin2 = ones(1,newSampwin);
@@ -25,8 +21,5 @@ windowedData = windowedData(1:numSmoothingSamples+newSampwin);
 fftedData = abs(fft(windowedData)); % abs converts complex numbers to their magnitudes (because we don`t care about the phase)
 fftedData = fftedData(1:round(length(fftedData)/2));
 
-%% "weight by power", but not quite...should remove this option and stop using the terms "amplitude-weighted" and "power-weighted" 
-% divide by 1/x...aka multiply by x...
-if strcmp(cfg.weightby,'power')
-    fftedData = fftedData.*(1:length(fftedData)); % weight by power
-end
+%% insert if statement "weight by power" (default is weight by amplitude)
+%fftedData = fftedData.*(1:length(fftedData)); % weight by power
