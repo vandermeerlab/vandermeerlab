@@ -25,7 +25,7 @@ cfg = ProcessConfig2(cfg_def,cfg_in);
 
 if cfg.verbose
 tic
-cprintf(-[0 0 1],'precand: generating pool of candidates...');
+cprintf(-[0 0 1],'precand: Looking for precandidate replays...');
 disp(' ');
 end
 
@@ -82,12 +82,6 @@ evt.data = score;
 if exist('nActiveCells','var')
     evt.nActiveCells = nActiveCells;
 end
-
-% keep a record 
-evt.cfg.history.mfun = cat(1,evt.cfg.history.mfun,mfilename);
-evt.cfg.history.cfg = cat(1,evt.cfg.history.cfg,{cfg});
-
-evt.parameters = struct('threshold',cfg.threshold,'mindur',cfg.mindur,'minCells',cfg.minCells,'amSWR',SWR.parameters,'amMUA',MUA.parameters);
 
 if cfg.verbose
 toc

@@ -25,8 +25,8 @@ keep = ones(length(iv1.tstart),1);
 for iI = 1:length(iv1.tstart)
     
     % first, check if any start or end is within this interval
-    temp1 = find(iv2.tstart >= iv1.tstart(iI) & iv2.tstart <= iv1.tend(iI));
-    temp2 = find(iv2.tend >= iv1.tstart(iI) & iv2.tend <= iv1.tend(iI));
+    temp1 = find(iv2.tstart > iv1.tstart(iI) & iv2.tstart < iv1.tend(iI));
+    temp2 = find(iv2.tend > iv1.tstart(iI) & iv2.tend < iv1.tend(iI));
     
     if ~isempty(temp1) | ~isempty(temp2)
        keep(iI) = 0;
