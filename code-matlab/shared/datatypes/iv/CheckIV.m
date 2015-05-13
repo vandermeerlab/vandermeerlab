@@ -1,5 +1,5 @@
 function pass_flag = CheckIV(iv_in)
-% function pass_flag = CheckIV(tsd_in)
+% function pass_flag = CheckIV(iv_in)
 %
 % checks if iv is well formed
 %
