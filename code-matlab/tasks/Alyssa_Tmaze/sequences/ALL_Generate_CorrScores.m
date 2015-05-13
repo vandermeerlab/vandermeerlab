@@ -5,6 +5,7 @@ cfg.requireCandidates = 1;
 fd = sort(getTmazeDataPath(cfg));
 
 %% 
+tic
 for iFD = 12%:length(fd)
     
     cd(fd{iFD});
@@ -22,3 +23,5 @@ for iFD = 12%:length(fd)
     Generate_CorrScores(cfg);
     
 end
+
+toc

@@ -8,7 +8,7 @@ fd = getTmazeDataPath(cfg);
 cfg.indivSessionPlot = 1;
 cfg.indivSequencePlots = 1;
 
-cfg.prefix = 'CS_ALL'; % which files to load
+cfg.prefix = 'CS_M_ALL_'; % which files to load
 cfg.p = 0.99; % p-level for which events to count
 cfg.sessions = {'food','water'};
 cfg.arms = {'left','right'}; % needs to match order of out.score1[] and out.score3[] (1 is left, 2 right arm)
@@ -17,7 +17,7 @@ cfg.eventsToProcess = 'prerecord'; % 'postrecord', 'all'
 
 %% init vars to place data into
 
-ALL_sig_seq.count = []; % the actual observed activation probabiliries
+ALL_sig_seq.count = []; % the actual observed activation probabilities
 ALL_sig_seq.arm = []; % left (1), right (2)
 ALL_sig_seq.type = []; % restriction type (food/water)
 ALL_sig_seq.sess = []; % session ID in case we want to restrict later
@@ -30,8 +30,10 @@ for iFD = 1:length(fd)
    cd(fd{iFD}); 
    LoadExpKeys;
    
-   cd('files');
-   this_file = FindFiles(cat(2,cfg.prefix,'*CorrScores.mat'));
+   %cd('files');
+   cd([fd{iFD},'\files'])
+   [~,sessionID,~] = fileparts(fd{iFD}); % 'RXXX-201X-XX-XX'
+   this_file = FindFiles([cfg.prefix,sessionID,'-CorrScores.mat']);
    
    if isempty(this_file)
       fprintf('Session %s: no CorrScores file found, skipping...\n',fd{iFD}); 
@@ -138,7 +140,7 @@ for iFD = 1:length(fd)
        plot(xl,[5 5],'r:'); plot(xl,[-5 -5],'b:');
        
        if cfg.writeFiles
-           cd('files');
+            cd([fd{iFD},'\files']) %cd('files');
            base_fn = ExpKeys.goodSWR{1}(1:15);
            
            fn = cat(2,base_fn,'_indivSessionCorr.png');
@@ -170,7 +172,7 @@ for iFD = 1:length(fd)
            drawnow;
            
            if cfg.writeFiles
-               cd('files');
+                cd([fd{iFD},'\files']) %cd('files');
                
                fn = cat(2,'IndivSeqL_',num2str(iEvt),'.png');
                print(gcf,'-dpng','-r300',fn);
@@ -194,7 +196,7 @@ for iFD = 1:length(fd)
            drawnow;
            
            if cfg.writeFiles
-               cd('files');
+                cd([fd{iFD},'\files']) %cd('files');
                
                fn = cat(2,'IndivSeqR_',num2str(iEvt),'.png');
                print(gcf,'-dpng','-r300',fn);
@@ -242,7 +244,7 @@ xlabel('(food restricted)         (water restricted)');
 title(sprintf('%d rats, %d sessions',length(cfg.rats),length(fd)));
 
 if cfg.writeFiles
-    cd('files');
+     cd([fd{iFD},'\files']) %cd('files');
     base_fn = ExpKeys.goodSWR{1}(1:15);
     
     fn = cat(2,base_fn,'_allSessionsCorr.png');
