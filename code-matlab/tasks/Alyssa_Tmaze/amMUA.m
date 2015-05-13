@@ -26,6 +26,7 @@ function [MUA,raw,noise] = amMUA(cfg_in,S,tvec)
 %                    Measured in # of cells. How many noisy cells will we
 %                    tolerate? Increasing this number narrows the detection
 %                    width for individual events.
+%   cfg.verbose = 1; talk to me
 %
 % OUTPUTS
 % MUA - tsd with fields
@@ -48,7 +49,7 @@ function [MUA,raw,noise] = amMUA(cfg_in,S,tvec)
 
 cfg_def.spkcap = 2;
 cfg_def.noisefloor = 4; 
-cfg_def.kernelstd = 40; % hidden cfg default for cell activity cap
+cfg_def.kernelstd = 40; 
 cfg_def.verbose = 1;
 cfg = ProcessConfig2(cfg_def,cfg_in);
 
@@ -124,9 +125,16 @@ muascoreneg2 = conv(muacapped,kernel3,'same');
 
 %MUA5 = tsd(tvec,muascoretot2.*muascore/mean(muascore));
 
+%% Generate output
+
 MUA = tsd(tvec,muascoretot3); % raw-noise
+MUA.parameters = struct('spkcap',cfg.spkcap,'kernelstd',cfg.kernelstd,'noisefloor',cfg.noisefloor);
+
 raw = tsd(tvec,muascore); % raw
+raw.parameters = struct('spkcap',cfg.spkcap,'kernelstd',cfg.kernelstd);
+
 noise = tsd(tvec,muascoreneg2); % noise
+noise.parameters = struct('spkcap',cfg.spkcap,'kernelstd',cfg.kernelstd,'noisefloor',cfg.noisefloor);
 
 if cfg.verbose
 toc
