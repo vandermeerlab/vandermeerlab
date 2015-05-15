@@ -11,7 +11,8 @@ function tf = LoadMetadata2
 %  Used in scripts that generate metadata fields (need to check if metadata 
 %  exists already)
 %
-% A.Carey Feb, 2015; written for T-maze-specific metadata file
+% A.Carey Feb 2015
+% --edit May 2015
 
 %% example usage
 
@@ -32,12 +33,15 @@ function tf = LoadMetadata2
 
 %%
 
-[~,name,~] = fileparts(pwd); 
+%[~,name,~] = fileparts(pwd); 
 
-fn = FindFiles([name,'-metadata.mat']);
+fn = FindFiles('*metadata.mat');
 
 if isempty(fn)
     tf = 0;
+elseif length(fn) > 1
+    disp(['LoadMetadata2: More than one file matching',' ''*metadata.mat'' ','was found in', [' ',pwd]])
+    disp('metadata not loaded')
 else
     tf = 1;
     load(fn{1})
