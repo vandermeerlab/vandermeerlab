@@ -14,6 +14,8 @@ function BulkRename(cfg_in)
 %      cfg_def.directory = []; % directories to look into, can be a list 
 %            of fd's directly containing the files to be renamed; if empty,
 %            searches all subdirectories in current directory 
+%      cfg_def.subfolder = ''; % look in a subfolder in session folder
+%            ex: 'files', to look in D:\data\promoted\R042\R042-2013-08-21\files
 %      cfg_def.oldprefix = ''; % any characters appearing before the standard
 %      cfg_def.oldsuffix = ''; % any characters appearing after the
 %                              standard, can include the extension as well
@@ -64,6 +66,7 @@ function BulkRename(cfg_in)
 
 cfg_def.type = 'file';
 cfg_def.directory = []; % can be a list 
+cfg_def.subfolder = '';
 cfg_def.oldprefix = ''; % any characters appearing before the standard
 cfg_def.oldsuffix = ''; % any characters appearing after the standard
 cfg_def.oldext = ''; 
@@ -87,7 +90,12 @@ function findterminalfolder(cfg)
             orig = pwd;
             cd([pwd,'\',dir_list(iDir).name])
             if  length(dir_list(iDir).name) == 15
-                renamefile(cfg)
+                [~,sessionID,~] = fileparts(pwd);
+                if ~isempty(cfg.subfolder)
+                    subfolder = ['\',cfg.subfolder];
+                    cd([pwd,subfolder])
+                end
+                renamefile(cfg,sessionID)
             else
                 findterminalfolder(cfg);
             end
@@ -96,8 +104,8 @@ function findterminalfolder(cfg)
     end
 end
 
-    function renamefile(cfg)
-        [~,sessionID,~] = fileparts(pwd);
+    function renamefile(cfg,sessionID)
+        %[~,sessionID,~] = fileparts(pwd);
         if ~isempty(cfg.newID)
             newfilename = [cfg.newprefix,cfg.newID,cfg.newsuffix,cfg.newext];
         else

@@ -13,6 +13,8 @@ function BulkDelete(cfg_in)
 %      cfg_def.directory = []; % directories to look into, can be a list 
 %            of fd's directly containing the files to be renamed; if empty,
 %            searches all subdirectories in current directory 
+%      cfg_def.subfolder = ''; % look in a subfolder in session folder
+%            ex: 'files', to look in D:\data\promoted\R042\R042-2013-08-21\files
 %      cfg_def.prefix = ''; % any characters appearing before the standard
 %      cfg_def.suffix = ''; % any characters appearing after the
 %                              standard, can include the extension as well
@@ -51,6 +53,7 @@ function BulkDelete(cfg_in)
 
 cfg_def.type = 'file';
 cfg_def.directory = []; % can be a list 
+cfg_def.subfolder = '';
 cfg_def.prefix = ''; % any characters appearing before the standard
 cfg_def.suffix = ''; % any characters appearing after the standard
 cfg_def.ext = ''; 
@@ -71,6 +74,11 @@ cfg = ProcessConfig2(cfg_def,cfg_in);
                 if  length(dir_list(iDir).name) == 15
                     [~,sessionID,~] = fileparts(pwd);
                     filename = [cfg.prefix,sessionID,cfg.suffix,cfg.ext];
+                    disp(cfg.subfolder)
+                    if ~isempty(cfg.subfolder)
+                        subfolder = ['\',cfg.subfolder];
+                        cd([pwd,subfolder])
+                    end
                     %fn = FindFiles(filename);
                     deletelist = [deletelist FindFiles(filename)];
                 else
@@ -101,7 +109,8 @@ end
 if isempty(deletelist)
     disp('0 files found')
 else
-    disp('BulkDelete found the following file(s) to delete:')
+    disp(' ')
+    disp(['BulkDelete found the following',[' ',num2str(length(deletelist))],' file(s) to delete:'])
     %disp(deletelist)
     arrayfun(@(x) disp(x), deletelist)
     %disp('Any keypress other than Y will not delete the file(s)')
