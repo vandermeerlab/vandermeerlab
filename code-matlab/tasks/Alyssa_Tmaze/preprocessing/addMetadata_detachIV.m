@@ -1,5 +1,5 @@
 % get iv for detachment events R044
-
+% amplitude thresholding. expand intervals.
 clear
 threshold = 0.0015; % the amplitude in volts, above which the data will be excluded
 cfg.d = [-0.025 0.025]; % ms, amount to expand detachIV 
@@ -19,6 +19,11 @@ for iFD = 1:length(fd)
     tend = csc.tvec(diff(abs(csc.data) > threshold) == -1);
     detachIV = iv(tstart,tend);
     detachIV = addIV(cfg,detachIV);
+    
+    % make it work with restrict(), so the iv has the stuff we want to keep
+    tstart = [csc.tvec(1); detachIV.tend];
+    tend = [detachIV.tstart; csc.tvec(end)];
+    detachIV = iv(tstart,tend);
 
     csc2 = restrict(csc,detachIV);
     figure; hold on
