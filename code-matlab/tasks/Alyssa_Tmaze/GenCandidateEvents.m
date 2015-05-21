@@ -42,16 +42,38 @@ disp('Loading data')
 LoadExpKeys
 LoadMetadata % for freqs
 
-cfg_temp.fc = ExpKeys.goodSWR(1);
-csc = LoadCSC(cfg_temp);
-
 cfg_temp = []; cfg_temp.useClustersFile = 0; cfg_temp.load_questionable_cells = cfg.load_questionable_cells;
 S = LoadSpikes(cfg_temp);
+
+pos = LoadPos([]);
+
+cfg_temp.fc = ExpKeys.goodSWR(1);
+csc = LoadCSC(cfg_temp);
 
 cfg_temp = []; cfg_temp.fc = ExpKeys.goodTheta(1);
 lfp_theta = LoadCSC(cfg_temp);
 
-pos = LoadPos([]);
+%% if there was HS detachment, we need to restrict the CSCs
+[~,sessionID,~] = fileparts(pwd);
+% 1. restrict based on HS_detach_times. note this is basically unnecessary
+% because there are no spikes during these times (ntt file restricted), 
+% which means the MUA detector will zero out this region anyway
+if strcmp(sessionID,'R044-2013-12-21') || strcmp(sessionID,'R044-2013-12-22')
+    disp('Excluding HS detach times')
+   load(FindFile('*HS_detach_times.mat')) 
+   temp_iv = iv(t_start/10^6,t_end/10^6);
+   %temp_iv.tstart(1) = lfp_theta.tvec(1);
+   %temp_iv.tend(end) = lfp_theta.tvec(end);
+   lfp_theta = restrict(lfp_theta,temp_iv.tstart,temp_iv.tend);
+   csc = restrict(csc,temp_iv);
+end
+% 2. restrict based on metadata.detachIV
+if isfield(metadata,'detachIV')
+    disp('Restricting CSCs')
+    lfp_theta = restrict(lfp_theta,metadata.detachIV);
+    csc = restrict(csc,metadata.detachIV);
+    %assignin('base','lfp_theta',lfp_theta)
+end
 
 %% SWR score
 disp(' ')
@@ -111,9 +133,9 @@ cfg_temp = []; cfg_temp.method = 'zscore'; cfg_temp.threshold = cfg.ThetaThresho
 low_theta_iv = TSDtoIV(cfg_temp,tpow);
 
 % restrict candidate events to only those inside low theta intervals
-evt_test = restrict(evt,low_theta_iv);
+evt = restrict(evt,low_theta_iv);
 
-disp([num2str(length(evt_test.tstart)),' theta-limited candidates found.'])
+disp([num2str(length(evt.tstart)),' theta-limited candidates found.'])
 
 %% Number of active cells thresholding (this is done last because it's slower than speed and theta thresholding)
 disp(' ')
@@ -128,12 +150,14 @@ evt.tend(exclude) = [];
 evt.nActiveCells(exclude) = [];
 
 %% Expand intervals to catch missed spikes
-disp(' ')
-disp('Expanding intervals of remaining events')
-
-cfg_temp = [];
-cfg_temp.d = cfg.expandIV;
-evt = addIV(cfg_temp,evt);
+if abs(prod(cfg.expandIV))> 0
+    disp(' ')
+    disp('Expanding intervals of remaining events')
+    
+    cfg_temp = [];
+    cfg_temp.d = cfg.expandIV;
+    evt = addIV(cfg_temp,evt);
+end
 
 %% Keep a record of parameters
 
@@ -144,7 +168,10 @@ parameters.ThetaThreshold = cfg.ThetaThreshold; % power, std above mean
 parameters.minCells = cfg.minCells; % minimum number of active cells for the event to be kept
 parameters.expandIV = cfg.expandIV; % amount to add to the interval (catch borderline missed spikes)
 parameters.allowOverlap = cfg.allowOverlap; 
-evt.parameters = struct('parameters',parameters,'SWRfreak',SWR.parameters.SWRfreak,'amSWR',SWR.parameters,'amMUA',MUA.parameters);
+parameters.SWRfreak = SWR.parameters.SWRfreak;
+parameters.amSWR = SWR.parameters;
+parameters.amMUA = MUA.parameters;
+evt.parameters = parameters; 
 
 % tell me how many you found
 disp(['Finished detection: ',num2str(length(evt.tstart)),' candidates found.'])
