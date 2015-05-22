@@ -79,6 +79,7 @@ aboveThreshold = score>cfg.threshold;
  %% Output 
 evt = iv(tstart,tend);
 evt.data = score;
+evt.tvec = tvec;
 if exist('nActiveCells','var')
     evt.nActiveCells = nActiveCells;
 end
