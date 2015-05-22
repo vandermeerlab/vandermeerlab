@@ -18,6 +18,7 @@ function proceed = checkTmazeReqs(cfg_in)
 %cfg_def.requireVT = 0;
 %cfg_def.requireCandidates = 0;
 %cfg_def.requireTimes = 0; for R042 only
+%cfg_def.requireHSdetach = 0; for R044 only
 %cfg_def.requireFiles = 0; files folder for images generated during
 %analysis
 %
@@ -39,6 +40,7 @@ cfg_def.MetadataFields = {};
 cfg_def.requireVT = 0;
 cfg_def.requireCandidates = 0;
 cfg_def.requireTimes = 0;
+cfg_def.requireHSdetach = 0;
 cfg_def.requireFiles = 0;
 
 cfg = ProcessConfig2(cfg_def,cfg_in);
@@ -52,6 +54,7 @@ if cfg.checkall
     cfg.requireVT = 1;
     cfg.requireCandidates = 1;
     cfg.requireTimes = 1; % R042 only
+    def.requireHSdetach = 1; % R044 only
     cfg.requireFiles = 1;
 end
 %% 
@@ -103,7 +106,7 @@ for iRat = 1:length(rat_list)
     for iSession = 1:length(session_list)
         session = [ratfolder,'\',session_list(iSession).name]; 
         cd(strcat(session));
-        [~,sessionName,~] = fileparts(session);
+        [~,sessionID,~] = fileparts(session);
 
         % now we're in the folder for a specific session; verify that we have
         %requisites...if not, say so:
@@ -111,7 +114,7 @@ for iRat = 1:length(rat_list)
         if cfg.requireExpKeys
             fn = FindFiles('*keys.m');
             if isempty(fn)
-                disp(['ExpKeys file not found in ',sessionName])
+                disp(['ExpKeys file not found in ',sessionID])
                 proceed = 0;
             end
             if ~isempty(fn) && ~isempty(cfg.ExpKeysFields)
@@ -125,7 +128,7 @@ for iRat = 1:length(rat_list)
         if cfg.requireMetadata
             fn = FindFiles('*metadata.mat');
             if isempty(fn)
-                disp(['metadata file not found in ',sessionName])
+                disp(['metadata file not found in ',sessionID])
                 proceed = 0;
             end
             if ~isempty(fn) && ~isempty(cfg.MetadataFields)
@@ -139,7 +142,7 @@ for iRat = 1:length(rat_list)
         if cfg.requireVT
             fn = FindFiles('*.nvt');
             if isempty(fn)
-                disp(['Video tracking file not found in ',sessionName])
+                disp(['Video tracking file not found in ',sessionID])
                 proceed = 0;
             end
         end
@@ -147,21 +150,29 @@ for iRat = 1:length(rat_list)
         if cfg.requireCandidates
             fn = FindFiles('*candidates.mat');
             if isempty(fn)
-                disp(['Candidates file not found in ',sessionName])
+                disp(['Candidates file not found in ',sessionID])
                 proceed = 0;
             end
         end
         
         if cfg.requireTimes && strcmp(rat_list(iRat).name,'R042') % for R042 only
-            fn = FindFiles('*times.mat');
+            fn = FindFiles('*-times.mat');
             if isempty(fn)
-                disp(['Times file not found in ',sessionName])
+                disp(['Times file not found in ',sessionID])
                 proceed = 0;
             end
-        end    
+        end   
+        if cfg.requireTimes && sum(strcmp(sessionID,{'R044-2013-12-21','R044-2013-12-22'})) >= 1 % for these sessions only
+            fn = FindFiles('*HS_detach_times.mat');
+            if isempty(fn)
+                disp(['HS_detach_times file not found in ',sessionID])
+                proceed = 0;
+            end
+        end
+        
         if cfg.requireFiles 
             if ~exist('files','dir')
-                disp(['Files folder not found in ',sessionName])
+                disp(['Files folder not found in ',sessionID])
                 proceed = 0;
             end
         end 
