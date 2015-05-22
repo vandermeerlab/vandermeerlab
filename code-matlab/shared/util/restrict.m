@@ -33,7 +33,7 @@ else
 end
  
 % get indices to keep
-if isfield(in,'tvec') % tsd
+if isfield(in,'tvec') && ~isfield(in,'tstart') % tsd
     keep = false(size(in.tvec));
     
     for iT = 1:length(iv_use.tstart)
