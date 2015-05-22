@@ -25,6 +25,15 @@ cfg_def.label = 'nActiveCells';
 cfg = ProcessConfig2(cfg_def,cfg_in);
 mfun = mfilename;
 
+% check inputs
+if ~CheckIV(iv_in)
+    error('Interval data must have been made with the iv constructor')
+end
+
+if isempty(iv_in.tstart)
+    error('Interval data is empty')
+end
+
 % make matrix of spike counts (nCells x nTimeBins) 
 Q = MakeQfromS(cfg,S);
 
