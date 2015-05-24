@@ -17,7 +17,7 @@ function evt = GenCandidateEvents(cfg_in)
 %% Tell me what you're doing
 
 tic
-
+[~,sessionID,~] = fileparts(pwd);
 cprintf(-[0 0 1],'GenCandidateEvents: Looking for candidate replay events:');
 disp(' ');
 %% parse cfg parameters
@@ -26,6 +26,9 @@ cfg_def.verbose = 0; % i don't want to see what the internal functions have to s
 cfg_def.load_questionable_cells = 1;
 cfg_def.weightby = 'amplitude';
 cfg_def.DetectorThreshold = 4; % the threshold you want precand to use
+if strcmp(sessionID,'R042-2013-08-17') || strcmp(sessionID,'R044-2013-12-23')
+    cfg_def.DetectorThreshold = 2.5;
+end
 cfg_def.mindur = 0.02; % in seconds, the minumum duration for detected events to be kept
 cfg_def.SpeedLimit = 10; % pixels per second
 cfg_def.ThetaThreshold = 2; % power, std above mean
@@ -52,28 +55,6 @@ csc = LoadCSC(cfg_temp);
 
 cfg_temp = []; cfg_temp.fc = ExpKeys.goodTheta(1);
 lfp_theta = LoadCSC(cfg_temp);
-
-%% if there was HS detachment, we need to restrict the CSCs
-[~,sessionID,~] = fileparts(pwd);
-% 1. restrict based on HS_detach_times. note this is basically unnecessary
-% because there are no spikes during these times (ntt file restricted), 
-% which means the MUA detector will zero out this region anyway
-if strcmp(sessionID,'R044-2013-12-21') || strcmp(sessionID,'R044-2013-12-22')
-    disp('Excluding HS detach times')
-   load(FindFile('*HS_detach_times.mat')) 
-   temp_iv = iv(t_start/10^6,t_end/10^6);
-   %temp_iv.tstart(1) = lfp_theta.tvec(1);
-   %temp_iv.tend(end) = lfp_theta.tvec(end);
-   lfp_theta = restrict(lfp_theta,temp_iv.tstart,temp_iv.tend);
-   csc = restrict(csc,temp_iv);
-end
-% 2. restrict based on metadata.detachIV
-if isfield(metadata,'detachIV')
-    disp('Restricting CSCs')
-    lfp_theta = restrict(lfp_theta,metadata.detachIV);
-    csc = restrict(csc,metadata.detachIV);
-    %assignin('base','lfp_theta',lfp_theta)
-end
 
 %% SWR score
 disp(' ')
@@ -111,7 +92,7 @@ cfg_temp.threshold = cfg.SpeedLimit; cfg_temp.dcn = '<'; cfg_temp.method = 'raw'
 low_spd_iv = TSDtoIV(cfg_temp,spd);
 
 evt = restrict(evt,low_spd_iv);
-message = [num2str(length(evt.tstart)),' speed-limited candidates found.'];
+message = ['***',num2str(length(evt.tstart)),' speed-limited candidates found.'];
 disp(message)
 
 %% Theta power thresholding
@@ -135,7 +116,26 @@ low_theta_iv = TSDtoIV(cfg_temp,tpow);
 % restrict candidate events to only those inside low theta intervals
 evt = restrict(evt,low_theta_iv);
 
-disp([num2str(length(evt.tstart)),' theta-limited candidates found.'])
+disp(['***',num2str(length(evt.tstart)),' theta-limited candidates found.'])
+
+%% if there was HS detachment, we need to restrict evt
+
+% 1. restrict based on HS_detach_times. note this is basically unnecessary
+% because there are no spikes during these times (ntt file restricted),
+% which means the MUA detector will zero out this region anyway
+if strcmp(sessionID,'R044-2013-12-21') || strcmp(sessionID,'R044-2013-12-22')
+    disp('Excluding HS detach times')
+    load(FindFile('*HS_detach_times.mat'))
+    temp_iv = iv(t_start/10^6,t_end/10^6);
+    %temp_iv.tstart(1) = lfp_theta.tvec(1);
+    %temp_iv.tend(end) = lfp_theta.tvec(end);
+    evt = restrict(evt,temp_iv);
+end
+% 2. restrict based on metadata.detachIV
+if isfield(metadata,'detachIV')
+    disp('Restricting evt to metadata.detachIV')
+    evt = restrict(evt,metadata.detachIV);
+end
 
 %% Number of active cells thresholding (this is done last because it's slower than speed and theta thresholding)
 disp(' ')
@@ -168,14 +168,27 @@ parameters.ThetaThreshold = cfg.ThetaThreshold; % power, std above mean
 parameters.minCells = cfg.minCells; % minimum number of active cells for the event to be kept
 parameters.expandIV = cfg.expandIV; % amount to add to the interval (catch borderline missed spikes)
 parameters.allowOverlap = cfg.allowOverlap; 
-parameters.SWRfreak = SWR.parameters.SWRfreak;
+%parameters.SWRfreak = SWR.parameters.SWRfreak; % SWRfreak parameters are already in amSWR.parameters
 parameters.amSWR = SWR.parameters;
 parameters.amMUA = MUA.parameters;
 evt.parameters = parameters; 
 
 % tell me how many you found
-disp(['Finished detection: ',num2str(length(evt.tstart)),' candidates found.'])
+disp(['***Finished detection: ',num2str(length(evt.tstart)),' candidates found.']); disp(' ')
+
+% display all parameters for quick reference (esp if diary is kept)
+disp('Displaying all parameters:'); disp(' ')
+disp('GenCandidateEvents:')
+disp(evt.parameters); disp(' ')
+disp('amSWR:')
+disp(evt.parameters.amSWR); disp(' ')
+disp('SWRfreak')
+disp(evt.parameters.amSWR.SWRfreak); disp(' ')
+disp('amMUA:')
+disp(evt.parameters.amMUA); disp(' ')
+
 
 toc
+disp(' ')
 end
 
