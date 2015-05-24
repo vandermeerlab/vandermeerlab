@@ -31,6 +31,7 @@ cfg.ExpKeysFields = {'goodSWR','goodTheta'};
 cfg.requireMetadata = 1;
 cfg.MetadataFields = {'SWRfreqs'};
 cfg.requireVT = 1;
+cfg.requireHSdetach = 1;
 if writeDiary, cfg.requireFiles = 1; end
 
 proceed = checkTmazeReqs(cfg); 
@@ -42,20 +43,21 @@ originalFolder = pwd;
 if proceed % Detect candidate replay events and save them as a .mat file
 
     fd = sort(getTmazeDataPath(cfg)); % get all session directories  
-
-    for iFD = 1 %:length(fd)
+   
+    for iFD = 1:length(fd)
         cd(fd{iFD});
+        
+        [~,session,~] = fileparts(fd{iFD});
         savename = strcat(prefix,session,'-candidates',suffix); % string concatenation
         
         if writeDiary % save command window text
             cd([fd{iFD},'\files'])
-            diary([savename,'.txt'])
+            diary([savename,'-final','.txt'])
             cd(fd{iFD})
             disp(date)
         end
         
         % tell me what you're working on
-        [~,session,~] = fileparts(fd{iFD});
         cprintf(-[0 0 1],['Working on ',session]); % disp(['Working on ',session])
         disp(' ');
     
@@ -67,33 +69,11 @@ if proceed % Detect candidate replay events and save them as a .mat file
         % save candidates
         save([savename,'.mat'],'evt'); 
     end
-
+    disp(' ')
+    disp('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+    disp('~~~ End of candidates run ~~~') 
+    disp('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+    
 end
 
 cd(originalFolder)
-
-%% TEMP
-
-% Plot results
-%cfg.fc = ExpKeys.goodSWR(1);
-%csc = LoadCSC(cfg);
-
-%please.useClustersFile = 0;
-%please.load_questionable_cells = 1;
-%S = LoadSpikes(please);
-
-% set up MR
-%cfg_mr.evt = evt;
-%cfg_mr.lfp = csc;
-%cfg_mr.lfpHeight = 30;
-
-% set up additional visualization aid (makes navigating slower when more
-% plotted)
-
-%evt.name = 'interval'; % to show evt-inclusive spikes
-%evtscore = evt.data*6;
-
-%MultiRaster(cfg_mr,S);
-%sidekick(csc.tvec,swrscore*3)
-
-%sidekick(csc.tvec,evtscore,evt)
