@@ -26,7 +26,7 @@ cfg.output_fd = 'files'; % file directory for saving image files
 cfg.prefix = ''; % prefix for image files
 cfg.suffix = ''; % suffix for image files; does NOT include extension
 cfg.writeDiary = 1; % save command window text 
-cfg.warningoff = 1; % don't show 8500 warnings that ft displays; else show warnings
+cfg.warningoff = 1; % 1 don't show 8500 warnings that ft displays; else show warnings
 
 %% check stuff
 cfg_temp = []; 
@@ -85,6 +85,7 @@ if proceed
         %% if there was HS detachment, we need to replace HS detach times with zeros in CSC
         [~,sessionID,~] = fileparts(pwd);
         if strcmp(sessionID(1:4),'R044')
+            csc_zeros = csc;
             % 1. add zeros within HS_detach_times. 
             if strcmp(sessionID,'R044-2013-12-21') || strcmp(sessionID,'R044-2013-12-22')
                 
@@ -96,7 +97,7 @@ if proceed
                    insertHere = insertHere + ugh;
                 end
                    insertHere = ~logical(insertHere);
-                   csc.data(insertHere) = 0;
+                   csc_zeros.data(insertHere) = 0;
             end
             % 2. add zeros within metadata.detachIV
             
@@ -106,7 +107,25 @@ if proceed
                 insertHere = insertHere + ugh;
             end
             insertHere = ~logical(insertHere);
-            csc.data(insertHere) = 0;
+            csc_zeros.data(insertHere) = 0;
+            
+            %%%%%%%%%%%%%%%%%% csc_zeros is unused
+            
+        end
+        
+        %% if there was HS detachment, we need to restrict csc
+        [~,sessionID,~] = fileparts(pwd);
+        if strcmp(sessionID(1:4),'R044')
+            % 1. restrict based on HS_detach_times. 
+            if strcmp(sessionID,'R044-2013-12-21') || strcmp(sessionID,'R044-2013-12-22')
+                disp('Excluding HS detach times')
+                load(FindFile('*HS_detach_times.mat'))
+                temp_iv = iv(t_start/10^6,t_end/10^6);
+                csc = restrict(csc,temp_iv);
+            end
+            % 2. restrict based on metadata.detachIV
+            disp('Restricting CSC')
+            csc = restrict(csc,metadata.detachIV);
         end
         
         % since there are gaps from starting/stopping the recording, need to
