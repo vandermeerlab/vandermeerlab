@@ -20,12 +20,13 @@ clear
 cfg = [];
 cfg.rats = {'R042','R044','R050'};
 cfg.whichEvents = 'all'; %'prerecord', 'postrecord','task'
+cfg.foi = 1:250; % the frequencies of interest (Hz)
 cfg.writeFiles = 1;
 cfg.output_fd = 'files'; % file directory for saving image files
 cfg.prefix = ''; % prefix for image files
 cfg.suffix = ''; % suffix for image files; does NOT include extension
-cfg.writeDiary = 1; % save command window text; not implemented in script yet
-cfg.warningoff = 1; % 1 don't show 8500 warnings that ft displays; else show warnings
+cfg.writeDiary = 1; % save command window text 
+cfg.warningoff = 1; % don't show 8500 warnings that ft displays; else show warnings
 
 %% check stuff
 cfg_temp = []; 
@@ -33,7 +34,7 @@ cfg_temp.requireExpKeys = 1;
 cfg_temp.ExpKeysFields = {'goodSWR','goodTheta'};
 cfg_temp.requireMetadata = 1;
 cfg_temp.MetadataFields = {'taskvars'};
-%cfg_temp.requireVT = 1;
+cfg_temp.requireCandidates = 1;
 if cfg.writeDiary || cfg.writeFiles, cfg_temp.requireFiles = 1; end
 
 proceed = checkTmazeReqs(cfg_temp);
@@ -54,6 +55,13 @@ if proceed
         cd(fd{iFD})
         workingFolder = pwd;
         [~,sessionID,~] = fileparts(pwd);
+        savename = [cfg.prefix,sessionID,'-EventPower',cfg.suffix];
+        if cfg.writeDiary % save command window text
+            cd([fd{iFD},'\files'])
+            diary([savename,'.txt'])
+            cd(fd{iFD})
+            disp(date)
+        end
         cprintf(-[0 0 1],['Working on',[' ',sessionID]]); disp(' ')
         
         disp('Loading ExpKeys')
@@ -66,16 +74,41 @@ if proceed
         %LoadMetadata3(metaload) % to get trial intervals
         %clear metaload
         
-        fn = FindFiles(['*',sessionID,'-candidates.mat']);
-        disp(['Loading candidates:',[' ',fn{1}]])
-        evt = []; % evt is the variable name in the candidates file
-        load(fn{1})
+        disp('Loading candidates')
+        LoadCandidates
         
         cfg_temp = [];
         fc = ExpKeys.goodSWR(1); % for ft_read_neurablah...
         cfg_temp.fc = fc; % for LoadCSC to get tvec for ft_maketrlFromIV()
         csc = LoadCSC(cfg_temp);
-
+        
+        %% if there was HS detachment, we need to replace HS detach times with zeros in CSC
+        [~,sessionID,~] = fileparts(pwd);
+        if strcmp(sessionID(1:4),'R044')
+            % 1. add zeros within HS_detach_times. 
+            if strcmp(sessionID,'R044-2013-12-21') || strcmp(sessionID,'R044-2013-12-22')
+                
+                load(FindFile('*HS_detach_times.mat'))
+                temp_iv = iv(t_start/10^6,t_end/10^6);
+                insertHere = zeros(size(csc.tvec));
+                for iInterval = 1:length(temp_iv.tstart)
+                   ugh = csc.tvec > temp_iv.tstart(iInterval) & csc.tvec < temp_iv.tend(iInterval);
+                   insertHere = insertHere + ugh;
+                end
+                   insertHere = ~logical(insertHere);
+                   csc.data(insertHere) = 0;
+            end
+            % 2. add zeros within metadata.detachIV
+            
+            insertHere = zeros(size(csc.tvec));
+            for iInterval = 1:length(metadata.detachIV.tstart)
+                ugh = csc.tvec > metadata.detachIV.tstart(iInterval) & csc.tvec < metadata.detachIV.tend(iInterval);
+                insertHere = insertHere + ugh;
+            end
+            insertHere = ~logical(insertHere);
+            csc.data(insertHere) = 0;
+        end
+        
         % since there are gaps from starting/stopping the recording, need to
         % interpolate gaps and fill with NaNs or something:
         data = ft_read_neuralynx_interp(fc); % this annoyingly prints 100+ lines of warning if warning not off
@@ -128,7 +161,7 @@ if proceed
         cfg_tfr.channel      = data_trl2.label;
         cfg_tfr.method       = 'mtmconvol';
         cfg_tfr.taper        = 'hanning';
-        cfg_tfr.foi          = 1:50; %1:250; %7:0.5:10; % frequencies of interest
+        cfg_tfr.foi          = cfg.foi; %1:50; %1:250; %7:0.5:10; % frequencies of interest
         %cfg.t_ftimwin    = ones(size(cfg.foi)).*0.5; % window size: fixed at 0.5s
         cfg_tfr.t_ftimwin    = 5./cfg_tfr.foi;
         %cfg.tapsmofrq = cfg.foi*0.4;
@@ -146,6 +179,7 @@ if proceed
         cfg_temp = []; cfg_temp.channel = data_trl2.label;
         ft_singleplotTFR(cfg_temp, TFR);
         grid on
+        ylabel('Frequency (Hz)')
         if cfg.writeFiles && ~isempty(cfg.output_fd)
             cd([pwd,'\',cfg.output_fd])
             filename = [cfg.prefix,sessionID,'-CandEventPower',cfg.suffix,'.png'];
@@ -167,7 +201,8 @@ if proceed
         cfg_temp = []; cfg_temp.channel = data_trl_running.label;
         ft_singleplotTFR(cfg_temp, TFR_running);
         grid on
-        
+        ylabel('Frequency (Hz)')
+        if cfg.writeDiary, diary off, end
         if cfg.writeFiles && ~isempty(cfg.output_fd)
             cd([pwd,'\',cfg.output_fd])
             filename = [cfg.prefix,sessionID,'-FakeEventPower',cfg.suffix,'.png'];
