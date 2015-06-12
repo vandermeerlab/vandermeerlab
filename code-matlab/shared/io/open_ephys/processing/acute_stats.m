@@ -20,7 +20,7 @@ cfg.pre_event = 0.01; % 10ms before the event. used for averaging.
 cfg.post_event = .05; % 50ms post the stim 
 extract_varargin
 title_dir = data_dir;
-cd(['G:\Acute\' data_dir(1:4)])
+cd([data_dir(1:4)])
 data_dir = [data_dir '*'];
 data_dir = FindFiles(data_dir);
 data_dir = data_dir{1,1};

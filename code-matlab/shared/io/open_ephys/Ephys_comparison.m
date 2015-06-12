@@ -14,32 +14,32 @@ function [comp_data, cfg_out] = Ephys_comparison(Rat_id, sess_id1, sess_id2, cfg
 cd(['G:\Acute\' Rat_id '\all_data'])
 fprintf(['Moving to ' Rat_id '\n'])
 % find the data struct for data set 1
-fname1 = [Rat_id '_' sess_id1];
-data_1dir = [fname1 '*'];
+cfg.fname1 = [Rat_id '_' sess_id1];
+data_1dir = [cfg.fname1 '*'];
 
 data_1dir = FindFiles(data_1dir);
 if isempty(data_1dir); error('Data1 file not found.  Be sure that the data has been preprocessed using Ephys_acute_preprocess'); end
 for el = 1:length(data_1dir)
     if strcmp(data_1dir{el}(end-2:end), 'mat')
-        fname1 = data_1dir{el};
+        cfg.fname1 = data_1dir{el};
     end
 end
 
 % find the data struct for data set 2
-fname2 = [Rat_id '_' sess_id2];
-data_2dir = [fname2 '*'];
+cfg.fname2 = [Rat_id '_' sess_id2];
+data_2dir = [cfg.fname2 '*'];
 
 data_2dir = FindFiles(data_2dir);
 if isempty(data_2dir); error('Data2 file not found.  Be sure that the data has been preprocessed using Ephys_acute_preprocess'); end
 for el = 1:length(data_2dir)
     if strcmp(data_2dir{el}(end-2:end), 'mat')
-        fname2 = data_2dir{el};
+        cfg.fname2 = data_2dir{el};
     end
 end
 % load the data sets
-data_1 = load(fname1);
+data_1 = load(cfg.fname1);
 
-data_2 = load(fname2);
+data_2 = load(cfg.fname2);
 
 %% plot the outputs of the two conditions
 figHandles = get(0,'Children');

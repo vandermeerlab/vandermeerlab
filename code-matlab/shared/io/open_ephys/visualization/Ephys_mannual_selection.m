@@ -56,23 +56,26 @@ for ii = 1:length(cfg.events_pos);
         end
         %     if isempty(events_to_keep)==0 ||exist('events_to_keep', 'var') ~=0
         % get the average response based on the good events only.
-        if exist('events_to_keep', 'var')  && isfield(events_to_keep, 'avg') && isfield(events_to_keep, 'data_norm')
+        if exist('events_to_keep', 'var')  && isfield(events_to_keep.channel{1,1}, 'avg') && isfield(events_to_keep.channel{1,1}, 'data_norm')
             for iChan = 1:length(cfg.chan_to_view)
                 events_to_keep.avg = nanmean(cell2mat(events_to_keep.channel{iChan}.data_norm),2);
             end
-        else
+        elseif exist('events_to_keep', 'var') 
             for iChan = 1:length(cfg.chan_to_view)
                 events_to_keep.channel{iChan}.avg = events.channel{iChan}.data_norm{1};
             end
         end
-    %     end
-    subtightplot(6,10, [44:50 54:60])
-    tvec = events.tvec{1}(:)-events.tvec{1}(1);
-    plot(tvec, events_to_keep.channel{iChan}.avg, 'k')
-    set(gca, 'ylim', [-3 3], 'xlim', [.008 .04]);
-    vline([.015 .025 .035], {'--r' '--b' '--g'}, {'5ms' '15ms' '25ms'})
-    
-    xlabel('Average')
+        %     end
+        if exist('events_to_keep', 'var')  && isfield(events_to_keep.channel{1,1}, 'avg')
+            
+            subtightplot(6,10, [44:50 54:60])
+            tvec = events.tvec{1}(:)-events.tvec{1}(1);
+            plot(tvec, events_to_keep.channel{iChan}.avg, 'k')
+            set(gca, 'ylim', [-15 15], 'xlim', [.008 .04]);
+            vline([.015 .025 .035], {'--r' '--b' '--g'}, {'5ms' '15ms' '25ms'})
+            
+            xlabel('Average')
+        end
 end
 if isfield(events_to_keep, 'tvec') ==0
     events_to_keep.tvec = tvec;
