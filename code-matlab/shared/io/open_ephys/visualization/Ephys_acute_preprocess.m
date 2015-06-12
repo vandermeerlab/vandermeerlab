@@ -31,7 +31,7 @@ Ephys_chan_plot(data, cfg)
 
 %% save both figures and the strcut
 all_data.events = events;
-all_data.events_tokeep = events_to_keep;
+all_data.events_to_keep = events_to_keep;
 all_data.data = data;
 all_data.cfg = cfg;
 

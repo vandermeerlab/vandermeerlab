@@ -58,7 +58,7 @@ for ii = 1:length(cfg.events_pos);
         % get the average response based on the good events only.
         if exist('events_to_keep', 'var')  && isfield(events_to_keep.channel{1,1}, 'avg') && isfield(events_to_keep.channel{1,1}, 'data_norm')
             for iChan = 1:length(cfg.chan_to_view)
-                events_to_keep.avg = nanmean(cell2mat(events_to_keep.channel{iChan}.data_norm),2);
+                events_to_keep.channel{iChan}.avg = nanmean(cell2mat(events_to_keep.channel{iChan}.data_norm),2);
             end
         elseif exist('events_to_keep', 'var') 
             for iChan = 1:length(cfg.chan_to_view)
