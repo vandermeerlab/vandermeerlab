@@ -7,8 +7,9 @@ function [data, cfg] = Ephys_load_session(data_dir, fname, cfg)
 
 %% 
 tic
-title_dir = fname; cfg.title_dir = title_dir;
-cd([data_dir fname(1:4)])
+title_dir = fname; 
+cfg.title_dir = title_dir;
+cd([data_dir])
 data_dir = [fname '*'];
 data_dir = FindFiles(data_dir);
 data_dir = data_dir{1,1};
