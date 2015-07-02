@@ -21,7 +21,7 @@ function [low_gamma_iv, high_gamma_iv, random_lg_iv, random_hg_iv, noise_iv, cha
 %     -
 
 %% input Variables
-LoadExpKeys;
+
 if isfield(data, 'dc_remove')==0 || isfield(data, 'artifacts_removed')==0
     warning('data has not been preprocessed properly.  Either the DC or the artifacts have not been removed')
     fprintf('\nAre you sure you want to proceed? \nPress any key to proceed...\n')
@@ -36,7 +36,7 @@ low_gamma_band = [40 55];  % default 40-55
 high_gamma_band = [70 85]; % default 70-85
 noise_band = [110 225];   % should be in the chewing/scratching range (110-225)
 noise_band2 = [225 400];  % should be high ~225-400Hz
-channel_of_interest = ExpKeys.DetectChan; % which channel is used for detection
+channel_of_interest = 1; % which channel is used for detection
 display = 'off';           % plots the events and lets your see each event
 extract_varargin
 %     cfg.fc = {ExpKeys.goodGamma_vStr{1}};
