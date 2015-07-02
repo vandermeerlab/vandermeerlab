@@ -26,13 +26,14 @@ else
 end
 artifact_times = artifacts.(session_type);
 %% Replace the data values in during the artifact periods with the "artvalue"
-loop_num = 1; edge_smooth = 1*data.hdr.Fs; % one second of extra smoothing on each end of the artifact
+%loop_num = 1; 
+edge_smooth = 1*data.hdr.Fs; % one second of extra smoothing on each end of the artifact
 for ii = length(artifact_times):-1:1
     for ichan = length(data.channels):-1:1;
         data.channels{1,ichan}(nearest(data.tvec, artifact_times(ii,1)/data.hdr.Fs)-edge_smooth: nearest(data.tvec, artifact_times(ii,2)/data.hdr.Fs)+edge_smooth) = artvalue;
         
     end
-    loop_num = loop_num+1;
+  %  loop_num = loop_num+1;
 %     ProgressBar(loop_num/length(artifact_times), 1);
 %     fprintf([num2str(floor((loop_num/length(artifact_times))*100)) '%'])
 end
