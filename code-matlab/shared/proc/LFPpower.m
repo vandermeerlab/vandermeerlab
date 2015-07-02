@@ -8,8 +8,9 @@ function lfp_tsd = LFPpower(cfg_in,lfp_tsd)
 % tsd with power envelope obtained by Hilbert transform
 %
 % CFG OPTIONS with defaults:
-%
 % cfg_def.output = 'envelope'; % 'power'
+% cfg.smooth = [smoothing window size] % used to smooth the power % added
+% by EC 2015-05-01
 %
 % MvdM 2014-06-25
 
@@ -45,6 +46,10 @@ for iS = 1:nSignals
     % obtain power
     temp_sig = hilbert(temp_sig);
     
+    if isfield(cfg_in, 'smooth') 
+        temp_sig = smooth(temp_sig, cfg_in.smooth);
+    end
+    
     switch cfg.output
         case 'power'
             temp_sig = abs(temp_sig).^2;
@@ -56,6 +61,8 @@ for iS = 1:nSignals
     temp_sig(nan_idx) = NaN;
     lfp_tsd.data(iS,:) = temp_sig;
 end
+
+    
 
 % housekeeping
 lfp_tsd.cfg.history.mfun = cat(1,lfp_tsd.cfg.history.mfun,mfun);
