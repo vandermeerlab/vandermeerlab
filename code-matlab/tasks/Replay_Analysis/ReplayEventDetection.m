@@ -1,6 +1,6 @@
 %% Load data
 clear all; clc;
-cd('D:\My_Documents\data\inProcess\R042-2013-08-18_recording'); %your data path
+cd('D:\data\inProcess\R042-2013-08-18_recording'); %your data path
 profile on;
 
 % load a CSC 
@@ -66,7 +66,7 @@ S_right = restrict(S_res,evtR.run_start,evtR.run_end);
 posR = restrict(pos,evtR.run_start,evtR.run_end);
 
 % Linearize runs and bin positions
-load('D:\My_Documents\data\pfmodels\2014-12-21\coord.mat'); % Use MakeCoord if you don't already have this
+load('D:\data\pfmodels\2014-12-21\coord.mat'); % Use MakeCoord if you don't already have this
 % CoordL = MakeCoord(getd(posL,'x'),getd(posL,'y'));
 % CoordR = MakeCoord(getd(posR,'x'),getd(posR,'y'));
 
@@ -105,9 +105,9 @@ clear evtL evtR CoordL CoordLrs CoordR CoordRrs S_left S_right posL posL_binned 
 clear TC %in case you are re-running
 cfg = [];
 cfg.binSize = binSize;
-iT = 2; %1 for left / 2 for right
+iT = 1; %1 for left / 2 for right
 
-TC = MakeTC(cfg,data(iT).S,data(iT).pos);
+TC = MakeTC2(cfg,data(iT).S,data(iT).pos);
 
 %% Plot tuning curves - visualization like Dragoi & Tonegawa (2011)
 figure;
@@ -153,7 +153,7 @@ MultiRaster(cfg,S_pc); %NOTE: MultiRaster has the navigate function inside!!!
 cfg = [];
 cfg.tvec = lfp.tvec;
 cfg.SWR = spwr_iv;
-cfg.MethodSelection = [1 1 1 0]; %use: help getCandSeq
+cfg.MethodSelection = [1 0 0 0]; %use: help getCandSeq
 CAND_iv = getCandSeq(cfg,S_pc,pos);
 
 %% Plot candidate events
