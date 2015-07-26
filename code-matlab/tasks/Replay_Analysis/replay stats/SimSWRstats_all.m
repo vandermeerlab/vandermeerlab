@@ -9,25 +9,30 @@ cfg_def.requireVT = 1;
 cfg_def.plotOutput = 0;
 cfg_def.rats = {'R042','R044','R050'};
 cfg_def.restrict = [];
+cfg_def.NAU = 0;
 originalFolder = pwd;
 
 cfg = ProcessConfig2(cfg_def,cfg_in);
 
 
 %% Generate simulated data and grab statistics
-simdata.tlen = [];
-simdata.mean = [];
-simdata.var = [];
-simdata.prop = [];
-simdata.avgspk = [];
-simdata.ISI = [];
-
-
-profile on
 for iR = 1:length(cfg.rats)
     rn = cfg.rats{iR};
     cfg_temp.rats = cfg.rats(iR);
     fd = sort(getTmazeDataPath(cfg_temp)); % get all session directories  
+    
+    simdata.TC.(rn) = [];
+    simdata.ENC_data.(rn) = [];
+    simdata.R(2).(rn) = [];
+    simdata.SWR_size(2).(rn) = [];
+    simdata.IFFR(2).(rn) = [];
+    simdata.IFFR_field(2).(rn) = [];
+    simdata.IFFR_fieldmax(2).(rn) = [];
+    simdata.ISI_SWR(2).(rn) = [];
+    simdata.ISI_IF(2).(rn) = [];
+    simdata.path_len(2).(rn) = [];
+    simdata.nCells = [];
+    simdata.nSWR = [];
     
     %% run for each session
     for iFD = 1:length(fd)
@@ -64,6 +69,9 @@ for iR = 1:length(cfg.rats)
         end
         [L_trl,R_trl] = GetMatchedTrials([],metadata,ExpKeys);
         
+        simdata.TC.(rn){iFD} = TC_temp;
+        simdata.ENC_data.(rn){iFD} = ENC_data;
+        
         %% Generate stats for each arm
         run_trl = [L_trl R_trl];
         for iT=1:2
@@ -73,7 +81,11 @@ for iR = 1:length(cfg.rats)
             if isempty(field_order)
                 sprintf('No place cells!')
                 continue 
+            elseif length(field_order) < 2
+                sprintf('Not enough place cells!')
+                continue
             end
+            
             S_pc(iT) = S_orig;
             S_pc(iT).t = S_pc(iT).t(field_order); 
 
@@ -83,14 +95,16 @@ for iR = 1:length(cfg.rats)
                 continue
             end
             
-            % limit candidates by NAU of place cells
-            minCells = 4;
-            activeCellsIV = AddNActiveCellsIV([],iv_in,S_pc(iT));
-            evt.nActiveCells = activeCellsIV.usr.data;
-            exclude = arrayfun(@(x) x < minCells,evt.nActiveCells);
-            evt.tstart(exclude) = [];
-            evt.tend(exclude) = [];
-            evt.nActiveCells(exclude) = [];
+            if cfg.NAU
+                % limit candidates by NAU of place cells
+                minCells = 4;
+                activeCellsIV = AddNActiveCellsIV([],iv_in,S_pc(iT));
+                evt.nActiveCells = activeCellsIV.usr.data;
+                exclude = arrayfun(@(x) x < minCells,evt.nActiveCells);
+                evt.tstart(exclude) = [];
+                evt.tend(exclude) = [];
+                evt.nActiveCells(exclude) = [];
+            end
 
             nCells = length(field_order)
             nSWR = length(evt.tstart)
@@ -99,105 +113,97 @@ for iR = 1:length(cfg.rats)
                 sprintf('no significant events!')
                 continue
             end
+            
             % make position vector from runs
             pos_in = tsd();
             pos_in.tvec = ENC_data(iT).pos.tvec;
             pos_in.data = getd(ENC_data(iT).pos,'z');
             pos_in = restrict2(pos_in,run_trl(iT).tstart(1),run_trl(iT).tend(1));
             
-            % make "replay" position vector
-%             spd_factor = 20;
-%             path_len = 80; 
-%             path_idx = pos_in.data > max(pos_in.data)-path_len;
-%             pos_in2 = pos_in;
-%             pos_in2.tvec = pos_in.tvec(path_idx)./spd_factor;
-%             pos_in2.data = pos_in.data(path_idx);
-            
-%             cfg_model.nTrials = nSWR;
-%             cfg_model.lockingParemeter = 0.7;
-% %             model_run = pfmodel2(cfg_model,pfs,pos_in);
-%             
-% %             cfg_model.maxFiringRate = 5;
-%             cfg_model.lockingParemeter = 0;
-%             model_replay = pfmodel2(cfg_model,pfs,pos_in2);
-% 
-%             % do stuff to get "infield" data
-% 
-%             spikes = ConvertModel([],model_replay);
-%             PlotSpikeRaster2([],spikes);
-            
             % make place fields
             for i=1:length(field_order)
-                pfs(i).xc = TC_temp(iT).field_loc(i);          
-                pfs(i).maxFiringRate = data_in.IFFR_fieldmax(iT).(rn){1,iFD}(i);
+                curr_field = TC_temp(iT).tc(:,field_order(i));
+                pfs(i).xc = TC_temp(iT).peak_loc{i};          
+                pfs(i).maxFiringRate = curr_field(pfs(i).xc);
+                pfs(i).rates = curr_field;
+                assert(length(pfs(i).xc) == length(pfs(i).maxFiringRate),'!');
             end
             
-            curr_R = zeros(length(field_order),nSWR);
-            spk_t = [];
-            isi = [];
+            R_temp = zeros(length(field_order),nSWR);
+            SWR_size_temp = zeros(nSWR,1);
+            ISI_temp = [];
+            path_length_temp = [];
             
-            for iTrial = nSWR:-1:1 %for each trial...
+            for iTrial = 1:nSWR %for each trial...
+                % get empirical "path length" for each SWR
                 pathlen = data_in.path_len(iT).(rn){1,iFD}(iTrial);
-                if pathlen<1
+                if pathlen<1 || isnan(pathlen)
                     continue
                 end
                 
-                path_idx = pos_in.data > max(pos_in.data)-pathlen;
-                
+                % generate virtual path based on a segment of a real run compressed by SWR length
+                path_idx = pos_in.data >= max(pos_in.data)-pathlen; % distance from reward
                 tlen = data_in.SWR_size(iT).(rn){1,iFD}(iTrial);
-                
-                pos_in2 = pos_in;
-                pos_in2.data = pos_in.data(path_idx);
-                pos_in2.tvec = linspace(0,tlen,length(pos_in2.data));
+                pos_virtual = pos_in;
+                pos_virtual.data = pos_in.data(path_idx);
+                pos_virtual.tvec = linspace(0,tlen,length(pos_virtual.data));
 
-                if isempty(pos_in2.data)
-                    sprintf('hi')
+                assert(~isempty(pos_virtual.data),'empty virtual run')
+                
+                % simulate place cell firing for event
+                cfg_model.nTrials = 1;
+                cfg_model.lockingParameter = 0; % no theta modulation
+                cfg_model.convertfile = 'spikes';
+                cfg_model.verbose = 0;
+                cfg_model.rate_dt = 0.0001;
+                S_temp = pfmodel2(cfg_model,pfs,pos_virtual);
+
+                % gather data across cells
+                spk_t = [];
+                for iC=1:length(S_temp.t) %for each cell...
+                    R_temp(iC,iTrial) = length(S_temp.t{iC});
+                    spk_t = vertcat(spk_t,S_temp.t{iC});
+                    ISI_temp = vertcat(ISI_temp,diff(S_temp.t{iC}));
+                end %iterate cells
+                                
+                % get length of event
+                if isempty(spk_t) || length(spk_t) < 2
+                    SWR_size_temp(iTrial) = nan;
+                else
+                    SWR_size_temp(iTrial) = max(spk_t) - min(spk_t);
                 end
                 
-                cfg_model.nTrials = 1;
-                cfg_model.lockingParemeter = 0;
-                cfg_model.convertfile = 'spikes';
-                curr_S = pfmodel2(cfg_model,pfs,pos_in2);
-
-                for iC=1:length(curr_S.t) %for each cell...
-                    curr_R(iC,iTrial) = length(curr_S.t{iC});
-                    spk_t = vertcat(spk_t,curr_S.t{iC});
-                    isi = vertcat(isi,diff(curr_S.t{iC}));
-
-        %             % get "infield" data
-        %             curr_tc = model.pf(iC).rates;
-        %             [pks.loc,pks.full] = find_fields([],curr_tc);
-        %             field_start = pks.full{:}(1);
-        %             field_end = pks.full{:}(end);
-        %             avg = mean(curr_tc(field_start:field_end));
-
-
-                end %iterate cells
+                % get virtual path length of each event (% max dist between first and last peak)
+                path_inds = find(R_temp(:,iTrial));
+                if isempty(path_inds);
+                    path_length_temp = vertcat(path_length_temp,nan); 
+                    continue
+                end
+                peak_loc_temp = [];
+                for iP = 1:length(path_inds) % for each cell find peak
+                    peak_loc_temp = horzcat(peak_loc_temp,pfs(iP).xc);
+                end
+                path_start = min(peak_loc_temp); 
+                path_end = max(peak_loc_temp);
+                path_length_temp = vertcat(path_length_temp,(path_end-path_start)); 
+                
             end %iterate trials
 
-            % get mean and variance across SWRs (for each unit)
-            simdata.mean = vertcat(simdata.mean,mean(curr_R,2));
-            simdata.var = vertcat(simdata.var,var(curr_R,0,2));
-
-            % get length of each SWR event
-            simdata.tlen = vertcat(simdata.tlen,max(spk_t)-min(spk_t));
-
-            % get proportion of SWR each cell is active
-            simdata.prop = vertcat(simdata.prop,sum(curr_R>0,2)/nSWR*100.0);
-
-            % get mean spike count of place cells across SWR events
-            curr_R(curr_R==0) = nan; %SWR events with no spikes are omitted from the average
-            simdata.avgspk = vertcat(simdata.avgspk,nanmean(curr_R,2));
-
-            % get ISIs
-            simdata.ISI = vertcat(simdata.ISI,isi);
+            simdata.R(iT).(rn){iFD} = R_temp;
+            simdata.SWR_size(iT).(rn){iFD} = SWR_size_temp;
+            simdata.ISI_SWR(iT).(rn){iFD} = ISI_temp;
+            simdata.path_len(iT).(rn){iFD} = path_length_temp;
+            simdata.nCells = vertcat(simdata.nCells,nCells);
+            simdata.nSWR = vertcat(simdata.nSWR,nSWR);
             
-            clear curr_R curr_S
-        end
-    end
-end
+            clear R_temp S_temp pfs
+        end %iterate left vs right
+        
+    end %iterate session
+    
+end %iterate rat
 
 data_out = simdata;
-profile viewer
+cd(originalFolder)
 
 end

@@ -10,7 +10,7 @@ cfg_def.requireVT = 1;
 cfg_def.plotOutput = 0;
 cfg_def.rats = {'R042','R044','R050'};
 cfg_def.restrict = [];
-cfg_def.testing = 0;
+cfg_def.NAU = 0;
 originalFolder = pwd;
 
 cfg = ProcessConfig2(cfg_def,cfg_in);
@@ -18,15 +18,6 @@ cfg = ProcessConfig2(cfg_def,cfg_in);
 iFD = 1; iR=1;
 nCells_out = [];
 nSWR_out = [];
-
-profile on
-
-simdata.tlen = [];
-simdata.mean = [];
-simdata.var = [];
-simdata.prop = [];
-simdata.avgspk = [];
-simdata.ISI = [];
 
 for iR = 1:length(cfg.rats)
     rn = cfg.rats{iR};
@@ -188,7 +179,11 @@ for iR = 1:length(cfg.rats)
             if isempty(field_order)
                 sprintf('No place cells!')
                 continue 
+            elseif length(field_order) < 2
+                sprintf('Not enough place cells!')
+                continue
             end
+            
             S_pc(iT) = S_orig;
             S_pc(iT).t = S_pc(iT).t(field_order); 
 
@@ -203,7 +198,7 @@ for iR = 1:length(cfg.rats)
             cfg_temp.dt = 0.005; %0.005 for NAU, 0.0005 for csc sample rate
             Q = MakeQfromS(cfg_temp,S_pc(iT));
             
-            if cfg.testing
+            if cfg.NAU
                 % limit candidates by NAU of place cells
                 minCells = 4;
                 activeCellsIV = AddNActiveCellsIV(cfg_temp,iv_in,S_pc(iT));
@@ -225,27 +220,16 @@ for iR = 1:length(cfg.rats)
 
             % Generate R-matrix (nCell x nSWR matrix containing spike count in each SWR event interval)
             R_temp = zeros(nCells,nSWR);
-            SWR_size_temp = zeros(1,nSWR);
+            SWR_size_temp = zeros(nSWR,1);
             ISI_SWR_temp = [];
             path_length_temp = [];
             
             % for each SWR event
-            for iIV = nSWR:-1:1
+            for iIV = 1:nSWR
                 % get spike counts for each cell for this event
                 Qr = restrict2(Q,evt.tstart(iIV),evt.tend(iIV));
                 R_temp(:,iIV) = sum(Qr.data,2);
-                
-                % get virtual path length of each event (% max dist between first and last peak)
-                path_inds = find(R_temp(:,iIV));
-                assert(~isempty(path_inds),'SWR event has no spikes')
-                peak_loc_temp = [];
-                for iP = 1:length(path_inds) % for each cell find peak
-                    peak_loc_temp = horzcat(peak_loc_temp,TC_temp(iT).peak_loc{path_inds(iP)});
-                end
-                path_start = min(peak_loc_temp); 
-                path_end = max(peak_loc_temp);
-                path_length_temp = vertcat(path_length_temp,(path_end-path_start)); 
-                
+     
                 % for each place cell get ISI distribution
                 S_SWR = restrict2(S_pc(iT),evt.tstart(iIV),evt.tend(iIV)); %restrict2
                 for iC=1:nCells %for each place cell...
@@ -254,6 +238,22 @@ for iR = 1:length(cfg.rats)
                                 
                 % for each SWR event, get how long the event is
                 SWR_size_temp(iIV) = evt.tend(iIV)-evt.tstart(iIV);
+                
+                % get virtual path length of each event (% max dist between first and last peak)
+                path_inds = find(R_temp(:,iIV));
+                if isempty(path_inds);
+                    path_length_temp = vertcat(path_length_temp,nan); 
+                    continue
+                end
+%                 assert(~isempty(path_inds),'SWR event has no spikes')
+                peak_loc_temp = [];
+                for iP = 1:length(path_inds) % for each cell find peak
+                    peak_loc_temp = horzcat(peak_loc_temp,TC_temp(iT).peak_loc{path_inds(iP)});
+                end
+                path_start = min(peak_loc_temp); 
+                path_end = max(peak_loc_temp);
+                path_length_temp = vertcat(path_length_temp,(path_end-path_start)); 
+
             end
             
             SWR_size(iT).(rn){iFD} = SWR_size_temp;
@@ -329,9 +329,7 @@ data_out.ISI_IF = ISI_IF;
 data_out.path_len = path_length;
 data_out.nCells = nCells_out;
 data_out.nSWR = nSWR_out;
-    
-profile viewer
-profile off
+
 cd(originalFolder)
 
 end

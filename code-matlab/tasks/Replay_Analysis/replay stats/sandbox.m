@@ -1,94 +1,99 @@
 %% Get data
-    
+originalFolder = pwd;
 cfg = [];
 cfg.rats = {'R042','R044','R050'};
 % cfg.rats = {'R050'};
 % cfg.restrict = 'pre';
-cfg.testing = 1;
+cfg.NAU = 1;
+
+% profile on
 data = GenSWRstats_all(cfg);
-
-%%
 simdata = SimSWRstats_all(cfg,data);
+% profile viewer
 
+cd(originalFolder)
 %% Unpack stats across sessions
 
-SWRstats.tlen = [];
-SWRstats.mean = [];
-SWRstats.var = [];
-SWRstats.prop = [];
-SWRstats.avgspk = [];
-SWRstats.ISI = [];
-SWRstats.pathlen = [];
+% IFstats.FR_cell = [];
+% IFstats.FR_field = [];
+% IFstats.ISI = [];
+% sess = 1;
+% session.avgspk{sess} = [];
 
-IFstats.FR_cell = [];
-IFstats.FR_field = [];
-IFstats.ISI = [];
+data_in = [data simdata];
+stats(2).tlen = [];
+stats(2).mean = [];
+stats(2).var = [];
+stats(2).prop = [];
+stats(2).avgspk = [];
+stats(2).ISI = [];
+stats(2).pathlen = [];
+    
+for iD=1:2
+    for iR=1:length(cfg.rats)
+        for iT=1:2
+            rn = cfg.rats{iR};
+            for iFD=1:length(data_in(iD).R(iT).(rn))
+                curr_R = data_in(iD).R(iT).(rn){1,iFD};
 
-sess = 1;
-session.avgspk{sess} = [];
+                [nCells,nSWR] = size(curr_R);
+                if isempty(curr_R)
+                    continue 
+                end
 
-for iR=1:length(cfg.rats)
-    for iT=1:2
-        rn = cfg.rats{iR};
-        for iFD=1:length(data.R(iT).(rn))
-            curr_R = data.R(iT).(rn){1,iFD};
-            [nCells,nSWR] = size(curr_R);
-            if isempty(curr_R)
-                continue 
-            end
-            
-            % get mean and variance across SWRs (for each unit)
-            SWRstats.mean = vertcat(SWRstats.mean,mean(curr_R,2));
-            SWRstats.var = vertcat(SWRstats.var,var(curr_R,0,2));
-            
-            % get length of each SWR event
-            SWRstats.tlen = vertcat(SWRstats.tlen,data.SWR_size(iT).(rn){iFD}');
-            
-            % proportion of SWR each cell is active
-            SWRstats.prop = vertcat(SWRstats.prop,sum(curr_R>0,2)/nSWR*100.0);
-            
-            % mean spike count of place cells across SWR events
-            curr_R(curr_R==0) = nan; %SWR events with no spikes are omitted from the average
-            SWRstats.avgspk = vertcat(SWRstats.avgspk,nanmean(curr_R,2));
-            session.avgspk{sess} = nanmean(curr_R,2);
-            sess = sess + 1;
-            
-            % get ISIs
-            SWRstats.ISI = vertcat(SWRstats.ISI,data.ISI_SWR(iT).(rn){iFD});
-            IFstats.ISI = vertcat(IFstats.ISI,data.ISI_IF(iT).(rn){iFD});
-            
-            % get infield firing rates
-            IFstats.FR_cell = vertcat(IFstats.FR_cell,data.IFFR(iT).(rn){iFD});
-            IFstats.FR_field = vertcat(IFstats.FR_field,data.IFFR_field(iT).(rn){iFD});
-            
-            % get path lengths
-            SWRstats.pathlen = vertcat(SWRstats.pathlen,data.path_len(iT).(rn){iFD});
-            simdata.pathlen = SWRstats.pathlen;
-        end
-    end
-end
+                % get mean and variance across SWRs (for each unit)
+                stats(iD).mean = vertcat(stats(iD).mean,mean(curr_R,2));
+                stats(iD).var = vertcat(stats(iD).var,var(curr_R,0,2));
 
-% clear curr_R iFD iR iT nCells nSWR rn iR iT
+                % get length of each SWR event
+                stats(iD).tlen = vertcat(stats(iD).tlen,data_in(iD).SWR_size(iT).(rn){iFD});
 
+                % proportion of SWR each cell is active
+                stats(iD).prop = vertcat(stats(iD).prop,sum(curr_R>0,2)/nSWR*100.0);
+
+                % mean spike count of place cells across SWR events
+                curr_R(curr_R==0) = nan; %SWR events with no spikes are omitted from the average
+                stats(iD).avgspk = vertcat(stats(iD).avgspk,nanmean(curr_R,2));
+%                 session.avgspk{sess} = nanmean(curr_R,2);
+%                 sess = sess + 1;
+
+                % get ISIs
+                stats(iD).ISI = vertcat(stats(iD).ISI,data_in(iD).ISI_SWR(iT).(rn){iFD});
+%                 IFstats.ISI = vertcat(IFstats.ISI,data_in.ISI_IF(iT).(rn){iFD});
+% 
+%                 % get infield firing rates
+%                 IFstats.FR_cell = vertcat(IFstats.FR_cell,data_in.IFFR(iT).(rn){iFD});
+%                 IFstats.FR_field = vertcat(IFstats.FR_field,data_in.IFFR_field(iT).(rn){iFD});
+
+                % get path lengths
+                stats(iD).pathlen = vertcat(stats(iD).pathlen,data_in(iD).path_len(iT).(rn){iFD});
+                
+            end %iterate session
+            
+        end %iterate left vs right
+        
+    end %iterate rats
+    
+end %iterate empirical vs simulation
 
 
 %% Plot SWR data vs simulated data for varying statistics
 
-data_in = [SWRstats simdata];
+data_in = stats;
 data_name = {'Empirical','Model'};
 
 % participation ratio
 figure('units','normalized','outerposition',[0,0,1,1]); 
 for i=1:length(data_in)
     subplot(1,2,i)
-    [n,x] = hist(data_in(i).prop,25);
+    [n,x] = hist(data_in(i).prop,20);
     bar(x,n,'hist')
     set(gca,'FontSize',12);
     xlabel('% SPWR participation')
     ylabel('Number of cells')
     title(data_name(i));
 end
-% print(gcf,'-dpng','-r300','Cell participation comparison');
+print(gcf,'-dpng','-r300','Cell participation comparison');
 clear x n i
 
 
@@ -103,7 +108,7 @@ for i=1:length(data_in)
     ylabel('% of place fields')
     title(data_name(i));
 end
-% print(gcf,'-dpng','-r300','Spike count distribution comparison')
+print(gcf,'-dpng','-r300','Spike count distribution comparison')
 clear x n
 
 
@@ -123,7 +128,7 @@ for i=1:length(data_in)
     xlabel('ISI (ms)'); ylabel('percent of isi'); grid on;
     title(data_name(i))
 end
-% print(gcf,'-dpng','-r300','ISI distribution comparison')
+print(gcf,'-dpng','-r300','ISI distribution comparison')
 clear dt histdata isi_centers isi_edges isih tmax
 
 
@@ -142,7 +147,7 @@ for i=1:length(data_in)
     set(gca,'FontSize',12); xlabel('SWR interval (ms)'); ylabel('percent intervals'); grid on;
     title(data_name(i))
 end
-% print(gcf,'-dpng','-r300','Event length distribution comparison')
+print(gcf,'-dpng','-r300','Event length distribution comparison')
 clear dt i tmax isi_edges isi_centers isih
 
 % Fano Factor comparison
@@ -171,8 +176,23 @@ for i=1:length(data_in)
 %     clear p s y d iC
 end
 legend({'data','poisson generated','ideal ratio'},'FontSize',8)
-% print(gcf,'-dpng','-r300','fano factor distribution comparison')
+print(gcf,'-dpng','-r300','fano factor distribution comparison')
 clear i iC
+
+% path length comparison
+figure('units','normalized','outerposition',[0,0,1,1]); 
+for i=1:length(data_in)
+    subplot(1,2,i)
+    [n,x] = hist(data_in(i).pathlen,20);
+    bar(x,n,'hist')
+    set(gca,'FontSize',12);
+    xlabel('path length')
+    ylabel('Number of cells')
+    title(data_name(i));
+end
+print(gcf,'-dpng','-r300','Replay path length comparison');
+clear x n i
+
 
 %% autocorrelation
 
@@ -221,7 +241,7 @@ shape = 'o+d';
 for iR=1:length(rats)
     rn = rats{iR};
     for iT=1:2
-        scatter(data.IFFR(iT).(rn),SWR_prop(iT).(rn),20,col(iT),shape(iR));
+        scatter(data_in.IFFR(iT).(rn),SWR_prop(iT).(rn),20,col(iT),shape(iR));
     end
 end
 
@@ -238,14 +258,14 @@ figure;
 for iT=1:2
     for iR=1:3
         rn = cfg.rats{iR};
-        for iFD=1:length(data.R(iT).(rn))
+        for iFD=1:length(data_in.R(iT).(rn))
             subplot(nsp(1),nsp(2),iP)
-            curr_R = data.R(iT).(rn){1,iFD};
+            curr_R = data_in.R(iT).(rn){1,iFD};
             if isempty(curr_R)
                 continue
             end
             
-            temp_FR = data.IFFR(iT).(rn){1,iFD};
+            temp_FR = data_in.IFFR(iT).(rn){1,iFD};
             temp_prop = sum(curr_R>0,2)/length(curr_R)*100.0;
 %             [rho,pval] = corr(temp_FR,temp_prop);
             scatter(temp_FR,temp_prop);
@@ -278,7 +298,7 @@ print(gcf,'-dpng','-r300','IFFR_SWRspkcount_scatter');
 
 %% Get spike count histograms across SWRs
 
-curr_R = data.R(2).R050{1,1};
+curr_R = data_in.R(2).R050{1,1};
 curr_R(curr_R==0) = nan;
 [nCells,nSWR] = size(curr_R);
 [nsp,~] = numSubplots(nCells);

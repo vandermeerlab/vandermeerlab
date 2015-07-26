@@ -132,11 +132,26 @@ freqTheta = cfg.freqTheta;
 %  Combination of Eq. A1.1 and A2.2 from Chadwick et al. 2014.
 %   Normalized so that the maximum value should be A
 
-ratefunc = @(x, theta, pf, v, vthresh) ...
+ratefunc1 = @(x, theta, pf, v, vthresh) ...
    pf.maxFiringRate ./ exp(pf.k) .* ... % scaled so that the peak value is A
-       exp(-(x-pf.xc).^2./(2*pf.sigma_sq))  .* ... % gaussian place field
+       exp(-(x-pf.xc).^2/(2*pf.sigma_sq)) .* ... % gaussian place field
        exp (pf.k .* cos (pf.initPhi - pf.deltaPhi ./ (2*pf.radius) .* (x - pf.xc + pf.radius) - theta)) .* ... % phase precession
        double(v >= vthresh);
+
+ratefunc2 = @(x, theta, pf, v, vthresh) ...
+    (pf.maxFiringRate(1) ./ exp(pf.k) .* ... % scaled so that the peak value is A
+    exp(-(x-pf.xc(1)).^2/(2*pf.sigma_sq)) .* ... % 1st peak
+    exp (pf.k .* cos (pf.initPhi - pf.deltaPhi ./ (2*pf.radius) .* (x - pf.xc(1) + pf.radius) - theta)) .* ... % phase precession
+    double(v >= vthresh)) + ...
+    (pf.maxFiringRate(2) ./ exp(pf.k) .* ... % scaled so that the peak value is A
+    exp(-(x-pf.xc(2)).^2/(2*pf.sigma_sq)) .* ... % 2nd peak
+    exp (pf.k .* cos (pf.initPhi - pf.deltaPhi ./ (2*pf.radius) .* (x - pf.xc(2) + pf.radius) - theta)) .* ... % phase precession
+    double(v >= vthresh));
+
+
+% a = @(x) 15.9*exp(-(x-1).^2/(2*81));
+% b = @(x) 6.6*exp(-(x-66).^2/(2*81));
+% c = @(a,b) a + b;
 
 rate_tvec = tvec(1):cfg.rate_dt:tvec(end);
 interp_pvec = interp1(tvec,pvec,rate_tvec);
@@ -146,12 +161,19 @@ if cfg.verbose
     sprintf('\n Creating firing rate profiles...')
 end
 
-for nPF=1:length(pf)
-    if cfg.verbose; sprintf('.'); end
-    
-    pf(nPF).rates = ratefunc(interp_pvec, lfpwave(rate_tvec), pf(nPF), ...
-      interp_spdvec, cfg.speedThreshold);
-end %iterate place cells
+if ~isfield(pf,'rates')
+    for nPF=1:length(pf)
+        if cfg.verbose; sprintf('.'); end
+        
+        if length(pf(nPF).xc) == 1
+            pf(nPF).rates = ratefunc1(interp_pvec, lfpwave(rate_tvec), pf(nPF), ...
+              interp_spdvec, cfg.speedThreshold);
+        else
+            pf(nPF).rates = ratefunc2(interp_pvec, lfpwave(rate_tvec), pf(nPF), ...
+                interp_spdvec, cfg.speedThreshold);  
+        end
+    end %iterate place cells
+end
 
 
 %% Generate poisson spikes for N trials
@@ -161,11 +183,17 @@ if cfg.verbose
 end
 for nPF = 1:length(pf)
     if cfg.verbose; sprintf('.'); end
-
-    pf_func = @(t) ratefunc(interp1(tvec-tvec(1), pvec, t), lfpwave(t), pf(nPF), ...
-                      interp1(tvec-tvec(1), spdvec, t), cfg.speedThreshold);
-
-    spiketimes = genInhomogeneousPoisson(cfg.maxFiringRate, tvec(end)-tvec(1), pf_func, trials);
+    
+    if length(pf(nPF).xc) == 1
+        pf_func = @(t) ratefunc1(interp1(tvec-tvec(1), pvec, t), lfpwave(t), pf(nPF), ...
+            interp1(tvec-tvec(1), spdvec, t), cfg.speedThreshold);
+    else
+        pf_func = @(t) ratefunc2(interp1(tvec-tvec(1), pvec, t), lfpwave(t), pf(nPF), ...
+            interp1(tvec-tvec(1), spdvec, t), cfg.speedThreshold); 
+    end
+    
+    spiketimes = genInhomogeneousPoisson2(cfg.maxFiringRate, tvec(end)-tvec(1), pf_func, trials);
+    
     for N = 1:trials
         spiketimes{N} = spiketimes{N} + tvec(1);
     if isempty(spiketimes{N})
@@ -257,9 +285,5 @@ else
     % Output pfmodel struct
     pfm_out = data;
 end
-
-
-
-
 
 end
