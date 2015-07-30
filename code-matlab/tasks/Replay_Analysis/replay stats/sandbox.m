@@ -1,8 +1,8 @@
 %% Get data
 originalFolder = pwd;
 cfg = [];
-cfg.rats = {'R042','R044','R050'};
-% cfg.rats = {'R050'};
+% cfg.rats = {'R042','R044','R050'};
+cfg.rats = {'R050'};
 % cfg.restrict = 'pre';
 cfg.NAU = 1;
 

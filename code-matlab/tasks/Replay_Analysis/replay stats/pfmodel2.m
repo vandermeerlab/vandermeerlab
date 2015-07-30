@@ -192,7 +192,7 @@ for nPF = 1:length(pf)
             interp1(tvec-tvec(1), spdvec, t), cfg.speedThreshold); 
     end
     
-    spiketimes = genInhomogeneousPoisson2(cfg.maxFiringRate, tvec(end)-tvec(1), pf_func, trials);
+    spiketimes = genInhomogeneousPoisson(cfg.maxFiringRate, tvec(end)-tvec(1), pf_func, trials);
     
     for N = 1:trials
         spiketimes{N} = spiketimes{N} + tvec(1);
