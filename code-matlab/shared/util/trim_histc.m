@@ -17,7 +17,8 @@ else
 end
 
 if nargin == 2
-    x_idx(varargin{1} == length(x)) = length(x)-1;
+    x_idx = varargin{1};
+    x_idx(x_idx == length(x)) = length(x)-1;
 else
    x_idx = []; 
 end

@@ -57,8 +57,8 @@ ProcessConfig;
 switch nDim
     case 1
         % bin tuning variable
-        [tc.occ_hist,tc.idx] = histc(tuning_var.data,cfg.binEdges{1},2);        
-        [tc.occ_hist,tc.idx] = trim_histc(tc.occ_hist,tc.idx);
+        [tc.occ_hist,tc.pos_idx] = histc(tuning_var.data,cfg.binEdges{1},2);        
+        [tc.occ_hist,tc.pos_idx] = trim_histc(tc.occ_hist,tc.pos_idx);
         
         tc.no_occ_idx = find(tc.occ_hist < cfg.minOcc);
         tc.good_idx = find(tc.occ_hist >= cfg.minOcc);
@@ -75,7 +75,7 @@ switch nDim
         for iC = 1:nCells
             spk_z = interp1(tuning_var.tvec,tuning_var.data(1,:),S.t{iC},'linear');
             
-            [spk_hist,tc.pos_idx] = histc(spk_z,cfg.binEdges{1},1);
+            [spk_hist,~] = histc(spk_z,cfg.binEdges{1},1);
             spk_hist = trim_histc(spk_hist);
             
             if ~isempty(cfg.smoothingKernel)
