@@ -79,7 +79,7 @@ switch nDim
             spk_hist = trim_histc(spk_hist);
             
             if ~isempty(cfg.smoothingKernel)
-                spk_hist = conv(spk_hist,kernel,'same');
+                spk_hist = conv(spk_hist,cfg.smoothingKernel,'same');
             end
             
             spk_hist(tc.no_occ_idx) = NaN;
