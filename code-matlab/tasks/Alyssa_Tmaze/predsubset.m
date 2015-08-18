@@ -47,9 +47,11 @@ s = rng;
 rng(1,'twister')
 
 % shuffle A pseudorandomly, then keep the first n samples
-p = randperm(length(A)); % permutes a vector same length as A...uniform distribution
-A_shuffled = A(p);
-Asubset = A_shuffled(1:n);
+[~,p] = datasample(A,n,'Replace',false);
+if datatype==2
+    p = sort(p); % for tsd, ensures samples are temporally ordered
+end
+Asubset = A(p);
 
 %% Now return the correct datatype struct
 
@@ -64,9 +66,7 @@ switch datatype
         Asub.usr.rating = Asub.usr.rating(1:n);
     case 2
         Asub.tstart = Asubset;
-        % also need to shuffle and select subset for .tend
-        tend_shuffled = A_orig.tend(p);
-        Asub.tend = tend_shuffled(1:n);
+        Asub.tend = A_orig.tend(p);
         Asub.cfg = A_orig.cfg;
 end
 

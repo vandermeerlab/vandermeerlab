@@ -4,6 +4,7 @@ function metadata = TrimTrialTimes(cfg_in,metadata)
 %
 
 cfg_def = [];
+cfg_def.verbose = 0; % print output
 cfg_def.mode = 'times'; % 'times', 'evt' (times.mat is specific to R042, evt mimics that)
 
 cfg = ProcessConfig2(cfg_def,cfg_in);
@@ -19,13 +20,13 @@ switch cfg.mode
             
             start_dt(iT) = metadata.taskvars.trial_iv.tstart(iT)-run_start(iT);
             
-            if start_dt(iT) < 0 % position-based trial starts before we have data
+            if start_dt(iT) < 0; % position-based trial starts before we have data
                 metadata.taskvars.trial_iv.tstart(iT) = run_start(iT);
             end
             
             end_dt(iT) = metadata.taskvars.trial_iv.tend(iT)-run_end(iT);
             
-            if start_dt(iT) > 0 % position-based trial ends after data cutoff in times
+            if start_dt(iT) > 0; % position-based trial ends after data cutoff in times
                 metadata.taskvars.trial_iv.tend(iT) = run_end(iT);
             end
             
@@ -39,8 +40,10 @@ switch cfg.mode
             
         end
         
-        fprintf('start dt:\n'); disp(start_dt);
-        fprintf('end dt:\n'); disp(end_dt);
+        if cfg.verbose
+            fprintf('start dt:\n'); disp(start_dt);
+            fprintf('end dt:\n'); disp(end_dt);
+        end
         
     case 'evt'
         

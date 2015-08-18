@@ -332,12 +332,12 @@ for iT = 1:2
     cfg_cs_shuf3.twin = cfg.twin;
     cfg_cs_shuf3.shuffleType = 3;
     
-    out.score3(iT) = CorrScoreWin(cfg_cs_shuf3,evt,S_pc(iT));
+    out.score3(iT) = CorrScoreWin2(cfg_cs_shuf3,evt,S_pc(iT));
     
     cfg_cs_shuf1 = cfg_cs_shuf3;
     cfg_cs_shuf1.shuffleType = 1;
     
-    out.score1(iT) = CorrScoreWin(cfg_cs_shuf1,evt,S_pc(iT));
+    out.score1(iT) = CorrScoreWin2(cfg_cs_shuf1,evt,S_pc(iT));
 end
 
 out.cfg = cfg; out.nLcells = length(S_pc(1).t); out.nRcells = length(S_pc(2).t);

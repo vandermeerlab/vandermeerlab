@@ -40,7 +40,7 @@ Q = MakeQfromS(cfg,S);
 % get number of active cells for each
 for iIV = length(iv_in.tstart):-1:1
     
-    Qr = restrict(Q,iv_in.tstart(iIV),iv_in.tend(iIV));
+    Qr = restrict2(Q,iv_in.tstart(iIV),iv_in.tend(iIV));
     
     if ~isempty(Qr.tvec)
         spk_counts = sum(Qr.data,2);

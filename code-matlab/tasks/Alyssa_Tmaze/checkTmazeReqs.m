@@ -75,6 +75,8 @@ switch machinename
         base_fp = 'D:\vandermeerlab\';
     case 'MVDMLAB-EUROPA'
         base_fp = 'D:\data\promoted\';
+    case 'DIONYSUS'
+        base_fp = 'D:\data\promoted\';
 end
 
 %%

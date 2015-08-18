@@ -26,7 +26,7 @@ function [score] = scoreCandSeq(cfg_in,CAND_iv_in,S)
 %% Parse input cfg parameters
 
 cfg_def.method = 'ROCorr'; %'RODist'
-cfg_def.nShuffles = 200; %number of shuffles for bootstrapping
+cfg_def.nShuffles = 250; %number of shuffles for bootstrapping
 cfg_def.seqMethod = 'mean'; %('exact','first','mean') determines which spikes to use for sequencing
 cfg_def.cdfcheck = 0;
 cfg_def.display = 0;
@@ -73,10 +73,16 @@ pvals = rhos;
 for iSeq = 1:length(sequences)
     s1 = sequences{1,iSeq};
     s2 = sequences{2,iSeq};
+    if isempty(s1) || isempty(s2)
+        s1 = nan; s2 = nan;
+    end
     [rhos(iSeq),pvals(iSeq)] = corr(s1,s2,'type','Spearman');
+    
+    if iSeq==1 || mod(iSeq,10)==0
+        str = sprintf('Calculating correlations for sequence %d',iSeq);
+        disp(str);
+    end
 
-    str = sprintf('Calculating correlations for sequence %d',iSeq);
-    disp(str);
     
     for iSh = 1:cfg.nShuffles
         rand_idx = randperm(length(sequences{2,iSeq}));
@@ -89,6 +95,7 @@ if strcmp(cfg.method,'ROCorr')
     keep_idx = zeros(1,length(rhos));
     
     for iEvt = 1:length(rhos)
+        
         xvals = -1:0.05:1;
         rhos_shuffled_dist = rhos_shuffled(:,iEvt);
         [n1,x1] = hist(rhos_shuffled_dist,xvals);
@@ -103,6 +110,14 @@ if strcmp(cfg.method,'ROCorr')
             significance = 'no';
         end
         
+        if pvals(iEvt) < cfg.siglvl && strcmp(significance,'no')
+            sprintf('conflicting significance')
+        elseif pvals(iEvt) > cfg.siglvl && strcmp(significance,'yes')
+            sprintf('conflicting significance')
+        end
+            
+            
+            
         if cfg.display
             % Compare shuffled distribution to observed value
             bar(x1,n1,'FaceColor',[.7 .7 .7]); hold on;
@@ -113,9 +128,10 @@ if strcmp(cfg.method,'ROCorr')
             axis([-1.1 1.1 ylims]);
 
             % Annotate each event
-            str1 = sprintf('Correlation: %4f',rhos(iEvt));
-            str2 = sprintf('Signigicant: %s',significance);
-            text(-1,ylims(2)-5,{str1,str2},'FontSize',8);
+            str1 = sprintf('Rho-value: %4f',rhos(iEvt));
+            str2 = sprintf('p-value: %4f',pvals(iEvt));
+            str3 = sprintf('Signigicant (vs shuffle): %s',significance);
+            text(-1,ylims(2)-5,{str1,str2,str3},'FontSize',8);
             title(sprintf('Event %d', iEvt));
             waitforbuttonpress
             cla;

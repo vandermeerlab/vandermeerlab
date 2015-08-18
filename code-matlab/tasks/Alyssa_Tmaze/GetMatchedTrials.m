@@ -88,6 +88,8 @@ if length(unique(matched_trial)) < length(matched_trial) % things somehow got me
     warning('*** Could not determine matched trial sequence.');
 end
 
+matched_trial = sort(matched_trial); % ensures they are temporally ordered
+
 % return subsets
 switch match
     case 'L'
