@@ -16,6 +16,9 @@ function [out,tt_mask] = CoOccurQ(cfg_in,Q)
 % out.p3: observed co-occurrence (joint) probability p(x,y)
 % out.p4: z-score of p3 against shuffled data (if requested, see config below)
 %
+% tt_mask: [nCells x nCells] containing NaNs (or whatever value is specified in
+% cfg.tt_repl) where cell pairs were recorded on the same tetrode
+% 
 % CONFIGS:
 %
 % cfg_def.nShuffle = 0; % 0 means no shuffle, >0 specifies number of
