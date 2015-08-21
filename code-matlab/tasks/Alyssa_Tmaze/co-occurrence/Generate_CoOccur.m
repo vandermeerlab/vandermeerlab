@@ -68,8 +68,11 @@ pos = LoadPos([]);
 if strcmp(S_orig.cfg.SessionID(1:4),'R042')
     metadata = TrimTrialTimes([],metadata); % R042 only!!
 end
-[L_trl,R_trl] = GetMatchedTrials([],metadata,ExpKeys);
+%[L_trl,R_trl] = GetMatchedTrials([],metadata,ExpKeys);
+[L_trl,R_trl] = GetMatchedTrials_old([],metadata);
 
+% restrict spiketrains to trial times only; note that some spiketrains may
+% be empty after this step
 S_left = restrict(S_orig,L_trl); posL = restrict(pos,L_trl);
 S_right = restrict(S_orig,R_trl); posR = restrict(pos,R_trl);
 
@@ -112,15 +115,19 @@ cpR = LinearizePos(cfg_c,cpR); cpR = cpR.data(1);
 
 % store left/right linearized data in a single struct (cleaner workspace!)
 
+%ENC is for "encoding" ie the tuning curves, that describe the
+%relationship between our observable variable (position) and firing rate.
+%(the answer to a question like, "How is position (en)coded by the
+%neurons whose activity we are recording?") 
 ENC_data(1).trial_type = 'left';
 ENC_data(1).Coord = CoordLrs;
 ENC_data(1).pos = posL_binned;
-ENC_data(1).S = S_left;
+ENC_data(1).S = S_left; % all spikes from all units during left trials
 
 ENC_data(2).trial_type = 'right';
 ENC_data(2).Coord = CoordRrs;
 ENC_data(2).pos = posR_binned;
-ENC_data(2).S = S_right;
+ENC_data(2).S = S_right; % all spikes from all units during right trials
 
 % check binned position (should be no/few gaps)
 if cfg.plotOutput
@@ -147,6 +154,8 @@ clear CoordL CoordLrs CoordR CoordRrs S_left S_right posL posL_binned posR posR_
 spd = getLinSpd([],pos);
 cfg_spd = []; cfg_spd.method = 'raw'; cfg_spd.threshold = 10; run_iv = TSDtoIV(cfg_spd,spd);
 
+% now the spiketrains must contain only spikes that were emitted when the rat
+% was traveling faster than 10 pixels/s:
 ENC_data(1).S = restrict(ENC_data(1).S,run_iv);
 ENC_data(2).S = restrict(ENC_data(2).S,run_iv);
 
@@ -196,26 +205,31 @@ if cfg.writeFiles, cd(output_fd);
 end
 
 %% order data -- contents of S are now fields beyond the choice point
-FieldOrder_left = TC_left.field_template_idx(TC_left.field_loc > cpL); 
-FieldOrder_right = TC_right.field_template_idx(TC_right.field_loc > cpR);
+FieldOrder_left = TC_left.field_template_idx(TC_left.field_loc > cpL); % this keeps all cells with field after the choice point
+FieldOrder_right = TC_right.field_template_idx(TC_right.field_loc > cpR); % ^^^
 
 % remove cells with fields in both
 [~,ia,ib] = intersect(FieldOrder_left,FieldOrder_right);
 FieldOrder_left(ia) = []; FieldOrder_right(ib) = [];
 
+% make a new S, keeping left-only cells
 S_pc_left = S_orig;
 S_pc_left.t = S_pc_left.t(FieldOrder_left); S_pc_left.label = S_pc_left.label(FieldOrder_left); S_pc_left.usr.data = S_pc_left.usr.data(FieldOrder_left);
 
+% make a new S, keeping right-only cells
 S_pc_right = S_orig;
 S_pc_right.t = S_pc_right.t(FieldOrder_right); S_pc_right.label = S_pc_right.label(FieldOrder_right); S_pc_right.usr.data = S_pc_right.usr.data(FieldOrder_right);
 
 
-%% make Q-matrix
-S_lr = [];
+%% make Q-matrix for in-field activity (not used in analysis)
+S_lr = []; % make a new S containing left-only and right-only cells
 S_lr.t = cat(2,S_pc_left.t,S_pc_right.t); nLeft = length(S_pc_left.t); nRight = length(S_pc_right.t);
 S_lr.usr.data = cat(2,S_pc_left.usr.data,S_pc_right.usr.data);
 S_lr.usr.label = 'tt_num';
 
+%A Q-matrix is organized such that each row corresponds to a cell, and each 
+%column groups the spikes into time bins. Thus, each column contains information 
+%about which cells were active together in a given time bin.
 cfg_Q = [];
 cfg_Q.dt = cfg.dt;
 cfg_Q.tvec_edges = ExpKeys.prerecord(1):cfg_Q.dt:ExpKeys.postrecord(end);
@@ -327,6 +341,14 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% co-coccurrence per SWR %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% make a Q-matrix
+%A Q-matrix is organized such that each row corresponds to a cell, and each 
+%column groups the spikes into time bins. Thus, each column contains information 
+%about which cells were active together in a given time bin.
+% the time bins here are +/- 50 ms of the center time of the candidate
+% events; thus, each time bin is 100 ms wide
+
 cfg_Q = [];
 
 nEvt = length(evt.tend);
@@ -370,6 +392,9 @@ cfg_cc.nShuffle = cfg.nShuffles;
 Q_leftright_SWRq = [];
 Q_leftright_SWRq.data = cat(1,Q_leftSWRq.data,Q_rightSWRq.data);
 
+% "crossed" is the term for pairs with one cell on the left
+%arm and another on the right arm -- so those we would expect to be less
+%co-active (at least during behavior) than pairs of cells on the same arm.
 c_crossed = CoOccurQ(cfg_cc,Q_leftright_SWRq);
 
 if cfg.plotOutput
@@ -390,9 +415,11 @@ if cfg.writeFiles, cd(output_fd);
 end
 
 % some stats
-all_left = c_crossed.p4(1:nLeft,1:nLeft);
-all_right = c_crossed.p4(nLeft+1:end,nLeft+1:end);
-all_crossed = c_crossed.p4(1:nLeft,nLeft+1:end);
+all_left = c_crossed.p4(1:nLeft,1:nLeft); % nLeft is number of left cells. this is keeping stat data made from the upper left quadrant of the Q-matrix, which is the left-only cells
+%since left and then right data are concatenated, the first nLeft entries are for left cells, and the rest are for right cells
+all_right = c_crossed.p4(nLeft+1:end,nLeft+1:end); % this is keeping the stat data made from lower right quadrant of the Q-matrix, which is the right-only cells
+all_crossed = c_crossed.p4(1:nLeft,nLeft+1:end); % this is keeping stat data from the ?upper right?, which is for 
+% left-right pairs. the remaining quadrant should be indentical to this one because it's a symmetrical matrix?
 
 fprintf('\nSWRz left mean z %.2f +/- %.2f, median %.2f\n',nanmean(all_left(:)),nanstd(all_left(:)),nanmedian(all_left(:)));
 fprintf('SWRz right mean z %.2f +/- %.2f, median %.2f\n',nanmean(all_right(:)),nanstd(all_right(:)),nanmedian(all_right(:)));
