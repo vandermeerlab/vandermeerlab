@@ -100,7 +100,7 @@ function SWRtimes = ducktrap(cfg_in,S,csc)
 % Ducktrap's output can be sent into SWRfreak to get the Fourier
 % coefficients of the sum of your manually identified SWRs. 
 %
-% WHY DO I HAVE TO SPECIFY NUM2CATCH?
+% WHY DO I HAVE TO SPECIFY CFG.NUM?
 %
 % Because AC sucks at programming, and couldn't get the function to work
 % unless there was some way to terminate the while loop cleanly. If you
@@ -147,6 +147,7 @@ function SWRtimes = ducktrap(cfg_in,S,csc)
         %% Set cfg parameters and check inputs
 
         cfg_def.trapwin = 0.08;
+        cfg_def.num = 50;
         cfg_def.SpikeHeight = 0.4;
         cfg_def.axisflag = 'tight';
         cfg_def.spkColor = 'k';
