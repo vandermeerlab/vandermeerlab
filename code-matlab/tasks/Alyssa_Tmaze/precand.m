@@ -62,9 +62,7 @@ aboveThreshold = score>cfg.threshold;
  
  if ~isempty(cfg.minCells)
      iv_in = iv(tstart,tend);
-     tic
      activeCellsIV = AddNActiveCellsIV([],iv_in,S);
-     toc
      nActiveCells = activeCellsIV.usr.data;
      exclude = arrayfun(@(x) x < cfg.minCells,nActiveCells);
      tstart(exclude) = [];
