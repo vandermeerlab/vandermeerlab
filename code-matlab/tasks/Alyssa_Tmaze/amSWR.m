@@ -1,21 +1,29 @@
-function [SWR,swr1,swr2] = amSWR(cfg_in,SWRfreqs,csc)
+function [SWR,swr1,swr2] = amSWR(cfg_in,ncfs,csc)
 %AMSWR Detect sharp wave-ripple events using the discrete Fourier transform.
 %
-% function SWR = amSWR(cfg_in,SWRfreqs,csc)
+% function SWR = amSWR(cfg_in,ncfs,csc)
 %
 %   INPUTS
-%   SWRfreqs - output from SWRfreak(), noise-corrected frequency spectrum.
-%   csc      - output from LoadCSC, comprising the data from a continuously 
-%              sampled channel (csc). 
+%   ncfs - output from SWRfreak(), noise-corrected frequency spectrum.
+%   csc  - output from LoadCSC, the data from a continuously sampled channel. 
 %
 %   CONFIGS (with defaults):
-%   cfg.weightby = SWRfreqs.parameters.weightby; % 'power' or 'amplitude' 
+%
+%   cfg.stepSize = 4; % indirectly controls speed
+%              - compute FFT every n samples (faster for larger n)
+%              and interpolate intermediate values
+%              - tip: a stepSize of 1 is unnecessary; 5, 10 work fine, but
+%              going past 30 is not recommended for now (it's kind of like
+%              smoothing)
+%
+%   cfg.weightby = ncfs.parameters.weightby; % 'power' or 'amplitude' 
 %              uses the same option that was specified for SWRfreak, but 
 %              user can switch 
-%              'power' re-weight the spectrum to "unbias" the voltage over 
+%              - 'power' re-weight the spectrum to "unbias" the voltage over 
 %               each frequency 
-%              'amplitude' use raw spectrum
-%   cfg.verbose = 1; % talk to me
+%              - 'amplitude' use raw spectrum
+%
+%   cfg.verbose = 1; % talk to me 
 %
 %   OUTPUTS
 %   SWR - tsd with fields:
@@ -31,20 +39,33 @@ function [SWR,swr1,swr2] = amSWR(cfg_in,SWRfreqs,csc)
 %% declare global variables
 
 global cfg parameters
-parameters = SWRfreqs.parameters; %because fast hack
+parameters = ncfs.parameters; %because fast hack
 
 %% Parse cfg parameters
 
 cfg_def.verbose = 1;
-cfg_def.weightby = SWRfreqs.parameters.weightby;
+cfg_def.weightby = ncfs.parameters.weightby;
+cfg_def.stepSize = 4; % indirectly controls speed
+switch cfg_in.stepSize % fyi
+    case 'diffusion'
+        cfg_in.stepSize = 1;
+    case 'yeehaw'
+        cfg_in.stepSize = 10;
+    case 'olympian'
+        cfg_in.stepSize = 20;
+    case 'dirty'
+        cfg_in.stepSize = 80;
+    case 'badscience'
+        cfg_in.stepSize = 120;
+end
+
 cfg = ProcessConfig2(cfg_def,cfg_in);
 
 % these settings should be identical to SWRfreak settings 
-cfg.hiPassCutoff = SWRfreqs.parameters.hiPassCutoff; % frequency in Hz; delete all freqs below
-cfg.fs = SWRfreqs.parameters.fs;
+cfg.hiPassCutoff = ncfs.parameters.hiPassCutoff; % frequency in Hz; delete all freqs below
+cfg.fs = ncfs.parameters.fs;
 
 %% Tell the user you're doing something
-
 
 if cfg.verbose
     tic
@@ -58,10 +79,10 @@ end
  
     function swrscore = SWRhelper(freqs,win,csc)
 
-        if strcmp(cfg.weightby,'amplitude') && strcmp(parameters.weightby,'power') % then SWRfreqs were power weighted, but user wants ampl weighted
+        if strcmp(cfg.weightby,'amplitude') && strcmp(parameters.weightby,'power') % then ncfs were power weighted, but user wants ampl weighted
             freqs = freqs./(1:length(freqs)); 
             
-        elseif strcmp(cfg.weightby,'power') && strcmp(parameters.weightby,'amplitude') % then SWRfreqs were ampl weighted, but user wants power weighted
+        elseif strcmp(cfg.weightby,'power') && strcmp(parameters.weightby,'amplitude') % then ncfs were ampl weighted, but user wants power weighted
             freqs = freqs.*(1:length(freqs)); 
         end
         
@@ -71,11 +92,12 @@ end
         hiPassCutoff = cfg.hiPassCutoff;
         fourierCoeffCutoff = round(hiPassCutoff*win);
  
-        swrscore = zeros(length(csc.data),1);
+        %swrscore = zeros(length(csc.data),1);
+        swrscore = NaN(length(csc.data),1);
  
         % FFT
         %for iSWR = sampwin:500000-sampwin % for testing
-        for iSWR = sampwin:length(csc.data)-sampwin
+        for iSWR = sampwin:cfg.stepSize:length(csc.data)-sampwin
         %for iSWR = 3868190:3868191
     
             % Grab a windowed candidate and smooth the ends to reduce noise.
@@ -88,15 +110,21 @@ end
             swrscore(iSWR) = score;
 
         end
-        
+        if cfg.stepSize > 1 % then interpolate the intermediate values
+            swrscore(1) = 0; swrscore(end) = 0; % because hack or interp can mess up the flanks
+            NonNaNs = ~isnan(swrscore); % these are indices of the values returned by windowedFFT
+            
+            % now interpolate the missing sample points
+            swrscore = interp1(csc.tvec(NonNaNs),swrscore(NonNaNs),csc.tvec,'cubic'); % can do linear too 
+        end
         % get rid of imaginary numbers (very rare, but happens)
         swrscore = max(0,swrscore); 
     end
 
 %% get score vectors
 
-if ~isempty(SWRfreqs.freqs2)
-    swrscore1 = SWRhelper(SWRfreqs.freqs1,SWRfreqs.parameters.win1,csc);
+if ~isempty(ncfs.freqs2)
+    swrscore1 = SWRhelper(ncfs.freqs1,ncfs.parameters.win1,csc);
     % rescale because values are insanely low
     swrscore1 = rescmean(swrscore1,1);
     
@@ -104,7 +132,7 @@ if ~isempty(SWRfreqs.freqs2)
         disp('*yawn* ...') % checkpoint ~ halfway done
     end
     
-    swrscore2 = SWRhelper(SWRfreqs.freqs2,SWRfreqs.parameters.win2,csc);
+    swrscore2 = SWRhelper(ncfs.freqs2,ncfs.parameters.win2,csc);
     % rescale
     swrscore2 = rescmean(swrscore2,1);
     
@@ -113,7 +141,7 @@ if ~isempty(SWRfreqs.freqs2)
     
      SWR = tsd(csc.tvec,geometricmean);
 else
-    swrscore1 = SWRhelper(SWRfreqs.freqs1,SWRfreqs.parameters.win1,csc);
+    swrscore1 = SWRhelper(ncfs.freqs1,ncfs.parameters.win1,csc);
     % rescale because values are insanely low
     swrscore1 = rescmean(swrscore1,1);
     SWR = tsd(csc.tvec,swrscore1);
@@ -124,15 +152,15 @@ end
  %% Return output
  mfun = mfilename;
  
- SWR.parameters = struct('weightby',cfg.weightby,'win1',SWRfreqs.parameters.win1,'win2',SWRfreqs.parameters.win2,'hiPassCutoff',cfg.hiPassCutoff,'fs',cfg.fs,'csc',csc.label,'SWRfreak',SWRfreqs.parameters);
+ SWR.parameters = struct('stepSize',cfg.stepSize,'weightby',cfg.weightby,'win1',ncfs.parameters.win1,'win2',ncfs.parameters.win2,'hiPassCutoff',cfg.hiPassCutoff,'fs',cfg.fs,'csc',csc.label,'SWRfreak',ncfs.parameters);
  SWR.label = csc.label;
  
  swr1 = tsd(csc.tvec,swrscore1);
- swr1.parameters = struct('weightby',cfg.weightby,'win1',SWRfreqs.parameters.win1,'hiPassCutoff',cfg.hiPassCutoff,'fs',cfg.fs,'csc',csc.label,'SWRfreak',SWRfreqs.parameters);
+ swr1.parameters = struct('stepSize',cfg.stepSize,'weightby',cfg.weightby,'win1',ncfs.parameters.win1,'hiPassCutoff',cfg.hiPassCutoff,'fs',cfg.fs,'csc',csc.label,'SWRfreak',ncfs.parameters);
  swr1.label = csc.label;
  
  swr2 = tsd(csc.tvec,swrscore2);
- swr2.parameters = struct('weightby',cfg.weightby,'win2',SWRfreqs.parameters.win2,'hiPassCutoff',cfg.hiPassCutoff,'fs',cfg.fs,'csc',csc.label,'SWRfreak',SWRfreqs.parameters);
+ swr2.parameters = struct('stepSize',cfg.stepSize,'weightby',cfg.weightby,'win2',ncfs.parameters.win2,'hiPassCutoff',cfg.hiPassCutoff,'fs',cfg.fs,'csc',csc.label,'SWRfreak',ncfs.parameters);
  swr2.label = csc.label;
  
  % keep a record
