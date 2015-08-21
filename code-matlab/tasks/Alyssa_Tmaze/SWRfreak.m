@@ -1,9 +1,9 @@
-function SWRfreqs = SWRfreak(cfg_in,SWRtimes,csc)
+function ncfs = SWRfreak(cfg_in,SWRtimes,csc)
 %SWRFREAK get frequency spectrum for manually identified sharp wave-ripples
 %
-%   SWRfreqs = SWRfreak(SWRtimes,csc,)
+%   ncfs = SWRfreak(SWRtimes,csc,)
 %
-%   SWRfreqs = SWRfreak(SWRtimes,csc,NOISEtimes) % not implemented yet
+%   ncfs = SWRfreak(SWRtimes,csc,NOISEtimes) % not implemented yet
 %
 %   cfg.weightby = 'power'; or 'amplitude'
 %                  'power' re-weight the spectrum to "unbias" the voltage
@@ -11,19 +11,20 @@ function SWRfreqs = SWRfreak(cfg_in,SWRtimes,csc)
 %                  'amplitude' raw spectrum
 %   cfg.hiPassCutoff = 100; in Hz, disregard all frequencies below
 %   cfg.fs = 2000; in Hz, the sampling frequency
-%   cfg.win1 = 0.06; in ms, the window size
+%   cfg.win1 = 0.06; in s, the window size
 %   cfg.win2 = []; specify if you want two windows to be used
 %   Suggested settings for two windows:
-%         cfg.win1 = 0.08; in ms, the "noise reduction" window
-%         cfg.win2 = 0.04; in ms, the "precision" window
-%
+%         cfg.win1 = 0.08; in s, the "noise reduction" window
+%         cfg.win2 = 0.04; in s, the "precision" window
+% 
 %   cfg.showfig = 0; 0 do not display the figures; 1 display the figures
 %          There is a hidden fig config if you open the function and read
-%          the section called "Parse cfg parameters"
+%          the section called "Parse cfg parameters".
+%   cfg.openNewFig = 1; if using SWRfreak with subplot, set this to 0
 %
 %   OUTPUT
 %   
-%   SWRfreqs - noise-corrected frequency spectrum: Fourier coefficients for 
+%   ncfs - noise-corrected frequency spectrum: Fourier coefficients for 
 %              SWRs minus the Fourier coefficients for HC background noise
 %         .freqs1      - frequency spectrum based on win1
 %         .freqs2      - (if win2 specified)frequency spectrum based on win2
@@ -50,8 +51,10 @@ function SWRfreqs = SWRfreak(cfg_in,SWRtimes,csc)
 % a lesser degree than 100 and 120. It also had decently low scores for false
 % positives. 40 ms had the best separation for nearby events, but was the
 % worst for peaking at false positives. The geometric mean of the two of
-% them did a good job, so it was decided that two sets of SWRfreqs
+% them did a good job, so it was decided that two sets of ncfs
 % were better than one. 
+% But then it was re-decided that a single 60 ms window was fine. It's also
+% faster for amSWR. Just use 60.
 
 %% Parse cfg parameters
 
@@ -60,16 +63,28 @@ cfg_def.win1 = 0.06;
 cfg_def.win2 = [];
 cfg_def.hiPassCutoff = 100; %We want to delete all frequencies below 100 Hz
 cfg_def.fs = 2000; 
+cfg_def.outputSWRfreqs = 0; 
+cfg_def.outputNOISEfreqs = 0;
 cfg_def.showfig = 0;
+cfg_def.openNewFig = 1; 
     % this makes it easier to delete the fig config from history:
     cfg_def.fig.SWRcolor = 'k'; % line colour for raw SWR freqs
     cfg_def.fig.NOISEcolor = [0.67 0.67 0.67]; % line colour for noise freqs 
     cfg_def.fig.FREQScolor = 'r'; % line colour for noise-corrected SWR freqs
     cfg_def.fig.LineWidth = 2; 
     cfg_def.fig.xlim = [0 600]; % xvals go all the way up to 1000 Hz (nyquist), but the freqs are basically flat after 600 Hz
-    
+    cfg_def.fig.TitleFontSize = 14;
+    cfg_def.fig.LegendFontSize = 12;
+    cfg_def.fig.xyFontSize = 11;
+    cfg_def.fig.LegendBoxAspectRatio = []; % [xsize ysize zsize]
+    if isfield(cfg_in,'fig')
+        fig = ProcessConfig2(cfg_def.fig,cfg_in.fig);
+    end
 cfg = ProcessConfig2(cfg_def,cfg_in);
 
+if isfield(cfg_in,'fig')
+    cfg.fig = fig;
+end
 %% check if csc is the same as the one used in ducktrap
 
 if ~strcmp(SWRtimes.label{1}(1:15),csc.label{1}(1:15))
@@ -131,20 +146,32 @@ end
             ymax = max([maxSWR maxNOISE maxDIFF]);
             ymin = min([minSWR minNOISE minDIFF]);
             
-            figure; hold on;
-            plot(frequency,SWRsum,'Color',cfg.fig.SWRcolor,'LineWidth',cfg.fig.LineWidth);
-            plot(frequency,SWRnoise,'Color',cfg.fig.NOISEcolor,'LineWidth',cfg.fig.LineWidth);
-            plot(frequency,freqs,'Color',cfg.fig.FREQScolor,'LineWidth',cfg.fig.LineWidth);
+            if cfg.openNewFig
+                figure; 
+            end
+            hold on;
+            plot(frequency,SWRsum,'Color',cfg.fig.SWRcolor,'LineWidth',cfg.fig.LineWidth)
+            plot(frequency,SWRnoise,'Color',cfg.fig.NOISEcolor,'LineWidth',cfg.fig.LineWidth)
+            plot(frequency,freqs,'Color',cfg.fig.FREQScolor,'LineWidth',cfg.fig.LineWidth)
+            plot([cfg.fig.xlim(1) cfg.fig.xlim(2)],[0 0],'Color','k','LineStyle',':','LineWidth',1)
             
-            xlabel('Frequency (Hz)','Fontsize',11); 
+            xlabel('Frequency (Hz)','Fontsize',cfg.fig.xyFontSize); 
             if strcmp(cfg.weightby,'power')
                 type = 'Power weighted, ';
+                y_label = '';
             elseif strcmp(cfg.weightby,'amplitude')
                 type = 'Amplitude weighted, ';
+                y_label = 'Fourier coefficients';
             end
             xlim(cfg.fig.xlim); ylim([ymin-0.01 ymax+0.01])
-            title([type,sprintf('%d SWRs, %d ms window',length(SWRtimes.tcent),timewin*1000)],'FontSize',14);
-            legend('SWR','background noise','SWR - noise')
+            title([type,sprintf('%d SWRs, %d ms window',length(SWRtimes.tcent),timewin*1000)],'FontSize',cfg.fig.TitleFontSize);
+            ylabel(y_label,'Fontsize',cfg.fig.xyFontSize);
+            box on
+            hL = legend('SWR','background noise','SWR - noise');
+            if ~isempty(cfg.fig.LegendBoxAspectRatio)
+                set(hL,'PlotBoxAspectRatio',cfg.fig.LegendBoxAspectRatio)
+            end
+            set(hL,'FontSize',cfg.fig.LegendFontSize)
         end
     end
 
@@ -159,15 +186,17 @@ else
 end
 
 %% return the output
-parameters = struct('weightby',cfg.weightby,'win1',cfg.win1,'win2',cfg.win2','hiPassCutoff',cfg.hiPassCutoff,'fs',cfg.fs,'csc',csc.label);
+parameters = struct('weightby',cfg.weightby,'win1',cfg.win1,'win2',cfg.win2','fs',cfg.fs,'csc',csc.label);
 
-SWRfreqs = struct('freqs1',freqs1,'freqs2',freqs2,'parameters',parameters);
-SWRfreqs.label = csc.label;
+ncfs = struct('freqs1',freqs1,'freqs2',freqs2);
+
+ncfs.parameters = parameters;
+ncfs.label = csc.label;
 
 % keep a record
 cfg = rmfield(cfg,'fig'); % because who cares what the figure settings were?
-SWRfreqs.cfg.history.mfun = mfilename;
-SWRfreqs.cfg.history.cfg = {cfg};
+ncfs.cfg.history.mfun = mfilename;
+ncfs.cfg.history.cfg = {cfg};
 
 end
 
