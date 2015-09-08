@@ -20,7 +20,7 @@ nRcells = length(TC_right.template_idx);
 
 match = '';
 if nLcells == nRcells
-    fprintf('Cell numbers equal (%d), TCs returned as is.\n',nLtrials);
+    fprintf('Cell numbers equal (%d), TCs returned as is.\n',nLcells);
     TC_leftM = TC_left;
     TC_rightM = TC_right;
     return;

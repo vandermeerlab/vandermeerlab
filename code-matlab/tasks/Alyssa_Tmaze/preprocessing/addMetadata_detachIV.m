@@ -26,9 +26,9 @@ for iFD = 1:length(fd)
     detachIV = iv(tstart,tend);
 
     csc2 = restrict(csc,detachIV);
-    figure; hold on
-    plot(csc.tvec,csc.data);
-    plot(csc2.tvec,csc2.data,'r');
+   % figure; hold on
+   % plot(csc.tvec,csc.data);
+   % plot(csc2.tvec,csc2.data,'r');
     
     % Save fields in metadata
        % first check if metadata exists yet

@@ -5,11 +5,11 @@ clear
 % First get a set of SWRfreqs from a past session to help find good SWRs more
 % quickly:
 originalFolder = pwd;
-% cd('D:\data\R050\R050-2014-04-02')
+ cd('D:\data\R050\R050-2014-04-02')
 
-% LoadMetadata
+ LoadMetadata
 
-% SWRfreqs_temp = metadata.SWRfreqs;
+SWRfreqs_temp = metadata.SWRfreqs;
 
 clear metadata
 
@@ -34,7 +34,7 @@ evt = precand(cfg_can,csc.tvec,SWR,MUA,S);
 %% manually identify SWRs 
 
 cfg_duck.num = 50;
-%cfg_duck.evt = evt;
+cfg_duck.evt = evt;
 cfg_duck.lfpHeight = 30;
 
 SWRtimes = ducktrap(cfg_duck,S,csc);
@@ -45,7 +45,7 @@ SWRtimes = ducktrap(cfg_duck,S,csc);
 %% get SWR Fourier coefficients
 cfg.showfig = 1;
 cfg.weightby = 'amplitude';
-SWRfreqs = SWRfreak(cfg,metadata.SWRtimes,csc);
+SWRfreqs = SWRfreak(cfg,SWRtimes,csc);
 
 %% Save fields in metadata
 

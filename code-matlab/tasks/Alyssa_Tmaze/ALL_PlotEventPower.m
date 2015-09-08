@@ -21,6 +21,7 @@ cfg = [];
 cfg.rats = {'R042','R044','R050'};
 cfg.whichEvents = 'all'; %'prerecord', 'postrecord','task'
 cfg.foi = 1:250; % the frequencies of interest (Hz)
+cfg.toi = -0.2:0.001:0.2; % times of interest % ex: 2s before:step_size:+2s after
 cfg.writeFiles = 1;
 cfg.output_fd = 'files'; % file directory for saving image files
 cfg.prefix = ''; % prefix for image files
@@ -121,11 +122,11 @@ if proceed
                 disp('Excluding HS detach times')
                 load(FindFile('*HS_detach_times.mat'))
                 temp_iv = iv(t_start/10^6,t_end/10^6);
-                csc = restrict(csc,temp_iv);
+                cscR = restrict(csc,temp_iv);%%%%%%%%%%%%%%%%%%
             end
             % 2. restrict based on metadata.detachIV
             disp('Restricting CSC')
-            csc = restrict(csc,metadata.detachIV);
+            cscR = restrict(csc,metadata.detachIV);
         end
         
         % since there are gaps from starting/stopping the recording, need to
@@ -165,8 +166,11 @@ if proceed
         cfg_temp = [];
         cfg_temp.num = length(evt.tstart);
         cfg_temp.twin = twin;
-        trl_running = ft_faketrlFromIV(cfg_temp,metadata.taskvars.trial_iv,csc.tvec,data.hdr);
-        
+        if strcmp(sessionID(1:4),'R044')
+            trl_running = ft_faketrlFromIV(cfg_temp,metadata.taskvars.trial_iv,cscR.tvec,data.hdr);
+        else
+            trl_running = ft_faketrlFromIV(cfg_temp,metadata.taskvars.trial_iv,csc.tvec,data.hdr);
+        end
         cfg_temp = [];
         cfg_temp.trl = trl_running;
         data_trl_running = ft_redefinetrial(cfg_temp,data);
@@ -184,7 +188,7 @@ if proceed
         %cfg.t_ftimwin    = ones(size(cfg.foi)).*0.5; % window size: fixed at 0.5s
         cfg_tfr.t_ftimwin    = 5./cfg_tfr.foi;
         %cfg.tapsmofrq = cfg.foi*0.4;
-        cfg_tfr.toi          = -0.5:0.005:0.5; % times of interest % ex: 2s before:step_size:+2s after
+        cfg_tfr.toi          = cfg.toi;
         
         % if NaNs appear in TF: if your data is defined e.g. between -1 and +1 seconds, and using
         % a cfg.t_ftimwin of 0.5 seconds, freqanalysis_mtmconvol will give non-NaN output only

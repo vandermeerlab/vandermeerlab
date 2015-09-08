@@ -26,6 +26,9 @@ function out = MultiRaster(cfg_in,S)
 %           Converts axis scaling. TIGHT restricts the plot to the data range. ALL sets
 %           the x-axis to cover the whole experiment.
 %
+%       cfg.LineWidth - default 1
+%           Line thickness for each spike.
+%
 %       cfg.spkColor - default 'k' (black)
 %           Color specifier for spikes in a single trial. Can be 1x3 vector of RGB values 
 %           [1 0 0], or a string specifying the short name of a color ('r'), or a string 
@@ -45,6 +48,9 @@ function out = MultiRaster(cfg_in,S)
 %           The height of the lfp from maximum to minium in y-axis units. Vertically 
 %           stretches the lfp to improve visibility of oscillations. lfp + iv mode only. 
 %
+%       cfg.lfpWidth - default 1
+%           Line thickness for LFP. Implemented in some modes but not others.
+%
 %       cfg.lfpMax - default 15
 %           Values greater than lfpMax times above mean(abs(lfp.data)) will be plotted 
 %           as NaNs. Improves visibilty by cutting off high-amplitude [noise] blips 
@@ -62,9 +68,11 @@ function out = MultiRaster(cfg_in,S)
 cfg_def.SpikeHeight = 0.4;
 cfg_def.axisflag = 'tight';
 cfg_def.spkColor = 'k';
+cfg_def.LineWidth = 1;
 cfg_def.ivColor = 'r';
 cfg_def.lfpColor = 'k'; 
 cfg_def.lfpHeight = 15;
+cfg_def.lfpWidth = 1;
 cfg_def.lfpMax = 15;
 cfg_def.axislabel = 'on';
 cfg_def.windowSize = 1;
@@ -180,11 +188,26 @@ switch plotMode
         error('ts + iv event data NOT WORKING YET')
         
     case 5 % lfp data only
-        numLFP = length(cfg.lfp);        
-        cmap = linspecer(numLFP);
-
-        for iLFP = 1:numLFP
-            lfp = cfg.lfp(iLFP);
+        numLFP = length(cfg.lfp);  
+        
+        if numLFP > 1
+            cmap = linspecer(numLFP);
+            
+            for iLFP = 1:numLFP
+                lfp = cfg.lfp(iLFP);
+                
+                abslfp = abs(lfp.data);
+                nans_here = abslfp > cfg.lfpMax*mean(abslfp);
+                lfp.data(nans_here) = NaN;
+                
+                lower_val = -iLFP*cfg.lfpHeight;
+                upper_val = lower_val+cfg.lfpHeight;
+                
+                lfp.data = rescale(lfp.data,lower_val,upper_val);
+                plot(lfp.tvec,lfp.data,'Color',cmap(iLFP,:),'LineWidth',cfg.lfpWidth)
+            end
+        else
+            lfp = cfg.lfp;
             
             abslfp = abs(lfp.data);
             nans_here = abslfp > cfg.lfpMax*mean(abslfp);
@@ -192,9 +215,9 @@ switch plotMode
             
             lower_val = -iLFP*cfg.lfpHeight;
             upper_val = lower_val+cfg.lfpHeight;
-
+            
             lfp.data = rescale(lfp.data,lower_val,upper_val);
-            plot(lfp.tvec,lfp.data,'Color',cmap(iLFP,:))
+            plot(lfp.tvec,lfp.data,'Color',cfg.lfpColor,'LineWidth',cfg.lfpWidth)
         end
         ylims(1) = lower_val;
 
@@ -204,7 +227,7 @@ switch plotMode
         cfg.lfp.data(nans_here) = NaN;
         
         cfg.lfp.data = rescale(cfg.lfp.data,-cfg.lfpHeight,0);
-        plot(cfg.lfp.tvec,cfg.lfp.data,'Color',cfg.lfpColor);
+        plot(cfg.lfp.tvec,cfg.lfp.data,'Color',cfg.lfpColor,'LineWidth',cfg.lfpWidth);
         ylims(1) = -cfg.lfpHeight;
         PlotTSEvt([],cfg.evt)
 

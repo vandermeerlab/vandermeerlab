@@ -3,6 +3,9 @@ function tsd_out = tsd(varargin)
 %
 % constructor for tsd (timestamped data) struct
 %
+% tsd_out = tsd(tvec,data);
+% tsd_out = tsd(tvec,data,'label');
+%
 % MvdM 2014-06-17
 
 tsd_out.tvec = [];

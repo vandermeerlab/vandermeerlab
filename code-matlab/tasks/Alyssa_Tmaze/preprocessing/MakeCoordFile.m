@@ -12,6 +12,8 @@
 
 %% Set your current directory to the session you want to work with
 
+clear
+
 % load position data with units in pixels:
 
 cfg = [];
@@ -50,6 +52,18 @@ coordR = MakeCoord(getd(pos,'x'),getd(pos,'y'),'titl','Draw right trajectory','Y
 %coordL = MakeCoord(getd(pos,'x'),getd(pos,'y'),'titl','Draw left trajectory','YDir','reverse','rot',270); % CoordL is in units of pixels
 %coordR = MakeCoord(getd(pos,'x'),getd(pos,'y'),'titl','Draw right trajectory','YDir','reverse','rot',270); % CoordR is in units of pixels
 
+%% click on choice point
+
+% plot coordL and coordR so I can see where they sit
+
+figure; plot(getd(pos,'x'),getd(pos,'y'),'.','Color',[0.7 0.7 0.7],'MarkerSize',4); set(gca,'YDir','reverse'); hold on;
+plot(coordL(1,:),coordL(2,:),'ob'); plot(coordR(1,:),coordR(2,:),'og'); title('Click choice point; press enter');
+maximize
+
+[x,y] = ginput; 
+
+plot(x,y,'or','MarkerSize',10,'LineWidth',4); pause(1); close
+
 %% convert units to cm 
 % we want to use the exact same trajectories, but have them exist with
 % different units
@@ -87,34 +101,40 @@ coordR = MakeCoord(getd(pos,'x'),getd(pos,'y'),'titl','Draw right trajectory','Y
 % |         |          | .
 % |_ _ _ _ _ _ _ _ _ _ |
 
+LoadExpKeys % to get real track dims
 
-xdiff_cm = 185; % T-maze width for R050; 167 for R042
-ydiff_cm = 167; % T-maze height for R050; 185 for R042
+if ~isfield(ExpKeys,'convFact')
+    convFact = PosCon(pos,ExpKeys.realTrackDims,'YDir','reverse');
+else 
+    convFact = ExpKeys.convFact;
+end
+  
+%%%%%%% ****** ADD CONVFACT TO EXPKEYS FOR ALL SESSIONS  ******  %%%%%%%
 
 
-% CONVERSION modified from youkitan code
-
-% note that the conversion isn't perfect, since the rat's position data is
-% wider than the track when he sticks his head out (but it's probably
-% close enough!)
-xdiff_pixel = max(pos.data(1,:)) - min(pos.data(1,:)); % T-maze width in terms of pixels 
-ydiff_pixel = max(pos.data(2,:)) - min(pos.data(2,:)); % T-maze height in terms of pixels
-XConvFactor = xdiff_pixel / xdiff_cm; % conversion factor for x data
-YConvFactor = ydiff_pixel / ydiff_cm; % conversion factor for y data
-    
 coordL_cm = coordL; % copy coordL under a new variable name, and apply some changes:
-coordL_cm(1,:) = coordL_cm(1,:)./XConvFactor; % apply x conversion
-coordL_cm(2,:) = coordL_cm(2,:)./YConvFactor; % apply y conversion
+coordL_cm(1,:) = coordL_cm(1,:)./convFact(1); % apply x conversion
+coordL_cm(2,:) = coordL_cm(2,:)./convFact(2); % apply y conversion
 
 coordR_cm = coordR; % as above, for R instead
-coordR_cm(1,:) = coordR_cm(1,:)./XConvFactor; % apply x conversion
-coordR_cm(2,:) = coordR_cm(2,:)./YConvFactor; % apply y conversion
+coordR_cm(1,:) = coordR_cm(1,:)./convFact(1); % apply x conversion
+coordR_cm(2,:) = coordR_cm(2,:)./convFact(2); % apply y conversion
+
+
+% convert choice point to cm
+chp = [x; y];
+chp_cm = [x/convFact(1); y/convFact(2)];
 
 % NOTE when using coord_cm, you must also use LoadPos in cm, or your units
-% are not the same! so cfg.realTrackDims = [185 167] for R050; [167 185] for R042
+% are not the same!
 
 % put it all in a struct for tighter packing in the base workspace (when loading variables later)
-coord = struct('coordL',coordL,'coordL_cm',coordL_cm,'coordR',coordR,'coordR_cm',coordR_cm);
+coord = struct('coordL',coordL,'coordL_cm',coordL_cm,'coordR',coordR,'coordR_cm',coordR_cm,'chp',chp,'chp_cm',chp_cm);
+
+%% plot cm coord and cp
+
+figure;set(gca,'YDir','reverse'); hold on; title('Your coords in centimeters')
+plot(coordL_cm(1,:),coordL_cm(2,:),'ob'); plot(coordR_cm(1,:),coordR_cm(2,:),'og'); plot(chp_cm(1),chp_cm(2),'or','MarkerSize',10,'LineWidth',4)
 
 %% Save coord field in metadata
 
@@ -123,12 +143,11 @@ coord = struct('coordL',coordL,'coordL_cm',coordL_cm,'coordR',coordR,'coordR_cm'
 % first check if metadata exists yet
 [~,name,~] = fileparts(pwd); % pwd is your current folder, we just want its namepart
 
-fn = FindFiles([name,'-metadata.mat']);
+loaded = LoadMetadata2;
 
-if isempty(fn) % then it doesn't exist yet, so make a metadata struct
+if ~loaded % then it doesn't exist yet, so make a metadata struct
     metadata.coord = coord;
 else % it does, so add a new field
-    load(fn{1})
     metadata.coord = coord;
 end
 

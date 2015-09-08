@@ -26,9 +26,9 @@ cfg_def.verbose = 0; % i don't want to see what the internal functions have to s
 cfg_def.load_questionable_cells = 1;
 cfg_def.weightby = 'amplitude';
 cfg_def.DetectorThreshold = 4; % the threshold you want precand to use
-if strcmp(sessionID,'R042-2013-08-17') || strcmp(sessionID,'R044-2013-12-23')
-    cfg_def.DetectorThreshold = 2.5;
-end
+%if strcmp(sessionID,'R042-2013-08-17') || strcmp(sessionID,'R044-2013-12-23')
+    %cfg_def.DetectorThreshold = 2.5;
+%end
 cfg_def.mindur = 0.02; % in seconds, the minumum duration for detected events to be kept
 cfg_def.SpeedLimit = 10; % pixels per second
 cfg_def.ThetaThreshold = 2; % power, std above mean

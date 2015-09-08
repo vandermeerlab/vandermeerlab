@@ -76,10 +76,10 @@ end
 cellactivitycap = cfg.spkcap./kernelstd./sqrt(2*pi);
 
 muascore = zeros(size(tvec));
-muascoreneg = zeros(size(tvec));
+%muascoreneg = zeros(size(tvec));
 %muascoretot = zeros(size(tvec));
 kernel = gausskernel(5*kernelstd,kernelstd);
-kernel2 = -5*gausskernel(3000,300);
+%kernel2 = -5*gausskernel(3000,300);
 for iS = 1:length(S.t)
     spk_tvec = zeros(size(tvec));
     spiketrain = S.t{iS};
@@ -88,10 +88,10 @@ for iS = 1:length(S.t)
         spk_tvec(spk_here) = spk_tvec(spk_here)+1;
     end
     spk_conv = conv(spk_tvec,kernel,'same');
-    spk_conv2 = conv(spk_tvec,kernel2,'same');
+    %spk_conv2 = conv(spk_tvec,kernel2,'same');
     spk_conv = min(spk_conv,cellactivitycap);
     muascore = muascore + spk_conv;
-    muascoreneg = muascoreneg + 0.1*spk_conv2;
+    %muascoreneg = muascoreneg + 0.1*spk_conv2;
     
     %spk_tot = spk_conv + spk_conv2;
     %spk_tot = max(0,spk_tot);
@@ -106,6 +106,8 @@ themean = mean(muascore);
                 %measured in # of cells.
 weightednoisefloor = cellactivitycap.*cfg.noisefloor;
 detectionthreshold = 1; %How many cells needed for detection (above noise floor)
+% ^^^ this is stupid, should not be hardcoded...not to mention there's a
+% variable name assigned to the number 1.
 
 muacapped = min(weightednoisefloor,muascore);
 kernel3 = -gausskernel(3000,250);
