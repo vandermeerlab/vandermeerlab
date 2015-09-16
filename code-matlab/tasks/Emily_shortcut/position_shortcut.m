@@ -1,79 +1,150 @@
+function [ pos_tsd ] = emi_position(unique_folder,expkeys)
 % Requires:
-% - event file (here '*Events.nev')
-% - xy_targets_chunks(unique_folder,chunksize) (.m)
-% - light_on(position_x,position_y,Timestamps,event_file,event_id) (.m)
-% - leds_position(position_data,led1_position,led2_position,threshold) (.m)
-% - make_tsd(pos_x,pos_y,Timestamps) (.m) *Not tested*
+% - emi_lights.m *Returns event_times
+%
+% * Example usage:
+% rat_id = 'R068_EI';
+% expday = emi_expday(rat_id);
+% unique_folder = expday.one;
+% unique_id = unique_folder(1:15);
+% cd(fullfile('C:\Users\Emily\Desktop',rat_id,unique_folder));
+% ExpKeys = loadExpKeys_shortcut(unique_folder);
+% pos_tsd = position_shortcut(unique_folder,ExpKeys);
+% * Returns and saves pos_tsd for shortcut experiment
+unique_id = unique_folder(1:15);
 
-% *- position_constraint(position_data,window_size,outlier) (.m) *doesn't seem to help*     
+num_target = 2;
+led1_xy = expkeys.led1_xy;
+led2_xy = expkeys.led2_xy;
+led_radius = expkeys.led_radius;
+head_dist = 50;
+light_interval = 0.1; % from nlx initializemaze
+cushion = 0.01; % for evt times & evt intervals
 
-clear all;
+if exist(['pos-xytime-',unique_id,'.mat'],'file');
+    fprintf('pos-xytime-*.mat file found, loading. \n');
+    load(['pos-xytime-',unique_id,'.mat']);
+else
+    [pos_x, pos_y, Timestamps] = xy_targets_shortcut(unique_folder,num_target);
+end
 
-fd = 'D:\data\R066\R066-2014-11-27';
-[~,fc,~] = fileparts(fd); 
-% position_file = sprintf('position-xy-%s',unique_id);
-% load(position_file);
+[led1on_times, led2on_times, ledoff_times] = light_on(unique_folder, expkeys);
 
-[pos_x,pos_y,Timestamps] = xy_targets_chunks(fd,5000,400);
+led1off_times = ledoff_times(nearest_idx3(led1on_times, ledoff_times));
+led1iv = iv(led1on_times, led1off_times);
+led1iv_corrected = false(1, length(led1iv.tstart));
+led1iv_corrected((led1iv.tend - led1iv.tstart) >=  light_interval-cushion) = true;
+led1iv = iv(led1on_times(led1iv_corrected)-cushion, led1off_times(led1iv_corrected)+cushion);
 
-% Finding indices when lights are on (based on Event file)
-light1_idx = light_on(pos_x,pos_y,Timestamps,'*Events.nev',10);
-light2_idx = light_on(pos_x,pos_y,Timestamps,'*Events.nev',11);
+led2off_times = ledoff_times(nearest_idx3(led2on_times,ledoff_times));
+led2iv = iv(led2on_times, led2off_times);
+led2iv_corrected = find((led2iv.tend - led2iv.tstart) >=  light_interval-cushion);
+led2iv = iv(led2on_times(led2iv_corrected)-cushion, led2off_times(led2iv_corrected)+cushion);
 
-% Converting lights from indices to a logical array
-lights = false(size(pos_x));
-lights(light1_idx) = true;
-lights(light2_idx) = true;
+% Get idxs corresponding to "LED on"
+xtsd = tsd(Timestamps, pos_x);
 
-% Finding LED constant position (*values may need to be altered based on exp*)
-leds = leds_position(pos_x,pos_y,515,460,615,60,30);
+led1_keep = false(size(xtsd.tvec));
+for u1 = 1:length(led1iv.tstart)
+    led1_keep = led1_keep | (xtsd.tvec >= led1iv.tstart(u1) & xtsd.tvec <= led1iv.tend(u1));
+end
+lights1 = led1_keep;
 
-% Finding outliers from position data
-% outlier_x_idx = position_constraint(pos_x,4,5);
-% outlier_y_idx = position_constraint(pos_y,4,5);
+led2_keep = false(size(xtsd.tvec));
+for u2 = 1:length(led2iv.tstart)
+    led2_keep = led2_keep | (xtsd.tvec >= led2iv.tstart(u2) & xtsd.tvec <= led2iv.tend(u2));
+end
+lights2 = led2_keep;
 
-% Converting outliers from indices to a logical array
-% outlier_x = false(size(pos_x));
-% outlier_x(outlier_x_idx) = true;
-% outlier_y = false(size(pos_y));
-% outlier_y(outlier_y_idx) = true;
+% Get euclidian distance of each position sample to LED reward center
+DistFun_posled = @(xd,yd,ctr) sqrt((xd-ctr(1)).^2 + (yd-ctr(2)).^2);
 
-% Determining indices where the lights are on and in the LEDs locations.
-% Removing annoying light points from analysis
-annoying_x = leds & lights;
-annoying_y = leds & lights;
-annoying = annoying_x | annoying_y;
+led1_dist = nan(num_target, length(pos_x));
+led2_dist = nan(num_target, length(pos_x));
+for i = 1:num_target
+    led1_dist(i,:) = DistFun_posled(pos_x(i,:), pos_y(i,:), led1_xy);
+    led2_dist(i,:) = DistFun_posled(pos_x(i,:), pos_y(i,:), led2_xy);
+end
 
-pos_x(annoying) = nan;
-pos_y(annoying) = nan;
+% Logical array for samples within LED position
+leds1 = false(size(pos_x));
+leds1(led1_dist <= led_radius) = true;
+leds2 = false(size(pos_x));
+leds2(led2_dist <= led_radius) = true;
 
-total_annoying = sum(annoying);
-percent_annoying = ceil((sum(isnan(pos_x)) / length(pos_x)) * 100);
+% Set position data to nan is LED is on & position is within led location
+for j = 1:num_target
+    nan_idx = (lights1 & leds1(j,:)) | (lights2 & leds2(j,:));
+    pos_x(j,nan_idx) = nan;
+    pos_y(j,nan_idx) = nan;
+end
 
+% Set position date to nan when jump & position is within led location
+finish_removing = false;
 
-% Plotting to check
-fig = figure('Position',[100, 100, 950, 950]);
+while finish_removing == false
+    removed = 0;
+    for k = 1:num_target
+        continuity = cat(2,0,sqrt(diffskipnan(pos_x(k,:)).^2 + ...
+            diffskipnan(pos_y(k,:)).^2));
+        continuity_idx = (continuity >= head_dist) & (leds1(k,:)|leds2(k,:));
+        pos_x(k,continuity_idx) = nan;
+        pos_y(k,continuity_idx) = nan;
+        
+        removed = removed + sum(continuity_idx);
+    end
+    
+    if (removed == 0)
+        finish_removing = true;
+    end
+end
 
-subaxis(3,6,[2:5], 'Spacing', 0.04, 'Padding', 0.01, 'Margin', 0.04);
-axis tight;
-plot(pos_x,pos_y,'b.','MarkerSize',4);
-pos_title = sprintf('Maze position of %s', fc);
-set(gca,'xtick',[],'ytick',[]);
-title(pos_title,'FontSize',14);
+% Average between targets when close; otherwise take 1st target
+avg_x = nan(1,length(pos_x));
+avg_y = nan(1,length(pos_y));
 
-subaxis(3,1,2, 'Spacing', 0.04, 'Padding', 0.01, 'Margin', 0.04);
-axis tight;
-plot(Timestamps,pos_x,'k.','MarkerSize',4);
-xpos_time_title = sprintf('X position of %s over time', fc);
-title(xpos_time_title,'FontSize',14);
+if num_target == 1 % Not tested...
+    avg_x = pos_x;
+    avg_y = pos_y;
+elseif num_target == 2
+    DistFun_targ = @(targ1,targ2) sqrt((targ1(1,:)-targ2(1,:)).^2 + ...
+        (targ1(2,:)-targ2(2,:)).^2);
+    distance = DistFun_targ([pos_x(1,:); pos_y(1,:)], [pos_x(2,:); pos_y(2,:)]);
+    
+    far_idx = distance >= head_dist;
+    avg_x(far_idx) = pos_x(1,far_idx);
+    avg_y(far_idx) = pos_y(1,far_idx);
 
-subaxis(3,1,3, 'Spacing', 0.04, 'Padding', 0.01, 'Margin', 0.04);
-axis tight;
-plot(Timestamps,pos_y,'k.','MarkerSize',4);
-ypos_time_title = sprintf('Y position of %s over time', fc);
-title(ypos_time_title,'FontSize',14);
+    other_idx = ~far_idx;
+    avg_x(other_idx) = nanmean(pos_x(:,other_idx));
+    avg_y(other_idx) = nanmean(pos_y(:,other_idx));
+else
+    error('Needs 1 or 2 targets. Only one target is not tested.');
+end
 
-% Make tsd
-[pos_tsd,tvec] = make_tsd(pos_x,pos_y,Timestamps);
+% Filtering with median filter to remove stragglers (and put back nans)
+only_nan = isnan(avg_x);
+filter_radius = 6;
+avg_x = medfilt1m(avg_x, filter_radius);
+avg_y = medfilt1m(avg_y, filter_radius);
+avg_x(only_nan) = nan; 
+avg_y(only_nan) = nan;
 
+pos_tsd = pos_tsd_shortcut(avg_x, avg_y, Timestamps);
 
+if ~CheckTSD(pos_tsd)
+    error('tsd check failed.');
+end
+
+save([unique_folder(1:15),'-vt.mat'],'pos_tsd');
+end
+
+function [ pos_tsd ] = pos_tsd_shortcut( pos_x,pos_y,Timestamps )
+% Uses datatype tsd.m function
+pos_tsd = tsd;
+pos_tsd.tvec = Timestamps;
+pos_tsd.data(1,:) = pos_x;
+pos_tsd.label{1} = 'x';
+pos_tsd.data(2,:) = pos_y;
+pos_tsd.label{2} = 'y';
+end
