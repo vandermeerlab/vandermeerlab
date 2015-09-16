@@ -25,6 +25,7 @@ disp(' ');
 cfg_def.verbose = 0; % i don't want to see what the internal functions have to say 
 cfg_def.load_questionable_cells = 1;
 cfg_def.weightby = 'amplitude';
+cfg_def.stepSize = 1;
 cfg_def.DetectorThreshold = 4; % the threshold you want precand to use
 %if strcmp(sessionID,'R042-2013-08-17') || strcmp(sessionID,'R044-2013-12-23')
     %cfg_def.DetectorThreshold = 2.5;
@@ -60,7 +61,7 @@ lfp_theta = LoadCSC(cfg_temp);
 disp(' ')
 disp('Working on SWR detection......')
 
-cfg_temp = []; cfg_temp.verbose = cfg.verbose; cfg_temp.weightby = cfg.weightby;
+cfg_temp = []; cfg_temp.verbose = cfg.verbose; cfg_temp.weightby = cfg.weightby; cfg_temp.stepSize = cfg.stepSize;
 [SWR,~,~] = amSWR(cfg_temp,metadata.SWRfreqs,csc);
 
 %% MUA score

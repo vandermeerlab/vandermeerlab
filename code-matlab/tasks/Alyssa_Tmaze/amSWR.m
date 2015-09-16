@@ -46,17 +46,21 @@ parameters = ncfs.parameters; %because fast hack
 cfg_def.verbose = 1;
 cfg_def.weightby = ncfs.parameters.weightby;
 cfg_def.stepSize = 4; % indirectly controls speed
-switch cfg_in.stepSize % fyi
-    case 'diffusion'
-        cfg_in.stepSize = 1;
-    case 'yeehaw'
-        cfg_in.stepSize = 10;
-    case 'olympian'
-        cfg_in.stepSize = 20;
-    case 'dirty'
-        cfg_in.stepSize = 80;
-    case 'badscience'
-        cfg_in.stepSize = 120;
+if isfield(cfg_in,'stepSize') && ~isnumeric(cfg_in.stepSize)
+    switch cfg_in.stepSize % fyi
+        case 'diffusion'
+            cfg_in.stepSize = 1;
+        case 'yeehaw'
+            cfg_in.stepSize = 10;
+        case 'olympian'
+            cfg_in.stepSize = 20;
+        case 'dirty'
+            cfg_in.stepSize = 80;
+        case 'badscience'
+            cfg_in.stepSize = 120;
+        otherwise
+            error('Better check that stepSize spelling.')
+    end
 end
 
 cfg = ProcessConfig2(cfg_def,cfg_in);

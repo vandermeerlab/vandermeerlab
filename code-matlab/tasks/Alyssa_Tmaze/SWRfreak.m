@@ -186,7 +186,7 @@ else
 end
 
 %% return the output
-parameters = struct('weightby',cfg.weightby,'win1',cfg.win1,'win2',cfg.win2','fs',cfg.fs,'csc',csc.label);
+parameters = struct('weightby',cfg.weightby,'win1',cfg.win1,'win2',cfg.win2','fs',cfg.fs,'hiPassCutoff',cfg.hiPassCutoff,'csc',csc.label);
 
 ncfs = struct('freqs1',freqs1,'freqs2',freqs2);
 
