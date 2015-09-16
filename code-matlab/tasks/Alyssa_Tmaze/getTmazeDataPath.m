@@ -17,7 +17,7 @@ function fd = getTmazeDataPath(cfg_in)
 %
 % MvdM 2015
 
-cfg_def.rats = {'R042','R044','R050'};
+cfg_def.rats = {'R042','R044','R050','R064'};
 cfg_def.requireMetadata = 1;
 cfg_def.requireCandidates = 0;
 
@@ -43,6 +43,8 @@ switch machinename
         base_fp = 'D:\data\promoted\';
     case 'DIONYSUS'
         base_fp = 'D:\data\promoted\';
+    case 'CALLISTO'
+        base_fp = 'E:\data\promoted\';
 end
 
 fd = {};
