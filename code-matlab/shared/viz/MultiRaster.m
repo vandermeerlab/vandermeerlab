@@ -58,11 +58,32 @@ function out = MultiRaster(cfg_in,S)
 %
 %       cfg.axislabel - default 'on'
 %           Automatically creates labels for the axes. Can be turned off.
+%      
+%       cfg.openNewFig - default 1
+%           If you want to use MultiRaster with subplot, set cfg.openNewFig
+%           to 0. This automatically sets cfg.openInAxes to 0. Open
+%           MultiRaster and read the Help section for instructions.
+%           (aacarey edit Sept 2015)
 %
 %
 % youkitan 2014-11-06 
 % edit 2015-01-20
 % ACarey edit, 2015-01-20 (lfpHeight and lfpMax)
+
+%% HELP
+
+% HOW DO I USE MULTIRASTER WITH SUBPLOT? (aacarey)
+
+%     Example:
+%     figure('KeyPressFcn',@navigate) % if you want to preserve the x-axis navigation
+
+%     ax1 = subplot(211);
+%     MultiRaster(cfg,S1)
+
+%     ax2 = subplot(212);
+%     MultiRaster(cfg,S2)
+
+%     linkaxes([ax1 ax2],'x'); % for navigation to work on both axes simultaneously
 
 %% Set cfg parameters and check inputs
 cfg_def.SpikeHeight = 0.4;
@@ -77,7 +98,12 @@ cfg_def.lfpMax = 15;
 cfg_def.axislabel = 'on';
 cfg_def.windowSize = 1;
 cfg_def.openInAxes = 0; % replace with axes handle to open in axes instead of figure
+cfg_def.openNewFig = 1;
 cfg = ProcessConfig2(cfg_def,cfg_in);
+
+if ~cfg.openNewFig % allows MR to be used with subplot (aacarey edit)
+    cfg.openInAxes = 0; 
+end
 
 %% Setup navigate
 
@@ -116,8 +142,10 @@ else
 end
     
 % open in appropriate fig or axes
-if ~cfg.openInAxes
-    figure('KeyPressFcn',@navigate)
+if ~cfg.openNewFig % (aacarey edit to allow subplot use. this section was preventing it from happening)
+    hold on; % required
+elseif ~cfg.openInAxes 
+    %figure('KeyPressFcn',@navigate)
     hold on;
 else
     axes(cfg.openInAxes);
@@ -278,8 +306,7 @@ switch cfg.axisflag
         ylim([ylims(1)-1 ylims(2)+1])
 end
 
-hold off;
-
+if cfg.openNewFig; hold off; end
 
 
 %% output for debugging
