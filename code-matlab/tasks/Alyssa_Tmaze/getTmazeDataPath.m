@@ -8,7 +8,7 @@ function fd = getTmazeDataPath(cfg_in)
 %
 % CONFIGS
 %
-% cfg_def.rats = {'R042','R044','R050'};
+% cfg_def.rats = {'R042','R044','R050','R064'};
 % cfg_def.requireMetadata = 1;
 %
 % OUTPUT
@@ -35,13 +35,11 @@ switch machinename
     
     case 'ISIDRO'
         base_fp = 'C:\data\';
-    case 'EQUINOX'
+    case {'EQUINOX','BERGKAMP'}
         base_fp = 'D:\data\';
     case 'MVDMLAB-ATHENA'
         base_fp = 'D:\vandermeerlab\';
-    case 'MVDMLAB-EUROPA'
-        base_fp = 'D:\data\promoted\';
-    case 'DIONYSUS'
+    case {'MVDMLAB-EUROPA','DIONYSUS'}
         base_fp = 'D:\data\promoted\';
     case 'CALLISTO'
         base_fp = 'E:\data\promoted\';
