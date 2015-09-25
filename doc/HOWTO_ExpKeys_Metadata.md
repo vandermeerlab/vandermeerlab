@@ -55,6 +55,16 @@ information that goes in metadata.
 To load a `*keys.m` file, use
 [LoadExpKeys.m](https://github.com/mvdm/vandermeerlab/blob/master/code-matlab/shared/io/LoadExpKeys.m).
 
+Notes:
+
+* `.notes`: [string] Located at the top of the keys file when present. 
+Any comments noting anything specific to this
+session that is not clear from the overall experiment description,
+such as 'Multiple headstage detachments, excluded from data --
+MvdM'. The contents of this field are displayed by default when
+ExpKeys are loaded (this is one reason why it is important and not
+simply convenient to use `LoadExpKeys`). 
+
 #### Required ExpKeys fields
 
 * `.species`: [string] 'Rat', 'Mouse', 'Chinchilla', etc.
@@ -91,15 +101,6 @@ If more than one task block
 * `.taskBlocks`: [1 x nBlocks cell array] labels of task blocks,
   e.g. `{'Standard','Reversal'}`; note the order of these labels
   corresponds to the order of the start and end times in `.task`.
-
-Notes:
-
-* `.notes`: [string] Any comments noting anything specific to this
-session that is not clear from the overall experiment description,
-such as 'Multiple headstage detachments, excluded from data --
-MvdM'. The contents of this field are displayed by default when
-ExpKeys are loaded (this is one reason why it is important and not
-simply convenient to use `LoadExpKeys`). 
 
 Other common fields:
 
