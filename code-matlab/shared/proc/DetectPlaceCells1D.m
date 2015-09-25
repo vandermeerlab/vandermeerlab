@@ -1,4 +1,4 @@
-function [idx,peak_idx,peak_loc] = DetectPlaceCells1D(cfg_in,tc)
+function tc_out = DetectPlaceCells1D(cfg_in,tc)
 % function [idx,peak_idx,peak_loc] = DetectPlaceCells1D(cfg,tc)
 %
 % inputs:
@@ -7,9 +7,14 @@ function [idx,peak_idx,peak_loc] = DetectPlaceCells1D(cfg_in,tc)
 %
 % outputs:
 %
-% idx: indices (into tc) of detected place cells
-% peak_idx: location of firing rate peak
-% peak_loc: cell array of detected peak idx's
+% tc_out.tc: original nCells x nBins tuning curves
+% tc_out.template_idx: indices (into tc) of detected place cells
+% tc_out.peak_idx: location of firing rate peak
+% tc_out.peak_loc: cell array of detected peak idx's
+% tc_out.field_loc = fpeak_val; single field locations (in cm?)
+% tc_out.peak_idx = peak_idx; multiple field indicies
+% tc_out.peak_loc = peak_loc; multiple field locations
+%
 %
 % cfg options:
 %
@@ -33,7 +38,7 @@ nCells = size(tc,2);
 
 ctr = 1; % counter for detected cells
 
-peak_idx = []; peak_loc = []; idx = [];
+peak_idx = []; peak_loc = []; template_idx = [];
 for iC = 1:nCells
 
     this_tc = tc(:,iC);
@@ -99,7 +104,7 @@ for iC = 1:nCells
     end
         
     if ~isempty(pks.loc) %  some fields remain, process
-        idx(ctr) = iC;
+        template_idx(ctr) = iC;
         [~,peak_idx(ctr)] = max(this_tc); % to determine where this cell appears in overall ordering of TC
         peak_loc{ctr} = pks.loc;
         
@@ -109,6 +114,28 @@ for iC = 1:nCells
 end
 
 [~,sort_idx] = sort(peak_idx,'ascend');
-idx = idx(sort_idx);
+template_idx = template_idx(sort_idx);
 peak_idx = peak_idx(sort_idx);
 peak_loc = peak_loc(sort_idx);
+
+% create field template
+fpeak_val = []; fpeak_idx = [];
+iPeak = 1;
+for iP = 1:length(peak_loc)
+    fpeak_val(iPeak:iPeak+length(peak_loc{iP})-1) = peak_loc{iP};
+    fpeak_idx(iPeak:iPeak+length(peak_loc{iP})-1) = template_idx(iP);
+    
+    iPeak = iPeak + length(peak_loc{iP});
+end
+[fpeak_val,sort_idx] = sort(fpeak_val,'ascend');
+fpeak_idx = fpeak_idx(sort_idx);
+
+%store all data in a single struct
+tc_out.tc = tc;
+tc_out.template_idx = template_idx;
+tc_out.field_template_idx = fpeak_idx;
+tc_out.field_loc = fpeak_val;
+tc_out.peak_idx = peak_idx;
+tc_out.peak_loc = peak_loc;
+
+
