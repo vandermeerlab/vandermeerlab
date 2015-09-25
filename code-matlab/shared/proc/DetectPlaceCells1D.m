@@ -19,6 +19,7 @@ function tc_out = DetectPlaceCells1D(cfg_in,tc)
 % cfg options:
 %
 %
+tc = tc' % FIX!!!!!
 
 cfg_def = [];
 cfg_def.debug = 0;
@@ -38,9 +39,6 @@ nCells = size(tc,2);
 
 ctr = 1; % counter for detected cells
 
-% !!!!!!!!!!
-tc = tc'; % DO A BETTER FIX!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-% !!!!!!!!!!
 
 peak_idx = []; peak_loc = []; template_idx = [];
 for iC = 1:nCells
