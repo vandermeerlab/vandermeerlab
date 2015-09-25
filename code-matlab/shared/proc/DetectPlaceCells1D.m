@@ -38,6 +38,10 @@ nCells = size(tc,2);
 
 ctr = 1; % counter for detected cells
 
+% !!!!!!!!!!
+tc = tc'; % DO A BETTER FIX!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+% !!!!!!!!!!
+
 peak_idx = []; peak_loc = []; template_idx = [];
 for iC = 1:nCells
 
