@@ -83,6 +83,8 @@ z_iv.novel = TSDtoIV(cfg, novel_lin);
 z.shortcut = restrict(shortcut_lin, z_iv.shortcut);
 z.u = restrict(u_lin, z_iv.u);
 z.novel = restrict(novel_lin, z_iv.novel);
+
+save([unique_folder(1:15),'-linearized-xy.mat'], 'z', 'z_iv');
 end
 
 function [ all_path ] = short_path(trajectory_pts, trajectory_labels, ...
