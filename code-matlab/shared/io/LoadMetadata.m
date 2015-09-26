@@ -6,18 +6,16 @@ function LoadMetadata
 % to work as expected. The variable metadata may contain any number of
 % additional fields.  
 %
-% A.Carey Feb 2015
+% aacarey Feb 2015
 %  --edit May 2015 
 
 %%
 
-%[~,name,~] = fileparts(pwd); 
-
 fn = FindFiles('*metadata.mat');
 if isempty(fn)
-    disp(['LoadMetadata: No files matching',' ''*metadata.mat'' ','were found in', [' ',pwd]])
+    disp(['LoadMetadata: No files matching ''*metadata.mat'' were found in ',pwd])
 elseif length(fn) > 1
-    disp(['LoadMetadata: More than one file matching',' ''*metadata.mat'' ','was found in', [' ',pwd]])
+    disp(['LoadMetadata: More than one file matching ''*metadata.mat'' was found in ',pwd])
     disp('metadata not loaded')
 else
     load(fn{1})
