@@ -11,9 +11,12 @@ function linpos_tsd = LinearizePos(cfg_in,pos_tsd)
 %
 % linpos_tsd: tsd with linearized position (z field) and distance (z_dist)
 %
-% cfg.Coord: Coord file geneated by makeCoord, if not defined tries to load
+% cfg_def.Coord = []; % Coord file geneated by makeCoord, if not defined tries to load
+% cfg_def.debugMode = 0; % if 1, also return z_dist (distance from
+%  linearized path)
 
 cfg_def.Coord = [];
+cfg_def.debugMode = 0;
 cfg = ProcessConfig2(cfg_def,cfg_in); % remember this will overwrite Coord if defined in cfg
 
 mfun = mfilename;
@@ -61,9 +64,10 @@ linpos_tsd.tvec = pos_tsd.tvec;
 linpos_tsd.data(1,:) = NN;
 linpos_tsd.label{1} = 'z';
 
-linpos_tsd.data(2,:) = d;
-linpos_tsd.label{2} = 'z_dist';
-
+if cfg.debugMode
+    linpos_tsd.data(2,:) = d;
+    linpos_tsd.label{2} = 'z_dist';
+end
 
 % housekeeping
 linpos_tsd.cfg.history.mfun = cat(1,linpos_tsd.cfg.history.mfun,mfun);

@@ -75,6 +75,8 @@ switch nDim
         for iC = 1:nCells
             spk_z = interp1(tuning_var.tvec,tuning_var.data(1,:),S.t{iC},'linear');
             
+            if isempty(spk_z), spk_z = zeros(0,1); end % ensures histc generates histogram with all zeros -- MvdM
+            
             [spk_hist,~] = histc(spk_z,cfg.binEdges{1},1);
             spk_hist = trim_histc(spk_hist);
             

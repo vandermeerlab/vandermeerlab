@@ -1,4 +1,4 @@
-function [idx,peak_idx,peak_loc] = DetectPlaceCells1D(cfg_in,tc)
+function tc_out = DetectPlaceCells1D(cfg_in,tc)
 % function [idx,peak_idx,peak_loc] = DetectPlaceCells1D(cfg,tc)
 %
 % inputs:
@@ -7,18 +7,24 @@ function [idx,peak_idx,peak_loc] = DetectPlaceCells1D(cfg_in,tc)
 %
 % outputs:
 %
-% idx: indices (into tc) of detected place cells
-% peak_idx: location of firing rate peak
-% peak_loc: cell array of detected peak idx's
+% tc_out.tc: original nCells x nBins tuning curves
+% tc_out.template_idx: indices (into tc) of detected place cells
+% tc_out.peak_idx: location of firing rate peak
+% tc_out.peak_loc: cell array of detected peak idx's
+% tc_out.field_loc = fpeak_val; single field locations (in cm?)
+% tc_out.peak_idx = peak_idx; multiple field indicies
+% tc_out.peak_loc = peak_loc; multiple field locations
+%
 %
 % cfg options:
 %
 %
+tc = tc' % FIX!!!!!
 
 cfg_def = [];
 cfg_def.debug = 0;
-cfg_def.p_thr = 7; % threshold for detecting place field, in Hz
-cfg_def.p_thr_sd = 1; % in SD
+cfg_def.thr = 7; % threshold for detecting place field, in Hz
+cfg_def.thr_sd = 1; % in SD
 cfg_def.mean_norm = 0.33; % max mean firing rate (peak is 1)
 cfg_def.minSize = 4;
 %cfg_def.maxSize = 20;
@@ -33,7 +39,8 @@ nCells = size(tc,2);
 
 ctr = 1; % counter for detected cells
 
-peak_idx = []; peak_loc = []; idx = [];
+
+peak_idx = []; peak_loc = []; template_idx = [];
 for iC = 1:nCells
 
     this_tc = tc(:,iC);
@@ -43,7 +50,7 @@ for iC = 1:nCells
     % firing rate
     this_frate = nanmean(this_tc);
 
-    if ~(max(this_tc) > cfg.p_thr & this_frate < cfg.max_meanfr) % too low or too high firing, reject
+    if ~(max(this_tc) > cfg.thr & this_frate < cfg.max_meanfr) % too low or too high firing, reject
         if cfg.debug, fprintf('Cell %d rejected: max TC %.1f, mean FR %.1f\n',iC,max(this_tc),this_frate); end
         continue;
     end
@@ -57,13 +64,14 @@ for iC = 1:nCells
         continue;
     end
     
-    %[pks.loc,pks.full] = find_fields(pf_z,cfg.p_thr_sd,'min_size',cfg.minSize);
-    [pks.loc,pks.full] = find_fields(this_tc,cfg.p_thr,'min_size',cfg.minSize);
-    
+    %[pks.loc,pks.full] = find_fields(pf_z,cfg.thr_sd,'min_size',cfg.minSize);
+%     [pks.loc,pks.full] = find_fields(this_tc,cfg.thr,'min_size',cfg.minSize);
+    [pks.loc,pks.full] = find_fields(cfg,this_tc);
+        
     if ~isempty(pks.loc) % some peaks were detected
         pks.val = this_tc(pks.loc); % get firing rate at peak
         
-        keep = pks.val > cfg.p_thr;
+        keep = pks.val > cfg.thr;
         pks.loc = pks.loc(keep); pks.val = pks.val(keep); pks.full = pks.full(keep);
         if cfg.debug & isempty(keep), fprintf('Cell %d, no peaks passed threshold.\n',iC); end
     else
@@ -98,7 +106,7 @@ for iC = 1:nCells
     end
         
     if ~isempty(pks.loc) %  some fields remain, process
-        idx(ctr) = iC;
+        template_idx(ctr) = iC;
         [~,peak_idx(ctr)] = max(this_tc); % to determine where this cell appears in overall ordering of TC
         peak_loc{ctr} = pks.loc;
         
@@ -108,91 +116,28 @@ for iC = 1:nCells
 end
 
 [~,sort_idx] = sort(peak_idx,'ascend');
-idx = idx(sort_idx);
+template_idx = template_idx(sort_idx);
 peak_idx = peak_idx(sort_idx);
 peak_loc = peak_loc(sort_idx);
-function [fields_out,fields_full] = find_fields(tc,thr,varargin)
 
-min_size = 3;
-extract_varargin;
-
-% initialize
-stack = find(tc >= thr);
-wrap_point = length(tc);
-fields_out = {}; fields_full = {}; fields = {};
-
-% find fields
-fieldCount = 0;
-while ~isempty(stack)
+% create field template
+fpeak_val = []; fpeak_idx = [];
+iPeak = 1;
+for iP = 1:length(peak_loc)
+    fpeak_val(iPeak:iPeak+length(peak_loc{iP})-1) = peak_loc{iP};
+    fpeak_idx(iPeak:iPeak+length(peak_loc{iP})-1) = template_idx(iP);
     
-    fieldCount = fieldCount + 1;
-    item = stack(1);
-    if length(stack) == 1
-        stack = [];
-    else
-        stack = stack(2:end);
-    end
-    [stack,fields{fieldCount}] = growField(item,stack,wrap_point);
-    
+    iPeak = iPeak + length(peak_loc{iP});
 end
+[fpeak_val,sort_idx] = sort(fpeak_val,'ascend');
+fpeak_idx = fpeak_idx(sort_idx);
 
-% process fields (output index of max firing rate for each field of sufficient size)
-if fieldCount
-    goodFieldCount = 1;
-    for iF = 1:length(fields)
-        if length(fields{iF}) >= min_size % size passed
-            [val,ind] = max(tc(fields{iF}));
-            fields_full{goodFieldCount} = fields{iF};
-            fields_out{goodFieldCount} = fields{iF}(ind);
-            goodFieldCount = goodFieldCount + 1;
-        end
-    end
-end
+%store all data in a single struct
+tc_out.tc = tc;
+tc_out.template_idx = template_idx;
+tc_out.field_template_idx = fpeak_idx;
+tc_out.field_loc = fpeak_val;
+tc_out.peak_idx = peak_idx;
+tc_out.peak_loc = peak_loc;
 
-fields_out = cell2mat(fields_out);
 
-function [overall_stack,field_out] = growField(item_in,overall_stack,wrap_point)
-
-step = 2;
-wraparound = 0;
-temp_stack = item_in; % start with input in the stack
-field_items = []; % track places covered
-
-while ~isempty(temp_stack);
-
-    item = temp_stack(1);
-    field_items = cat(1,field_items,item);
-    if length(temp_stack) == 1
-        temp_stack = [];
-    else
-        temp_stack = temp_stack(2:end);
-    end
-    
-    % find sid_s close enough to current
-    min_sid = item - step;
-    if min_sid < 1
-        min_sid = wrap_point + min_sid;
-    end
-
-    max_sid = item + step;
-    if max_sid > wrap_point
-        max_sid = max_sid - wrap_point;
-    end
-
-    if min_sid < max_sid
-
-        temp_ind = overall_stack >= min_sid & overall_stack <= max_sid;
-
-    else % wraparound
-
-       wraparound = 1;
-       temp_ind = overall_stack >= min_sid | overall_stack <= max_sid;
-        
-    end
-
-    temp_stack = cat(1,temp_stack,overall_stack(temp_ind));
-    overall_stack = overall_stack(~temp_ind);
-    
-end
-
-field_out = field_items;
