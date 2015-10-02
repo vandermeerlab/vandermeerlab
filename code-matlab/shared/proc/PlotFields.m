@@ -6,6 +6,7 @@ function PlotFields(cfg_in,tc,fields,pos,S)
 %
 % INPUTS:
 % cfg_def.npf = 6; % number of subplots per figure
+% cfg_def.subsample = 10; % subsampling factor for position data
 %
 % fields: output of FindFields()
 % pos: position data
@@ -17,6 +18,7 @@ function PlotFields(cfg_in,tc,fields,pos,S)
 % MvdM 2015-10-01 initial version
 
 cfg_def.npf = 6;
+cfg_def.subsample = 10;
 
 cfg = ProcessConfig2(cfg_def,cfg_in);
 
@@ -47,7 +49,10 @@ for iC = 1:length(S.t)
     % plot scatterfield
     subplot(2,6,sno*2);
     
-    plot(getd(pos,'y'),getd(pos,'x'),'.','MarkerSize',1,'Color',[0.5 0.5 0.5]);
+    x = getd(pos,'x'); x = x(1:cfg.subsample:end);
+    y = getd(pos,'y'); y = y(1:cfg.subsample:end);
+    
+    plot(y,x,'.','MarkerSize',1,'Color',[0.5 0.5 0.5]);
     hold on; axis off
 
     spk = S.t{iC};
