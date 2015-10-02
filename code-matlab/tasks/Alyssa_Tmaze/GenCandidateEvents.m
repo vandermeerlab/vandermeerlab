@@ -157,7 +157,10 @@ if abs(prod(cfg.expandIV))> 0
     
     cfg_temp = [];
     cfg_temp.d = cfg.expandIV;
-    evt = addIV(cfg_temp,evt);
+    evt = ResizeIV(cfg_temp,evt);
+    if ~cfg.allowOverlap
+        evt = MergeSingleIV([],evt);
+    end
 end
 
 %% Keep a record of parameters

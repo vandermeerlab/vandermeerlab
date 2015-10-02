@@ -2,8 +2,7 @@
 % amplitude thresholding. expand intervals.
 clear
 threshold = 0.0015; % the amplitude in volts, above which the data will be excluded
-cfg.d = [-0.025 0.025]; % ms, amount to expand detachIV 
-cfg.merge = 1; % merge overlapping intervals
+cfg.d = [-0.025 0.025]; % ms, amount to expand detachIV
 
 cfg.rats = {'R044'};
 fd = sort(getTmazeDataPath(cfg)); % get all session directories 
@@ -18,7 +17,8 @@ for iFD = 1:length(fd)
     tstart = csc.tvec(diff(abs(csc.data) > threshold) == 1);
     tend = csc.tvec(diff(abs(csc.data) > threshold) == -1);
     detachIV = iv(tstart,tend);
-    detachIV = addIV(cfg,detachIV);
+    detachIV = ResizeIV(cfg,detachIV);
+    detachIV = MergeSingleIV([],detachIV);
     
     % make it work with restrict(), so the iv has the stuff we want to keep
     tstart = [csc.tvec(1); detachIV.tend];

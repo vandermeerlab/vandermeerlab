@@ -295,7 +295,7 @@ end
 
 %% add some padding
 cfg_pad = []; cfg_pad.d = [-0.1 0.1];
-evt = addIV(cfg_pad,evt);
+evt = ResizeIV(cfg_pad,evt);
 
 %% remove events with less than some number of cells
 cfg_n = []; cfg_n.label = 'NActiveCells_left';

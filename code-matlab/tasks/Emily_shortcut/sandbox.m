@@ -62,8 +62,8 @@ hist(led1.tend-led1.tstart,100)
 
 %% expand IVs -- this is apparently needed to catch stray position samples which fall outside the LED event window
 cfg = []; cfg.d = [-1/60 1/60];
-led0 = addIV(cfg,led0);
-led1 = addIV(cfg,led1);
+led0 = ResizeIV(cfg,led0);
+led1 = ResizeIV(cfg,led1);
 
 %% restrict (slow, need to optimize TSD_getidx)
 xtsd = tsd(t_avg,x_avg);
