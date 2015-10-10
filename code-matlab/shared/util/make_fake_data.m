@@ -34,7 +34,7 @@ cfg_def.nChan = 1:64;
 cfg_def.Fs = 2000; % in Hz
 cfg_def.amp = 200;
 cfg_def.freq = 52; % in Hz
-cfg_def.phase_off = 1; % in degrees
+cfg_def.phase_off = 0; % in degrees
 cfg_def.t_len = 1; % time in seconds
 cfg_def.output = 'AMPX';
 cfg_def.plot = 'on';
@@ -50,7 +50,7 @@ wave = cell(length(cfg.nChan),1);
 labels = NaN*ones(1,length(cfg.nChan));
 
 for iChan = 1:length(cfg.nChan)
-    wave{iChan} = cfg.amp*sin(2*pi*cfg.freq*t+degtorad(cfg.phase_off*iChan));
+    wave{iChan} = cfg.amp*sin(2*pi*cfg.freq*t+(cfg.phase_off*iChan).*pi./180);
     labels(iChan) = cfg.nChan(iChan);
     if strcmp(cfg.plot, 'on')
     hold on
