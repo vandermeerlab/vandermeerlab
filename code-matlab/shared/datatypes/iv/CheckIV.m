@@ -15,7 +15,7 @@ function pass_flag = CheckIV(iv_in)
 pass_flag = 1;
 
 if isstruct(iv_in)
-    if ~isfield(iv_in.tstart,'tstart') || ~isfield(iv_in.tend,'tend')
+    if ~isfield(iv_in,'tstart') || ~isfield(iv_in,'tend')
         pass_flag = 0;
         fprintf('FAIL: input iv must contain tstart and tend fields.\n');
     end
