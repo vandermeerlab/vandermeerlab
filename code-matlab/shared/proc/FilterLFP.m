@@ -37,7 +37,14 @@ end
 nSignals = length(lfp_tsd.cfg.hdr);
 for iS = nSignals:-1:1
     
-   reported_Fs(iS) = lfp_tsd.cfg.hdr{iS}.SamplingFrequency;
+   if isfield(lfp_tsd.cfg.hdr{iS},'SamplingFrequency')
+       reported_Fs(iS) = lfp_tsd.cfg.hdr{iS}.SamplingFrequency;
+   elseif isfield(lfp_tsd.cfg.hdr{iS},'Fs')
+       reported_Fs(iS) = lfp_tsd.cfg.hdr{iS}.Fs;
+   else
+      error('Unknown Fs.'); 
+   end
+   
     
 end
 
