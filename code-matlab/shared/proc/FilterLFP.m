@@ -34,7 +34,7 @@ if ~CheckTSD(lfp_tsd)
 end
 
 % check reported Fs in headers
-nSignals = size(lfp_tsd.data,1);
+nSignals = length(lfp_tsd.cfg.hdr);
 for iS = nSignals:-1:1
     
    reported_Fs(iS) = lfp_tsd.cfg.hdr{iS}.SamplingFrequency;
