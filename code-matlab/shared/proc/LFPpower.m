@@ -30,7 +30,7 @@ nSignals = size(lfp_tsd.data,1);
 % process signals
 for iS = 1:nSignals
     
-    fprintf('PowerLFP.m: Hilberting signal %d/%d...\n',iS,nSignals);
+    fprintf('LFPpower.m: Hilberting signal %d/%d...\n',iS,nSignals);
     
     % check for NaNs in the data; if there are, issue a warning and replace by
     % zeros
@@ -39,7 +39,7 @@ for iS = 1:nSignals
     nan_idx = find(isnan(temp_sig));
     
     if ~isempty(nan_idx)
-        fprintf('WARNING: FilterLFP.m: signal %d contains NaNs (%d).\n',iS,length(nan_idx));
+        fprintf('WARNING: LFPpower.m: signal %d contains NaNs (%d).\n',iS,length(nan_idx));
         temp_sig(nan_idx) = 0;
     end
     
