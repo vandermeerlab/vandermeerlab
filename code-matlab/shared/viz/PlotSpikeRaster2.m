@@ -30,14 +30,14 @@ if cfg.openInAxes % user defined axes
     axes(cfg.openInAxes);
 end
 
-
-spkColor = cfg.spkColor; colorType = 'single color';
-
-% make colour matrix if user specifies a colormap like 'jet' or 'summer'
-if ischar(cfg.spkColor) && length(cfg.spkColor) > 1 % if spikeColor is a multicharacter array
-    nCells = length(S_in.t);
-    spkColor = colormap(eval([cfg.spkColor '(' num2str(nCells) ')'])); % turn the string into a matrix of RGB values
-    colorType = 'color matrix';
+% handle color matrix (aacarey)
+if length(cfg.spkColor) == 1 || isnumeric(cfg.spkColor)
+    cfg.spkColor = repmat(cfg.spkColor,length(S_in.t),1);
+    
+elseif length(cfg.spkColor) > 1 && ~isnumeric(cfg.spkColor)
+    cfg.spkColor = colormap(eval([cfg.spkColor '(' num2str(length(S_in.t)) ')'])); % turn the string into a matrix of RGB values
+else
+    error('Unable to assign cfg.spkColor')
 end
 
 % Plot spikes
@@ -54,13 +54,8 @@ if  nTrials == 1
         
         xvals = xvals(:);
         yvals = yvals(:);
-        
-        switch colorType
-            case 'single color'
-                plot(xvals,yvals,'Color',spkColor,'LineWidth',cfg.LineWidth)
-            case 'color matrix'
-                plot(xvals,yvals,'Color',spkColor(iC,:),'LineWidth',cfg.LineWidth)
-        end
+
+        plot(xvals,yvals,'Color',cfg.spkColor(iC,:),'LineWidth',cfg.LineWidth)
         
     end
     
