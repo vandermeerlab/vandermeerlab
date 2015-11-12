@@ -22,9 +22,10 @@ function out = MultiRaster(cfg_in,S)
 %           cfg.evt object by using a 1xM cell array where M is the number of event files.
 %           (i.e., cfg.evt = {evt1,evt2}, where evt1=ts evt2=iv)
 %
-%       cfg.axisflag - default 'tight'
+%       cfg.axisflag - default 'spandex'
 %           Converts axis scaling. TIGHT restricts the plot to the data range. ALL sets
-%           the x-axis to cover the whole experiment.
+%           the x-axis to cover the whole experiment. 
+%           'spandex' tightest possible 
 %
 %       cfg.LineWidth - default 1
 %           Line thickness for each spike.
@@ -68,7 +69,8 @@ function out = MultiRaster(cfg_in,S)
 % youkitan 2014-11-06 
 % edit 2015-01-20
 % aacarey edit, 2015-01-20 (lfpHeight and lfpMax)
-% aacarey edit Sept 2015, +cfg.openNewFig, removed cfg.openInAxes
+% aacarey edit Sept 2015, +cfg.openNewFig, removed cfg.openInAxes, added
+%      cfg.axisflag option
 
 %% HELP
 
@@ -87,7 +89,7 @@ function out = MultiRaster(cfg_in,S)
 
 %% Set cfg parameters and check inputs
 cfg_def.SpikeHeight = 0.4;
-cfg_def.axisflag = 'tight';
+cfg_def.axisflag = 'spandex';
 cfg_def.spkColor = 'k';
 cfg_def.LineWidth = 1;
 cfg_def.ivColor = 'r';
@@ -98,6 +100,7 @@ cfg_def.lfpMax = 15;
 cfg_def.axislabel = 'on';
 cfg_def.windowSize = 1;
 cfg_def.openNewFig = 1;
+cfg_def.setAxes = 'on';
 cfg = ProcessConfig2(cfg_def,cfg_in);
 
 %% Setup navigate
@@ -107,18 +110,22 @@ windowSize = cfg.windowSize;
 
 % Initialize time vector for navigating
 if ~isfield(cfg,'time')
-    %create internal tvec
-    spktimes = [];
+    %create internal tvec that runs form the first spike time from any cell
+    %to the last spike time
+    firstSpike = size(S.t);
+    lastSpike = size(S.t);
     for iC = 1:length(S.t)
-       spktimes = cat(1,spktimes,S.t{iC}); 
+       firstSpike(iC) = S.t{iC}(1);
+       lastSpike(iC) = S.t{iC}(end);
     end
-    spktimes = sort(spktimes);
-
-    tstart = spktimes(1);
-    tend = spktimes(end);
+    
+    tstart = min(firstSpike);
+    assignin('base','firstspike',firstSpike)
+    tend = max(lastSpike);
 
     binSize = 0.01;
     time = tstart:binSize:tend;
+    assignin('base','time',time)
 end
 
 % Initialize events
@@ -131,9 +138,9 @@ if isfield(cfg,'evt')
         usrfield = [];
     end
 else
-    %set time vector as evtTimes
-    evtTimes = time;
-    usrfield = [];
+    % navigate by seconds
+    evtTimes = time(1:100:end); 
+    assignin('base','evtTimes',evtTimes)
 end
     
 % handle lone figure plotting or subplotting
@@ -297,6 +304,15 @@ switch cfg.axisflag
     case 'all'
         xlim([S.cfg.ExpKeys.TimeOnTrack S.cfg.ExpKeys.TimeOffTrack]);
         ylim([ylims(1)-1 ylims(2)+1])
+    case 'spandex' % because sometimes tight just isn't tight enough (aacarey sept 2015)
+        xlim([cfg.lfp.tvec(1) cfg.lfp.tvec(end)])
+        ylim([max(-cfg.lfpHeight) ylims(2)])
+end
+
+if strcmp(cfg.setAxes,'off') % (aacarey sept 2015)
+    axis off
+else
+    axis on
 end
 
 if cfg.openNewFig; hold off; end
