@@ -97,7 +97,11 @@ detect_cfg.max_meanfr = cfg.max_meanfr;
 detect_cfg.minSize = cfg.minSize;
 %detect_cfg.maxSize = cfg.maxSize; 
 detect_cfg.debug = cfg.debug;
-[template_idx,peak_idx,peak_loc] = DetectPlaceCells1D(detect_cfg,tc);
+tc_out = DetectPlaceCells1D(detect_cfg,tc');
+
+template_idx = tc_out.template_idx;
+peak_idx = tc_out.peak_idx;
+peak_loc = tc_out.peak_loc;
 
 % create field template
 fpeak_val = []; fpeak_idx = [];
@@ -112,7 +116,7 @@ end
 fpeak_idx = fpeak_idx(sort_idx);
 
 %store all data in a single struct
-tc_out.tc = tc;
+tc_out.tc = tc';
 tc_out.template_idx = template_idx;
 tc_out.field_template_idx = fpeak_idx;
 tc_out.field_loc = fpeak_val;

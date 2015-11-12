@@ -39,6 +39,7 @@ cfg_def.requireMetadata = 0;
 cfg_def.MetadataFields = {};
 cfg_def.requireVT = 0;
 cfg_def.requireCandidates = 0;
+cfg_def.requirePrecandidates = 0;
 cfg_def.requireTimes = 0;
 cfg_def.requireHSdetach = 0;
 cfg_def.requireFiles = 0;
@@ -53,8 +54,9 @@ if cfg.checkall
     cfg.MetadataFields = {'coord','taskvars','SWRtimes','SWRfreqs'};
     cfg.requireVT = 1;
     cfg.requireCandidates = 1;
+    cfg.requirePrecandidates = 1;
     cfg.requireTimes = 1; % R042 only
-    def.requireHSdetach = 1; % R044 only
+    cfg.requireHSdetach = 1; % R044 only
     cfg.requireFiles = 1;
 end
 %% 
@@ -77,6 +79,8 @@ switch machinename
         base_fp = 'D:\data\promoted\';
     case 'DIONYSUS'
         base_fp = 'D:\data\promoted\';
+    case 'CALLISTO'
+        base_fp = 'E:\data\promoted\';
 end
 
 %%
@@ -150,9 +154,17 @@ for iRat = 1:length(rat_list)
         end
         
         if cfg.requireCandidates
-            fn = FindFiles('*candidates.mat');
+            fn = FindFiles('*-candidates.mat');
             if isempty(fn)
                 disp(['Candidates file not found in ',sessionID])
+                proceed = 0;
+            end
+        end
+        
+        if cfg.requirePrecandidates
+            fn = FindFiles('*-precandidates.mat');
+            if isempty(fn)
+                disp(['Precandidates file not found in ',sessionID])
                 proceed = 0;
             end
         end
