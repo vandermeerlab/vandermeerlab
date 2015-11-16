@@ -22,7 +22,7 @@ cfg.writeFiles = 1; % if 1, saves inputData as outlined below; if 0, does not sa
 
 % what to call the output and where to put it?
 cfg.output_fn = 'inputData';
-cfg.output_fd = 'E:\Documents\TmazePaper\data';
+cfg.output_fd = pwd; % 'E:\Documents\TmazePaper\data';
 
 % Which cells to load for LoadSpikes?
 cfg.load_questionable_cells = 1; % 1 load 5's, 0 don't
@@ -31,7 +31,7 @@ cfg.maxspeed = 3.5; % in cm/s, upper speed limit for estimating tuning curves
 
 %%
 please.checkall = 1;
-proceed = checkTmazeReqs(please); please = [];
+proceed = 1; %checkTmazeReqs(please); please = [];
 if proceed
     tic
     
@@ -166,7 +166,7 @@ if proceed
             for iArm = 1:length(arms)
                 please = []; 
                 sessionData.(arms{iArm}).tc_ordered = sessionData.(arms{iArm}).PF.tc(sessionData.(arms{iArm}).PF.field_template_idx,:);
-                sessionData.(arms{iArm}).tc_unique_ordered = sessionData.(arms{iArm}).PF.tc(fields.(arms{iArm}));
+                sessionData.(arms{iArm}).tc_unique_ordered = sessionData.(arms{iArm}).PF.tc(fields.(arms{iArm}),:);
             end
             
             all_sessionData.(rats{iRat})(iSession) = sessionData;
