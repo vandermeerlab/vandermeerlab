@@ -10,17 +10,19 @@ function proceed = checkTmazeReqs(cfg_in)
 % and metadata fields (unless additional ones were added after this was
 % written)
 %
-%cfg_def.requireExpKeys = 0;
-%cfg_def.ExpKeysFields = {}; list of strings specifying field names
+% cfg_def.requireExpKeys = 0;
+% cfg_def.ExpKeysFields = {}; list of strings specifying field names
 %           ex: {'nTrials','badTrials'}
-%cfg_def.requireMetadata = 0;
-%cfg_def.MetadataFields = {}; list of strings specifying field names
-%cfg_def.requireVT = 0;
-%cfg_def.requireCandidates = 0;
-%cfg_def.requireTimes = 0; for R042 only
-%cfg_def.requireHSdetach = 0; for R044 only
-%cfg_def.requireFiles = 0; files folder for images generated during
-%analysis
+% cfg_def.requireMetadata = 0;
+% cfg_def.MetadataFields = {}; list of strings specifying field names
+% cfg_def.requireVT = 0;
+% cfg_def.requireCandidates = 0;
+% cfg_def.requireTimes = 0; for R042 only
+% cfg_def.requireHSdetach = 0; for R044 only
+% cfg_def.requireFiles = 0; files folder for images generated during
+%   analysis
+% cfg_def.ratsToProcess = {'R042','R044','R050','R064'}; % only process these
+%   rats
 %
 % ACarey May 2015, for Tmaze project 
 
@@ -43,8 +45,9 @@ cfg_def.requirePrecandidates = 0;
 cfg_def.requireTimes = 0;
 cfg_def.requireHSdetach = 0;
 cfg_def.requireFiles = 0;
+cfg_def.ratsToProcess = {'R042','R044','R050','R064'};
 
-cfg = ProcessConfig2(cfg_def,cfg_in);
+cfg = ProcessConfig(cfg_def,cfg_in);
 cfg.verbose = 1; % i want checkfields to tell me which ones are missing
 
 if cfg.checkall
@@ -71,13 +74,11 @@ switch machinename
     
     case 'ISIDRO'
         base_fp = 'C:\data\';
-    case 'EQUINOX'
+    case {'EQUINOX','BERGKAMP'}
         base_fp = 'D:\data\';
     case 'MVDMLAB-ATHENA'
         base_fp = 'D:\vandermeerlab\';
-    case 'MVDMLAB-EUROPA'
-        base_fp = 'D:\data\promoted\';
-    case 'DIONYSUS'
+    case {'MVDMLAB-EUROPA','DIONYSUS'}
         base_fp = 'D:\data\promoted\';
     case 'CALLISTO'
         base_fp = 'E:\data\promoted\';
@@ -96,8 +97,15 @@ cd(base_fp);
 % Work though each rat's folder
 rat_list = dir(pwd); % dir() lists folder contents
 
+% keep only entries that are actually folders
+rat_list = rat_list([rat_list.isdir]);
+
 % It seems that MATLAB pulls up some crap "folders" that are called "." or ".." ... ignore them  
 rat_list = rat_list(arrayfun(@(x) x.name(1), rat_list) ~= '.');
+
+% keep only requested rats
+[~,ix,~] = intersect({rat_list.name},cfg.ratsToProcess);
+rat_list = rat_list(ix);
 
 for iRat = 1:length(rat_list)
     
@@ -107,6 +115,7 @@ for iRat = 1:length(rat_list)
     
     % Get all the sessions
     session_list = dir(pwd);
+    session_list = session_list([session_list.isdir]);
     session_list = session_list(arrayfun(@(x) x.name(1), session_list) ~= '.');
    
     for iSession = 1:length(session_list)
