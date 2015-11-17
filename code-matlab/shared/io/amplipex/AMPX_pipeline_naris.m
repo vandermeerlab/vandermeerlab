@@ -31,7 +31,7 @@ save_fig = 'on';
 figures = 'on';
 % display = 'off'; % used for the gamma detection viewer
 peri_gamma_evt_window = .25;
-gamma_evt_window = 0.05;
+gamma_evt_window = 0.025;
 % theta_evt_window = 0.5;
 % delta_evt_window = 1.5;
 decimate_factor = 10;
@@ -169,9 +169,9 @@ else
     
     if strcmp(figures, 'on')==1
         mkdir([date '\' session_type '\high_gamma_pow_figures']);  mkdir([date '\' session_type  '\high_gamma_phase_figures']);
-        AMPX_pow_distrib_plot_naris(data_out.high_gamma.power, data_trl_high_peri, data, 'save_fig', save_fig, 'fig_type', 'high')
+%         AMPX_pow_distrib_plot_naris(data_out.high_gamma.power, data_trl_high_peri, data, 'save_fig', save_fig, 'fig_type', 'high')
         AMPX_pow_distrib_plot_naris_avg(data_out.high_gamma.power, data_trl_high_peri, data, 'save_fig', save_fig, 'fig_type', 'high')
-        AMPX_phase_distrib_plot(data_out.high_gamma.phase, data_trl_high, data, 'save_fig', save_fig, 'fig_type', 'high')
+%         AMPX_phase_distrib_plot(data_out.high_gamma.phase, data_trl_high, data, 'save_fig', save_fig, 'fig_type', 'high')
     end
 end
 %% Low Gamma
@@ -186,8 +186,8 @@ else
     if strcmp(figures, 'on')==1
         [data_trl_low_peri, ~, ~] = AMPX_trial_split(data_ft, all.ev.(session_name).(session_type).low_gamma, peri_gamma_evt_window);
         AMPX_pow_distrib_plot_naris_avg(data_out.low_gamma.power, data_trl_low_peri, data, 'save_fig', save_fig,'fig_type', 'low')
-        AMPX_pow_distrib_plot_naris(data_out.low_gamma.power, data_trl_low_peri, data, 'save_fig', save_fig,'fig_type', 'low')
-        AMPX_phase_distrib_plot(data_out.low_gamma.phase, data_trl_low, data, 'save_fig', save_fig,'fig_type', 'low')
+%         AMPX_pow_distrib_plot_naris(data_out.low_gamma.power, data_trl_low_peri, data, 'save_fig', save_fig,'fig_type', 'low')
+%         AMPX_phase_distrib_plot(data_out.low_gamma.phase, data_trl_low, data, 'save_fig', save_fig,'fig_type', 'low')
     end
 end
 
@@ -202,8 +202,8 @@ else
     
     if strcmp(figures, 'on')==1
         AMPX_pow_distrib_plot_naris_avg(data_out.random_low_gamma.power, data_trl_low, data, 'save_fig', save_fig,'fig_type', 'Ran_low')
-        AMPX_pow_distrib_plot_naris(data_out.random_low_gamma.power, data_trl_low, data, 'save_fig', save_fig,'fig_type', 'Ran_low')
-        AMPX_phase_distrib_plot(data_out.random_low_gamma.phase, data_trl_low, data, 'save_fig', save_fig, 'fig_type', 'Ran_low')
+%         AMPX_pow_distrib_plot_naris(data_out.random_low_gamma.power, data_trl_low, data, 'save_fig', save_fig,'fig_type', 'Ran_low')
+%         AMPX_phase_distrib_plot(data_out.random_low_gamma.phase, data_trl_low, data, 'save_fig', save_fig, 'fig_type', 'Ran_low')
     end
 end
 %% random "high" intervals
@@ -216,9 +216,9 @@ else
      tic; [data_out.random_high_gamma.phase] = AMPX_phase_distrib(data_trl_high_ran,  'min_freq', 70, 'max_freq', 85); toc;
     
     if strcmp(figures, 'on')==1
-        AMPX_pow_distrib_plot_naris(data_out.random_high_gamma.power, data_trl_high_ran, data, 'save_fig', save_fig,'fig_type', 'Ran_high')
+%         AMPX_pow_distrib_plot_naris(data_out.random_high_gamma.power, data_trl_high_ran, data, 'save_fig', save_fig,'fig_type', 'Ran_high')
         AMPX_pow_distrib_plot_naris_avg(data_out.random_high_gamma.power, data_trl_high_ran, data, 'save_fig', save_fig,'fig_type', 'Ran_high')
-        AMPX_phase_distrib_plot(data_out.random_high_gamma.phase, data_trl_low, data, 'save_fig', save_fig,'fig_type', 'Ran_high')
+%         AMPX_phase_distrib_plot(data_out.random_high_gamma.phase, data_trl_high_ran, data, 'save_fig', save_fig,'fig_type', 'Ran_high')
     end
 end
 % %% Theta detection
@@ -278,6 +278,6 @@ data_out.cfg.fname = session_name;
 data_out.cfg.type = session_type;
 data_out.cfg.version = '1.0';
 %% Save the Data_out
-% save([cd '\' date '\' session_type '_data_out.mat'], 'data_out','-v7.3'); save([session_type '_data_out'], 'data_out','-v7.3');
+ save([cd '\' date '\' session_type '_data_out2.mat'], 'data_out','-v7.3'); save([session_type '_data_out'], 'data_out','-v7.3');
 % save 'D:\DATA\Si_probe_analysis_data\all_events.mat' all
 fprintf(['\n' file_name ' Complete'])
