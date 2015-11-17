@@ -1,4 +1,4 @@
-function [SWR,swr1,swr2] = amSWR(cfg_in,ncfs,csc)
+function [SWR,swr1,swr2] = amSWR(cfg_in,ncfs,CSC)
 %AMSWR Detect sharp wave-ripple events using the discrete Fourier transform.
 %
 % function SWR = amSWR(cfg_in,ncfs,csc)
@@ -63,7 +63,9 @@ if isfield(cfg_in,'stepSize') && ~isnumeric(cfg_in.stepSize)
     end
 end
 
-cfg = ProcessConfig2(cfg_def,cfg_in);
+mfun = mfilename;
+
+cfg = ProcessConfig(cfg_def,cfg_in,mfun);
 
 % these settings should be identical to SWRfreak settings 
 cfg.hiPassCutoff = ncfs.parameters.hiPassCutoff; % frequency in Hz; delete all freqs below
@@ -73,7 +75,7 @@ cfg.fs = ncfs.parameters.fs;
 
 if cfg.verbose
     tic
-    cprintf(-[0 0 1],'amSWR: Identifying potential sharp wave-ripple events...');
+    disp([mfun,': Identifying potential sharp wave-ripple events...']);
     disp(' ');
 end
 
@@ -122,13 +124,13 @@ end
             swrscore = interp1(csc.tvec(NonNaNs),swrscore(NonNaNs),csc.tvec,'cubic'); % can do linear too 
         end
         % get rid of imaginary numbers (very rare, but happens)
-        swrscore = max(0,swrscore); 
+        swrscore = max(0,swrscore)'; 
     end
 
 %% get score vectors
 
 if ~isempty(ncfs.freqs2)
-    swrscore1 = SWRhelper(ncfs.freqs1,ncfs.parameters.win1,csc);
+    swrscore1 = SWRhelper(ncfs.freqs1,ncfs.parameters.win1,CSC);
     % rescale because values are insanely low
     swrscore1 = rescmean(swrscore1,1);
     
@@ -136,45 +138,40 @@ if ~isempty(ncfs.freqs2)
         disp('*yawn* ...') % checkpoint ~ halfway done
     end
     
-    swrscore2 = SWRhelper(ncfs.freqs2,ncfs.parameters.win2,csc);
+    swrscore2 = SWRhelper(ncfs.freqs2,ncfs.parameters.win2,CSC);
     % rescale
     swrscore2 = rescmean(swrscore2,1);
     
     % combine the scores
     geometricmean = sqrt(swrscore1.*swrscore2);
     
-     SWR = tsd(csc.tvec,geometricmean);
+     SWR = tsd(CSC.tvec,geometricmean);
 else
-    swrscore1 = SWRhelper(ncfs.freqs1,ncfs.parameters.win1,csc);
+    swrscore1 = SWRhelper(ncfs.freqs1,ncfs.parameters.win1,CSC);
     % rescale because values are insanely low
     swrscore1 = rescmean(swrscore1,1);
-    SWR = tsd(csc.tvec,swrscore1);
+    SWR = tsd(CSC.tvec,swrscore1);
     
     swrscore2 = [];
 end
  
  %% Return output
- mfun = mfilename;
  
- SWR.parameters = struct('stepSize',cfg.stepSize,'weightby',cfg.weightby,'win1',ncfs.parameters.win1,'win2',ncfs.parameters.win2,'hiPassCutoff',cfg.hiPassCutoff,'fs',cfg.fs,'csc',csc.label,'SWRfreak',ncfs.parameters);
- SWR.label = csc.label;
+ SWR.parameters = struct('stepSize',cfg.stepSize,'weightby',cfg.weightby,'win1',ncfs.parameters.win1,'win2',ncfs.parameters.win2,'hiPassCutoff',cfg.hiPassCutoff,'fs',cfg.fs,'csc',CSC.label,'SWRfreak',ncfs.parameters);
+ SWR.label = CSC.label;
  
- swr1 = tsd(csc.tvec,swrscore1);
- swr1.parameters = struct('stepSize',cfg.stepSize,'weightby',cfg.weightby,'win1',ncfs.parameters.win1,'hiPassCutoff',cfg.hiPassCutoff,'fs',cfg.fs,'csc',csc.label,'SWRfreak',ncfs.parameters);
- swr1.label = csc.label;
+ swr1 = tsd(CSC.tvec,swrscore1);
+ swr1.parameters = struct('stepSize',cfg.stepSize,'weightby',cfg.weightby,'win1',ncfs.parameters.win1,'hiPassCutoff',cfg.hiPassCutoff,'fs',cfg.fs,'csc',CSC.label,'SWRfreak',ncfs.parameters);
+ swr1.label = CSC.label;
  
- swr2 = tsd(csc.tvec,swrscore2);
- swr2.parameters = struct('stepSize',cfg.stepSize,'weightby',cfg.weightby,'win2',ncfs.parameters.win2,'hiPassCutoff',cfg.hiPassCutoff,'fs',cfg.fs,'csc',csc.label,'SWRfreak',ncfs.parameters);
- swr2.label = csc.label;
+ swr2 = tsd(CSC.tvec,swrscore2);
+ swr2.parameters = struct('stepSize',cfg.stepSize,'weightby',cfg.weightby,'win2',ncfs.parameters.win2,'hiPassCutoff',cfg.hiPassCutoff,'fs',cfg.fs,'csc',CSC.label,'SWRfreak',ncfs.parameters);
+ swr2.label = CSC.label;
  
  % keep a record
- if isfield(cfg_in,'history')
-     SWR.cfg.history.mfun = cat(1,SWR.cfg.history.mfun,mfilename);
-     SWR.cfg.history.cfg = cat(1,SWR.cfg.history.cfg,{cfg});
- else
-     SWR.cfg.history.mfun = mfun;
-     SWR.cfg.history.cfg = {cfg};
- end
+ 
+ SWR.cfg.history.mfun = cat(1,SWR.cfg.history.mfun,mfun);
+ SWR.cfg.history.cfg = cat(1,SWR.cfg.history.cfg,{cfg});
  
  if cfg.verbose
  toc

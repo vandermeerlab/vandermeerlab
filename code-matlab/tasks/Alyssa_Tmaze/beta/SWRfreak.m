@@ -21,6 +21,7 @@ function ncfs = SWRfreak(cfg_in,SWRtimes,csc)
 %          There is a hidden fig config if you open the function and read
 %          the section called "Parse cfg parameters".
 %   cfg.openNewFig = 1; if using SWRfreak with subplot, set this to 0
+%   cfg.verbose = 1; If 1 talk to me, if 0 don't
 %
 %   OUTPUT
 %   
@@ -58,6 +59,7 @@ function ncfs = SWRfreak(cfg_in,SWRtimes,csc)
 
 %% Parse cfg parameters
 
+cfg_def.verbose = 1;
 cfg_def.weightby = 'power'; 
 cfg_def.win1 = 0.06;
 cfg_def.win2 = [];
@@ -80,7 +82,9 @@ cfg_def.openNewFig = 1;
     if isfield(cfg_in,'fig')
         fig = ProcessConfig2(cfg_def.fig,cfg_in.fig);
     end
-cfg = ProcessConfig2(cfg_def,cfg_in);
+    
+mfun = mfilename;
+cfg = ProcessConfig(cfg_def,cfg_in,mfun);
 
 if isfield(cfg_in,'fig')
     cfg.fig = fig;

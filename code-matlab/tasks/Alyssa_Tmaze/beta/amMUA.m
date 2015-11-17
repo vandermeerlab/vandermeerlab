@@ -19,7 +19,7 @@ function [MUA,raw,noise] = amMUA(cfg_in,S,tvec)
 %                   rapid succession, it only gets counted as this many
 %                   spikes. The region containing the capped spikes spans
 %                   the standard deviation of the kernel. Increasing this
-%                   number increasing the allowed "loudness" of a cell. 
+%                   number increases the allowed "loudness" of a cell. 
 %                   If spkcap is 0, the curve is flat.
 %
 %   cfg.noisefloor = 4; Magic constant for how much noise we try to remove.
@@ -129,13 +129,13 @@ muascoreneg2 = conv(muacapped,kernel3,'same');
 
 %% Generate output
 
-MUA = tsd(tvec,muascoretot3); % raw-noise
+MUA = tsd(tvec,muascoretot3'); % raw-noise
 MUA.parameters = struct('spkcap',cfg.spkcap,'kernelstd',cfg.kernelstd,'noisefloor',cfg.noisefloor);
 
-raw = tsd(tvec,muascore); % raw
+raw = tsd(tvec,muascore'); % raw
 raw.parameters = struct('spkcap',cfg.spkcap,'kernelstd',cfg.kernelstd);
 
-noise = tsd(tvec,muascoreneg2); % noise
+noise = tsd(tvec,muascoreneg2'); % noise
 noise.parameters = struct('spkcap',cfg.spkcap,'kernelstd',cfg.kernelstd,'noisefloor',cfg.noisefloor);
 
 if cfg.verbose
