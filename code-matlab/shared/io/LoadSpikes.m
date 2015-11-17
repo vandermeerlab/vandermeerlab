@@ -11,7 +11,8 @@ function S = LoadSpikes(cfg_in)
 % cfg.min_cluster_quality = 5; % minimum cluster quality
 % cfg.useClustersFile = 0; % use .clusters file
 % cfg.tsflag = 'sec'; % units to use
-% cfg.getTTnumbers = 0; add usr field with tetrode number for each cell
+% cfg.getTTnumbers = 1; add usr field with tetrode number for each cell
+% cfg.verbose = 1; Allow or suppress displaying of command window text
 %
 % output:
 %
@@ -24,17 +25,17 @@ cfg_def.load_questionable_cells = 0;
 cfg_def.min_cluster_quality = 5;
 cfg_def.useClustersFile = 0;
 cfg_def.getTTnumbers = 1;
-
-cfg = ProcessConfig2(cfg_def,cfg_in); % this takes fields from cfg_in and puts them into cfg
+cfg_def.verbose = 1;
 
 mfun = mfilename;
+cfg = ProcessConfig(cfg_def,cfg_in,mfun); % this takes fields from cfg_in and puts them into cfg
 
 if ~isfield(cfg,'fc')
         
         cfg.fc = FindFiles('*.t');
         
         if cfg.load_questionable_cells
-           fprintf('%s: WARNING: loading questionable cells\n',mfun);
+            if cfg.verbose; fprintf('%s: WARNING: loading questionable cells\n',mfun); end
            cfg.fc = cat(1,cfg.fc,FindFiles('*._t'));
         end
         
@@ -49,47 +50,46 @@ end
 cfg.fc = sort(cfg.fc);
 nFiles = length(cfg.fc);
 
-fprintf('%s: Loading %d files...\n',mfun,nFiles);
+if cfg.verbose; fprintf('%s: Loading %d files...\n',mfun,nFiles); end
 
 % for each tfile
 % first read the header, then read a tfile 
 
 S = ts; % initialize new ts struct
 
-for iF = 1:nFiles
-
-	tfn = cfg.fc{iF};
+for iF = 1:nFiles    
+    tfn = cfg.fc{iF};
     
-	if ~isempty(tfn)
+    if ~isempty(tfn)
         
-		tfp = fopen(tfn, 'rb','b');
-		if (tfp == -1)
-			error(['LoadSpikes: Could not open tfile ' tfn]);
-		end
-		
-		ReadHeader(tfp);    
-		%S.t{iF} = fread(tfp,inf,'uint64');	% read as 64 bit ints
-        S.t{iF} = fread(tfp,inf,'uint32');	% read as 64 bit ints
-		
-		% set appropriate time units
-		switch cfg.tsflag
-			case 'sec'
-				S.t{iF} = S.t{iF}/10000;
-			case 'ts'
-				S.t{iF} = S.t{iF};
-			case 'ms'
-				S.t{iF} = S.t{iF}*10000*1000;
-			otherwise
-				error('LoadSpikes: invalid tsflag.');
+        tfp = fopen(tfn, 'rb','b');
+        if (tfp == -1)
+            error(['LoadSpikes: Could not open tfile ' tfn]);
         end
-		
+        
+        ReadHeader(tfp);
+        %S.t{iF} = fread(tfp,inf,'uint64');	% read as 64 bit ints
+        S.t{iF} = fread(tfp,inf,'uint32');	% read as 64 bit ints
+        
+        % set appropriate time units
+        switch cfg.tsflag
+            case 'sec'
+                S.t{iF} = S.t{iF}/10000;
+            case 'ts'
+                S.t{iF} = S.t{iF};
+            case 'ms'
+                S.t{iF} = S.t{iF}*10000*1000;
+            otherwise
+                error('LoadSpikes: invalid tsflag.');
+        end
+        
         % add filenames
         [~,fname,fe] = fileparts(tfn);
-		S.label{iF} = cat(2,fname,fe);
-		
-		fclose(tfp);
-		
-	end 		% if tfn valid
+        S.label{iF} = cat(2,fname,fe);
+        
+        fclose(tfp);
+        
+    end 		% if tfn valid
 end		% for all files
 
 if cfg.useClustersFile
@@ -110,24 +110,24 @@ if cfg.useClustersFile
             if exist(clu_fn,'file')
                 load(clu_fn,'-mat');
             else
-                error(sprintf('File %s does not exist.',clu_fn));
+                error('File %s does not exist.',clu_fn);
             end
             
             % get rating
-            cellno = str2num(tok{1}{2});
+            cellno = str2double(tok{1}{2});
             
             if exist('MClust_Clusters','var')
                 clu_name = MClust_Clusters{cellno}.name;
             elseif exist('Clusters','var')
                 clu_name = Clusters{cellno}.name;
             else
-                error('what clusters??');
+                error('what clusters??'); % snarky LoadSpikes is so appalled
             end
             
             if ischar(clu_name(1))
-                S.usr.rating(iC) = str2num(clu_name(1)); % first character of name should be rating
+                S.usr.rating(iC) = str2double(clu_name(1)); % first character of name should be rating
             else
-                error(sprintf('Cluster %d has no rating (name is %s).',cellno,clu_name));
+                error('Cluster %d has no rating (name is %s).',cellno,clu_name);
             end
             
         end % of filenames to process
@@ -159,18 +159,15 @@ end
 % add tt numbers
 if cfg_def.getTTnumbers
     for iC = length(S.t):-1:1
-    
+        
         out = regexp(S.label{iC},'TT(\d\d)','tokens');
         
         if isempty(out)
             error('Filename %s does not contain TTxx, cannot extract tetrode number.',S.label{iC});
         else
-           S.usr(1).data(iC) = str2num(cell2mat(out{1}));
+            S.usr.tt_num(iC) = str2double(cell2mat(out{1}));
         end
-        
     end
-    
-    S.usr(1).label = 'tt_num';
 end
 
 % add sessionID
