@@ -9,6 +9,7 @@ function csc_tsd = LoadCSC(cfg_in)
 %   if no file_list field is specified, loads all *.Ncs files in current dir
 % cfg.TimeConvFactor = 10^-6; % from nlx units to seconds
 % cfg.VoltageConvFactor = 1; % factor of 1 means output will be in volts
+% cfg.verbose = 1; Allow or suppress displaying of command window text
 %
 % OUTPUTS:
 %
@@ -16,14 +17,15 @@ function csc_tsd = LoadCSC(cfg_in)
 %
 % MvdM 2014-06-18, 25 (use cfg_in)
 
+cfg_def.fc = {};
 cfg_def.TimeConvFactor = 10^-6; % 10^-6 means convert nlx units to seconds
 cfg_def.VoltageConvFactor = 1; % 1 means output in volts, 1000 in mV, 10^6 in uV
-
-cfg = ProcessConfig2(cfg_def,cfg_in); % this takes fields from cfg_in and puts them into cfg
+cfg_def.verbose = 1;
 
 mfun = mfilename;
+cfg = ProcessConfig(cfg_def,cfg_in,mfun); % this takes fields from cfg_in and puts them into cfg
 
-if ~isfield(cfg,'fc') % no filelist provided, load everything
+if isempty(cfg.fc) % no filelist provided, load everything
     
     cfg.fc = FindFiles('*.Ncs');
     
@@ -48,7 +50,7 @@ sample_count_data = nan(nFiles,1);
 
 csc_tsd = tsd;
 
-fprintf('%s: Loading %d files...\n',mfun,nFiles);
+if cfg.verbose; fprintf('%s: Loading %d file(s)...\n',mfun,nFiles); end
 
 for iF = 1:nFiles
     
@@ -119,7 +121,7 @@ for iF = 1:nFiles
     
     cfg.badBlocks = badBlocks;
     
-    fprintf('%s: %s %d/%d bad blocks found (%.2f%%).\n',mfun,fname,badBlocks,nBlocks,(badBlocks./nBlocks).*100);
+    if cfg.verbose; fprintf('%s: %s %d/%d bad blocks found (%.2f%%).\n',mfun,fname,badBlocks,nBlocks,(badBlocks./nBlocks).*100); end
     
     
     % remove nans
@@ -174,7 +176,7 @@ for hline = 1:length(Header)
    
     line = strtrim(Header{hline});
     
-    if isempty(line) | ~strcmp(line(1),'-') % not an informative line, skip
+    if isempty(line) || ~strcmp(line(1),'-') % not an informative line, skip
         continue;
     end
     
