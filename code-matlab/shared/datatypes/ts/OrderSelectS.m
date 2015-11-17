@@ -23,7 +23,7 @@ function S_out = OrderSelectS(cfg_in,S,idx)
 %   S.label, and S.usr.data. It also updates cfg history. This function does 
 %   not know about any additional data fields that may be present.
 %
-% aacarey Oct 2015
+% aacarey Oct 2015, edit Nov 2015
 
 %% Parse cfg parameters
 
@@ -36,7 +36,15 @@ mfun = mfilename; % get name of function as string
 S_out = S;
 S_out.t = S_out.t(idx);
 S_out.label = S_out.label(idx);
-S_out.usr.data = S_out.usr.data(idx);
+%S_out.usr.data = S_out.usr.data(idx);
+
+% also select data from other same-length usr fields
+if isfield(S_out,'usr') && ~isempty(S_out.usr)
+    Sfields = fieldnames(S_out.usr);
+    for iField = 1:length(Sfields)
+        S_out.usr.(Sfields{iField}) = S_out.usr.(Sfields{iField})(idx);
+    end
+end
 
 if cfg.verbose % talk to me
     disp([mfun,': ',num2str(length(S.t)),' spiketrains in, ',num2str(length(S_out.t)),' spiketrains out'])
