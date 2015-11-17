@@ -305,8 +305,13 @@ switch cfg.axisflag
         xlim([S.cfg.ExpKeys.TimeOnTrack S.cfg.ExpKeys.TimeOffTrack]);
         ylim([ylims(1)-1 ylims(2)+1])
     case 'spandex' % because sometimes tight just isn't tight enough (aacarey sept 2015)
-        xlim([cfg.lfp.tvec(1) cfg.lfp.tvec(end)])
-        ylim([max(-cfg.lfpHeight) ylims(2)])
+        if isfield(cfg,'lfp');
+            xlim([cfg.lfp.tvec(1) cfg.lfp.tvec(end)])
+            ylim([max(-cfg.lfpHeight) ylims(2)])
+        else
+            xlim([xlims(1) xlims(2)]);
+            ylim([ylims(1)-1 ylims(2)+1])
+        end
 end
 
 if strcmp(cfg.setAxes,'off') % (aacarey sept 2015)
