@@ -16,9 +16,6 @@ function [out,tt_mask] = CoOccurQ(cfg_in,Q)
 % out.p3: observed co-occurrence (joint) probability p(x,y)
 % out.p4: z-score of p3 against shuffled data (if requested, see config below)
 %
-% p1 through p4 are [nCells x nCells] matrices (unless cfg.outputFormat
-% specifies otherwise)
-%
 % tt_mask: [nCells x nCells] containing NaNs (or whatever value is specified in
 % cfg.tt_repl) where cell pairs were recorded on the same tetrode
 % 
@@ -30,19 +27,12 @@ function [out,tt_mask] = CoOccurQ(cfg_in,Q)
 %   below)
 % cfg_def.tt_repl = NaN; % multiply elements from same tt with thi
 %
-% cfg_def.outputFormat = 'matrix'; % applies to p1 through p4
-%              'matrix' outputs nCells x nCells matrix
-%              'vectorU' outputs the upper triangular part of the matrix as 
-%                        a vector
-%
 % MvdM Feb 2015
-% aacarey Oct 2015, added cfg.outputFormat 
 
 cfg_def = [];
 cfg_def.nShuffle = 0;
 cfg_def.num_tt = []; % if specified, specialtreat pairs from same tt (see below)
 cfg_def.tt_repl = NaN; % multiply elements from same tt with this
-cfg_def.outputFormat = 'matrix';
 
 cfg = ProcessConfig2(cfg_def,cfg_in);
 
@@ -164,21 +154,5 @@ if ~isempty(cfg.num_tt)
    if cfg.nShuffle > 0
        out.p4 = out.p4.*tt_mask;
    end
-
-end
-
-% set output format
-switch cfg.outputFormat
-    case 'matrix'
-        % do nothing
-    case 'vectorU'
-        outfields = fieldnames(out);
-        for iField = 2:length(outfields) % starting at 2 because we want to ignore p0, which is not a matrix
-            keep = triu(ones(size(out.(outfields{iField}))),1); % get indices of values we want to keep (the 1 means we're discarding the diagonal)
-            out.(outfields{iField}) = out.(outfields{iField})(find(keep));
-        end
-    otherwise
-        error('Unrecognized cfg.outputFormat')
-end
 end
 

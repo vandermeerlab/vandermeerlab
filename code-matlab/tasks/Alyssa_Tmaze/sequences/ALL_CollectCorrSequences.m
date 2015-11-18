@@ -1,19 +1,19 @@
 % batch script to collect and plot co-occurrence data
 
 %%
-cfg = []; cfg.rats = {'R042'};
+cfg = []; cfg.rats = {'R042','R050'};
 cfg.requireCandidates = 1;
 fd = getTmazeDataPath(cfg);
 
 cfg.indivSessionPlot = 1;
 cfg.indivSequencePlots = 1;
 
-cfg.prefix = 'CS_ALL_'; % which files to load
+cfg.prefix = 'CS_M_ALL_'; % which files to load
 cfg.p = 0.99; % p-level for which events to count
 cfg.sessions = {'food','water'};
 cfg.arms = {'left','right'}; % needs to match order of out.score1[] and out.score3[] (1 is left, 2 right arm)
 cfg.writeFiles = 1;
-cfg.eventsToProcess = 'all'; % 'postrecord', 'all'
+cfg.eventsToProcess = 'prerecord'; % 'postrecord', 'all'
 
 %% init vars to place data into
 

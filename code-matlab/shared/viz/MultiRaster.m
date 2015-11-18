@@ -109,7 +109,6 @@ global evtTimes windowSize time usrfield
 windowSize = cfg.windowSize;
 
 % Initialize time vector for navigating
-binSize = 0.01;
 if ~isfield(cfg,'lfp')
     %create internal tvec that runs from the first spike time from any cell
     %to the last spike time
@@ -121,10 +120,12 @@ if ~isfield(cfg,'lfp')
     end
     
     tstart = min(firstSpike);
-    tend = max(lastSpike);    
+    tend = max(lastSpike);
+
+    binSize = 0.01;
     time = tstart:binSize:tend;
 else
-    time = cfg.lfp.tvec(1):binSize:cfg.lfp.tvec(end);
+    time = cfg.lfp.tvec;
 end
 
 % Initialize events

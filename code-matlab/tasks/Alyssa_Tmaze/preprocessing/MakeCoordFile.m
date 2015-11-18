@@ -110,7 +110,7 @@ else
 end
   
 %%%%%%% ****** ADD CONVFACT TO EXPKEYS FOR ALL SESSIONS  ******  %%%%%%%
-%%
+
 
 coordL_cm = coordL; % copy coordL under a new variable name, and apply some changes:
 coordL_cm(1,:) = coordL_cm(1,:)./convFact(1); % apply x conversion
