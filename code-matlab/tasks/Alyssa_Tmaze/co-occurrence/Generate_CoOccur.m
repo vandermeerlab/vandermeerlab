@@ -214,12 +214,12 @@ FieldOrder_right = TC_right.field_template_idx(TC_right.field_loc > cpR); % ^^^
 FieldOrder_left(ia) = []; FieldOrder_right(ib) = [];
 
 % make a new S, keeping left-only cells
-S_pc_left = S_orig;
-S_pc_left.t = S_pc_left.t(FieldOrder_left); S_pc_left.label = S_pc_left.label(FieldOrder_left); S_pc_left.usr.data = S_pc_left.usr.data(FieldOrder_left);
+S_pc_left = OrderSelectS([],S_orig,FieldOrder_left);
+%S_pc_left.t = S_pc_left.t(FieldOrder_left); S_pc_left.label = S_pc_left.label(FieldOrder_left); S_pc_left.usr.data = S_pc_left.usr.data(FieldOrder_left);
 
 % make a new S, keeping right-only cells
-S_pc_right = S_orig;
-S_pc_right.t = S_pc_right.t(FieldOrder_right); S_pc_right.label = S_pc_right.label(FieldOrder_right); S_pc_right.usr.data = S_pc_right.usr.data(FieldOrder_right);
+S_pc_right = OrderSelectS([],S_orig,FieldOrder_right);
+%S_pc_right.t = S_pc_right.t(FieldOrder_right); S_pc_right.label = S_pc_right.label(FieldOrder_right); S_pc_right.usr.data = S_pc_right.usr.data(FieldOrder_right);
 
 if cfg.outputPConly
     % output data pertaining to the place cells we keep for analysis
@@ -247,8 +247,7 @@ end
 %% make Q-matrix for in-field activity 
 S_lr = []; % make a new S containing left-only and right-only cells
 S_lr.t = cat(2,S_pc_left.t,S_pc_right.t); nLeft = length(S_pc_left.t); nRight = length(S_pc_right.t);
-S_lr.usr.data = cat(2,S_pc_left.usr.data,S_pc_right.usr.data);
-S_lr.usr.label = 'tt_num';
+S_lr = concatenateTS(S_pc_left,S_pc_right);
 
 %A Q-matrix is organized such that each row corresponds to a cell, and each 
 %column groups the spikes into time bins. Thus, each column contains information 
@@ -278,7 +277,7 @@ Q_lrR = restrict(Q_lrR,run_iv);
 %% z-scored co-occurrence
 cx = [-20 20];
 
-cfg_cc = []; cfg_cc.nShuffle = cfg.nShuffles; cfg_cc.num_tt = S_lr.usr.data;
+cfg_cc = []; cfg_cc.nShuffle = cfg.nShuffles; cfg_cc.num_tt = S_lr.usr.tt_num;
 [c_crossed,mask_both] = CoOccurQ(cfg_cc,Q_lrR);
 
 if cfg.plotOutput
