@@ -27,7 +27,7 @@ cfg_def = [];
 cfg_def.load_questionable_cells = 1;
 cfg_def.output_dir = 'files';
 cfg_def.output_file_prefix = []; % when writing files, prefix this
-cfg_def.whichEvents = 'all'; % 'prerecord', 'all', 'postrecord'
+cfg_def.whichEvents = 'all'; % 'prerecord', 'all', 'postrecord', 'taskrest'
 cfg_def.dt = 0.1; % window size (s) for RUN
 cfg_def.win = 0.1; % window size (s) for SWR
 cfg_def.writeFiles = 1;
@@ -36,6 +36,7 @@ cfg_def.nShuffles = 250;
 cfg_def.removeTheta = 1;
 cfg_def.removeRunning = 1;
 cfg_def.doMovingWindow = 0;
+cfg_def.outputPConly = 0; % send me the place cells and tuning curves only
 
 cfg = ProcessConfig2(cfg_def,cfg_in);
 
@@ -141,7 +142,7 @@ if cfg.plotOutput
 end
 
 % write fig
-if cfg.writeFiles, cd(output_fd);
+if cfg.writeFiles && cfg.plotOutput, cd(output_fd);
     out_fn = cat(2,base_fn,'-CoordCheck.png');
     print(gcf,'-r300','-dpng',out_fn);
     close(gcf);
@@ -174,7 +175,7 @@ cfg_tc = []; cfg_tc.order = 2; cfg_tc.binsize = binSize; cfg_tc.cp = cpL;% field
 if cfg.plotOutput, TCPlot(cfg_tc,TC_left); end
 
 % write fig -- could be helper function
-if cfg.writeFiles, cd(output_fd);
+if cfg.writeFiles && cfg.plotOutput, cd(output_fd);
     out_fn = cat(2,base_fn,'-TC_left.png');
     print(gcf,'-r300','-dpng',out_fn);
     close(gcf);
@@ -184,7 +185,7 @@ end
 cfg_tc.cp = cpR;
 if cfg.plotOutput, TCPlot(cfg_tc,TC_right); end
 % write fig -- could be helper function
-if cfg.writeFiles, cd(output_fd);
+if cfg.writeFiles && cfg.plotOutput, cd(output_fd);
     out_fn = cat(2,base_fn,'-TC_right.png');
     print(gcf,'-r300','-dpng',out_fn);
     close(gcf);
@@ -194,7 +195,7 @@ end
 % NOTE this takes a lot of Java heap space..
 if cfg.plotOutput, fh = AnotherTCplotTwin([],S_run,TC_left,TC_right,pos); else fh = []; end
 % write figs
-if cfg.writeFiles, cd(output_fd);
+if cfg.writeFiles && cfg.plotOutput, cd(output_fd);
     for iFH = 1:length(fh)
         out_fn = cat(2,base_fn,'-fields_',num2str(iFH),'.png');
         set(fh(iFH), 'InvertHardCopy', 'off');
@@ -220,8 +221,30 @@ S_pc_left.t = S_pc_left.t(FieldOrder_left); S_pc_left.label = S_pc_left.label(Fi
 S_pc_right = S_orig;
 S_pc_right.t = S_pc_right.t(FieldOrder_right); S_pc_right.label = S_pc_right.label(FieldOrder_right); S_pc_right.usr.data = S_pc_right.usr.data(FieldOrder_right);
 
-
-%% make Q-matrix for in-field activity (not used in analysis)
+if cfg.outputPConly
+    % output data pertaining to the place cells we keep for analysis
+    
+    keepLeft = TC_left.field_template_idx(TC_left.field_loc > cpL);
+    keepRight = TC_right.field_template_idx(TC_right.field_loc > cpR);
+    
+    %spiketrains and corresponding .t file name
+    
+    armPC.L.S = OrderSelectS([],S_orig,TC_left.template_idx);
+    %tuning curves
+    armPC.L.tc = TC_left; %%%% was here
+    armPC.L.unique_idx = keepLeft;
+    
+    armPC.R.S = OrderSelectS([],S_orig,TC_right.template_idx);
+   
+    armPC.R.tc = TC_right;
+    armPC.R.unique_idx = keepRight;
+    cd(output_fd)
+    save([base_fn,'-armPC'],'armPC')
+    cd(this_fd)
+    %return
+end
+ if ~cfg.outputPConly
+%% make Q-matrix for in-field activity 
 S_lr = []; % make a new S containing left-only and right-only cells
 S_lr.t = cat(2,S_pc_left.t,S_pc_right.t); nLeft = length(S_pc_left.t); nRight = length(S_pc_right.t);
 S_lr.usr.data = cat(2,S_pc_left.usr.data,S_pc_right.usr.data);
@@ -267,7 +290,7 @@ if cfg.plotOutput
     title(sprintf('RUN - coOcc z (dt = %.3f)',cfg.dt)); caxis(cx);
 end
 % write fig -- could be helper function
-if cfg.writeFiles, cd(output_fd);
+if cfg.writeFiles && cfg.plotOutput, cd(output_fd);
     out_fn = cat(2,base_fn,'-RUN_coOccurZ.png');
     print(gcf,'-r300','-dpng',out_fn);
     close(gcf);
@@ -294,18 +317,25 @@ out.TCleft = TC_left; out.TCright = TC_right;
 %%%%%%%%%%%%%%%%%%%%%%%%%
 %% get SWR candidates %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%
-load(FindFile('*candidates.mat'));
+%load(FindFile('*candidates.mat'));
+LoadCandidates
 if isfield(evt,'data'), evt = rmfield(evt,'data'); end
 
 fprintf('nEvents loaded: %d\n',length(evt.tstart));
 
 switch cfg.whichEvents
     case 'all'
-        evt = restrict(evt,ExpKeys.prerecord(1),ExpKeys.postrecord(2));
+        % do nothing
     case 'prerecord'
         evt = restrict(evt,ExpKeys.prerecord(1),ExpKeys.prerecord(2));
     case 'postrecord'
         evt = restrict(evt,ExpKeys.postrecord(1),ExpKeys.postrecord(2));
+    case 'taskrest'
+        evt = restrict(evt,metadata.taskvars.trial_iv.tstart,metadata.taskvars.trial_iv.tend);
+    case 'task'
+        evt = restrict(evt,ExpKeys.task(1),ExpKeys.task(2));
+    otherwise
+        error('Unrecognized cfg.whichEvents')
 end
 fprintf('nEvents after cfg.whichEvents restrict: %d\n',length(evt.tstart));
 
@@ -378,6 +408,7 @@ if ~isempty(S_pc_right.t)
         
         qtemp = MakeQfromS(cfg_Q,S_pc_right);
         Q_rightSWR(:,iEvt) = qtemp.data;
+        assignin('base','Q',Q_rightSWR)
         
     end
 end
@@ -407,7 +438,7 @@ if cfg.plotOutput
     title(sprintf('SWR_z - coOcc z (dt = %.3f)',cfg.dt)); caxis(cx);
 end
 % write fig -- could be helper function
-if cfg.writeFiles, cd(output_fd);
+if cfg.writeFiles && cfg.plotOutput, cd(output_fd);
     out_fn = cat(2,base_fn,'-coOccur_SWR_z.png');
     print(gcf,'-r300','-dpng',out_fn);
     close(gcf);
@@ -473,3 +504,5 @@ if cfg.writeFiles
     save(out_fn,'out');
     cd(this_fd)
 end
+ end
+ cd(this_fd)
