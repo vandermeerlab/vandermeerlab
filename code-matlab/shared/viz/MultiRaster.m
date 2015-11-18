@@ -109,8 +109,8 @@ global evtTimes windowSize time usrfield
 windowSize = cfg.windowSize;
 
 % Initialize time vector for navigating
-if ~isfield(cfg,'time')
-    %create internal tvec that runs form the first spike time from any cell
+if ~isfield(cfg,'lfp')
+    %create internal tvec that runs from the first spike time from any cell
     %to the last spike time
     firstSpike = size(S.t);
     lastSpike = size(S.t);
@@ -120,12 +120,12 @@ if ~isfield(cfg,'time')
     end
     
     tstart = min(firstSpike);
-    assignin('base','firstspike',firstSpike)
     tend = max(lastSpike);
 
     binSize = 0.01;
     time = tstart:binSize:tend;
-    assignin('base','time',time)
+else
+    time = cfg.lfp.tvec;
 end
 
 % Initialize events
@@ -140,7 +140,6 @@ if isfield(cfg,'evt')
 else
     % navigate by seconds
     evtTimes = time(1:100:end); 
-    assignin('base','evtTimes',evtTimes)
 end
     
 % handle lone figure plotting or subplotting
@@ -305,11 +304,10 @@ switch cfg.axisflag
         xlim([S.cfg.ExpKeys.TimeOnTrack S.cfg.ExpKeys.TimeOffTrack]);
         ylim([ylims(1)-1 ylims(2)+1])
     case 'spandex' % because sometimes tight just isn't tight enough (aacarey sept 2015)
-        if isfield(cfg,'lfp');
-            xlim([cfg.lfp.tvec(1) cfg.lfp.tvec(end)])
+        xlim([time(1) time(end)])
+        if isfield(cfg,'lfp');           
             ylim([max(-cfg.lfpHeight) ylims(2)])
         else
-            xlim([xlims(1) xlims(2)]);
             ylim([ylims(1)-1 ylims(2)+1])
         end
 end
