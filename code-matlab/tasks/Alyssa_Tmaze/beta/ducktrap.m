@@ -397,7 +397,7 @@ end
             end
             H = [];
         else 
-            if ~isempty(cfg.lfp)
+            if isfield(cfg,'lfp') && ~isempty(cfg.lfp)
                 set(spButton,'Visible','on'); set(zPop,'Visible','on'); set(frange,'Visible','on')
                 mafak = findobj(ax_spec); % use findobj, otherwise can't make imagesc invisible (just axes)
                 set(mafak,'Visible','off'); set(ax_main,'Color','w') 
