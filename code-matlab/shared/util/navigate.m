@@ -375,17 +375,17 @@ next_idx = current_index;
         leftLim = next_location - flank;
         rightLim = next_location + flank;
         limits = [leftLim rightLim];
-        
-        if ~isempty(usrfield)
-            str_title = sprintf('event %d/%d',next_idx,length(evtTimes));
-
-            for iU = 1:length(usrfield)  
-                str_font = '\fontsize{8}';
-                str_usr{iU} = [str_font,sprintf('%s: %.3f',usrfield(iU).label,usrfield(iU).data(next_idx))];
-            end
-            
-            str = [{str_title},str_usr];
-            title(str)
+        if false
+%         if ~isempty(usrfield)
+%             str_title = sprintf('event %d/%d',next_idx,length(evtTimes));
+% 
+%             for iU = 1:length(usrfield)  
+%                 str_font = '\fontsize{8}';
+%                 str_usr{iU} = [str_font,sprintf('%s: %.3f',usrfield(iU).label,usrfield(iU).data(next_idx))];
+%             end
+%             
+%             str = [{str_title},str_usr];
+%             title(str)
            
         % no usr field input for events
         elseif evtTitle == 1
