@@ -9,13 +9,15 @@ function spd = getLinSpd(cfg_in,pos)
 %
 % cfg options with defaults:
 %
-% (none yet)
+% cfg.verbose = 1; 1 display command window text, 0 don't
 %
 % MvdM 2014-07-29
 
-cfg_def = [];
-cfg = ProcessConfig2(cfg_def,cfg_in);
+cfg_def.verbose = 1;
 mfun = mfilename;
+cfg = ProcessConfig(cfg_def,cfg_in,mfun);
+
+if cfg.verbose; fprintf('%s: calculating linear speed from position data\n',mfun); end
 
 vx = dxdt(pos.tvec,getd(pos,'x'));
 vy = dxdt(pos.tvec,getd(pos,'y'));

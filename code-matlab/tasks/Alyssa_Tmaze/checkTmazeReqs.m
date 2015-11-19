@@ -1,4 +1,4 @@
-function proceed = checkTmazeReqs(cfg_in)
+function pass_flag = checkTmazeReqs(cfg_in)
 %CHECKTMAZEREQS Verify that requisites exist before continuing analysis
 % ExpKeys, metadata, VT file, candidates, times (R042 only), files (for
 % stuff generated during analysis)
@@ -23,13 +23,14 @@ function proceed = checkTmazeReqs(cfg_in)
 %   analysis
 % cfg_def.ratsToProcess = {'R042','R044','R050','R064'}; % only process these
 %   rats
+% cfg_def.verbose = 1; 1 display command window text, 0 don't
 %
 % ACarey May 2015, for Tmaze project 
 
 %% 
 if isempty(cfg_in)
     disp('checkTmazeReqs: cfg is empty, not checking requisites')
-    proceed = 1;
+    pass_flag = 1;
     return
 end
 
@@ -46,8 +47,10 @@ cfg_def.requireTimes = 0;
 cfg_def.requireHSdetach = 0;
 cfg_def.requireFiles = 0;
 cfg_def.ratsToProcess = {'R042','R044','R050','R064'};
+cfg_def.verbose = 1;
 
-cfg = ProcessConfig(cfg_def,cfg_in);
+mfun = mfilename;
+cfg = ProcessConfig(cfg_def,cfg_in,mfun);
 cfg.verbose = 1; % i want checkfields to tell me which ones are missing
 
 if cfg.checkall
@@ -63,6 +66,8 @@ if cfg.checkall
     cfg.requireFiles = 1;
 end
 %% 
+
+disp([mfun,': searching for required data in session folders...'])
 
 if ispc
     machinename = getenv('COMPUTERNAME');
@@ -86,7 +91,7 @@ end
 
 %%
 
-proceed = 1;
+pass_flag = 1;
 
 % Remember where you started
 original_folder = pwd; % pwd is your current directory ("print working directory")
@@ -130,12 +135,12 @@ for iRat = 1:length(rat_list)
             fn = FindFiles('*keys.m');
             if isempty(fn)
                 disp(['ExpKeys file not found in ',sessionID])
-                proceed = 0;
+                pass_flag = 0;
             end
             if ~isempty(fn) && ~isempty(cfg.ExpKeysFields)
                 [ismissing,~] = checkfields(cfg,'*keys.m',cfg.ExpKeysFields);
                 if ismissing
-                    proceed = 0;
+                    pass_flag = 0;
                 end
             end
         end
@@ -144,12 +149,12 @@ for iRat = 1:length(rat_list)
             fn = FindFiles('*metadata.mat');
             if isempty(fn)
                 disp(['metadata file not found in ',sessionID])
-                proceed = 0;
+                pass_flag = 0;
             end
             if ~isempty(fn) && ~isempty(cfg.MetadataFields)
                 [ismissing,~] = checkfields(cfg,'*metadata.mat',cfg.MetadataFields);
                 if ismissing
-                    proceed = 0;
+                    pass_flag = 0;
                 end
             end
         end
@@ -158,7 +163,7 @@ for iRat = 1:length(rat_list)
             fn = FindFiles('*.nvt');
             if isempty(fn)
                 disp(['Video tracking file not found in ',sessionID])
-                proceed = 0;
+                pass_flag = 0;
             end
         end
         
@@ -166,7 +171,7 @@ for iRat = 1:length(rat_list)
             fn = FindFiles('*-candidates.mat');
             if isempty(fn)
                 disp(['Candidates file not found in ',sessionID])
-                proceed = 0;
+                pass_flag = 0;
             end
         end
         
@@ -174,7 +179,7 @@ for iRat = 1:length(rat_list)
             fn = FindFiles('*-precandidates.mat');
             if isempty(fn)
                 disp(['Precandidates file not found in ',sessionID])
-                proceed = 0;
+                pass_flag = 0;
             end
         end
         
@@ -182,31 +187,31 @@ for iRat = 1:length(rat_list)
             fn = FindFiles('*-times.mat');
             if isempty(fn)
                 disp(['Times file not found in ',sessionID])
-                proceed = 0;
+                pass_flag = 0;
             end
         end   
         if cfg.requireTimes && sum(strcmp(sessionID,{'R044-2013-12-21','R044-2013-12-22'})) >= 1 % for these sessions only
             fn = FindFiles('*HS_detach_times.mat');
             if isempty(fn)
                 disp(['HS_detach_times file not found in ',sessionID])
-                proceed = 0;
+                pass_flag = 0;
             end
         end
         
         if cfg.requireFiles 
             if ~exist('files','dir')
                 disp(['Files folder not found in ',sessionID])
-                proceed = 0;
+                pass_flag = 0;
             end
         end 
         
     end
-    if ~proceed 
+    if ~pass_flag 
         disp(' ') % for formatting, kind of
     end
 end
-if proceed
-    disp('checkTmazeReqs: all requisites exist')
+if pass_flag
+    disp('checkTmazeReqs: all known requisites exist')
 end
 % return to the original folder
 cd(original_folder)

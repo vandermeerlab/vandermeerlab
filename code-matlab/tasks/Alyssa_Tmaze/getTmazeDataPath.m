@@ -10,6 +10,7 @@ function fd = getTmazeDataPath(cfg_in)
 %
 % cfg_def.rats = {'R042','R044','R050','R064'};
 % cfg_def.requireMetadata = 1;
+% cfg_def.requireCandidates = 0;
 %
 % OUTPUT
 %
@@ -20,8 +21,10 @@ function fd = getTmazeDataPath(cfg_in)
 cfg_def.rats = {'R042','R044','R050','R064'};
 cfg_def.requireMetadata = 1;
 cfg_def.requireCandidates = 0;
+cfg_def.verbose = 1;
 
-cfg = ProcessConfig2(cfg_def,cfg_in);
+mfun = mfilename;
+cfg = ProcessConfig(cfg_def,cfg_in,mfun);
 
 if ispc
     machinename = getenv('COMPUTERNAME');

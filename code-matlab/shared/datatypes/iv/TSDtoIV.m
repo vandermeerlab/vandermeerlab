@@ -14,6 +14,7 @@ function iv_out = TSDtoIV(cfg_in,tsd_in)
 % cfg.merge_thr = 0.05; % merge events closer than this
 % cfg.target = []; % which data (label) to use
 % cfg.minlen = 0.05; % minimum interval length
+% cfg.verbose = 1; 1 display command window text, 0 don't
 %
 % OUTPUTS:
 %
@@ -27,9 +28,10 @@ cfg_def.dcn =  '>'; % return intervals where threshold is exceeded
 cfg_def.merge_thr = 0.05; % merge events closer than this
 cfg_def.target = [];
 cfg_def.minlen = 0.05; % minimum interval length
+cfg_def.verbose = 1;
 
-cfg = ProcessConfig2(cfg_def,cfg_in); % should take whatever is in cfg_in and put it into cfg!
 mfun = mfilename;
+cfg = ProcessConfig(cfg_def,cfg_in,mfun); % should take whatever is in cfg_in and put it into cfg!
 
 iv_out = iv; % initialize new iv struct
 
@@ -92,6 +94,10 @@ end
 
 if ~iscolumn(iv_out.tend)
     iv_out.tend = iv_out.tend';
+end
+
+if cfg.verbose
+    disp([mfun,': ',num2str(length(up_t)),' intervals found.'])
 end
 
 % housekeeping

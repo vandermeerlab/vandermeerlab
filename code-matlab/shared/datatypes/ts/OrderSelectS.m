@@ -28,9 +28,9 @@ function S_out = OrderSelectS(cfg_in,S,idx)
 %% Parse cfg parameters
 
 cfg_def.verbose = 1;
-cfg = ProcessConfig2(cfg_def,cfg_in);
 
 mfun = mfilename; % get name of function as string
+cfg = ProcessConfig(cfg_def,cfg_in,mfun);
 
 % do the thing
 S_out = S;

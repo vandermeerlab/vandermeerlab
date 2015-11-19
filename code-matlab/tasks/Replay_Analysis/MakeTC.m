@@ -18,6 +18,7 @@ function tc_out = MakeTC(cfg_in,S,pos)
 %    cfg_def.conv2Sec = 1;
 %    cfg_def.p_thr = 5; % threshold for detecting place fields in Hz
 %    cfg_def.max_meanfr = 5; % mean fr to rule out interneurons
+%    cfg_def.verbose = 1; 1 display command window text, 0 don't
 %
 % youkitan 2014-12-28, MvdM edits
 
@@ -33,8 +34,12 @@ cfg_def.minSize = 4; % minimum size of field (in bins)
 %cfg_def.maxSize = 20; % maximum size of field (in bins)
 cfg_def.edges = []; % edge vector to use for binning; defaults to min(pos):binSize:max(pos)
 cfg_def.nSpikesInField = 20; % minimum number of spikes in field
+cfg_def.verbose = 1;
 
-cfg = ProcessConfig2(cfg_def,cfg_in);
+mfun = mfilename;
+cfg = ProcessConfig(cfg_def,cfg_in,mfun);
+
+if cfg.verbose; disp([mfun,': gathering tuning curve and place cell data...']); end
 
 %% Detect place cells and get tuning curves
 
