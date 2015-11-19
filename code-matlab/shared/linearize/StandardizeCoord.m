@@ -14,15 +14,20 @@ function Coord_out = StandardizeCoord(cfg_in,Coord_in)
 % config options
 %  cfg_def.run_dist = 300; % actual length of Coord (in cm)
 %  cfg_def.binsize = 3; % desired bin size (in cm)
+%  cfg_def.verbose = 1; % 1 display command window text, 0 don't
 %
 % MvdM 2015-10-01 initial version
 
 cfg_def.run_dist = 300; % actual length of Coord (in cm)
 cfg_def.binsize = 3; % desired bin size (in cm)
+cfg_def.verbose = 1;
 
-cfg = ProcessConfig2(cfg_def,cfg_in);
+mfun = mfilename;
+cfg = ProcessConfig(cfg_def,cfg_in,mfun);
 
-nBins = round(cfg.run_dist/cfg.binSize);
+if cfg.verbose; fprintf('%s: standardizing %d cm coord to %d cm bin size...\n',mfun,cfg.run_dist,cfg.binsize); end
+
+nBins = round(cfg.run_dist/cfg.binsize);
 
 Coord_out(1,:) = interp1(1:size(Coord_in,2),Coord_in(1,:),linspace(1,size(Coord_in,2),nBins),'linear');
 Coord_out(2,:) = interp1(1:size(Coord_in,2),Coord_in(2,:),linspace(1,size(Coord_in,2),nBins),'linear');
