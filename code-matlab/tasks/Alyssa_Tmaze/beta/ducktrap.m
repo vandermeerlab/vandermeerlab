@@ -519,13 +519,15 @@ function spectraxis(~,~)
         switch zscale
             case 'root'
                 P = sqrt(P);
+                col = [0.09*10^-6 18*10^-6]; % some arbitrary range for the color scaling, keep everything relative or w/e
             case 'decibel-watt'
                 P = 10*log10(P);
+                col = [-200 -80];
             case 'raw'
-                % do nothing
+                col = [0.09*10^-10 3*10^-10];                
         end
         
-        imagesc(T,F,P)
+        imagesc(T,F,P,col);
         set(ax_spec,'YAxisLocation','right','XTick',xticks,'XTickLabel',[],'YDir','normal','Visible','on')
         
         ylabel(ax_spec,'Frequency (Hz)')
