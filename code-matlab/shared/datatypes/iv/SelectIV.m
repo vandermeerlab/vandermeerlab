@@ -61,18 +61,18 @@ cfg = ProcessConfig(cfg_def,cfg_in,mfun);
 
 % choose which thing to do
 if islogical(selectspec) || isnumeric(selectspec)
-    goto = 'there'; % -_-
+    spec_type = 'log_or_num'; % specifying intervals to keep using a logical or numerical array
 elseif ischar(selectspec)
-    goto = 'here'; % D:
+    spec_type = 'string'; % specifying a string which corresponds to a usr field name
 else
     error('selectspec must be a logical array, numeric array of indices, or a string specifying a usr field name.')
 end
 
-switch goto
-    case 'here'  
+switch spec_type
+    case 'string'  
         % make sure usr exists
         if ~isfield(iv_in,'usr')
-            error([mfun,': iv_in requires usr for this type of selection.'])
+            error('iv_in requires usr for this type of selection.')
         end
         % check that the field actually exists and that it's the right length
         if ischar(selectspec) && ~isfield(iv_in.usr,selectspec)
@@ -83,24 +83,22 @@ switch goto
         
         % if the field contains strings, get ratings in numerical form
         if isempty(cfg.str) && ~isnumeric(iv_in.usr.(selectspec)(1))
-            type = 1;
+            str_type = 'rating'; % something like '5, or delete'
             temp = nan(size(iv_in.usr.(selectspec)));
             for ii = 1:length(temp)
                 temp(ii,1) = str2double(iv_in.usr.(selectspec){ii,1}(1)); % we assume the rating is the first character in the string
             end
         elseif isempty(cfg.str) && isnumeric(iv_in.usr.(selectspec))
-            type = 1;
+            str_type = 'rating'; % something like '5, or delete'
             temp = iv_in.usr.(selectspec);
         elseif ~isempty(cfg.str)
-            type = 2;
+            str_type = 'description'; % something like 'good'
             temp = iv_in.usr.(selectspec);
         end
         
-        assignin('base','temp',temp)
-        
         % do the thing
-        switch type
-            case 1
+        switch str_type
+            case 'rating'
                 switch cfg.operation
                     case '>'
                         keep =  temp > cfg.threshold;
@@ -115,7 +113,7 @@ switch goto
                     otherwise
                         error('Unrecognized cfg.operation')
                 end
-            case 2
+            case 'description'
                 keep = nan(size(temp));
                 for iStr = 1:length(temp)
                     keep(iStr) = strcmp(cfg.str,temp(iStr));
@@ -124,8 +122,13 @@ switch goto
         
         keep = logical(keep);
         
-    case 'there'
+    case 'log_or_num'
         keep = selectspec;
+        % these config options do not apply in this case, so don't give
+        % them a value in history since they did not affect the output
+        cfg.operation = '';
+        cfg.threshold = [];
+        cfg.str = '';
 end
 
 iv_out = iv_in;
