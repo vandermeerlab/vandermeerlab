@@ -116,7 +116,7 @@ ii = 1;
 current_iv = idx_list(ii);
 midpoints = IVcenters(iv_in);
 
-if ~isfield(iv_in,'usr') && ~isfield(iv_in.usr,'annotation')
+if ~isfield(iv_in,'usr') || ~isstruct(iv_in.usr) || ~isfield(iv_in.usr,'annotation')
     % add empty annotations
     iv_in.usr.annotation = cell(length(iv_in.tstart),1);
 end
@@ -324,9 +324,9 @@ PlotCurrentIV
         nEmpties = length(temp(cellfun(@isempty,temp)));
         
         if nEmpties > 0
-            choice = questdlg(['You are missing ',num2str(nEmpties),' annotations. Are you sure you want to close the figure? Any unsaved data will be lost.'],'Quit Requested','No','Quit anyway','No');
+            choice = questdlg(['You are missing ',num2str(nEmpties),' annotations. Are you sure you want to close the figure? Any unsaved data will be lost.'],'Quit Requested','Quit anyway','Cancel','Cancel');
             switch choice
-                case 'No'
+                case 'Cancel'
                     return
                 case 'Quit anyway'
                     delete(gcf)
