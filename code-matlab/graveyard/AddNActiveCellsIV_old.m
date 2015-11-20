@@ -15,10 +15,12 @@ function iv_in = AddNActiveCellsIV(cfg_in,iv_in,S)
 %
 % mvdm 2015-02-01 initial version
 % note: uses binning method for speed, i.e. is not exact
+% note: adding usr fields needs to be standardized globally
 
 % parse cfg parameters
 cfg_def = [];
 cfg_def.dt = 0.005;
+cfg_def.label = 'nActiveCells';
 cfg_def.verbose = 1;
 
 mfun = mfilename;
@@ -34,12 +36,10 @@ if isempty(iv_in.tstart)
     error('Interval data is empty')
 end
 
-if cfg.verbose; disp([mfun,': Adding the number of active units during each interval']); end
+if cfg.verbose; disp([mfun,': Adding the number of active cells during each interval']); end
 
 % make matrix of spike counts (nCells x nTimeBins) 
-cfg_temp.dt = cfg.dt;
-cfg_temp.verbose = 0;
-Q = MakeQfromS(cfg_temp,S);
+Q = MakeQfromS(cfg,S);
 
 % get number of active cells for each
 for iIV = length(iv_in.tstart):-1:1
@@ -55,15 +55,15 @@ for iIV = length(iv_in.tstart):-1:1
     
 end
 
-if ~isfield(iv_in,'usr') 
-    iv_in.usr = [];
+% NOTE adding usr fields to ivs needs to be handled better
+if isfield(iv_in,'usr')
+    iUsr = length(iv_in.usr)+1;
+else
+    iUsr = 1;
 end
 
-if cfg.verbose && isfield(iv_in.usr,'nActiveCells')
-    disp(['WARNING in ',mfun,': iv data already includes usr.nActiveCells, overwriting...'])
-end
-iv_in.usr.nActiveCells = nC;
-
+iv_in.usr(iUsr).data = nC;
+iv_in.usr(iUsr).label = cfg.label;
 
 % housekeeping
 iv_in.cfg.history.mfun = cat(1,iv_in.cfg.history.mfun,mfun);
