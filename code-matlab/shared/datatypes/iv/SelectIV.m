@@ -1,65 +1,160 @@
-function iv = SelectIV(cfg_in,iv)
-% function iv_out = SelectIV(cfg_in,iv_in)
+function [iv_out,idx] = SelectIV(cfg_in,iv_in,selectspec)
+%SELECTIV Specify intervals to keep.
+%   [iv_out,idx] = SELECTIV(cfg_in,iv_in,selectspec)
 %
-% select IVs based on some usr field
+%   INPUTS:
+%         cfg: config struct with fields controlling function behavior
+%       iv_in: iv struct
+%  selectspec: selection specifics, either:
+%         - [nx1] double: logical array or indices specifying which
+%                 intervals to keep.
+%         - string: string specifying which usr field to work with. If
+%                 selectspec is a string, the config options cfg.operation,
+%                 cfg.threshold, and cfg.str apply.
 %
-% INPUTS:
 %
-% iv_in: input interval data
+%   OUTPUTS
+%      iv_out: iv struct with specified intervals selected and all
+%              corresponding same-length usr trimmed accordingly
 %
-% CFG OPTIONS:
-% cfg.usrlabel = []; % which label to use
-% cfg.dcn = '>';
-% cfg.threshold = 5;
+%   CFG OPTIONS
+%       cfg.operation = '>='; How to perform numerical selection, see
+%                     cfg.threshold.
+%                '>' - usr data > threshold
+%               '>=' - usr data >= threshold
+%                '<' - usr data < threshold
+%               '<=' - usr data <= threshold
+%                '=' - usr data = threshold
+%       cfg.threshold = 0; Set a numerical threshold for keeping intervals.
+%                     This works on numerical usr contents, but can also be
+%                     applied to strings as long as the first character is
+%                     number-convertible:
+%                     If your field contains strings and cfg.str is
+%                     empty, SelectIV assumes that the first character is a
+%                     number (i.e. a rating) and thresholds based on this 
+%                     number. An example would be '1, very good', for which
+%                     SelectIV considers the 1 only. 
+%       cfg.str = ''; If your target usr field contains strings that 
+%                     are NOT number-convertible, input the string you
+%                     want to select by. If this is not empty, it overrides 
+%                     numerical selection. Examples of non-number-convertible 
+%                     strings might be 'good' or 'maybe' or 'poor'.
+%       cfg.verbose = 1; Tell me how many intervals came in, and how many
+%                     went out.
+% aacarey Nov 2015
 %
-% OUTPUTS:
-%
-% iv_out: output interval data
-%
-% MvdM 2014-06-24
-% youkitan 2015-01-20
+% see also RemoveIV, restrict
 
-cfg_def.usrlabel = []; % which label to use
-cfg_def.dcn = '>'; %'<','exact'
-cfg_def.threshold = 5;
+cfg_def.operation = '>=';
+cfg_def.threshold = 0;
+cfg_def.str = ''; % if this is not empty, it overrides numerical selection
+cfg_def.verbose = 1;
 
-cfg = ProcessConfig2(cfg_def,cfg_in); % should take whatever is in cfg_in and put it into cfg!
-mfun = mfilename;
-
-if ~isfield(iv,'usr')
-   error('This iv has no usr data.'); 
+if ~CheckIV(iv_in)
+    error('iv_in must be an iv data type.')
 end
 
-% get data to select on
-if length(iv.usr) == 1
-    temp_data = iv.usr.data;
+mfun = mfilename;
+
+% parse cfg parameters
+cfg = ProcessConfig(cfg_def,cfg_in,mfun);
+
+% choose which thing to do
+if islogical(selectspec) || isnumeric(selectspec)
+    goto = 'there'; % -_-
+elseif ischar(selectspec)
+    goto = 'here'; % D:
 else
-    idx = strcmp(cfg.usrlabel,[iv.usr.label]); % FIXED -- works now
-    
-    if ~isempty(idx)
-        temp_data = iv.usr(idx).data;
-    else
-        error('usrlabel not found.');
+    error('selectspec must be a logical array, numeric array of indices, or a string specifying a usr field name.')
+end
+
+switch goto
+    case 'here'  
+        % make sure usr exists
+        if ~isfield(iv_in,'usr')
+            error([mfun,': iv_in requires usr for this type of selection.'])
+        end
+        % check that the field actually exists and that it's the right length
+        if ischar(selectspec) && ~isfield(iv_in.usr,selectspec)
+            error([selectspec,' does not exist.'])
+        elseif ischar(selectspec) && length(iv_in.usr.(selectspec)) ~= length(iv_in.tstart)
+            error(['iv_in.usr.',selectspec,' must have the same dimensions as iv_in.tstart.'])
+        end
+        
+        % if the field contains strings, get ratings in numerical form
+        if isempty(cfg.str) && ~isnumeric(iv_in.usr.(selectspec)(1))
+            type = 1;
+            temp = nan(size(iv_in.usr.(selectspec)));
+            for ii = 1:length(temp)
+                temp(ii,1) = str2double(iv_in.usr.(selectspec){ii,1}(1)); % we assume the rating is the first character in the string
+            end
+        elseif isempty(cfg.str) && isnumeric(iv_in.usr.(selectspec))
+            type = 1;
+            temp = iv_in.usr.(selectspec);
+        elseif ~isempty(cfg.str)
+            type = 2;
+            temp = iv_in.usr.(selectspec);
+        end
+        
+        assignin('base','temp',temp)
+        
+        % do the thing
+        switch type
+            case 1
+                switch cfg.operation
+                    case '>'
+                        keep =  temp > cfg.threshold;
+                    case '>='
+                        keep = temp >= cfg.threshold;
+                    case '<'
+                        keep = temp < cfg.threshold;
+                    case '<='
+                        keep = temp <= cfg.threshold;
+                    case '='
+                        keep = temp == cfg.threshold;
+                    otherwise
+                        error('Unrecognized cfg.operation')
+                end
+            case 2
+                keep = nan(size(temp));
+                for iStr = 1:length(temp)
+                    keep(iStr) = strcmp(cfg.str,temp(iStr));
+                end
+        end
+        
+        keep = logical(keep);
+        
+    case 'there'
+        keep = selectspec;
+end
+
+iv_out = iv_in;
+iv_out.tstart = iv_out.tstart(keep);
+iv_out.tend = iv_out.tend(keep);
+
+% also select data from other same-length usr fields
+if isfield(iv_out,'usr') && ~isempty(iv_out.usr)
+    ivfields = fieldnames(iv_out.usr);
+    for iField = 1:length(ivfields)
+        iv_out.usr.(ivfields{iField}) = iv_out.usr.(ivfields{iField})(keep);
     end
 end
 
-% do the selection
-switch cfg.dcn
-    case '>'
-        keep_idx = temp_data > cfg.threshold;
-    case '<'
-        keep_idx = temp_data < cfg.threshold;
-    case 'exact' %selecting ivs by the index for logical input
-        keep_idx = temp_data;
+% make idx output
+if islogical(keep)
+    idx = find(keep);
+elseif isnumeric(keep)
+    idx = keep; 
 end
 
-iv.tstart = iv.tstart(keep_idx);
-iv.tend = iv.tend(keep_idx);
-
-for iU = 1:length(iv.usr)
-   iv.usr(iU).data = iv.usr(iU).data(keep_idx); 
+% talk to me
+if cfg.verbose
+    disp([mfun,': ',num2str(length(iv_in.tstart)),' intervals in, ',num2str(length(iv_out.tstart)),' intervals out.'])
 end
 
 % housekeeping
-iv.cfg.history.mfun = cat(1,iv.cfg.history.mfun,mfun);
-iv.cfg.history.cfg = cat(1,iv.cfg.history.cfg,{cfg});
+iv_out.cfg.history.mfun = cat(1,iv_in.cfg.history.mfun,mfun);
+iv_out.cfg.history.cfg = cat(1,iv_in.cfg.history.cfg,{cfg});
+
+end % of function
+
