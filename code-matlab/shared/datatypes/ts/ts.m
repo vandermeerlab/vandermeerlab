@@ -7,7 +7,7 @@ function ts_out = ts(varargin)
 %
 %    OUTPUTS:
 %      ts_out: [1x1] ts struct with fields:
-%           .type   - 'tsd'; datatype identification
+%           .type   - 'ts'; datatype identification
 %           .t      - {1xn} cell, each containing a [nTimestamps x 1] double
 %           .label  - {1xn} cell containing unique identifiers for the 
 %                     timestamps contained within the .t field, such as a 
