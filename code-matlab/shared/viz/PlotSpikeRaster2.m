@@ -1,4 +1,4 @@
-function [ylims] = PlotSpikeRaster2(cfg_in,S_in)
+function h = PlotSpikeRaster2(cfg_in,S_in)
 %% Plot spikes
 % Converting the data to (x,y) coordinates is significantly faster to plot than calling on
 % cell arrays directly. Also, it removes the issue of drawing diagonals for cells with
@@ -16,7 +16,10 @@ cfg_def.lfpColor = 'r';
 cfg_def.axislabel = 'on';
 cfg_def.openInAxes = 0;
 cfg_def.LineWidth = 1;
-cfg = ProcessConfig2(cfg_def,cfg_in);
+cfg_def.verbose = 0;
+
+mfun = mfilename;
+cfg = ProcessConfig(cfg_def,cfg_in,mfun);
 
 % Check inputs
 assert(isfield(S_in,'t'),'Input is not a ts object!')
@@ -45,7 +48,7 @@ end
 
 if  nTrials == 1
     hold on;
-    
+    h = nan(size(S_in.t));
     for iC = 1:nCells
         nSpikes = length(S_in.t{iC});
         xvals = [ S_in.t{iC}' ; S_in.t{iC}' ; nan(size(S_in.t{iC}')) ];
@@ -55,7 +58,7 @@ if  nTrials == 1
         xvals = xvals(:);
         yvals = yvals(:);
 
-        plot(xvals,yvals,'Color',cfg.spkColor(iC,:),'LineWidth',cfg.LineWidth)
+        h(iC) = plot(xvals,yvals,'Color',cfg.spkColor(iC,:),'LineWidth',cfg.LineWidth);
         
     end
     
@@ -72,6 +75,8 @@ if  nTrials == 1
 else %equivalent to elseif nTrials > 1 (nTrials is always a positive integer)
     cmap = linspecer(nCells);
     hold on;
+    
+    h = nan(nCells,nTrials);
     for iC = 1:nCells
         for iT = 1:nTrials
             nSpikes = length(S_in.t{iT,iC});
@@ -82,7 +87,7 @@ else %equivalent to elseif nTrials > 1 (nTrials is always a positive integer)
             xvals = xvals(:);
             yvals = yvals(:);
             
-            plot(xvals,yvals,'Color',cmap(iC,:),'LineWidth',cfg.LineWidth)
+            h(iC,iT) = plot(xvals,yvals,'Color',cmap(iC,:),'LineWidth',cfg.LineWidth);
             
         end %iterate trials
     end %iterate cells
@@ -95,7 +100,8 @@ else %equivalent to elseif nTrials > 1 (nTrials is always a positive integer)
     
     % Set ylims
     ylims = [1 nTrials];
-    
 end
+
+set(gca,'YLim',ylims)
 
 end

@@ -1,4 +1,4 @@
-function out = MultiRaster(cfg_in,S)
+function h = MultiRaster(cfg_in,S)
 % function MultiRaster(cfg,S) plots the spiketrain S with optional inputs for lfps and
 % iv or ts event objects. 
 % User can move viewing window via keyboard input (type "help navigate" in command window).
@@ -7,6 +7,14 @@ function out = MultiRaster(cfg_in,S)
 %       cfg_in: input cfg
 %       S: input ts NOTE: S.t can be a MxN cell array where M is the number of repeated trials
 %       and N is the number of labeled signals
+%
+%   OUTPUT
+%       * handles output depends on plotmode
+%        h.S        - handles to spike trains 
+%        h.S_iv     - spike train intervals
+%        h.LFP      - hande to lfp
+%        h.LFP_iv   - handle to LFP intervals
+%        h.plotmode - which plot mode was entered
 %
 %   CFG OPTIONS:
 %       cfg.SpikeHeight - default 0.4
@@ -101,7 +109,10 @@ cfg_def.axislabel = 'on';
 cfg_def.windowSize = 1;
 cfg_def.openNewFig = 1;
 cfg_def.setAxes = 'on';
-cfg = ProcessConfig2(cfg_def,cfg_in);
+cfg_def.verbose = 0;
+
+mfun = mfilename;
+cfg = ProcessConfig(cfg_def,cfg_in,mfun);
 
 %% Setup navigate
 
@@ -113,6 +124,7 @@ binSize = 0.01;
 if ~isfield(cfg,'lfp')
     %create internal tvec that runs from the first spike time from any cell
     %to the last spike time
+    S.t = S.t(~cellfun(@isempty, S.t)); % remove empty cells
     firstSpike = size(S.t);
     lastSpike = size(S.t);
     for iC = 1:length(S.t)
@@ -157,7 +169,8 @@ ts_only = @(x) isfield(x,'t') && ~isfield(x,'tstart');
 iv_only = @(x) isfield(x,'tstart') && ~isfield(x,'t');
 
 if isfield(cfg,'lfp') %lfp
-    ylims = PlotSpikeRaster2(cfg,S);
+    hS = PlotSpikeRaster2(cfg,S);
+    ylims = get(gca,'YLim');
 
     spikelims = get(gca,'Xlim');
     for iLFP = 1:length(cfg.lfp)
@@ -197,18 +210,21 @@ end
 %% Choose Plotting mode
 switch plotMode        
     case 1 % just spikes
-        ylims = PlotSpikeRaster2(cfg,S);
+        h.S = PlotSpikeRaster2(cfg,S);
+        ylims = get(gca,'YLim');
         
     case 2 % ts data only
-        ylims = PlotSpikeRaster2(cfg,S);
+        h.S = PlotSpikeRaster2(cfg,S);
         PlotTSEvt(cfg,cfg.evt)
+        ylims = get(gca,'YLim');
         
     case 3 % iv data only
         evtTimes = (cfg.evt.tstart + cfg.evt.tend)./2;
         S_iv = restrict(S,cfg.evt.tstart,cfg.evt.tend);
-        ylims = PlotSpikeRaster2(cfg,S);
+        h.S = PlotSpikeRaster2(cfg,S); % plots all spikes
         cfg.spkColor = 'r';
-        ylims = PlotSpikeRaster2(cfg,S_iv);
+        h.S_iv = PlotSpikeRaster2(cfg,S_iv); % plots event spikes overtop in a different color
+        ylims = get(gca,'YLim');
         
     case 4 % ts + iv data NOT WORKING YET
         error('ts + iv event data NOT WORKING YET')
@@ -230,7 +246,7 @@ switch plotMode
                 upper_val = lower_val+cfg.lfpHeight;
                 
                 lfp.data = rescale(lfp.data,lower_val,upper_val);
-                plot(lfp.tvec,lfp.data,'Color',cmap(iLFP,:),'LineWidth',cfg.lfpWidth)
+                h.LFP(iLFP) = plot(lfp.tvec,lfp.data,'Color',cmap(iLFP,:),'LineWidth',cfg.lfpWidth);
             end
         else
             lfp = cfg.lfp;
@@ -243,9 +259,9 @@ switch plotMode
             upper_val = lower_val+cfg.lfpHeight;
             
             lfp.data = rescale(lfp.data,lower_val,upper_val);
-            plot(lfp.tvec,lfp.data,'Color',cfg.lfpColor,'LineWidth',cfg.lfpWidth)
+            h.LFP = plot(lfp.tvec,lfp.data,'Color',cfg.lfpColor,'LineWidth',cfg.lfpWidth);
         end
-        ylims(1) = lower_val;
+        ylims = get(gca,'YLim'); ylims(1) = lower_val;
 
     case 6 % lfp + ts data
         abslfp = abs(cfg.lfp.data);
@@ -253,8 +269,8 @@ switch plotMode
         cfg.lfp.data(nans_here) = NaN;
         
         cfg.lfp.data = rescale(cfg.lfp.data,-cfg.lfpHeight,0);
-        plot(cfg.lfp.tvec,cfg.lfp.data,'Color',cfg.lfpColor,'LineWidth',cfg.lfpWidth);
-        ylims(1) = -cfg.lfpHeight;
+        h.LFP = plot(cfg.lfp.tvec,cfg.lfp.data,'Color',cfg.lfpColor,'LineWidth',cfg.lfpWidth);
+        ylims = get(gca,'YLim'); ylims(1) = -cfg.lfpHeight;
         PlotTSEvt([],cfg.evt)
 
     case 7 % lfp + iv data
@@ -267,8 +283,8 @@ switch plotMode
         cfg_temp.bgcol = cfg.lfpColor;
         cfg_temp.fgcol = cfg.ivColor;
         
-        PlotTSDfromIV(cfg_temp,cfg.evt,cfg.lfp);
-        ylims(1) = -cfg.lfpHeight - 1;
+        h = PlotTSDfromIV(cfg_temp,cfg.evt,cfg.lfp); % h.LFP and h.LFP_iv handles
+        ylims = get(gca,'YLim'); ylims(1) = -cfg.lfpHeight - 1;
     
     case 8 % lfp + iv + ts data
         error('ts + iv event data NOT WORKING YET')
@@ -324,6 +340,7 @@ if cfg.openNewFig; hold off; end
 plotmodes = {'spikes only','ts events','iv events','ts + iv events','lfp','lfp + ts events'...
     'lfp + iv events','all'};
 % out.yvals = yvals;
-out.plotMode = plotmodes{plotMode};
+h.plotMode = plotmodes{plotMode};
 % out.plot = h;
+if exist('hS','var'); h.S = hS; end
 end
