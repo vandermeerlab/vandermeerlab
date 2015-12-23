@@ -17,8 +17,8 @@ function ducktrap(cfg_in,varargin)
 % mode is 'unfixed'). The interval will plot in an orange color. If you
 % want to keep the interval, hit 'Enter'. The interval will now appear in
 % green. Once you've hit Enter there's no way to undo the choice, so don't 
-% mess up. When an interval appears in orange, hitting any button other
-% than Enter will make it disappear.
+% mess up. When an interval appears in orange, clicking elsewhere on the
+% figure will make it disappear.
 % 
 % Use the Spectrogram button to plot a spectrogram under the current
 % viewing window. Change the frequency range and z axis using the
@@ -52,6 +52,12 @@ function ducktrap(cfg_in,varargin)
 %
 %       cfg.trapwin - default 0.06 seconds (60 milliseconds). Applies to
 %                     'fixed' mode only.
+%       cfg.segments - default []; iv struct containing start and end
+%                      times for the segments you want to focus on. This
+%                      allows you to navigate between regions quickly by
+%                      using ui control buttons. Patch objects are plotted
+%                      in the "anti" regions (this also oddly speeds up
+%                      plotting).
 %       cfg.resume  - default []; iv struct containing previously identified
 %                     intervals . (If you don't want to do it all in one
 %                     sitting, save the progress and continue later by
@@ -70,11 +76,17 @@ function ducktrap(cfg_in,varargin)
 %                         window after user interaction with UI controls. 
 %                         If there is something strange in the neighborhood, 
 %                         disable robot by setting cfg.EnableRobot = 0.
+%       cfg.hdr - default []; Input struct containing information you want
+%                       to keep with the output. It becomes evt.hdr.
 %
 % For plot appearance options, see the config specification for MultiRaster
 %
+% known bug: if patch objects are plotted, spectrogram for windows 8.2 s
+% and above does not plot.
+%
 % (proposed mundane name for ducktrap: ManualIV)
 % aacarey, Oct 2015 (complete rewrite from original ducktrap, Jan 2015)
+% -- Dec 2015
 
 %% DUCKTRAP: THE STORY
 %
@@ -133,18 +145,21 @@ function ducktrap(cfg_in,varargin)
 
 % ducktrap-specific cfg options
 cfg_def.mode = 'fixed'; % 'fixed' or 'unfixed'
+cfg_def.segments = [];
 cfg_def.trapwin = 0.06; % window size in x axis units
 cfg_def.clickColor = [255/255 99/255 71/255]; % color of intervals when initially plotted
 cfg_def.keepColor = [113/255 198/255 113/255]; % color of intervals that have been kept
 cfg_def.resume = []; % iv struct containing previously identified intervals
 cfg_def.sidekick = [];
 cfg_def.EnableRobot = 1;
+cfg_def.hdr = [];
 %cfg_def.nansub = 4; % Every nth tsd sample is replaced by nan to speed navigation. But looks bad.
 
 % MR-specific cfg options
 cfg_def.SpikeHeight = 0.4;
 cfg_def.axisflag = 'spandex';
 cfg_def.spkColor = 'k';
+cfg_def.ivColor = 'r';
 cfg_def.lfpColor = 'k';
 cfg_def.lfpHeight = 15;
 cfg_def.lfpMax = 15;
@@ -178,24 +193,61 @@ end
 %% initialize some things, set global variables (any variables that are 
 % here and inside of the nested functions are automatically global)
 
-MultiRaster(cfg,S); hold on;
+%~~~~~~~ MULTIRASTER; main figure plotted here ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+hMR = MultiRaster(cfg,S); box on; hold on;
 ax_main = gca; 
 if ~isempty(cfg.sidekick)
-   sidekick(cfg.sidekick{:}); hold on;
+   sidekick(cfg.sidekick{:});
 end
+
+% ~~~~~~ SEGMENTS; plot boundaries for regions of interest ~~~~~~~~~~~~~~~~~
+if ~isempty(cfg.segments) && ~CheckIV(cfg.segments)
+    error('cfg.segments muct be an iv datatype')
+elseif ~isempty(cfg.segments) && CheckIV(cfg.segments)
+    % then plot interval boundaries as vertical lines
+    cfg_temp.showLegend = 0;
+    cfg_temp.ColVal = [0 0 0; 1 1 1]; % black first, then white
+    hSK = sidekick(cfg_temp,cfg.segments,cfg.segments);
+    set(hSK(1),'LineWidth',3.5) % make the black line thicker than the white line
+    
+    % make transparent patch objects to place over the regions we are not
+    % interested in
+    ylims = get(gca,'YLim');
+    alph = 0.4;
+    patchCol = [155/255 48/255 255/255];
+    patchX = [cfg.lfp.tvec(1); cfg.lfp.tvec(1); cfg.segments.tstart(1); cfg.segments.tstart(1)];
+    patchY = [ylims(1); ylims(2); ylims(2); ylims(1)];
+    patch(patchX,patchY,patchCol,'EdgeColor','none','FaceAlpha',alph)
+    
+    for ii = 1:length(cfg.segments.tstart)-1
+       patchX = [cfg.segments.tend(ii); cfg.segments.tend(ii); cfg.segments.tstart(ii+1); cfg.segments.tstart(ii+1)];
+       patch(patchX,patchY,patchCol,'EdgeColor','none','FaceAlpha',alph)
+    end
+    
+    patchX = [cfg.segments.tend(end); cfg.segments.tend(end); cfg.lfp.tvec(end); cfg.lfp.tvec(end)];
+    patch(patchX,patchY,patchCol,'EdgeColor','none','FaceAlpha',alph)   
+end
+
 set(ax_main,'layer','top')
-hfig = gcf; 
-set(hfig,'Name',mfilename,'KeyPressFcn',@keystuff,'WindowButtonDownFcn',@clickstuff,'CloseRequestFcn',@leaveme); 
+hfig = gcf;
+set(hfig,'Name',mfilename,'KeyPressFcn',@keystuff,'WindowButtonDownFcn',@clickstuff,'CloseRequestFcn',@leaveme);
 
 % I'm pulling some things out of cfg so I can "trace" them easier if I want to
 mode = cfg.mode;
-trapwin = cfg.trapwin; 
+trapwin = cfg.trapwin;
 clickColor = cfg.clickColor;
 keepColor = cfg.keepColor;
 
+% initialize some global variables
 numKept = 0; % number of user-defined intervals
-numPrev = 0;% number of events from a previous bout of identification
-clicktimes = []; % locations of x-axis clicks
+numPrev = 0;% number of events from a previous bout of identification (see cfg.resume)
+
+switch cfg.mode
+    case 'fixed'
+        clicktimes = []; % locations of x-axis clicks
+    case 'unfixed'
+        clicktimes.tstart = []; clicktimes.tend = [];
+end
 
 state = 'start'; % 'start','once','twice': state changes while function is running
 
@@ -204,10 +256,11 @@ x1 = []; x2 = []; y1 = []; y2 = []; H = []; % click spots and plot handle
 xLoc = 1.1; yLoc = 1.08; % the horizontal and vertical location of the count text
 hTxt = ''; % count text handle is global
 
-% resume from previous session, if wanted
+%~~~~~~~~~~~ RESUME from previous session, if wanted ~~~~~~~~~~~~~~~~~~~~~~
 if ~isempty(cfg.resume)
-    plot([cfg.resume.tstart cfg.resume.tend],[0 0],'LineWidth',3,'Color',[30/255 144/255 255/255])
-    plot([cfg.resume.tstart cfg.resume.tend],[0 0],'o','MarkerFaceColor',[30/255 144/255 255/255],'Color',[30/255 144/255 255/255],'MarkerSize',8)
+    resCol = [30/255 144/255 255/255]; % The color for previously identified intervals
+    plot([cfg.resume.tstart cfg.resume.tend],[0 0],'LineWidth',3,'Color',resCol)
+    plot([cfg.resume.tstart cfg.resume.tend],[0 0],'o','MarkerFaceColor',resCol,'Color',resCol,'MarkerSize',8)
     % go to the last interval (assume they went start -> end)
     lastTime = mean([cfg.resume.tstart(end) cfg.resume.tend(end)]);
     set(gca,'XLim',[lastTime-0.5 lastTime+0.5])   
@@ -226,29 +279,56 @@ uipressed = 0; % this keeps track of when the focus is removed from the
 
 % save button
 uicontrol('Style', 'pushbutton', 'String', 'Save',...
+    'TooltipString','Save the intervals you have identified',...
     'Units','normalized','Position', [0.93 0.25 0.05 0.05],...
     'FontUnits','normalized','Callback', @saveme);
 
 % quit button
 uicontrol('Style', 'pushbutton', 'String', 'Quit',...
+    'TooltipString',['Exit ',mfilename],...
     'Units','normalized','Position', [0.93 0.125 0.05 0.05],...
     'FontUnits','normalized','Callback', @leaveme);
 
+if ~isempty(cfg.segments) && CheckIV(cfg.segments)
+    
+    % next button for segment navigation
+    uicontrol('Style', 'pushbutton', 'String', 'Teleport',...
+        'TooltipString','Jump to another segment',...
+        'Units','normalized','Position', [0.92 0.88 0.078 0.05],...
+        'FontUnits','normalized','Callback', @teleport);
+    
+    % teleport drop down option for which segment to go to
+    hSegNum = uicontrol('Style','popupmenu','String',cellstr(num2str((1:length(cfg.segments.tstart))'))',...
+        'TooltipString','Choose segment number',...
+        'Units','normalized','Position',[0.92 0.826 0.078 0.05]);
+    
+    % teleport drop down option for where to go inside of a segment
+    hDest = uicontrol('Style','popupmenu','String',{'beginning','center','end'},...
+        'TooltipString','Choose segment destination',...
+        'Units','normalized','Position',[0.92 0.822 0.078 0.03]);
+    
+    segmentCenters = IVcenters(cfg.segments); % for segment center navigation
+end
+
 if isfield(cfg,'lfp')
     % spectrogram button
-    spButton = uicontrol('Style', 'pushbutton', 'String', 'Spectrogram',...
+    uicontrol('Style', 'pushbutton', 'String', 'Spectrogram',...
+        'TooltipString','Plot spectrogram for current window',...
         'Units','normalized','Position', [0.01 0.88 0.1 0.05],...
-        'FontUnits','normalized','Visible','off','Callback', @spectraxis);
+        'FontUnits','normalized','Callback', @spectraxis);
     
     % spectrogram z scale drop down option
     zPop = uicontrol('Style','popupmenu','String',{'root','decibel-watt','raw'},...
-        'Units','normalized','Position',[0.01 0.76 0.1 0.05],'Visible','off');
+        'TooltipString','Choose colour axis scaling',...
+        'Units','normalized','Position',[0.01 0.76 0.1 0.05]);
     
     % spectrogram frequency range 
-    frange(1) = uicontrol('Style','edit','String','0',...
-        'Units','normalized','Position',[0.01 0.82 0.04 0.04],'Visible','off');
+    frange(1) = uicontrol('Style','edit','String','50',...
+        'TooltipString','Pass band lower frequency',...
+        'Units','normalized','Position',[0.01 0.82 0.04 0.04]);
     frange(2) = uicontrol('Style','edit','String','300',...
-        'Units','normalized','Position',[0.07 0.82 0.04 0.04],'Visible','off');
+        'TooltipString','Pass band higher frequency',...
+        'Units','normalized','Position',[0.07 0.82 0.04 0.04]);
     
     % create exes for a spectrogram. These do not move with navigate, unlike the main
     % axes, and instead are set to invisible unless a spectrogram is plotted
@@ -294,6 +374,19 @@ end
             set(0,'PointerLocation',ml_orig)
             
         end
+    end % of RoboDuck
+
+% ~~~~~~ HIDE SPECTRAXIS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    function HideSpectraxis
+        % hide spectrogram axis
+        specObj = findobj(ax_spec); % use findobj, otherwise can't make imagesc invisible (just axes)
+        set(specObj,'Visible','off'); set(ax_main,'Color','w')
+        
+        % return color of LFP/spikes/intervals to have nice contrast with white background
+        %if isfield(hMR,'S'); set(hMR.S(:),'Color',cfg.spkColor); end
+        if isfield(hMR,'LFP'); set(hMR.LFP,'Color',cfg.lfpColor); end
+        if isfield(hMR,'LFP_iv'); set(hMR.LFP_iv,'Color',cfg.ivColor); end
     end
 
 %% callback functions
@@ -396,11 +489,9 @@ end
                     end
             end
             H = [];
-        else 
-            if isfield(cfg,'lfp') && ~isempty(cfg.lfp)
-                set(spButton,'Visible','on'); set(zPop,'Visible','on'); set(frange,'Visible','on')
-                mafak = findobj(ax_spec); % use findobj, otherwise can't make imagesc invisible (just axes)
-                set(mafak,'Visible','off'); set(ax_main,'Color','w') 
+        else
+            if isfield(cfg,'lfp') && ~isempty(cfg.lfp)               
+                HideSpectraxis
             end
             navigate(source,event)
         end
@@ -462,7 +553,9 @@ end
                     evt.tstart(discard) = [];
                     evt.tend(discard) = [];
                 end
-                        
+                
+                evt.hdr = cfg.hdr;
+                
                 [~,name,~] = fileparts(pwd);
                 uisave('evt',[name,'-manualIV']) % opens window for saving stuff
                 
@@ -474,25 +567,70 @@ end
         end
     end % of saveme
 
+% ~~~~~~ TELEPORT ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    function teleport(~,~)
+        % jump to another segment of interest
+        
+        uipressed = 1; % focus has been taken off of axes because of ui button press
+        RoboDuck
+        
+        if isfield(cfg,'lfp') && ~isempty(cfg.lfp)            
+            HideSpectraxis
+        end
+        
+        % get info about current viewing window
+        xlims = get(ax_main,'XLim');
+        flank = diff(xlims)/2;
+        
+        % get segment number from uicontrol
+        string = get(hSegNum,'String'); choice = get(hSegNum,'Value');
+        number = str2double(string{choice});
+        
+        % get segment destination from uicontrol
+        string = get(hDest,'String'); choice = get(hDest,'Value');
+        destination = string{choice};
+        
+        % get lookup values for nearest segment
+        switch destination
+            case 'beginning'
+                newLocation = cfg.segments.tstart(number);
+            case 'center'
+                newLocation = segmentCenters(number);
+            case 'end'
+                newLocation = cfg.segments.tend(number);
+        end
+        
+        % set new viewing window
+        set(ax_main,'XLim',[newLocation-flank newLocation+flank])
+        
+        % display title fyi, but also to cover up a navigate "bug" that
+        % happens if you teleport while an event number is displayed (if
+        % you do this, then navigate doesn't know you moved and it leaves
+        % the title there since the movement is done outside of navigate)
+        titl = ['Segment ',num2str(number),', ',destination];
+        title(titl,'FontSize',14)
+        
+    end % of teleport
+
 % ~~~~~~ SPECTRAXIS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-function spectraxis(~,~)
+    function spectraxis(~,~)
         % create a new set of axes and plot a spectrogram behind the raster plot
         uipressed = 1;
         
-        xlims = get(gca,'XLim'); 
+        xlims = get(gca,'XLim');
         xticks = get(gca,'XTick');
         
-        ugh = restrict2(cfg.lfp,xlims(1),xlims(2));
+        CSCr = restrict(cfg.lfp,xlims(1),xlims(2)); % restrict to count the numbers of samples in viewing window
         
-        if length(ugh.tvec) > 50000
+        if length(CSCr.tvec) > 50000
             % outright refuse
             msgbox('I refuse to spectrogram this much data...it''s for your own good.','Bad things can happen','error')
             RoboDuck
             return
         end
         
-        if length(ugh.tvec) > 20000
+        if length(CSCr.tvec) > 18000
             choice = questdlg('Oh wow! Your computer figuratively almost caught fire because you wanted to spectrogram a lot of data.','This might take a long time...','I like fire','Oops!','Oops!');
           
             switch choice
@@ -506,33 +644,56 @@ function spectraxis(~,~)
         set(gca,'color','none')
         set(hfig,'CurrentAxes',ax_spec) % now change current axes
         
-        fs = 2000; % sampling frequency
+        nSamples = 102; % the number of samples to use in the spectrogram
+        
+        fs = length(CSCr.data)/(xlims(2)-xlims(1)); % get the local approx sampling frequency
+        
+        buffer = (nSamples/2)/fs; % how much time buffer is needed so that the spectrogram lines up with the data in viewing window
+        CSCr = restrict(cfg.lfp,xlims(1)-buffer,xlims(2)+buffer); % re-restrict with buffer
         
         % get frequencies of interest
         foi = str2double(get(frange(1),'String')):str2double(get(frange(2),'String')); % don't be evil..numbers only
         
-        [~,F,T,P] = spectrogram(ugh.data,hanning(102),100,foi,fs);
+        [~,F,T,P] = spectrogram(CSCr.data,hanning(nSamples),100,foi,fs);
         
         % get z scale option (see uicontrol zPop)
         string = get(zPop,'String'); choice = get(zPop,'Value');
         zscale = string{choice};
         switch zscale
             case 'root'
-                P = sqrt(P);
-                col = [0.09*10^-6 18*10^-6]; % some arbitrary range for the color scaling, keep everything relative or w/e
+                P = sqrt(P); % rescale power
+                col = [0.09*10^-6 18*10^-6]; % some arbitrary range for the color scaling
+                
+                % change colors of LFP/spikes/intervals for contrast with spectrogram
+                %if isfield(hMR,'S'); set(hMR.S,'Color',[1 1 1 0.5]); end
+                if isfield(hMR,'LFP'); set(hMR.LFP,'Color','w'); end
+                if isfield(hMR,'LFP_iv'); set(hMR.LFP_iv,'Color','r'); end
+                
             case 'decibel-watt'
-                P = 10*log10(P);
-                col = [-200 -80];
+                P = 10*log10(P); % rescale power
+                col = [-170 -80]; % some arbitrary range for the color scaling
+                
+                % change colors of LFP/spikes/intervals for contrast with spectrogram
+                %if isfield(hMR,'S'); set(hMR.S(:),'Color','k'); end
+                if isfield(hMR,'LFP'); set(hMR.LFP,'Color','k'); end
+                if isfield(hMR,'LFP_iv'); set(hMR.LFP_iv,'Color','b'); end
+                
             case 'raw'
-                col = [0.09*10^-10 3*10^-10];                
+                col = [0.09*10^-10 3*10^-10]; % some arbitrary range for the color scaling
+                
+                % change colors of LFP/spikes/intervals for contrast with spectrogram
+                %if isfield(hMR,'S'); set(hMR.S(:),'Color','k'); end
+                if isfield(hMR,'LFP'); set(hMR.LFP,'Color','w'); end
+                if isfield(hMR,'LFP_iv'); set(hMR.LFP_iv,'Color','r'); end
         end
         
         imagesc(T,F,P,col);
-        set(ax_spec,'YAxisLocation','right','XTick',xticks,'XTickLabel',[],'YDir','normal','Visible','on')
+        set(ax_spec,'YAxisLocation','right','XTick',xticks,'XTickLabel',[],'YDir','normal')
         
         ylabel(ax_spec,'Frequency (Hz)')
         grid on
         uistack(ax_spec,'bottom') % send it to the very back; other axes in front
+        
         % return to main axes (for navigation and stuff)
         set(hfig,'CurrentAxes',ax_main) 
         

@@ -10,7 +10,22 @@ function AnnotateIV(cfg_in,iv_in,varargin)
 % ANNOTATEIV(cfg,iv,S,CSC) or ANNOTATEIV(cfg,iv,CSC,S)
 %
 % Use keyboard input to navigate to different areas of the plot (type "doc
-% navigate" in the cammand window, or the letter h on your keyboard).
+% navigate" in the command window, or the letter h on your keyboard).
+%
+% Special keyboard commands for AnnotateIV (unassigned to navigate at the
+% time this was written):
+%
+%  n - go to the next event
+%  p - go to the previous event
+%  s - spectrogram
+%
+%  Additional keyboard commands are available if cfg.EnableRobot = 1
+%  t - (type) go to the annotate box (when in the annotation box, hit 'Enter' to
+%      return focus to the figure window and continue using keyboard commands)
+%  r - delete (remove) this event upon saving
+%
+%  Tip: if the keyboard commands are not working, try clicking on the
+%  figure window to return focus.
 %
 %   OUTPUT
 %    - is variable called "evt" that is saved to directory of your choice.
@@ -26,10 +41,19 @@ function AnnotateIV(cfg_in,iv_in,varargin)
 %                fields must be the same as .tstart and .tend.
 %
 %   CONFIG OPTIONS
-%       cfg_def.mode = 'random'; In which order should the intervals be
+%       cfg.mode = 'random'; In which order should the intervals be
 %                                shown?
 %                'random'  -  Show me the intervals in random order.
 %                'chrono'  -  Show me the intervals in chronological order.
+%
+%       cfg.EnableRobot - Java robot automatically returns focus to figure
+%                         window after user interaction with UI controls.
+%                         It also makes complete keyboard control of
+%                         AnnotateIV possible by performing mouse movements
+%                         when the user clicks 't' and 'r'.
+%                         If there is something strange try disabling the
+%                         robot by setting cfg.EnableRobot = 0 to see if
+%                         this fixes the problem.
 %
 %
 % This function was written for testing detector performance against
@@ -51,9 +75,10 @@ function AnnotateIV(cfg_in,iv_in,varargin)
 % change your mind about deleting an interval at any time as long as the
 % figure window remains open. 
 %
-% aacarey Oct 2015
+% aacarey Oct 2015, edit Dec 2015
 
 cfg_def.mode = 'random'; % 'chrono','random'
+cfg_def.EnableRobot = 1;
 
 % MR-specific cfg options
 cfg_in.evt = iv_in; % don't let them put in the wrong evt via config
@@ -124,7 +149,7 @@ end
 del = zeros(1,length(iv_in.tstart)); % del will become 1 where the user wants to delete an interval.
 
 % plot the stuff
-MultiRaster(cfg,S); hold on;
+hMR = MultiRaster(cfg,S); hold on;
 hfig = gcf; 
 set(hfig,'Name',mfilename,'KeyPressFcn',@keystuff,'WindowButtonDownFcn',@clickstuff,'CloseRequestFcn',@leaveme);
 
@@ -134,6 +159,7 @@ windowSize = 1;
 
 ax_main = gca;
 
+uipressed = 0; % this helps track whether a UI button has been pressed when handling RoboDuck and human clicks in clickstuff function
 
 updateProgress
 
@@ -141,49 +167,57 @@ updateProgress
 
 % save button
 uicontrol('Style', 'pushbutton', 'String', 'Save',...
-    'Units','normalized','Position', [0.93 0.25 0.05 0.05],...
+    'Units','normalized','Position', [0.925 0.25 0.05 0.05],...
     'FontUnits','normalized','Callback', @saveme);
 
 % quit button
 uicontrol('Style', 'pushbutton', 'String', 'Quit',...
-    'Units','normalized','Position', [0.93 0.125 0.05 0.05],...
+    'TooltipString',['Exit ',mfilename],...
+    'Units','normalized','Position', [0.925 0.125 0.05 0.05],...
     'FontUnits','normalized','Callback', @leaveme);
 
 % next button
 hnext = uicontrol('Style', 'pushbutton', 'String', 'Next',...
-    'Units','normalized','Position', [0.9075 0.75 0.09 0.05],...
+    'TooltipString','Go to next interval',...
+    'Units','normalized','Position', [0.92 0.75 0.075 0.05],...
     'FontUnits','normalized','Callback', @nextIV);
 
 % prev button
 hprev = uicontrol('Style', 'pushbutton', 'String', 'Previous',...
-    'Units','normalized','Position', [0.9075 0.88 0.09 0.05],...
+    'TooltipString','Go to previous interval',...
+    'Units','normalized','Position', [0.92 0.88 0.075 0.05],...
     'FontUnits','normalized','Enable','off','Callback', @prevIV);
 
 % collect annotation
-hnote = uicontrol('Style', 'edit', 'String', '[enter text]',...
-    'Units','normalized','Position', [0.9075 0.83 0.09 0.05],...
-    'FontUnits','normalized','Callback', @writestuff);
+hnote = uicontrol('Style', 'edit', 'String', '',...
+    'TooltipString','Type annotation here',...
+    'Units','normalized','Position', [0.92 0.83 0.075 0.05],...
+    'FontUnits','normalized','Callback', @writestuff,'KeyPressFcn',@NotLetters);
 
 % delete checkbox
 hdel = uicontrol('Style', 'checkbox', 'String', 'Delete this interval',...
-    'Units','normalized','Position', [0.9075 0.8 0.09 0.03],...
+    'Units','normalized','Position', [0.92 0.8 0.075 0.03],...
     'Callback', @dontwant);
      set(hdel,'BackgroundColor',get(gcf,'Color')); % checkbox otherwise sits in a white rectangle, which looks bad
 
 if isfield(cfg,'lfp')
     % spectrogram button
     uicontrol('Style', 'pushbutton', 'String', 'Spectrogram',...
+        'TooltipString','Plot spectrogram for current window',...
         'Units','normalized','Position', [0.01 0.88 0.1 0.05],...
         'FontUnits','normalized','Callback', @spectraxis);
     
     % spectrogram z scale drop down option
     zPop = uicontrol('Style','popupmenu','String',{'root','decibel-watt','raw'},...
+        'TooltipString','Choose colour axis scaling',...
         'Units','normalized','Position',[0.01 0.76 0.1 0.05]);
     
     % spectrogram frequency range 
     frange(1) = uicontrol('Style','edit','String','50',...
+        'TooltipString','Pass band lower frequency',...
         'Units','normalized','Position',[0.01 0.82 0.04 0.04]);
     frange(2) = uicontrol('Style','edit','String','300',...
+        'TooltipString','Pass band higher frequency',...
         'Units','normalized','Position',[0.07 0.82 0.04 0.04]);
     
     % create exes for a spectrogram. These do not move with navigate, unlike the main
@@ -218,7 +252,7 @@ PlotCurrentIV
     function updateButtons
         % update edit box text to show current annotation string
         if isempty(iv_in.usr.annotation{current_iv})
-            set(hnote,'String','[enter text]')
+            set(hnote,'String','')
         else
             set(hnote,'String',iv_in.usr.annotation{current_iv})
         end
@@ -233,38 +267,104 @@ PlotCurrentIV
         set(gca,'XLim',[midpoints(current_iv)-windowSize/2 midpoints(current_iv)+windowSize/2])
         delete(h_curr)
         ylims = get(gca,'Ylim');
-        h_curr(1) = plot([iv_in.tstart(current_iv) iv_in.tstart(current_iv)],ylims,'Color',cfg.ivColor);
-        h_curr(2) = plot([iv_in.tend(current_iv) iv_in.tend(current_iv)],ylims,'Color',cfg.ivColor);
+        h_curr(1) = plot([iv_in.tstart(current_iv) iv_in.tstart(current_iv)],ylims);
+        h_curr(2) = plot([iv_in.tend(current_iv) iv_in.tend(current_iv)],ylims);
+        set(h_curr, 'Color',cfg.ivColor,'LineWidth',1.5)
         title(['Annotate event ',num2str(current_iv),' out of ',num2str(length(iv_in.tstart))],'FontSize',14)
         drawnow % this makes it wait for the plotting to happen before it updates the buttons (plotting very slow)
         updateButtons
     end
 
+% ~~~~~~ ROBODUCK ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    function RoboDuck(obj_handle)
+        % use java robot to help return focus to the axes after interacting with a uicontrol
+        % RoboDuck and uipressed work together to produce the desired behaviour
+        % RoboDuck also performs some clicking actions such as moving the
+        % cursor to the edit and check boxes.
+        % obj_handle is the handle of the object you want RoboDuck to click
+        % for you
+        
+        if cfg.EnableRobot
+            % get original location of mouse cursor
+            ml_orig = get(0,'PointerLocation');
+            
+            % get location of figure window
+            objLoc = get(obj_handle,'Position');
+            
+            type = get(obj_handle,'Type');
+            
+            switch type
+                case 'figure'
+                    % in this case, the handle position is with reference
+                    % to the screen
+                    ml_new = [objLoc(1)+objLoc(3)/2 objLoc(2)+objLoc(4)/2];
+                    set(hfig,'Pointer','custom','PointerShapeCData',NaN(16,16)) % make cursor invisible
+                    
+                case 'uicontrol'
+                    % in this case, the handle position is with reference
+                    % to the parent (which is the figure)
+                    
+                    parentLoc = get(hfig,'Position'); % note can also do this by getting the parent from the uicontrol handle
+                    ml_new = [parentLoc(1)+objLoc(1)*parentLoc(3)+(objLoc(3)*parentLoc(3))/2,parentLoc(2)+objLoc(2)*parentLoc(4)+(objLoc(4)*parentLoc(4))/2];         
+            end
+            
+            % set new mouse location for the robot
+            set(0,'PointerLocation',ml_new)
+            
+            % robot!
+            drawnow
+            robot = java.awt.Robot ;
+            robot.mousePress(java.awt.event.InputEvent.BUTTON1_MASK);
+            robot.mouseRelease(java.awt.event.InputEvent.BUTTON1_MASK);
+            
+            if strcmp(type,'figure')
+                set(hfig,'Pointer','arrow') % make cursor visible again
+            end
+            
+            % now return pointer location to where the user last had it
+            set(0,'PointerLocation',ml_orig)
+            
+        end
+    end % of RoboDuck
+
 % ~~~~~~ HIDE SPECTRAXIS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     function HideSpectraxis
-        mafak = findobj(ax_spec); % use findobj, otherwise can't make imagesc invisible (just axes)
-        set(mafak,'Visible','off'); set(ax_main,'Color','w')
+        specObj = findobj(ax_spec); % use findobj, otherwise can't make imagesc invisible (just axes)
+        set(specObj,'Visible','off'); set(ax_main,'Color','w')
+        
+        % return color of LFP/spikes/intervals to have nice contrast with white background
+        %if isfield(hMR,'S'); set(hMR.S(:),'Color','k'); end
+        if isfield(hMR,'LFP'); set(hMR.LFP,'Color','k'); end
+        if isfield(hMR,'LFP_iv'); set(hMR.LFP_iv,'Color','r'); end
     end
 
 %% callback functions
 
 % ~~~~~~ NEXT INTERVAL ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     function nextIV(~,~)
+        
+        uipressed = 1;
+        
         HideSpectraxis
         if ii == length(iv_in.tstart) % we've gone through all of them
             set(hnext,'Enable','off')
-            title('All intervals have been annotated','FontSize',14)
+            title('End of interval list','FontSize',14)
         else
             ii = ii+1;
             current_iv = idx_list(ii);
             PlotCurrentIV
         end  
-        set(hprev,'Enable','on')  
+        set(hprev,'Enable','on')
+        
+        RoboDuck(hfig)
     end
 
 % ~~~~~~ PREVIOUS INTERVAL ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     function prevIV(~,~)
+        
+        uipressed = 1;
+        
         HideSpectraxis
         if ii-1 <= 0 % we're at the beginning
             set(hprev,'Enable','off')
@@ -273,22 +373,45 @@ PlotCurrentIV
             current_iv = idx_list(ii);
             PlotCurrentIV
         end
-        set(hnext,'Enable','on')       
+        set(hnext,'Enable','on')
+        
+        RoboDuck(hfig)
     end
 
 % ~~~~~~ KEY STUFF ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     function keystuff(source,event)
         if strcmp(event.Key,'n')
             nextIV(source,event)
+        elseif strcmp(event.Key,'p')
+            prevIV(source,event)
+        elseif strcmp(event.Key,'t')
+            RoboDuck(hnote)
+        elseif strcmp(event.Key,'r')
+            RoboDuck(hdel)
+        elseif strcmp(event.Key,'s')
+            spectraxis(source,event)
         else
             HideSpectraxis
             navigate(source,event)
         end
     end
 
+% ~~~~~~ NOT LETTERS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    function NotLetters(~, event)
+        % keypress function for keys other than letter/character keys,
+        % intended just to detect when Enter is pressed for the annotation
+        % and delete box so that focus can be returned to the figure window
+        if strcmp(event.Key,'return')
+            RoboDuck(hfig)
+        end
+    end
+
 % ~~~~~~ WRITE STUFF ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     function writestuff(source,~)
         % add annotation to iv
+        
+        uipressed = 1;
+        
         str = strtrim(get(source, 'String')); 
         % remove leading and trailing whitespace
         % before str = '    '; now str = ''; or before str = ' 5 '; now str = '5';
@@ -300,7 +423,10 @@ PlotCurrentIV
 % ~~~~~~ CLICK STUFF ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     function clickstuff(~,~)
         % handle mouse clicks
-        HideSpectraxis
+        if ~uipressed
+            HideSpectraxis
+        end
+        uipressed = 0;
         
         % right now this is just for hiding spectrogram axis, but can add
         % more mouse things here
@@ -311,14 +437,21 @@ PlotCurrentIV
 
     function dontwant(source,~)
         % keeps a record of which intervals to delete
+        
+        uipressed = 1;
+        
         del(current_iv) = get(source, 'Value');
         
-        updateProgress
+        updateProgress 
+        RoboDuck(hfig)        
     end
 
 % ~~~~~~ LEAVE ME ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     function leaveme(~,~)
         % quit request function
+        
+        uipressed = 1;
+        
         temp = iv_in.usr.annotation;
         temp(logical(del)) = [];
         nEmpties = length(temp(cellfun(@isempty,temp)));
@@ -327,6 +460,7 @@ PlotCurrentIV
             choice = questdlg(['You are missing ',num2str(nEmpties),' annotations. Are you sure you want to close the figure? Any unsaved data will be lost.'],'Quit Requested','Quit anyway','Cancel','Cancel');
             switch choice
                 case 'Cancel'
+                    RoboDuck(hfig)
                     return
                 case 'Quit anyway'
                     delete(gcf)
@@ -337,6 +471,7 @@ PlotCurrentIV
                 case 'Yes'
                     delete(gcf)
                 case 'No'
+                    RoboDuck(hfig)
                     return
             end
         end
@@ -346,6 +481,9 @@ PlotCurrentIV
 
     function saveme(~,~)
         % save request function
+        
+        uipressed = 1;
+        
         choice = questdlg('Would you like to save the data?','Save Requested','Yes','No','No');
         switch choice
             case 'Yes'
@@ -369,7 +507,10 @@ PlotCurrentIV
                 [~,name,~] = fileparts(pwd);
                 uisave('evt',[name,'-manualIV']) % opens window for saving stuff
                 
+                RoboDuck(hfig)
+                
             case 'No'
+                RoboDuck(hfig)
                 return
         end
     end % of saveme
@@ -378,18 +519,27 @@ PlotCurrentIV
 
 function spectraxis(~,~)
         % create a new set of axes and plot a spectrogram behind the raster plot
+        
+        uipressed = 1;
+        
         set(gca,'color','none')
         xlims = get(gca,'XLim'); 
         xticks = get(gca,'XTick');
         set(hfig,'CurrentAxes',ax_spec) % now change current axes
-        ugh = restrict2(cfg.lfp,xlims(1),xlims(2));
         
-        fs = 2000; % sampling frequency
+        nSamples = 102; % the number of samples to use in the spectrogram
+       
+        CSCr = restrict(cfg.lfp,xlims(1),xlims(2)); % restrict to count the numbers of samples in viewing window
+        
+        fs = length(CSCr.data)/(xlims(2)-xlims(1)); % get the local approx sampling frequency
+        
+        buffer = (nSamples/2)/fs; % how much time buffer is needed so that the spectrogram lines up with the data in viewing window
+        CSCr = restrict(cfg.lfp,xlims(1)-buffer,xlims(2)+buffer); % re-restrict with buffer
         
         % get frequencies of interest
         foi = str2double(get(frange(1),'String')):str2double(get(frange(2),'String')); % don't be evil..numbers only
         
-        [~,F,T,P] = spectrogram(ugh.data,hanning(102),100,foi,fs);
+        [~,F,T,P] = spectrogram(CSCr.data,hanning(nSamples),100,foi,fs);
         
         % get z scale option (see uicontrol zPop)
         string = get(zPop,'String'); choice = get(zPop,'Value');
@@ -398,11 +548,28 @@ function spectraxis(~,~)
             case 'root'
                 P = sqrt(P);
                 col = [0.09*10^-6 18*10^-6]; % some arbitrary range for the color scaling, keep everything relative or w/e
+                
+                % change colors of LFP/spikes/intervals for contrast with spectrogram
+                %if isfield(hMR,'S'); set(hMR.S,'Color','w'); end
+                if isfield(hMR,'LFP'); set(hMR.LFP,'Color','w'); end
+                if isfield(hMR,'LFP_iv'); set(hMR.LFP_iv,'Color','r'); end
+                
             case 'decibel-watt'
                 P = 10*log10(P);
-                col = [-200 -80];
+                col = [-170 -80];
+                
+                % change colors of LFP/spikes/intervals for contrast with spectrogram
+                %if isfield(hMR,'S'); set(hMR.S(:),'Color','k'); end
+                if isfield(hMR,'LFP'); set(hMR.LFP,'Color','k'); end
+                if isfield(hMR,'LFP_iv'); set(hMR.LFP_iv,'Color','b'); end
+                
             case 'raw'
-                col = [0.09*10^-10 3*10^-10];
+                col = [0.09*10^-10 3*10^-10]; 
+                
+                % change colors of LFP/spikes/intervals for contrast with spectrogram
+                %if isfield(hMR,'S'); set(hMR.S(:),'Color','w'); end
+                if isfield(hMR,'LFP'); set(hMR.LFP,'Color','w'); end
+                if isfield(hMR,'LFP_iv'); set(hMR.LFP_iv,'Color','r'); end
         end
         
         imagesc(T,F,P,col); 
@@ -413,6 +580,9 @@ function spectraxis(~,~)
         uistack(ax_spec,'down') % send backwards
         % return to main axes (for navigation and stuff)
         set(hfig,'CurrentAxes',ax_main) 
+        
+        RoboDuck(hfig)
+        
     end % of spectraxis
 
 end
