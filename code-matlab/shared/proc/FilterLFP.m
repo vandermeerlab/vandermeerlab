@@ -9,9 +9,9 @@ function lfp_tsd = FilterLFP(cfg_in,lfp_tsd)
 %
 % CFG OPTIONS with defaults:
 %
-% cfg.type = 'cheby1'; % 'butter' 'fdesign' -- type of filter to be used
-% cfg.order = 4; % filter order;
-% cfg.display_filter = 1; % show output of fvtool on filter
+% cfg.type = 'butter'; % {'cheby1','butter','fdesign'} -- type of filter to be used
+% cfg.order = 4; % filter order
+% cfg.display_filter = 0; % show output of fvtool on filter
 % cfg.bandtype = 'bandpass'; % 'highpass', 'lowpass'
 % cfg.R = 0.5; % passband ripple (in dB) for Chebyshev filters only
 % cfg.f = [6 10]; filter range to use (in Hz)
