@@ -1,4 +1,4 @@
-function PlotTSDfromIV(cfg_in,iv,tsd_in)
+function h = PlotTSDfromIV(cfg_in,iv,tsd_in)
 % function PlotTSDfromIV(cfg,iv,tsd)
 %
 % create interval data from tsd by tresholding
@@ -53,12 +53,13 @@ end
 switch cfg.display
     case 'tsd' % plot tsd with highlighted iv
         
-        plot(tsd_in.tvec,temp_data,cfg.bgcol,'MarkerSize',1);
+        h.LFP = plot(tsd_in.tvec,temp_data,cfg.bgcol,'MarkerSize',1);
         hold on;
         
+        h.LFP_iv = nan(size(tstart_idx));
         for iI = 1:length(tstart_idx)
         
-            plot(tsd_in.tvec(tstart_idx(iI):tend_idx(iI)),temp_data(tstart_idx(iI):tend_idx(iI)),cfg.fgcol,'MarkerSize',1);
+            h.LFP_iv(iI) = plot(tsd_in.tvec(tstart_idx(iI):tend_idx(iI)),temp_data(tstart_idx(iI):tend_idx(iI)),cfg.fgcol,'MarkerSize',1);
             
         end
             
@@ -74,7 +75,7 @@ switch cfg.display
             figure(figno);
             subtightplot(cfg.subplotdim(1),cfg.subplotdim(2),plotno);
             
-            plot(tsd_in.tvec(tstart_idx(iI):tend_idx(iI)),temp_data(tstart_idx(iI):tend_idx(iI)),cfg.fgcol,'MarkerSize',1);
+            h.LFP_iv = plot(tsd_in.tvec(tstart_idx(iI):tend_idx(iI)),temp_data(tstart_idx(iI):tend_idx(iI)),cfg.fgcol,'MarkerSize',1);
             hold on;
             
             axis off; axis tight;
