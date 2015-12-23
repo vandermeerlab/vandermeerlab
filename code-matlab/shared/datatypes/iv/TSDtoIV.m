@@ -1,5 +1,5 @@
-function iv_out = TSDtoIV(cfg_in,tsd_in)
-% function iv = TSDtoIV(cfg,tsd)
+function [iv_out,thr_out] = TSDtoIV(cfg_in,tsd_in)
+% function [iv_out,thr_out] = TSDtoIV(cfg,tsd)
 %
 % create interval data from tsd by tresholding
 %
@@ -19,6 +19,8 @@ function iv_out = TSDtoIV(cfg_in,tsd_in)
 % OUTPUTS:
 %
 % iv_out: output interval data
+% thr_out: threshold used (in same units as input; helpful if z-scored
+%   threshold is to be applied later to other data)
 %
 % MvdM 2014-06-24
 
@@ -50,7 +52,15 @@ end
 % zscore
 switch cfg.method
     case 'zscore'
-        temp_data = zscore(temp_data);
+        [temp_data,mu,sigma] = zscore(temp_data);
+        switch cfg.dcn
+            case '>' 
+                thr_out = mu + cfg.threshold.*sigma; % store threshold for output argument
+            case '<'
+                thr_out = mu - cfg.threshold.*sigma;
+        end
+    otherwise
+        thr_out = cfg.threshold;
 end
 
 % detect crossings
@@ -97,7 +107,7 @@ if ~iscolumn(iv_out.tend)
 end
 
 if cfg.verbose
-    disp([mfun,': ',num2str(length(up_t)),' intervals found.'])
+    disp([mfun,': ',num2str(length(iv_out.tstart)),' intervals found.'])
 end
 
 % housekeeping
