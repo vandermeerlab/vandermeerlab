@@ -1,19 +1,14 @@
-% MAT2NLXNRD   Exports data from Matlab into a Neuralynx NRD file.
+% MAT2NLXNDE   Exports data from Matlab into a Neuralynx NDE file.
 %
-%   Mat2NlxNRD(FileName, ChannelNumber, AppendToFileFlag, ExportMode,
-%              ExportModeVector, FieldSelectionFlags, Timestamps,
-%              Samples, Header);
+%   Mat2NlxNDE(FileName, AppendToFileFlag, ExportMode, ExportModeVector,
+%              FieldSelectionFlags, StartTimestamps, EndTimestamps,
+%              SamplesLost, DataTypes, ObjectNames, Header);
 %
 %   Version 6.0.0 
 %
 %	Requires MATLAB R2012b (8.0) or newer
 %
 %   
-%   IMPORTANT: This function will only export a single channel to an NRD file.
-%   If you attempt to export a second channel to the NRD file, it will not be
-%   time aligned with previously exported data and could even erase that data.
-%   Please read this help document completely before using this command.
-%
 %   Notes on export data:
 %   1. Each export variable's Nth element corresponds to the Nth element in
 %      all the other export variables with the exception of the header export
@@ -28,21 +23,14 @@
 %   4. Export data will always be assigned in the order indicated in the
 %      FieldSelectionFlags. If data is not imported via a FieldSelectionFlags
 %      index being 0, simply omit the export variable from the command.
-%      EXAMPLE: FieldSelectionFlags = [1 0 1];
-%      Mat2NlxNRD('test.nrd',3,0,1,1, FieldSelectionFlags,Timestamps, Header);
+%      EXAMPLE: FieldSelectionFlags = [1 0 0 0 1 0];
+%      Mat2NlxNDE('test.nde',0,1,1, FieldSelectionFlags, StartTimestamps, ObjectNames);
 %
 %
 %   INPUTS:
 %   FileName: String containing either the complete ('C:\CheetahData\
-%             RawData.nrd') or relative ('RawData.nrd') path of the file where you
+%             NDE1.nde') or relative ('NDE1.nde') path of the file where you
 %             wish to export data. 
-%   ChannelNumber: The zero based channel number in the NRD file whose data
-%                  will be imported  (i.e. channel 0 is the first channel, channel
-%                  1 is the second channel, etc). All channels prior to this
-%                  number will contain zeroes.
-%                  EXAMPLE: If ChannelNumber = 3, and the first exported
-%                  sample = 120, the resulting samples portion of the first
-%                  AD record is: 0 0 0 120
 %   AppendToFileFlag: If this flag is a zero and the file does not exist, a new
 %                     file will be created. If the file already exists, and the
 %                     flag is zero, it will be overwritten with the new data
@@ -125,21 +113,45 @@
 %                        data) or a one (includes data) that determines which
 %                        export variables will be necessary. The order of
 %                        the items in the vector correspond to the following:
-%                           FieldSelectionFlags(1): Timestamps
-%                           FieldSelectionFlags(2): Samples
-%                           FieldSelectionFlags(3): Header
-%                        EXAMPLE: [1 1 0] exports timestamp and samples
-%                        data from each record and excludes all other data.
-%   Timestamps: A 1xN integer vector of timestamps. These timestamps are the full
-%               64 bit Cheetah timestamps.
-%   Samples: A 1xN integer vector of the data points. These values are in AD counts.
+%                           FieldSelectionFlags(1): Start Timestamps
+%                           FieldSelectionFlags(2): End Timestamps
+%                           FieldSelectionFlags(3): Samples Lost
+%                           FieldSelectionFlags(4): Data Types
+%                           FieldSelectionFlags(5): Object Names
+%                           FieldSelectionFlags(6): Header
+%                        EXAMPLE: [1 0 0 0 1 0] exports start timestamp and object
+%                        names and excludes all other data.
+%   StartTimestamps: A 1xN integer vector of starting timestamps for each record.
+%                    This must be in ascending order.
+%   EndTimestamps: A 1xN integer vector of ending timestamps for each record.
+%                  This must be in ascending order.
+%   SamplesLost: A 1xN integer vector of samples lost for each record.
+%   DataTypes: A 1xN integer vector of data types for each record.
+%              Valid Types: 0 - Invalid
+%                           1 - SingleElectrode
+%                           2 - Stereotrode
+%                           3 - Timestamp
+%                           4 - Tetrode
+%                           5 - CSC
+%                           6 - Event
+%                           7 - VideoTracker
+%                           8 - NRD
+%                           9 - MClustTimestamps
+%                           10 - NCC
+%                           11 - NSIF
+%                           12 - NSUB
+%                           13 - NDE
+%                           14 - PersystLay
+%                           15 - PersystDat
+%   ObjectNames: A Mx1 string vector of object names for each record, where M is the
+%                number of records.
 %   Header: A Mx1 string vector of all the text from the Neuralynx file header, where
 %           M is the number of lines of text in the header.
 %
-%   EXAMPLE: Mat2NlxNRD('test.nrd', 3, 0, 1, 1, [1 1 1], Timestamps,
-%                      Samples, Header);
+%   EXAMPLE: Mat2NlxNDE('test.nde', 0, 1, 1, [1 1 1 1 1 1], StartTimestamps,
+%                      EndTimestamps, SamplesLost, DataTypes, ObjectNames, Header);
 %   Uses export mode 1 to export all of the data (assuming N is identical for
 %   all export variables) from all of the export variables to the file
-%   test.nrd at channel number 3, overwriting any data that may be in that file.
+%   test.nde, overwriting any data that may be in that file.
 %
 

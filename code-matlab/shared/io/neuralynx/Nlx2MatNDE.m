@@ -1,8 +1,8 @@
-% NLX2MATNRD Imports data from Neuralynx NRD files to Matlab variables.
+% NLX2MATNDE Imports data from Neuralynx NDE files to Matlab variables.
 %
-%   [Timestamps, Samples, Header] = Nlx2MatNRD( Filename, ChannelNumber,
-%                                  FieldSelectionFlags, HeaderExtractionFlag,
-%                                  ExtractMode, ExtractionModeVector);
+%   [StartTimeStamps, EndTimeStamps, SamplesLost, DataTypes, ObjectNames, Header] =
+%                      Nlx2MatNDE( Filename, FieldSelection, ExtractHeader,
+%                                 ExtractMode, ModeArray );
 %
 %   Version 6.0.0 
 %
@@ -11,19 +11,19 @@
 %
 %   INPUT ARGUMENTS:
 %   FileName: String containing either the complete ('C:\CheetahData\
-%             RawData.nrd') or relative ('RawData.nrd') path of the file you wish
+%             DataProcessingErrors.nde') or relative ('DataProcessingErrors.nde') path of the file you wish
 %             to import. 
-%   ChannelNumber: The zero based channel number in the NRD file whose data
-%                  will be imported(i.e. channel 0 is the first channel,
-%                  channel 1 is the second channel, etc).
 %   FieldSelectionFlags: Vector with each item being either a zero (excludes
 %                        data) or a one (includes data) that determines which
 %                        data will be returned for each record. The order of
 %                        the items in the vector correspond to the following:
-%                           FieldSelectionFlags(1): Timestamps
-%                           FieldSelectionFlags(2): Samples
-%                        EXAMPLE: [1 0] imports timestamp data from each record
-%                        and excludes all other data.
+%                           FieldSelectionFlags(1): StartTimestamps
+%                           FieldSelectionFlags(2): EndTimestamps
+%                           FieldSelectionFlags(3): SamplesLost
+%                           FieldSelectionFlags(4): DataTypes
+%                           FieldSelectionFlags(5): ObjectNames
+%                        EXAMPLE: [1 0 0 1 0] imports start timestamps and data types
+%                        from each record and excludes all other data.
 %   HeaderExtractionFlag: Either a zero if you do not want to import the header
 %                         or a one if header import is desired..
 %   ExtractionMode: A number indicating how records will be processed during
@@ -101,23 +101,43 @@
 %   4. Output data will always be assigned in the order indicated in the
 %      FieldSelectionFlags. If data is not imported via a FieldSelectionFlags
 %      index being 0, simply omit the output variable from the command.
-%      EXAMPLE: FieldSelectionFlags = [1 0];
-%      [Timestamps] = Nlx2MatNRD('test.nrd', 3, FieldSelectionFlags,0,1,[]);
+%      EXAMPLE: FieldSelectionFlags = [1 0 0 0 1];
+%      [StartTimestamps,ObjectNames] = Nlx2MatNDE('test.nde',FieldSelectionFlags,0,1,[]);
 %
 %   OUTPUT VARIABLES:
-%   Timestamps: A 1xN integer vector of timestamps. These timestamps are the full
-%               64 bit Cheetah timestamps.
-%   Samples: A 1xN integer vector of the data points. These values are in AD counts.
+%   StartTimestamps: A 1xN integer vector of  starting timestamps for each record.
+%   EndTimestamps: A 1xN integer vector of  ending timestamps for each record.
+%   SamplesLost: A 1xN integer vector of the samples lost of each record.
+%   DataTypes: A 1xN integer vector of the data type of each record.
+%              Valid Types: 0 - Invalid
+%                           1 - SingleElectrode
+%                           2 - Stereotrode
+%                           3 - Timestamp
+%                           4 - Tetrode
+%                           5 - CSC
+%                           6 - Event
+%                           7 - VideoTracker
+%                           8 - NRD
+%                           9 - MClustTimestamps
+%                           10 - NCC
+%                           11 - NSIF
+%                           12 - NSUB
+%                           13 - NDE
+%                           14 - PersystLay
+%                           15 - PersystDat
+%   ObjectNames: A Mx1 string vector of object names for each record, where M is the
+%                number of records.
 %   Header: A Mx1 string vector of all the text from the Neuralynx file header, where
 %           M is the number of lines of text in the header.
 %
 %
-%   EXAMPLE: [Timestamps, Samples, Header] = Nlx2MatNRD('test.nrd', 3,
-%                                            [1 1], 1, 1, [] );
-%   Uses extraction mode 1 to return all of the data from all of the records of
-%   AD channel 3 in the file test.nrd.
+%   EXAMPLE: [StartTimeStamps, EndTimeStamps, SamplesLost, DataTypes, ObjectNames, Header] =
+%            Nlx2MatNDE('test.nde', [1 1 1 1 1], 1, 1, [] );
+%   Uses extraction mode 1 to return all of the data from all of the records
+%   in the file test.nde.
 %
-%   EXAMPLE: [Timestamps, Header] = Nlx2MatNRD('test.nrd', 3,[1 0],1, 2, [14 30]);
-%   Uses extraction mode 2 to return the Timestamps between record index 14 and
-%   30 of subchannel 3 as well as the complete file header.
+%   EXAMPLE: [StartTimestamps, ObjectNames, Header] = Nlx2MatNDE('test.nde',
+%            [1 0 0 0 1], 1, 2, [14 30]);
+%   Uses extraction mode 2 to return the Object Names and Data Types between
+%   record index 14 and 30 as well as the complete file header.
 %
