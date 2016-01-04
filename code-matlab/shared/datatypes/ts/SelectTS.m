@@ -44,7 +44,7 @@ function [ts_out,idx] = SelectTS(cfg_in,ts_in,selectspec)
 
 
 mfun = mfilename; 
-if ~CheckTS(ts_in,mfun)
+if ~CheckTS(ts_in)
     error('ts_in is either not a ts datatype or is poorly formed.')
 end
 
@@ -93,6 +93,8 @@ switch goto
             temp = ts_in.usr.(selectspec);
         end
         
+        assignin('base','temp',temp)
+        
         % do the thing
         switch type
             case 1
@@ -121,11 +123,6 @@ switch goto
         
     case 'there'
         keep = selectspec;
-        % these config options do not apply in this case, so don't give
-        % them a value in history since they did not affect the output
-        cfg.operation = '';
-        cfg.threshold = [];
-        cfg.str = '';
 end
 
 % select
