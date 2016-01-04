@@ -133,10 +133,20 @@ end
 % keep track of intervals
 switch cfg.mode
     case 'random' % user wants to be shown intervals in a random order
-        idx_list = randperm(length(iv_in.tstart));       
+        s = rng; % get current rng state
+        rng(1,'twister') % seed the random number generator
+        idx_list_all = randperm(length(iv_in.tstart));
+        rng(s); % return to original state
+        
     case 'chrono' % user wants to be shown intervals in chronological order
-        idx_list = 1:length(iv_in.tstart);
+        idx_list_all = 1:length(iv_in.tstart);
 end
+
+% indices into iv data in the order that we will see them. when "Show unseen" is
+% selected, idx_list is updated to include only unseen intervals. when 'show
+% all' is selected, idx_list is reset to idx_list_all
+idx_list = idx_list_all;
+
 ii = 1;
 current_iv = idx_list(ii);
 midpoints = IVcenters(iv_in);
@@ -160,6 +170,32 @@ windowSize = 1;
 ax_main = gca;
 
 uipressed = 0; % this helps track whether a UI button has been pressed when handling RoboDuck and human clicks in clickstuff function
+inRedraw = 0; % whether we are currently redrawing an interval
+
+% this keeps track of clicks for redrawing intervals (see clickstuff)
+state = 'start';
+% 'start' is before clicks
+% 'once' is a single click
+% 'twice' is two clicks
+x1 = []; x2 = []; % click spots for redrawing intervals
+
+% if the interval is from ducktrap, we need to know which mode was used
+if isfield(iv_in,cfg) && isfield(iv_in.cfg,'history') && any(strcmp(iv_in.cfg.history.mfun,'ducktrap'))
+    cfg_temp = [];
+    cfg_temp.target = 'ducktrap';
+    
+    history = GetHistory(cfg_temp,iv_in);
+    mode = history{end}.mode;
+    
+    % if mode was fixed, we need trapwin so all intervals have same
+    % duration
+    if strcmp(mode,'fixed')
+        trapwin = history{end}.trapwin;
+    end
+    
+else % if it's not from ducktrap, just make user click twice because w/e
+    mode = 'unfixed';
+end
 
 updateProgress
 
@@ -167,7 +203,7 @@ updateProgress
 
 % save button
 uicontrol('Style', 'pushbutton', 'String', 'Save',...
-    'Units','normalized','Position', [0.925 0.25 0.05 0.05],...
+    'Units','normalized','Position', [0.925 0.175 0.05 0.05],...
     'FontUnits','normalized','Callback', @saveme);
 
 % quit button
@@ -199,6 +235,23 @@ hdel = uicontrol('Style', 'checkbox', 'String', 'Delete this interval',...
     'Units','normalized','Position', [0.92 0.8 0.075 0.03],...
     'Callback', @dontwant);
      set(hdel,'BackgroundColor',get(gcf,'Color')); % checkbox otherwise sits in a white rectangle, which looks bad
+     
+% show certain intervals drop down option
+hChange = uicontrol('Style','popupmenu','String',{'Show all','Show unseen'},...
+        'TooltipString','Which intervals are shown',...
+        'Units','normalized','Position',[0.92 0.68 0.075 0.05],'Callback',@ChangeList);     
+     
+% redraw button
+hRedraw = uicontrol('Style', 'pushbutton', 'String', 'Redraw',...
+    'TooltipString','Redefine current interval boundaries',...
+    'Units','normalized','Position', [0.92 0.64 0.075 0.05],...
+    'FontUnits','normalized','Callback', @EnableRedraw);
+
+% cancel redraw button
+hCancelRedraw = uicontrol('Style', 'pushbutton', 'String', 'Cancel',...
+    'TooltipString','Return to annotating without completing redraw',...
+    'Units','normalized','Position', [0.92 0.59 0.075 0.05],...
+    'FontUnits','normalized','Enable','off','Callback', @DisableRedraw);
 
 if isfield(cfg,'lfp')
     % spectrogram button
@@ -230,7 +283,9 @@ end
 
 PlotCurrentIV
 
-%% helper functions
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%                    HELPER FUNCTIONS                               %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % ~~~~~~ UPDATE PROGRESS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -284,7 +339,7 @@ PlotCurrentIV
         % obj_handle is the handle of the object you want RoboDuck to click
         % for you
         
-        if cfg.EnableRobot
+        if cfg.EnableRobot && ~inRedraw
             % get original location of mouse cursor
             ml_orig = get(0,'PointerLocation');
             
@@ -339,7 +394,9 @@ PlotCurrentIV
         if isfield(hMR,'LFP_iv'); set(hMR.LFP_iv,'Color','r'); end
     end
 
-%% callback functions
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%                    CALLBACK FUNCTIONS                               %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % ~~~~~~ NEXT INTERVAL ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     function nextIV(~,~)
@@ -347,7 +404,7 @@ PlotCurrentIV
         uipressed = 1;
         
         HideSpectraxis
-        if ii == length(iv_in.tstart) % we've gone through all of them
+        if ii == length(idx_list) % we've gone through all of them
             set(hnext,'Enable','off')
             title('End of interval list','FontSize',14)
         else
@@ -377,6 +434,32 @@ PlotCurrentIV
         
         RoboDuck(hfig)
     end
+
+% ~~~~~~ CHANGE LIST ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    function ChangeList(~,~)
+        % change idx_list between the whole set of intervals and the
+        % non-annotated subset
+        uipressed = 1;
+        string = get(hChange,'String'); selected = get(hChange,'Value');
+        choice = string{selected};
+        switch choice
+            case 'Show unseen'
+                % remove seen intervals from idx_list
+                temp = iv_in.usr.annotation;
+                temp(logical(del)) = [];
+                unseen = cellfun(@isempty,temp);
+                unseen = unseen(idx_list);
+                idx_list = idx_list(unseen);
+                
+                ii = 1; current_iv = idx_list(ii);
+                PlotCurrentIV
+                
+            case 'Show all'
+                idx_list = idx_list_all;
+                ii = find(idx_list == current_iv);
+        end
+        RoboDuck(hfig)
+    end % of changelist
 
 % ~~~~~~ KEY STUFF ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     function keystuff(source,event)
@@ -432,6 +515,95 @@ PlotCurrentIV
         % more mouse things here
         
     end
+
+% ~~~~~~ ENABLE REDRAW ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    function EnableRedraw(~,~)
+        % changes the current window button down function to redraw
+        set(ax_main,'XLim',[midpoints(current_iv)-windowSize/2 midpoints(current_iv)+windowSize/2])
+        set(hfig,'WindowButtonDownFcn',@redraw)
+        set(hRedraw,'Enable','off')
+        set(hCancelRedraw,'Enable','on')
+        switch mode
+            case 'fixed'
+                title('Redraw enabled: click center of interval','FontSize',14)
+            case 'unfixed'
+                title('Redraw enabled: click beginning of interval','FontSize',14)
+        end
+    end % of EnableRedraw
+
+% ~~~~~~ DISABLE REDRAW ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    function DisableRedraw(~,~)
+        % changes the current window button down function to clickstuff
+        uipressed = 1;
+        inRedraw = 0; % whether we are currently redrawing an interval
+        state = 'start';
+        set(hfig,'WindowButtonDownFcn',@clickstuff)
+        set(hRedraw,'Enable','on') % allow user to click button for next time
+        set(hCancelRedraw,'Enable','off')
+        PlotCurrentIV
+        RoboDuck(hfig)
+    end % of DisableRedraw
+
+% ~~~~~~ REDRAW ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    function redraw(source,event)
+        % handles mouse input for redrawing interval (this is modified from
+        % ducktrap's clickstuff
+        
+        inRedraw = 1; % whether we are currently redrawing an interval
+        ylims = get(ax_main,'Ylim');
+        
+        clickpoint = get(ax_main,'CurrentPoint');
+        x = clickpoint(1,1);
+        
+        switch state
+            case 'start'
+                switch mode
+                    case 'fixed' % interval is defined by trapwin around click location
+                        state = 'twice';
+                        x1 = x;
+                        % assign new iv boundaries
+                        iv_in.tstart(current_iv) = x1-trapwin/2;
+                        iv_in.tend(current_iv) = x1+trapwin/2;
+                        
+                        % update plot of current iv
+                        PlotCurrentIV
+                        
+                        DisableRedraw(source,event)
+                        
+                    case 'unfixed' % interval start and stop are defined by user
+                        state = 'once';
+                        x1 = x;
+                        delete(h_curr(1))
+                        h_curr(1) = plot(ax_main,[x1 x1],ylims,'Color',cfg.ivColor,'LineWidth',1.5);
+                        title('Redraw enabled: click end of interval','FontSize',14)
+                        
+                    otherwise
+                        error('Unrecognized mode')
+                end
+                
+            case 'once'
+                assert(strcmp(mode,'unfixed'))
+                state = 'twice';
+                x2 = x;
+                delete(h_curr(2))
+                h_curr(2) = plot(ax_main,[x2 x2],ylims,'Color',cfg.ivColor,'LineWidth',1.5);
+                
+                % reassign iv boundaries
+                clicktimes = sort([x1 x2]);
+                iv_in.tstart(current_iv) = clicktimes(1);
+                iv_in.tend(current_iv) = clicktimes(2);
+                drawnow
+                DisableRedraw(source,event)
+                
+            case 'twice'
+                % if user has clicked twice, cycle is complete - return
+                % to 'start' state
+                state = 'start';
+        end
+    end % of redraw
 
 % ~~~~~~ DON'T WANT ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
