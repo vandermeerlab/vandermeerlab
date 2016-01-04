@@ -165,6 +165,8 @@ cfg_def.lfpHeight = 15;
 cfg_def.lfpMax = 15;
 cfg_def.axislabel = 'on';
 cfg_def.windowSize = 1;
+
+mfun = mfilename;
 cfg = ProcessConfig2(cfg_def,cfg_in); % use ProcessConfig2 because there's complications with the MR fields on cfg_in
 
 S = []; % spike trains
@@ -522,22 +524,22 @@ end
                 switch mode
                     case 'fixed'
                         if ~isempty(cfg.resume)
-                           clicktimes = [clicktimes IVcenters(cfg.resume)]; 
+                           centers = [clicktimes IVcenters(cfg.resume)]; 
                         end
-                        clicktimes = sort(clicktimes);
-                        evt = iv(clicktimes - trapwin/2,clicktimes + trapwin/2);
+                        centers = sort(centers);
+                        evt = iv(centers - trapwin/2,centers + trapwin/2);
                         if isfield(cfg,'lfp')
                             evt.label = cfg.lfp.label;
                         end
                         
                     case 'unfixed'
                         if ~isempty(cfg.resume)
-                           clicktimes.tstart = [clicktimes.tstart cfg.resume.tstart']; 
-                           clicktimes.tend = [clicktimes.tend cfg.resume.tend']; 
+                           intervals.tstart = [clicktimes.tstart cfg.resume.tstart']; 
+                           intervals.tend = [clicktimes.tend cfg.resume.tend']; 
                         end
-                        [clicktimes.tstart,idx] = sort(clicktimes.tstart);
-                        clicktimes.tend = clicktimes.tend(idx);
-                        evt = iv(clicktimes.tstart,clicktimes.tend);  
+                        [intervals.tstart,idx] = sort(intervals.tstart);
+                        intervals.tend = intervals.tend(idx);
+                        evt = iv(intervals.tstart,intervals.tend);  
                         if isfield(cfg,'lfp')
                             evt.label = cfg.lfp.label;
                         end
@@ -555,6 +557,9 @@ end
                 end
                 
                 evt.hdr = cfg.hdr;
+                
+                % housekeeping
+                evt = History(evt,mfun,cfg);
                 
                 [~,name,~] = fileparts(pwd);
                 uisave('evt',[name,'-manualIV']) % opens window for saving stuff
