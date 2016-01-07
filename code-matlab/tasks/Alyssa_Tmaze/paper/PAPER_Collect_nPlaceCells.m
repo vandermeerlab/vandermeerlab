@@ -79,8 +79,6 @@ arms = {'L','R'};
 
 %% Generate LaTex code
 
-disp('IMPORTANT: you must correct 4 lines manually because of an annoying feature of fprintf; correct extbf to \textbf'); disp(' ')
-
 disp('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 disp('      LATEX CODE FOLLOWS:'); 
 disp('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'); disp(' ')
@@ -103,8 +101,7 @@ cfg_temp.threshold = cfg.threshold; cfg_temp.operation = cfg.operation; cfg_temp
 for iRat = 1:length(cfg.rats)
     
     nTotal = 0; % for collecting total place cells per rat
-    % disp(['           \textbf{',cfg.rats{iRat},'}']); fprintf('\b') % this results in something annoying in the text file
-    fprintf('           \textbf{%s}',cfg.rats{iRat}); % this make a tab and removes \t from the text
+    fprintf('\t\t\t\\textbf{%s}',cfg.rats{iRat});
     
     for iSession = 1:length(inputData.(cfg.rats{iRat}))
         
