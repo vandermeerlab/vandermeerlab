@@ -81,6 +81,10 @@
 %    -  If the only peak is between 100-140 Hz, dock a rating point or call
 %       it a 4 or 5 (maybe a SWR)
 %
+% What if my interval is technically a 4 according to the rating system,
+% but I am very confident that it's truly a SWR?
+%    - Give it a rating of 3
+%
 % What if my interval has one really nice peak between 50-100 HZ?
 %    -  You've found a really nice gamma event.
 %
@@ -97,9 +101,16 @@
 % LFP.) 
 % On the right side of the window are the buttons "Previous" and "Next"
 % between which are an edit box for you to type your rating and a checkbox
-% to select whether you want your interval to be deleted.
+% to select whether you want your interval to be deleted. If you want to
+% modify the interval boundaries, click the "Redraw" button. You will be
+% prompted to click on the beginning and then the end of the interval. If
+% you want to exit the redraw process before completion hit "Cancel".
 % Each time you rate or select to delete an interval, the Progress updates
 % at the top right of the window.
+% If you want to display only the only the intervals you have not annotated
+% (or selected for deletion), choose "Show unseen" from the drop down menu.
+% To see all the intervals choose "Show all".
+% 
 % You can use the navigate function to scroll through the figure window,
 % though this is discouraged: AnnotateIV wants you to annotate the interval
 % it has shown you, and if you navigate away it is still considering that
@@ -128,6 +139,9 @@
 %      an event at any time as long as the figure window remains open.
 %      Events are deleted upon saving: If you close the figure, the intervals 
 %      are exactly as they were the last time you saved them.
+%
+%  There are no keyboard shortcuts for Redraw or switching to unseen
+%  intervals.
 % 
 % Save your progress frequently.
 %

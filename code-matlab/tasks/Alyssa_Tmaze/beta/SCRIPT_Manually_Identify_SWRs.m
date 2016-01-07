@@ -50,17 +50,20 @@
 % In this particular script, the data is divided into three segments: one for
 % each of the prerecord, task, and postrecord. When you run this script for
 % the first time, make sure that cfg.resumeSession = 0. A figure window
-% will open showing you the full length of data. Hit 'f' on the keyboard to
-% go to the first event (in this script, each event is one second of data).
-% You should see a vertical bar in the center of the screen. To verify that
-% this is the first segment of data, you can hit the "Teleport" button on 
-% the far right of the window with the drop down menus set to '1' and 
-% 'beginning'. To scroll through the data, move the figure window right and
+% will open showing you the full length of data. 
+% Press the 'f' key to go to the beginning of the data. Now, hit the 
+% "Teleport" button on the far right of the window with the drop down menus
+% set to '1' and 'beginning'. Now you should see a vertical bar in the
+% middle of the window with a purple patch object to the left and a white
+% background to the right. (Do not identify SWRs that are in the purple
+% regions unless the SWR straddles the boundry.)
+% To scroll through the data, move the figure window right and
 % left using the arrow keys. When you have reached the end of the first
 % segment of data you will see another vertical bar. You do not have to
 % navigate to the next segment using the keyboard (that might take a while
 % or some luck). Instead, select '2' and 'beginning' in the dropdown menus
-% and hit "Teleport".
+% and hit "Teleport". This takes you to the beginning of the second
+% segment.
 %
 % Save your progress frequently because ducktrap is in beta and power
 % outages don't care about you.
@@ -128,7 +131,7 @@ switch cfg.whichSFiles
 end
 
 % Just cuz
-if any(~strcmp(cfg.whichEpochs,{'prerecord','task','postrecord'}))
+if ~any(strcmp(cfg.whichEpochs,{'prerecord','task','postrecord'}))
     error('cfg.whichEpochs contains unrecognized recording segment')
 end
 
