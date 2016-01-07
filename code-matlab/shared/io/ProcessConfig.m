@@ -123,24 +123,27 @@ if ~isempty(cfg_in)
     end %iterate extra cfg fields
  
 %~~~~~~~~~~ CHECK CONFIG ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-if isempty(cfg_in)
-    cfg_in = cfg_def;
-end
 
-pass_flag = 1;
-
-if ~isempty(cfg_in)
-    inFields = fieldnames(cfg_in);
-    badFields = inFields(arrayfun(@(x) ~isfield(cfg_def,x),inFields));
+if (isfield(cfg_out,'verbose') && cfg_out.verbose) || nargout > 2
+    if isempty(cfg_in)
+        cfg_in = cfg_def;
+    end
     
-    if ~isempty(badFields) && isfield(cfg_out,'verbose') && cfg_out.verbose
+    pass_flag = 1;
+    
+    if ~isempty(cfg_in)
+        inFields = fieldnames(cfg_in);
+        badFields = inFields(arrayfun(@(x) ~isfield(cfg_def,x),inFields));
         
-        in_mfun = ''; % set empty in case callername isn't given
-    
-        if ~isempty(varargin) && ischar(varargin{1})
-            in_mfun = [' in ',varargin{1}];
+        if ~isempty(badFields) && isfield(cfg_out,'verbose') && cfg_out.verbose
+            
+            in_mfun = ''; % set empty in case callername isn't given
+            
+            if ~isempty(varargin) && ischar(varargin{1})
+                in_mfun = [' in ',varargin{1}];
+            end
+            disp(['WARNING',in_mfun,': unrecognized config field(s) ',strjoin(badFields',', ')])
         end
-        disp(['WARNING',in_mfun,': unrecognized config field(s) ',strjoin(badFields',', ')])
     end
 end
 end
