@@ -61,6 +61,9 @@ clear % note that this script will clear the base workspace prior to collecting 
 
 %% WHAT DO YOU WANT THIS SCRIPT TO DO?
 
+% Which candidates file?
+cfg.whichCandidates = '-candidates'; % the suffix of the candidates file you want to load
+
 % Would you like to save the output?
 cfg.writeFiles = 1; % If 1, save the output variable as well as a record of
 % command window history. If 0, don't.
@@ -72,7 +75,7 @@ cfg.output_fd = [pwd,'\data'];
 cfg.output_fn = 'nEvents';
 
 % Which rats to use? (best to leave all here)
-cfg.rats = {'R042','R044','R050','R064'}; %{'R042','R044','R050','R064'};
+cfg.rats = TmazeRats;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                                                                     %%%
@@ -121,7 +124,7 @@ for iRat = 1:length(cfg.rats)
         
         %~~~~~~~~~~~~~~~~~~~~~~~ Load data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         ExpKeys = []; LoadExpKeys; disp(['     Restriction type: ',ExpKeys.RestrictionType])
-        evt = []; LoadCandidates; evt_original = evt;
+        evt = []; evt = loadpop([sessionID,cfg.whichCandidates,'.mat']); evt_original = evt;
         metadata = []; LoadMetadata
         
         % tell me how many total events were detected
