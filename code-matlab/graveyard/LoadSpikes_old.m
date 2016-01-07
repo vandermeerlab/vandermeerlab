@@ -1,75 +1,36 @@
 function S = LoadSpikes(cfg_in)
-% LOADSPIKES Load .t files or .tt files containing spike timestamps 
+% S = LoadSpikes(cfg)
 %
-%   S = LOADSPIKES(cfg) Loads spiketrains into a ts struct. Spikes can
-%   originate as .t files (spike sorted in MClust) or .tt files (all spikes 
-%   recorded by a tetrode, see MakeTTFiles). To create an S struct from
-%   spiketrains with another format (such as from another lab), load the
-%   files and use the ts datatype constructor.
+% Loads MClust *.t files containing spike timestamps
 %
-%   CFG OPTIONS:
+% input cfg fields:
 %
-%       cfg.fc = {}; Cell array containing filenames to load. If 
-%                no filenames are specified, loads all *.t files in the
-%                current directory.
-%       cfg.load_questionable_cells = 0; Load *._t files if set to 1
-%       cfg.getTTnumbers = 1; If 1, includes the tetrode number each 
-%                spiketrain originated from in S.usr.tt_num. If 0 there is 
-%                no such field.
-%       cfg.getRatings = 0; If 1, includes cluster ratings in S.usr.rating. 
-%                If 0, (or if .tt files are loaded) there is no such field.
-%       cfg.min_cluster_quality = 5; Minimum cluster quality to load for .t
-%                files (applies if cfg.getRatings = 1).
-%       cfg.tsflag = 'sec'; Units to use for the timestamps
-%                 'sec'  -  seconds
-%                  'ms'  -  milliseconds
-%                  'ts'  -  exact (as exists in the file)
-%       cfg.verbose = 1; If 1, allow command window text. If 0, suppress
-%                command window text.
+% cfg.fc: cell array containing filenames to load
+%   if no file_list field is specified, loads all *.t files in current dir
+% cfg.load_questionable_cells = 0; % load *._t files if set to 1
+% cfg.min_cluster_quality = 5; % minimum cluster quality
+% cfg.useClustersFile = 0; % use .clusters file
+% cfg.tsflag = 'sec'; % units to use
+% cfg.getTTnumbers = 1; add usr field with tetrode number for each cell
+% cfg.verbose = 1; Allow or suppress displaying of command window text
 %
-%   OUTPUT
+% output:
 %
-%       S: spike data ts struct
-%
-% see also ts, MakeTTFiles
+% S: spike data ts struct
 %
 % MvdM 2014-06-17 based on ADR LoadSpikes(), 25 edit to use cfg_in
-% aacarey edit Nov 2015
 
-cfg_def.fc = {};
 cfg_def.tsflag = 'sec';
 cfg_def.load_questionable_cells = 0;
 cfg_def.min_cluster_quality = 5;
-cfg_def.getRatings = 0;
+cfg_def.useClustersFile = 0;
 cfg_def.getTTnumbers = 1;
 cfg_def.verbose = 1;
 
 mfun = mfilename;
 cfg = ProcessConfig(cfg_def,cfg_in,mfun); % this takes fields from cfg_in and puts them into cfg
 
-if ~isempty(cfg.fc)
-    % can't get ratings for .tt files, also can't load questionable cells
-    ext_tt = false(size(cfg.fc));
-    for iFN = 1:length(ext_tt)
-        [~,~,ext] = fileparts(cfg.fc{iFN});
-        if strcmp(ext,'.tt')
-            ext_tt(iFN) = true;
-        end
-    end
-    
-    if any(ext_tt)
-        % reset cfg.getRatings to 0 both so that it won't attempt to get the
-        % ratings and so that the config history shows that ratings were not
-        % added to usr field
-        if cfg.verbose && cfg.getRatings; fprintf('WARNING in %s: at least one file is a .tt file, ratings cannot be included in usr\n',mfun); end
-        if cfg.verbose && cfg.load_questionable_cells; fprintf('WARNING in %s: at least one file is a .tt file, cfg.load_questionable_cells does not apply\n',mfun); end
-        cfg.getRatings = 0;
-        cfg.load_questionable_cells = 0;
-        cfg.min_cluster_quality = [];
-    end
-end
-
-if isempty(cfg.fc)
+if ~isfield(cfg,'fc')
         
         cfg.fc = FindFiles('*.t');
         
@@ -92,11 +53,11 @@ nFiles = length(cfg.fc);
 if cfg.verbose; fprintf('%s: Loading %d files...\n',mfun,nFiles); end
 
 % for each tfile
-% first read the header, then read a tfile
+% first read the header, then read a tfile 
 
 S = ts; % initialize new ts struct
 
-for iF = 1:nFiles
+for iF = 1:nFiles    
     tfn = cfg.fc{iF};
     
     if ~isempty(tfn)
@@ -131,7 +92,8 @@ for iF = 1:nFiles
     end 		% if tfn valid
 end		% for all files
 
-if cfg.getRatings
+if cfg.useClustersFile
+    if isfield(cfg,'min_cluster_quality');
         
         warning('off','MATLAB:unknownElementsNowStruc');
         
@@ -148,9 +110,7 @@ if cfg.getRatings
             if exist(clu_fn,'file')
                 load(clu_fn,'-mat');
             else
-                S.usr.rating(iC) = nan;
-                warning('File %s does not exist. Cannot get rating.',clu_fn);
-                continue
+                error('File %s does not exist.',clu_fn);
             end
             
             % get rating
@@ -167,8 +127,7 @@ if cfg.getRatings
             if ischar(clu_name(1))
                 S.usr.rating(iC) = str2double(clu_name(1)); % first character of name should be rating
             else
-                S.usr.rating(iC) = nan;
-                warning('Cluster %d has no rating (name is %s). Cannot get rating.',cellno,clu_name);               
+                error('Cluster %d has no rating (name is %s).',cellno,clu_name);
             end
             
         end % of filenames to process
@@ -183,7 +142,7 @@ if cfg.getRatings
         S.label = S.label(keep_idx);
         S.usr.rating = S.usr.rating(keep_idx);
         
-        if cfg.verbose; fprintf('%s: Outputting %d spiketrains that meet criteria...\n',mfun,length(S.t)); end 
+    end % of min_cluster_quality conditional
 end
 
 % check if ExpKeys available
@@ -215,4 +174,6 @@ end
 [~,S.cfg.SessionID,~] = fileparts(pwd);
 
 % housekeeping
-S = History(S,mfun,cfg);
+S.cfg.history.mfun = cat(1,S.cfg.history.mfun,mfun);
+S.cfg.history.cfg = cat(1,S.cfg.history.cfg,{cfg});
+
