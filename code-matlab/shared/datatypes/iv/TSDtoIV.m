@@ -59,6 +59,10 @@ switch cfg.method
             case '<'
                 thr_out = mu - cfg.threshold.*sigma;
         end
+    case 'percentile'
+        temp_data_sorted = sort(temp_data,'ascend');
+        thr_idx = round(cfg.threshold*length(temp_data)); % find index corresponding to percentile
+        thr_out = temp_data_sorted(thr_idx);
     otherwise
         thr_out = cfg.threshold;
 end
