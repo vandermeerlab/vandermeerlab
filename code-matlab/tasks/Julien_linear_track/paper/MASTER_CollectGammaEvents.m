@@ -1,11 +1,17 @@
-%% path
+%% MASTER_CollectGammaEvents.m
+% detects and organizes gamma events from raw LFP data
+%
+% Julien Catanese & Matthijs van der Meer
+
+%% set paths
 restoredefaultpath;
-addpath(genpath('D:\My_Documents\GitHub\fieldtrip')); % incorrect but that's how we used to do it
+cd('D:\My_Documents\GitHub\fieldtrip');
+ft_defaults;
 
 rmpath('D:\My_Documents\GitHub\fieldtrip\external\signal\');
-addpath(genpath('D:\My_Documents\GitHub\vandermeerlab\code-matlab\shared'));
 
-addpath('D:\My_Documents\Dropbox\projects\Julien_multiLFP\2015-12-28'); % Detect events, CountCycles live here
+addpath(genpath('D:\My_Documents\GitHub\vandermeerlab\code-matlab\shared'));
+addpath(genpath('D:\My_Documents\GitHub\vandermeerlab\code-matlab\tasks\Julien_linear_track')); % Detect events, CountCycles live here
 
 %% make fd
 clear all; pack
@@ -250,6 +256,7 @@ for iFD = 1:length(fd)
         sess_id_field = regexprep(SessionLIST{iFD},'-','_');
         ALL_evt.(this_RatID).(sess_id_field).(PARAM_f_label{iFreq}) = evt;
         ALL_evt.(this_RatID).(sess_id_field).fd = fd{iFD};
+        ALL_evt.(this_RatID).(sess_id_field).firstTimestamp = csc.tvec(1); % need this for trialification later
         
     end % of loop over frequencies
     
