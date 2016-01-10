@@ -26,7 +26,7 @@ function [iv_out,thr_out] = TSDtoIV(cfg_in,tsd_in)
 
 cfg_def.method = 'zscore';
 cfg_def.threshold = 5;
-cfg_def.dcn =  '>'; % return intervals where threshold is exceeded
+cfg_def.dcn = '>'; % return intervals where threshold is exceeded
 cfg_def.merge_thr = 0.05; % merge events closer than this
 cfg_def.target = [];
 cfg_def.minlen = 0.05; % minimum interval length
@@ -49,7 +49,8 @@ else
     temp_data = tsd_in.data;
 end
 
-% zscore
+% apply transform to data if requested
+thr_out = cfg.threshold;
 switch cfg.method
     case 'zscore'
         [temp_data,mu,sigma] = zscore(temp_data);
@@ -61,10 +62,11 @@ switch cfg.method
         end
     case 'percentile'
         temp_data_sorted = sort(temp_data,'ascend');
-        thr_idx = round(cfg.threshold*length(temp_data)); % find index corresponding to percentile
-        thr_out = temp_data_sorted(thr_idx);
-    otherwise
-        thr_out = cfg.threshold;
+        thr_out_idx = round(cfg.threshold.*length(temp_data));
+        thr_out = temp_data_sorted(thr_out_idx);
+        
+        temp_data = tiedrank(temp_data)./length(temp_data); % assign percentile to each data point    
+        
 end
 
 % detect crossings
