@@ -85,8 +85,8 @@ for iIV = nIV:-1:1
    iv_in.usr.nCycles(iIV) = sum(this_pk_val > cfg.threshold);
    
    % track mean filtered peak amplitude
-   iv_in.usr.mean_filt(iIV) = nanmean(this_pk_val_raw);
-   iv_in.usr.min_filt(iIV) = min(this_pk_val_raw);
+   iv_in.usr.mean_filt(iIV) = nanmean(this_pk_val);
+   iv_in.usr.min_filt(iIV) = min(this_pk_val);
    
    % track variability in how far from mean peaks and throughs are
    all_peak_tr = cat(2,this_pk_val-nanmean(this_data),this_tr_val-nanmean(this_data));
