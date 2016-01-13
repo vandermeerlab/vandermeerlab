@@ -61,9 +61,11 @@ for iF = 1:nFiles
      
     % disabled channels cannot be loaded
     if Timestamps == 0 
-        message = ['No csc data (disabled tetrode channel). Considering deleting ',cfg.fc{1},'.'];
+        message = ['No csc data (disabled tetrode channel). Consider deleting ',fname,'.'];
         error(message);
     end
+    
+    % check for each data 
     
     % check for constant sampling frequency
     Fs = unique(SampleFrequencies);
@@ -131,6 +133,12 @@ for iF = 1:nFiles
     % track sizes
     sample_count_tvec(iF) = length(tvec);
     sample_count_data(iF) = length(data);
+    
+    % check if the data is the same length for each channel.  
+    if iF >1 && length(data) ~= length(csc_tsd.data(iF-1,:))
+        message = 'Data lengths differ across channels.';
+        error(message);
+    end
     
     % done, add to tsd
     csc_tsd.tvec = tvec;
