@@ -40,6 +40,7 @@ cfg_def.width = 0.2; % in s
 cfg_def.subplotdim = [10 8];
 cfg_def.bgcol = 'k';
 cfg_def.fgcol = 'r';
+cfg_def.iv_only = 0; % if 1, don't plot tsd
 cfg_def.title = [];
 
 cfg = ProcessConfig(cfg_def,cfg_in); % should take whatever is in cfg_in and put it into cfg!
@@ -75,7 +76,9 @@ end
 switch cfg.display
     case 'tsd' % plot tsd with highlighted iv
         
+        if ~cfg.iv_only
         h.LFP = plot(tsd_in.tvec,temp_data,cfg.bgcol,'MarkerSize',1);
+        end
         hold on;
         
         h.LFP_iv = nan(size(tstart_idx));
