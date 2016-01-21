@@ -13,9 +13,16 @@ function pass_flag = CheckTSD(tsd_in)
 
 pass_flag = 1;
 
+if ~isstruct(tsd_in)
+   pass_flag = 0;
+   fprintf('FAIL: data is not a struct.\n');
+   return;
+end
+
 if iscell(tsd_in.data)
    pass_flag = 0;
    fprintf('FAIL: data is a cell.\n');
+   return;
 end
 
 nSignals = size(tsd_in.data,1);

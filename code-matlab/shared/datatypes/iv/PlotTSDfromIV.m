@@ -26,8 +26,11 @@ function h = PlotTSDfromIV(cfg_in,iv_in,tsd_in)
 %   window to be added to each edge (for 'edges')
 % cfg_def.subplotdim = [10 8]; % for 'iv' display mode only, specifies
 %   subplots to use in single figure
+% cfg_def.title = []; % for each iv, add contents of specified usr
+%  field as title (SHOULD GENERALIZE TO ARBITRARY STRING WITH MULTIPLE
+%  FIELDS, FORMATTING...)
 %
-% MvdM 2014-06-24
+% MvdM 2014-06-24, edit 2016-01-0y to add title option
 
 cfg_def = [];
 cfg_def.verbose = 1;
@@ -37,6 +40,8 @@ cfg_def.width = 0.2; % in s
 cfg_def.subplotdim = [10 8];
 cfg_def.bgcol = 'k';
 cfg_def.fgcol = 'r';
+cfg_def.iv_only = 0; % if 1, don't plot tsd
+cfg_def.title = [];
 
 cfg = ProcessConfig(cfg_def,cfg_in); % should take whatever is in cfg_in and put it into cfg!
 mfun = mfilename;
@@ -71,7 +76,9 @@ end
 switch cfg.display
     case 'tsd' % plot tsd with highlighted iv
         
+        if ~cfg.iv_only
         h.LFP = plot(tsd_in.tvec,temp_data,cfg.bgcol,'MarkerSize',1);
+        end
         hold on;
         
         h.LFP_iv = nan(size(tstart_idx));
@@ -98,6 +105,10 @@ switch cfg.display
             h.LFP_iv(iI) = plot(tsd_in.tvec(tstart_idx(iI):tend_idx(iI)),temp_data(tstart_idx(iI):tend_idx(iI)),cfg.fgcol,'MarkerSize',1);
                         
             axis off; axis tight;
+            if ~isempty(cfg.title)
+               all_usr = iv_in.usr.(cfg.title);
+               title(all_usr(iI));
+            end
             
         end
     
