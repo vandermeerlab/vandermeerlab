@@ -27,6 +27,8 @@ if isstruct(iv_in)
     if ~isfield(iv_in,'tstart') || ~isfield(iv_in,'tend')
         pass_flag = 0;
         fprintf('FAIL%s: input iv must contain tstart and tend fields.\n',in_mfun);
+    elseif isempty(iv_in.tstart) || isempty(iv_in.tend)
+        fprintf('WARNING%s: input iv is empty.\n',in_mfun);
     elseif ~iscolumn(iv_in.tstart) || ~iscolumn(iv_in.tend)
         pass_flag = 0;
         fprintf('FAIL%s: tstart and tend must be column vectors.\n',in_mfun);
