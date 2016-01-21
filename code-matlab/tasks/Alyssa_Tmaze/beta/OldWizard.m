@@ -50,6 +50,7 @@ end
 cfg_temp = [];
 cfg_temp.type = 'fdesign';
 cfg_temp.f = cfg.rippleband;
+cfg_temp.verbose = 0;
 CSCf = FilterLFP(cfg_temp,CSC);
 
 % ask hilbert what he thinks

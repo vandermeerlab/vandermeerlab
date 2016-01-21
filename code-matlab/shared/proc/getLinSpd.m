@@ -19,8 +19,8 @@ cfg = ProcessConfig(cfg_def,cfg_in,mfun);
 
 if cfg.verbose; fprintf('%s: calculating linear speed from position data\n',mfun); end
 
-vx = dxdt(pos.tvec,getd(pos,'x'));
-vy = dxdt(pos.tvec,getd(pos,'y'));
+vx = dxdt(pos.tvec,getd(pos,'x'),'verbose',cfg.verbose);
+vy = dxdt(pos.tvec,getd(pos,'y'),'verbose',cfg.verbose);
 
 spd = tsd;
 spd.tvec = pos.tvec;
