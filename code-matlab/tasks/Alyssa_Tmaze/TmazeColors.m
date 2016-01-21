@@ -16,6 +16,8 @@ function col = TmazeColors(colormode)
 %    'inventory1'; as in Tmaze data inventory, with combined rats in grey
 %    'inventory2'; as in inventory, with combined rats in red and blue
 %    'inventory3'; " " with red and blue less saturated
+%    'inventory4'; as with inventory 3, but with individual rat colors less
+%    saturated
 %    'single'; coordinating colors when not using food AND water data in
 %    same plot; in this case, use only the "f" field ex: col.R042.f, but not
 %    col.R042.w. For all data, col.all.w = 'k' and col.all.f = 'w'.
@@ -78,19 +80,19 @@ switch colormode
         col.all.f =  [176/255 23/255 31/255]; % deep red
         col.all.w =  [39/255 64/255 139/255]; % dark blue
         
-    case 'single'
-        col.R042.f = [113/255 198/255 113/255];
-        col.R042.w = 'k';
-        col.R044.f = [113/255 113/255 198/255];
-        col.R044.w = 'k';
-        col.R050.f = [142/255 56/255 142/255];
-        col.R050.w = 'k';
+    case 'inventory4' % with rb for combined data
+        
+        col.R042.f = [92/255 121/255 75/255];
+        col.R042.w = [191/255 213/255 178/255];
+        col.R044.f = [89/255 101/255 135/255];
+        col.R044.w = [194/255 198/255 210/255];
+        col.R050.f = [106/255 75/255 121/255];
+        col.R050.w = [197/255 181/255 205/255];
         col.R064.f = [198/255 113/255 113/255];
-        col.R064.w = 'k';
-        col.all.f =  'w';
-        col.all.w =  'k';
-        
-        
+        col.R064.w = [238/255 213/255 210/255];
+        col.all.f =  [176/255 23/255 31/255];
+        col.all.w =  [39/255 64/255 139/255];
+      
     case 'rb'
         col.R042.f = 'r';
         col.R042.w = 'b';
