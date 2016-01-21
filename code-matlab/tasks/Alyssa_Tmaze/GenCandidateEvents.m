@@ -10,9 +10,34 @@ function evt = GenCandidateEvents(cfg_in)
 %     metadata.SWRfreqs (if using amSWR)
 %
 % CONFIG OPTIONS
-%     open the function and see the section called "parse cfg parameters"
+%   cfg.verbose = 0; % i don't want to see what the internal functions have to say 
+%   cfg.load_questionable_cells = 1;
+%   cfg.SWRmethod = 'AM'; % 'AM' for amSWR (frequency content similarity), 
+%       'HT' for OldWizard (hilbert transform), 'TR' for photonic 
+%       (transient detection), or 'none' to skip
+%   cfg.MUAmethod = 'AM'; % 'AM' for amMUA, or 'none' for skip MUA detection
+%   cfg.weightby = 'amplitude'; % 'power' or 'amplitude', this applies to 
+%       'AM' amSWR and 'TR' photonic, but not 'HT' OldWizard
+%   cfg.stepSize = 1; % if using amSWR, this controls the speed of
+%       detection.
+%   cfg.ThreshMethod = 'zscore'; % 'zscore' or 'raw' how you want the
+%       detector's TSD to be thresholded
+%   cfg.DetectorThreshold = 3; % the threshold you want to use for
+%       thresholding the detector to generate intervals
+%   cfg.mindur = 0.02; % in seconds, the minumum duration for detected 
+%       events to be kept
+%   cfg.SpeedLimit = 10; % max speed allowed in pixels/sec. If empty [],
+%       this step is skipped.
+%   cfg.ThetaThreshold = 2; % allowable max theta power, std above mean, If
+%       empty [], this step is skipped
+%   cfg.minCells = 5; % minimum number of active cells for the event to be 
+%       kept. if this is empty [], this step is skipped
+%   cfg.expandIV = [0 0]; % amount to add to the interval (catch borderline 
+%       missed spikes). This is the cfg.d input to ResizeIV
+%   cfg.allowOverlap = 0; % don't allow the expanded intervals to overlap one another
 %
 % ACarey Mar 2015, for T-maze candidate events
+% aacarey edit Jan 2016
 
 %% Tell me what you're doing
 
@@ -20,7 +45,7 @@ tic
 mfun = mfilename;
 [~,sessionID,~] = fileparts(pwd);
 disp(['***',mfun,': Looking for candidate events:']);
-disp(' ');
+
 %% parse cfg parameters
 
 cfg_def.verbose = 0; % i don't want to see what the internal functions have to say 
@@ -54,16 +79,20 @@ disp('***Loading data')
 LoadExpKeys
 LoadMetadata % for freqs
 
-cfg_temp = []; cfg_temp.getRatings = 0; cfg_temp.load_questionable_cells = cfg.load_questionable_cells;
+cfg_temp = []; cfg_temp.getRatings = 0; cfg_temp.load_questionable_cells = cfg.load_questionable_cells; cfg_temp.verbose = cfg.verbose;
 S = LoadSpikes(cfg_temp);
 
-pos = LoadPos([]);
+if ~ isempty(cfg.SpeedLimit)
+    cfg_temp = []; cfg_temp.verbose = cfg.verbose;
+    pos = LoadPos(cfg_temp);
+end
 
+cfg_temp = []; cfg_temp.verbose = cfg.verbose;
 cfg_temp.fc = ExpKeys.goodSWR(1);
 CSC = LoadCSC(cfg_temp);
 
 if ~isempty(cfg.ThetaThreshold) % load a theta CSC
-    cfg_temp = []; cfg_temp.fc = ExpKeys.goodTheta(1);
+    cfg_temp = []; cfg_temp.fc = ExpKeys.goodTheta(1); cfg_temp.verbose = cfg.verbose;
     lfp_theta = LoadCSC(cfg_temp);
 end
 
@@ -125,7 +154,7 @@ elseif isempty(MUA) && ~isempty(SWR)
 end
 
 cfg_temp =[];
-cfg_temp.method = 'geometricmean';
+cfg_temp.method = 'geometricmean'; cfg_temp.verbose = cfg.verbose;
 score = MergeTSD(cfg_temp,SWR,MUA);
 
 score = rescmean(score,0.5); % this was a step in precand(), doing same to preserve
@@ -154,10 +183,10 @@ if ~isempty(cfg.SpeedLimit)
     disp(' ')
     disp('***Limiting output based on speed...')
     
-    cfg_temp = [];
+    cfg_temp = []; cfg_temp.verbose = cfg.verbose;
     spd = getLinSpd(cfg_temp,pos);
     
-    cfg_temp.threshold = cfg.SpeedLimit; cfg_temp.dcn = '<'; cfg_temp.method = 'raw';
+    cfg_temp.threshold = cfg.SpeedLimit; cfg_temp.dcn = '<'; cfg_temp.method = 'raw'; cfg_temp.verbose = cfg.verbose;
     %cfg_temp.minlen = 0;
     low_spd_iv = TSDtoIV(cfg_temp,spd);
     
@@ -175,14 +204,15 @@ if ~isempty(cfg.ThetaThreshold)
     
     % remove events during high theta
     % 4th order, passband [6 10]
-    cfg_temp = []; cfg_temp.f = [6 10]; cfg_temp.order = 4; cfg_temp.display_filter = 0; cfg_temp.type = 'fdesign';
+    cfg_temp = []; cfg_temp.f = [6 10]; cfg_temp.order = 4; cfg_temp.display_filter = 0; cfg_temp.type = 'fdesign'; cfg_temp.verbose = cfg.verbose;
     lfp_theta_filtered = FilterLFP(cfg_temp,lfp_theta);
     
     % create tsd with theta power (lfp_theta is the output from LoadCSC)
-    tpow = LFPpower([],lfp_theta_filtered);
+    cfg_temp = []; cfg_temp.verbose = cfg.verbose;
+    tpow = LFPpower(cfg_temp,lfp_theta_filtered);
     
     % detect intervals with "low theta" (z-score below 2)
-    cfg_temp = []; cfg_temp.method = 'zscore'; cfg_temp.threshold = cfg.ThetaThreshold; cfg_temp.dcn =  '<';
+    cfg_temp = []; cfg_temp.method = 'zscore'; cfg_temp.threshold = cfg.ThetaThreshold; cfg_temp.dcn =  '<'; cfg_temp.verbose = cfg.verbose;
     low_theta_iv = TSDtoIV(cfg_temp,tpow);
     
     % restrict candidate events to only those inside low theta intervals
@@ -212,10 +242,11 @@ end
 
 %% Number of active cells thresholding (this is done last because it's slower than speed and theta thresholding)
 disp(' ')
-disp('***Limiting output based on number of active cells.')
-
-evt = AddNActiveCellsIV([],evt,S);
-if ~isempty(cfg.minCells)    
+cfg_temp =[]; cfg_temp.verbose = cfg.verbose;
+evt = AddNActiveCellsIV(cfg_temp,evt,S);
+if ~isempty(cfg.minCells)
+    
+    disp('***Limiting output based on number of active cells.')
     cfg_temp = []; cfg_temp.operation = '>='; cfg_temp.threshold = cfg.minCells;
     evt = SelectIV(cfg_temp,evt,'nActiveCells');
 end
@@ -234,11 +265,10 @@ if abs(prod(cfg.expandIV))> 0
 end
 
 % tell me how many you found
-disp(['***Finished detection: ',num2str(length(evt.tstart)),' candidates found.']); disp(' ')
+disp(' '); disp(['***Finished detection: ',num2str(length(evt.tstart)),' candidates found.']); disp(' ')
 
 evt = History(evt,mfun,cfg);
 
 toc
-disp(' ')
 end
 
