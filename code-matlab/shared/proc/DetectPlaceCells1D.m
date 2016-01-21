@@ -78,7 +78,7 @@ for iC = 1:nCells
            % get field entries and exits as an iv
            cfg_infield = [];
            cfg_infield.method = 'raw'; cfg_infield.threshold = [field_start field_end]; 
-           cfg_infield.dcn = 'range'; cfg_infield.target = 'z';
+           cfg_infield.dcn = 'range'; cfg_infield.target = 'z'; cfg_infield.verbose = 0;
            infield_iv = TSDtoIV(cfg_infield,cfg.pos);
            
            % now get number of spikes
