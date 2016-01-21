@@ -55,7 +55,7 @@ cfg.verbose = 1; % i want checkfields to tell me which ones are missing
 
 if cfg.checkall
     cfg.requireExpKeys = 1;
-    cfg.ExpKeysFields = {'Behavior','RestrictionType','Session','Layout','Pedestal','pathlength','patharms','realTrackDims','convFact','nPellets','waterVolume','nTrials','forcedTrials','nonConsumptionTrials','badTrials','TimeOnTrack','TimeOffTrack','prerecord','task','postrecord','goodSWR','goodTheta'};
+    cfg.ExpKeysFields = {'RestrictionType','Session','Layout','Pedestal','pathlength','patharms','realTrackDims','convFact','nPellets','waterVolume','nTrials','forcedTrials','nonConsumptionTrials','badTrials','TimeOnTrack','TimeOffTrack','prerecord','task','postrecord','goodSWR','goodTheta'};
     cfg.requireMetadata = 1;
     cfg.MetadataFields = {'coord','taskvars','SWRtimes','SWRfreqs'};
     cfg.requireVT = 1;
