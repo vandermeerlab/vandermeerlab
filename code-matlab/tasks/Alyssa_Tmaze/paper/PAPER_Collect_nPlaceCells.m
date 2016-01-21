@@ -14,7 +14,8 @@
 %
 % aacarey Jan 2016 (from thesis script nPlaceCells)
 %
-clear
+clearvars -except CFG
+
 %% WHAT DO YOU WANT THIS SCRIPT TO DO?
 
 % Location of inputData
@@ -38,6 +39,12 @@ cfg.whichS = 'unique'; %'unique' are cells with place fields on only one arm;
 % Select which cells to keep (these are direct inputs into SelectTS targeting S.usr.rating)
 cfg.operation = '<=';
 cfg.threshold = 5;
+
+%% If master config exists, process cfg
+
+if exist('CFG','var')
+    cfg = ProcessConfig2(cfg,CFG.temp);
+end
 
 %% Info and data loading section
 
@@ -140,6 +147,12 @@ disp('       END OF LATEX CODE');
 disp('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'); disp(' ')
 
 %% Finish up
+
+% If master config exists, save config history
+
+if exist('CFG','var')
+    CFG = History(CFG,mfilename,cfg);
+end
 
 if cfg.writeFiles; diary off; end
 

@@ -18,7 +18,7 @@
 % aacarey Sept 2015 (poster version, two separate scripts)
 %  --edit Jan 2016 (paper version, single script)
 
-clear
+clearvars -except CFG
 
 %% WHAT DO YOU WANT THIS SCRIPT TO DO?
 
@@ -151,6 +151,12 @@ disp('       END OF LATEX CODE');
 disp('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'); disp(' ')
 
 %% Finish up
+
+% If master config exists, save config history
+
+if exist('CFG','var')
+    CFG = History(CFG,mfilename,cfg);
+end
 
 if cfg.writeFiles; diary off; end
 

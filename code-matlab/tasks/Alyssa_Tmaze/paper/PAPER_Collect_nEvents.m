@@ -57,7 +57,7 @@
 
 % aacarey Dec 1 2015
 
-clear % note that this script will clear the base workspace prior to collecting data
+clearvars -except CFG
 
 %% WHAT DO YOU WANT THIS SCRIPT TO DO?
 
@@ -84,6 +84,13 @@ cfg.rats = TmazeRats;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 tic % start timer
+
+% If master config exists, process cfg
+
+if exist('CFG','var')
+    cfg = ProcessConfig2(cfg,CFG.plot);
+end
+
 
 iWasHere = pwd; % remember original directory
 
@@ -190,6 +197,12 @@ if cfg.writeFiles % save the output
     save(cfg.output_fn,'nEvt')
 else
     disp('WARNING: You have selected not to save the output data')
+end
+
+%% If master config exists, save config history
+
+if exist('CFG','var')
+    CFG = History(CFG,mfilename,cfg);
 end
 
 disp('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')

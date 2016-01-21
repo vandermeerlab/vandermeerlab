@@ -95,7 +95,7 @@
 %
 % aacarey Sept 2015, Nov 2015
 
-clear % note that this script will clear the base workspace prior to collecting data
+clearvars -except CFG
 
 %% WHAT DO YOU WANT THIS SCRIPT TO DO?
 
@@ -120,7 +120,7 @@ switch cfg.posunits
 end
 
 % remove bad trials? (these are trials where the rat attempted to reverse
-% directions and/or was interferred with by the researcher)
+% directions and/or was interfered with by the researcher)
 cfg.rmbadtrl = 0; % 1 yes, 0 no
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -166,6 +166,8 @@ cfg.rmbadtrl = 0; % 1 yes, 0 no
 % rat ID field of inputData), these are done using dynamically changing 1xn
 % structs through each iteration.
 
+%% proceed with other things
+
 iWasHere = pwd; % remember where I started before cding all over the place
 
 %~~~~~~~~~~~ handle saving a record of command window text ~~~~~~~~~~~~~~~~
@@ -181,9 +183,16 @@ disp('~~~                    Collecting inputData                     ~~~')
 disp('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 fprintf('\nDATE of script run: %s\n',datestr(now));
 
-%~~~~~~~~~~~~~~ verify that all requisite data exists ~~~~~~~~~~~~~~~~~~~~~
-please = []; please.checkall = 1;
-if ~checkTmazeReqs(please); return; end
+%% If master config exists, process cfg
+
+if exist('CFG','var')
+    cfg = ProcessConfig2(cfg,CFG.in);
+    % and we already checked requisites
+else
+    %~~~~~~~~~~~~~~ verify that all requisite data exists ~~~~~~~~~~~~~~~~~~~~~
+    please = []; please.checkall = 1;
+    if ~checkTmazeReqs(please); return; end
+end
 
 tic
 
@@ -402,6 +411,12 @@ if cfg.writeFiles
     save(cfg.output_fn,'inputData')
 else
     disp('WARNING: You have selected not to save the inputData')
+end
+
+%% If master config exists, save config history
+
+if exist('CFG','var')
+    CFG = History(CFG,mfilename,cfg);
 end
 
 disp('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')

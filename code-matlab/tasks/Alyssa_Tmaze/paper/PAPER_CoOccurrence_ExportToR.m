@@ -29,7 +29,7 @@
 %
 % aacarey Jan 2015 from code by MvdM
 
-clear 
+clearvars -except CFG
 
 %% WHAT DO YOU WANT THIS SCRIPT TO DO?
 
@@ -42,6 +42,12 @@ cfg.whichP = 'p4'; % Options: 'p0' (proportion SWR single cell),'p4' (zscore coo
 % Which event category do you want to collect data for?
 cfg.whichEvents = 'prerecord'; % Options:  'all', 'prerecord', 'task', 'postrecord', 'allITI', 'equalBehaviorITI'
 
+
+%% If master config exists, process cfg
+
+if exist('CFG','var')
+    cfg = ProcessConfig2(cfg,CFG.cc);
+end
 
 %% initialize some things
 
@@ -111,6 +117,14 @@ end % of rats
 % data_out.restriction = data_out.restriction(~n);
 % data_out.rat = data_out.rat(~n);
 
-%%
+%% If master config exists, save config history
+
+if exist('CFG','var')
+    CFG = History(CFG,mfilename,cfg);
+end
+
 save(fn_out,'data_out');
 cd(originalFolder)
+
+disp(' ')
+disp('~~~~~~~ END OF COOCCURRENCE EXPORT ~~~~~~~')
