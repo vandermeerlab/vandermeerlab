@@ -34,6 +34,7 @@ end
  
 % get indices to keep
 if isfield(in,'tvec') && ~isfield(in,'tstart') % tsd
+    type = 'tsd';
     keep = false(size(in.tvec));
     
     for iT = 1:length(iv_use.tstart)
@@ -41,7 +42,7 @@ if isfield(in,'tvec') && ~isfield(in,'tstart') % tsd
     end
     
 elseif isfield(in,'tstart') % iv
-    
+    type = 'iv';
     keep = false(size(in.tstart));
     
     for iT = 1:length(iv_use.tstart)
@@ -49,7 +50,7 @@ elseif isfield(in,'tstart') % iv
     end
     
 elseif isfield(in,'t') % ts
-    
+    type = 'ts';
     for iC = length(in.t):-1:1
         keep{iC} = false(size(in.t{iC}));
         
@@ -61,7 +62,7 @@ elseif isfield(in,'t') % ts
 end
 
 % do the right thing depending on data type
-switch in.cfg.history.mfun{1}
+switch type
     
     case 'ts'
         for iC = 1:length(in.t)
