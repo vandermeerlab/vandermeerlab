@@ -7,7 +7,7 @@ if isstruct(varargin{1})
     if isfield(varargin{1},'type')
         switch varargin{1}.type
             case 'tsd'
-                h = plot(varargin{1}.tvec,varargin{1}.data,varargin{2:end});
+                h = builtin('plot',varargin{1}.tvec,varargin{1}.data,varargin{2:end});
             case 'ts'
                 h = MultiRaster(varargin{1});
             otherwise
