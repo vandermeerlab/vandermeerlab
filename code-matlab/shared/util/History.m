@@ -24,7 +24,12 @@ function var_out = History(var_in,mfun,cfg)
 
 var_out = var_in;
 
-var_out.cfg.history.mfun = cat(1,var_out.cfg.history.mfun,mfun);
-var_out.cfg.history.cfg = cat(1,var_out.cfg.history.cfg,{cfg});
+if isfield(var_out,'cfg') && isfield(var_out.cfg,'history')
+    var_out.cfg.history.mfun = cat(1,var_out.cfg.history.mfun,mfun);
+    var_out.cfg.history.cfg = cat(1,var_out.cfg.history.cfg,{cfg});
+else
+    var_out.cfg.history.mfun{1} = mfilename;
+    var_out.cfg.history.cfg{1} = [];
+end
 end
 
