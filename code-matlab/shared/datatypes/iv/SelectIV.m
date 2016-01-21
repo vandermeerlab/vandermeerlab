@@ -59,6 +59,14 @@ mfun = mfilename;
 % parse cfg parameters
 cfg = ProcessConfig(cfg_def,cfg_in,mfun);
 
+if isempty(iv_in.tstart)
+    if cfg.verbose
+        fprintf('%s: iv_in is empty, returning iv_in\n',mfun)
+        iv_out = History(iv_in,mfun,cfg);
+        return
+    end
+end
+
 % choose which thing to do
 if islogical(selectspec) || isnumeric(selectspec)
     spec_type = 'log_or_num'; % specifying intervals to keep using a logical or numerical array
