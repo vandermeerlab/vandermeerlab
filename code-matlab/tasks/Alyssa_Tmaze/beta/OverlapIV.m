@@ -46,7 +46,7 @@ idxa = idxa(~isnan(idxa));
 
 % select intervals to keep
 cfg_temp.verbose = 0; % prevent SelectIV from talking
-iva = SelectIV2(cfg_temp,ivA,idxa);
+iva = SelectIV(cfg_temp,ivA,idxa);
 
 % remove doubles (this happens when more than one ivB interval corresponds to the same IVa interval)
 %   ivA   ____________

@@ -51,7 +51,8 @@ cfg_def.spkcap = 2;
 cfg_def.noisefloor = 4; 
 cfg_def.kernelstd = 40; 
 cfg_def.verbose = 1;
-cfg = ProcessConfig2(cfg_def,cfg_in);
+mfun = mfilename;
+cfg = ProcessConfig(cfg_def,cfg_in,mfun);
 
 %%
 
@@ -61,7 +62,7 @@ end
 
 if cfg.verbose
     tic
-    cprintf(-[0 0 1],'amMUA: Looking for multi-unit activity...');
+    disp([mfun,': Looking for multi-unit activity...']);
     disp(' ');
 end
 
@@ -130,13 +131,13 @@ muascoreneg2 = conv(muacapped,kernel3,'same');
 %% Generate output
 
 MUA = tsd(tvec,muascoretot3'); % raw-noise
-MUA.parameters = struct('spkcap',cfg.spkcap,'kernelstd',cfg.kernelstd,'noisefloor',cfg.noisefloor);
+MUA = History(MUA,mfun,cfg);
 
 raw = tsd(tvec,muascore'); % raw
-raw.parameters = struct('spkcap',cfg.spkcap,'kernelstd',cfg.kernelstd);
+raw = History(raw,mfun,cfg);
 
 noise = tsd(tvec,muascoreneg2'); % noise
-noise.parameters = struct('spkcap',cfg.spkcap,'kernelstd',cfg.kernelstd,'noisefloor',cfg.noisefloor);
+noise = History(noise,mfun,cfg);
 
 if cfg.verbose
 toc

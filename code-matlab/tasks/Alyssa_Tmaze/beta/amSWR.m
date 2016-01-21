@@ -46,6 +46,7 @@ parameters = ncfs.parameters; %because fast hack
 cfg_def.verbose = 1;
 cfg_def.weightby = ncfs.parameters.weightby;
 cfg_def.stepSize = 4; % indirectly controls speed
+cfg_def.InterpMethod = 'pchip';
 if isfield(cfg_in,'stepSize') && ~isnumeric(cfg_in.stepSize)
     switch cfg_in.stepSize % fyi
         case 'diffusion'
@@ -121,7 +122,7 @@ end
             NonNaNs = ~isnan(swrscore); % these are indices of the values returned by windowedFFT
             
             % now interpolate the missing sample points
-            swrscore = interp1(csc.tvec(NonNaNs),swrscore(NonNaNs),csc.tvec,'cubic'); % can do linear too 
+            swrscore = interp1(csc.tvec(NonNaNs),swrscore(NonNaNs),csc.tvec,cfg.InterpMethod); % 'pchip' is cubic interpolation, can do linear too 
         end
         % get rid of imaginary numbers (very rare, but happens)
         swrscore = max(0,swrscore)'; 

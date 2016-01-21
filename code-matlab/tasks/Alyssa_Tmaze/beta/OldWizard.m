@@ -69,8 +69,7 @@ end
 % make output
 SWR = tsd(CSC.tvec,score);
 
-SWR.cfg.history.mfun = cat(1,SWR.cfg.history.mfun,mfun);
-SWR.cfg.history.cfg = cat(1,SWR.cfg.history.cfg,{cfg});
+SWR = History(SWR,mfun,cfg);
 
 if cfg.verbose
     toc

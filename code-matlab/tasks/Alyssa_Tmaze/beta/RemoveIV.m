@@ -76,7 +76,7 @@ if cfg.verbose
 end
 
 % make output
-iv_out = SelectIV2(cfg_temp,iv_temp,keep);
+iv_out = SelectIV(cfg_temp,iv_temp,keep);
 % iv_out = iv_temp;
 % iv_out.tstart = iv_temp.tstart(keep);
 % iv_out.tend = iv_temp.tend(keep);
