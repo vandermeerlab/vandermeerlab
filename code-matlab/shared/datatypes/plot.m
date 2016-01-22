@@ -1,4 +1,4 @@
-function h = plot(varargin)
+function h_out = plot(varargin)
 % overload plot function to accept ts, tsd, iv structs
 %
 % MvdM 2016-01-20
@@ -18,4 +18,8 @@ if isstruct(varargin{1})
     end
 else
     h = builtin('plot',varargin{:});
+end
+
+if nargout == 1
+    h_out = h;
 end
