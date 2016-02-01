@@ -89,7 +89,8 @@ for iC = 1:nCells
     all_tc(iC,:) = tc;
 end
 
-tc = all_tc'; % for compatibility with 2d version
+tc_temp.tc = all_tc;
+tc_temp.usr = S.usr;
 spk_hist = spk_hist_mat;
 
 % detect place fields
@@ -97,12 +98,12 @@ detect_cfg = [];
 detect_cfg.S = S;
 detect_cfg.pos = pos;
 detect_cfg.nSpikesInField = cfg.nSpikesInField;
-detect_cfg.p_thr = cfg.p_thr; % threshold for detecting place fields in Hz
+%detect_cfg.p_thr = cfg.p_thr; % threshold for detecting place fields in Hz
 detect_cfg.max_meanfr = cfg.max_meanfr;
 detect_cfg.minSize = cfg.minSize;
 %detect_cfg.maxSize = cfg.maxSize; 
 detect_cfg.debug = cfg.debug;
-tc_out = DetectPlaceCells1D(detect_cfg,tc');
+tc_out = DetectPlaceCells1D(detect_cfg,tc_temp);
 
 template_idx = tc_out.template_idx;
 peak_idx = tc_out.peak_idx;
@@ -121,8 +122,8 @@ end
 fpeak_idx = fpeak_idx(sort_idx);
 
 %store all data in a single struct
-tc_out.tc = tc';
-tc_out.template_idx = template_idx;
+tc_out.tc = tc_out.tc';
+%tc_out.template_idx = template_idx;
 tc_out.field_template_idx = fpeak_idx;
 tc_out.field_loc = fpeak_val;
 tc_out.peak_idx = peak_idx;
