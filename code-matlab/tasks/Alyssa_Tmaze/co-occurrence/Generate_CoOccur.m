@@ -27,7 +27,7 @@ cfg_def = [];
 cfg_def.load_questionable_cells = 1;
 cfg_def.output_dir = 'files';
 cfg_def.output_file_prefix = []; % when writing files, prefix this
-cfg_def.whichEvents = 'all'; % 'prerecord', 'all', 'postrecord'
+cfg_def.whichEvents = 'all'; % 'prerecord', 'all', 'postrecord', 'taskrest'
 cfg_def.dt = 0.1; % window size (s) for RUN
 cfg_def.win = 0.1; % window size (s) for SWR
 cfg_def.writeFiles = 1;
@@ -36,6 +36,7 @@ cfg_def.nShuffles = 250;
 cfg_def.removeTheta = 1;
 cfg_def.removeRunning = 1;
 cfg_def.doMovingWindow = 0;
+cfg_def.outputPConly = 0; % send me the place cells and tuning curves only
 
 cfg = ProcessConfig2(cfg_def,cfg_in);
 
@@ -118,7 +119,7 @@ cpR = LinearizePos(cfg_c,cpR); cpR = cpR.data(1);
 %ENC is for "encoding" ie the tuning curves, that describe the
 %relationship between our observable variable (position) and firing rate.
 %(the answer to a question like, "How is position (en)coded by the
-%neurons whose activity we are recording?") 
+%neurons whose activity we are recording?")
 ENC_data(1).trial_type = 'left';
 ENC_data(1).Coord = CoordLrs;
 ENC_data(1).pos = posL_binned;
@@ -141,7 +142,7 @@ if cfg.plotOutput
 end
 
 % write fig
-if cfg.writeFiles, cd(output_fd);
+if cfg.writeFiles && cfg.plotOutput, cd(output_fd);
     out_fn = cat(2,base_fn,'-CoordCheck.png');
     print(gcf,'-r300','-dpng',out_fn);
     close(gcf);
@@ -174,7 +175,7 @@ cfg_tc = []; cfg_tc.order = 2; cfg_tc.binsize = binSize; cfg_tc.cp = cpL;% field
 if cfg.plotOutput, TCPlot(cfg_tc,TC_left); end
 
 % write fig -- could be helper function
-if cfg.writeFiles, cd(output_fd);
+if cfg.writeFiles && cfg.plotOutput, cd(output_fd);
     out_fn = cat(2,base_fn,'-TC_left.png');
     print(gcf,'-r300','-dpng',out_fn);
     close(gcf);
@@ -184,7 +185,7 @@ end
 cfg_tc.cp = cpR;
 if cfg.plotOutput, TCPlot(cfg_tc,TC_right); end
 % write fig -- could be helper function
-if cfg.writeFiles, cd(output_fd);
+if cfg.writeFiles && cfg.plotOutput, cd(output_fd);
     out_fn = cat(2,base_fn,'-TC_right.png');
     print(gcf,'-r300','-dpng',out_fn);
     close(gcf);
@@ -194,7 +195,7 @@ end
 % NOTE this takes a lot of Java heap space..
 if cfg.plotOutput, fh = AnotherTCplotTwin([],S_run,TC_left,TC_right,pos); else fh = []; end
 % write figs
-if cfg.writeFiles, cd(output_fd);
+if cfg.writeFiles && cfg.plotOutput, cd(output_fd);
     for iFH = 1:length(fh)
         out_fn = cat(2,base_fn,'-fields_',num2str(iFH),'.png');
         set(fh(iFH), 'InvertHardCopy', 'off');
@@ -213,263 +214,294 @@ FieldOrder_right = TC_right.field_template_idx(TC_right.field_loc > cpR); % ^^^
 FieldOrder_left(ia) = []; FieldOrder_right(ib) = [];
 
 % make a new S, keeping left-only cells
-S_pc_left = S_orig;
-S_pc_left.t = S_pc_left.t(FieldOrder_left); S_pc_left.label = S_pc_left.label(FieldOrder_left); S_pc_left.usr.data = S_pc_left.usr.data(FieldOrder_left);
+S_pc_left = OrderSelectS([],S_orig,FieldOrder_left);
+%S_pc_left.t = S_pc_left.t(FieldOrder_left); S_pc_left.label = S_pc_left.label(FieldOrder_left); S_pc_left.usr.data = S_pc_left.usr.data(FieldOrder_left);
 
 % make a new S, keeping right-only cells
-S_pc_right = S_orig;
-S_pc_right.t = S_pc_right.t(FieldOrder_right); S_pc_right.label = S_pc_right.label(FieldOrder_right); S_pc_right.usr.data = S_pc_right.usr.data(FieldOrder_right);
+S_pc_right = OrderSelectS([],S_orig,FieldOrder_right);
+%S_pc_right.t = S_pc_right.t(FieldOrder_right); S_pc_right.label = S_pc_right.label(FieldOrder_right); S_pc_right.usr.data = S_pc_right.usr.data(FieldOrder_right);
 
-
-%% make Q-matrix for in-field activity (not used in analysis)
-S_lr = []; % make a new S containing left-only and right-only cells
-S_lr.t = cat(2,S_pc_left.t,S_pc_right.t); nLeft = length(S_pc_left.t); nRight = length(S_pc_right.t);
-S_lr.usr.data = cat(2,S_pc_left.usr.data,S_pc_right.usr.data);
-S_lr.usr.label = 'tt_num';
-
-%A Q-matrix is organized such that each row corresponds to a cell, and each 
-%column groups the spikes into time bins. Thus, each column contains information 
-%about which cells were active together in a given time bin.
-cfg_Q = [];
-cfg_Q.dt = cfg.dt;
-cfg_Q.tvec_edges = ExpKeys.prerecord(1):cfg_Q.dt:ExpKeys.postrecord(end);
-
-Q_lr = MakeQfromS(cfg_Q,S_lr);
-
-% restrict to trials/running
-both_trl = iv;
-both_trl.tstart = cat(1,L_trl.tstart,R_trl.tstart);
-both_trl.tend = cat(1,L_trl.tend,R_trl.tend);
-Q_lrR = restrict(Q_lr,both_trl);
-
-spd = getLinSpd([],pos);
-cfg_spd = []; cfg_spd.method = 'raw'; cfg_spd.threshold = 20; run_iv = TSDtoIV(cfg_spd,spd);
-Q_lrR = restrict(Q_lrR,run_iv);
-
-% restrict to maze pieces beyond choice point...
-cfg_l = []; cfg_l.method = 'raw'; cfg_l.threshold = cpL; cfg_l.target = 'z'; run_left = TSDtoIV(cfg_l,ENC_data(1).pos);
-cfg_r = []; cfg_r.method = 'raw'; cfg_r.threshold = cpR; cfg_r.target = 'z'; run_right = TSDtoIV(cfg_r,ENC_data(2).pos);
-run_iv = UnionIV([],run_left,run_right);
-Q_lrR = restrict(Q_lrR,run_iv);
-
-%% z-scored co-occurrence
-cx = [-20 20];
-
-cfg_cc = []; cfg_cc.nShuffle = cfg.nShuffles; cfg_cc.num_tt = S_lr.usr.data;
-[c_crossed,mask_both] = CoOccurQ(cfg_cc,Q_lrR);
-
-if cfg.plotOutput
-    figure;
-    imagesc(c_crossed.p4); colorbar;
-    hold on; plot(xlim,[nLeft+0.5 nLeft+0.5],'k--'); plot([nLeft+0.5 nLeft+0.5],ylim,'k--');
-    tl = [FieldOrder_left FieldOrder_right];
-    set(gca,'XTick',1:length(tl),'XTickLabel',tl,'YTick',1:length(tl),'YTickLabel',tl);
-    title(sprintf('RUN - coOcc z (dt = %.3f)',cfg.dt)); caxis(cx);
-end
-% write fig -- could be helper function
-if cfg.writeFiles, cd(output_fd);
-    out_fn = cat(2,base_fn,'-RUN_coOccurZ.png');
-    print(gcf,'-r300','-dpng',out_fn);
-    close(gcf);
+if cfg.outputPConly
+    % output data pertaining to the place cells we keep for analysis
+    
+    keepLeft = TC_left.field_template_idx(TC_left.field_loc > cpL);
+    keepRight = TC_right.field_template_idx(TC_right.field_loc > cpR);
+    
+    %spiketrains and corresponding .t file name
+    
+    armPC.L.S = OrderSelectS([],S_orig,TC_left.template_idx);
+    %tuning curves
+    armPC.L.tc = TC_left; %%%% was here
+    armPC.L.unique_idx = keepLeft;
+    
+    armPC.R.S = OrderSelectS([],S_orig,TC_right.template_idx);
+    
+    armPC.R.tc = TC_right;
+    armPC.R.unique_idx = keepRight;
+    cd(output_fd)
+    save([base_fn,'-armPC'],'armPC')
     cd(this_fd)
+    %return
 end
-
-% some stats
-all_left = c_crossed.p4(1:nLeft,1:nLeft);
-all_right = c_crossed.p4(nLeft+1:end,nLeft+1:end);
-all_crossed = c_crossed.p4(1:nLeft,nLeft+1:end);
-
-fprintf('\nRUN left mean z %.2f +/- %.2f, median %.2f\n',nanmean(all_left(:)),nanstd(all_left(:)),nanmedian(all_left(:)));
-fprintf('RUN right mean z %.2f +/- %.2f, median %.2f\n',nanmean(all_right(:)),nanstd(all_right(:)),nanmedian(all_right(:)));
-fprintf('RUN crossed mean z %.2f +/- %.2f, median %.2f\n',nanmean(all_crossed(:)),nanstd(all_crossed(:)),nanmedian(all_crossed(:)));
-
-% keep
-out.run.full_cc = c_crossed;
-out.run.left = all_left;
-out.run.right = all_right;
-out.run.crossed = all_crossed;
-out.nLeft = nLeft; out.nRight = nRight;
-out.TCleft = TC_left; out.TCright = TC_right;
-
-%%%%%%%%%%%%%%%%%%%%%%%%%
-%% get SWR candidates %%%
-%%%%%%%%%%%%%%%%%%%%%%%%%
-load(FindFile('*candidates.mat'));
-if isfield(evt,'data'), evt = rmfield(evt,'data'); end
-
-fprintf('nEvents loaded: %d\n',length(evt.tstart));
-
-switch cfg.whichEvents
-    case 'all'
-        evt = restrict(evt,ExpKeys.prerecord(1),ExpKeys.postrecord(2));
-    case 'prerecord'
-        evt = restrict(evt,ExpKeys.prerecord(1),ExpKeys.prerecord(2));
-    case 'postrecord'
-        evt = restrict(evt,ExpKeys.postrecord(1),ExpKeys.postrecord(2));
-end
-fprintf('nEvents after cfg.whichEvents restrict: %d\n',length(evt.tstart));
-
-
-%% remove some events
-% remove events during theta
-if cfg.removeTheta
-    fprintf('current nEvents: %d\n',length(evt.tstart));
+if ~cfg.outputPConly
+    %% make Q-matrix for in-field activity
+    S_lr = []; % make a new S containing left-only and right-only cells
+    S_lr.t = cat(2,S_pc_left.t,S_pc_right.t); nLeft = length(S_pc_left.t); nRight = length(S_pc_right.t);
+    S_lr = concatenateTS(S_pc_left,S_pc_right);
     
-    cfg_theta = []; cfg_theta.f = [6 10]; cfg_theta.order = 4; cfg_theta.display_filter = 0; cfg_theta.type = 'fdesign';
-    lfp_theta = FilterLFP(cfg_theta,lfp_theta);
+    %A Q-matrix is organized such that each row corresponds to a cell, and each
+    %column groups the spikes into time bins. Thus, each column contains information
+    %about which cells were active together in a given time bin.
+    cfg_Q = [];
+    cfg_Q.dt = cfg.dt;
+    cfg_Q.tvec_edges = ExpKeys.prerecord(1):cfg_Q.dt:ExpKeys.postrecord(end);
     
-    tpow = LFPpower([],lfp_theta);
+    Q_lr = MakeQfromS(cfg_Q,S_lr);
     
-    cfg_theta = []; cfg_theta.method = 'zscore'; cfg_theta.threshold = 2; cfg_theta.dcn =  '<';
-    low_theta_iv = TSDtoIV(cfg_theta,tpow);
+    % restrict to trials/running
+    both_trl = iv;
+    both_trl.tstart = cat(1,L_trl.tstart,R_trl.tstart);
+    both_trl.tend = cat(1,L_trl.tend,R_trl.tend);
+    Q_lrR = restrict(Q_lr,both_trl);
     
-    evt = restrict(evt,low_theta_iv);
-    fprintf('nEvents after theta filtering: %d\n',length(evt.tstart));
-end
-
-% remove events during running
-if cfg.removeRunning
-    fprintf('current nEvents: %d\n',length(evt.tstart));
+    spd = getLinSpd([],pos);
+    cfg_spd = []; cfg_spd.method = 'raw'; cfg_spd.threshold = 20; run_iv = TSDtoIV(cfg_spd,spd);
+    Q_lrR = restrict(Q_lrR,run_iv);
     
-    cfg_run = []; cfg_run.method = 'raw'; cfg_run.threshold = 10; cfg_run.dcn = '<';
-    run_iv = TSDtoIV(cfg_run,spd);
+    % restrict to maze pieces beyond choice point...
+    cfg_l = []; cfg_l.method = 'raw'; cfg_l.threshold = cpL; cfg_l.target = 'z'; run_left = TSDtoIV(cfg_l,ENC_data(1).pos);
+    cfg_r = []; cfg_r.method = 'raw'; cfg_r.threshold = cpR; cfg_r.target = 'z'; run_right = TSDtoIV(cfg_r,ENC_data(2).pos);
+    run_iv = UnionIV([],run_left,run_right);
+    Q_lrR = restrict(Q_lrR,run_iv);
     
-    evt = restrict(evt,run_iv);
-    fprintf('nEvents after speed filtering: %d\n',length(evt.tstart));
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% co-coccurrence per SWR %%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% make a Q-matrix
-%A Q-matrix is organized such that each row corresponds to a cell, and each 
-%column groups the spikes into time bins. Thus, each column contains information 
-%about which cells were active together in a given time bin.
-% the time bins here are +/- 50 ms of the center time of the candidate
-% events; thus, each time bin is 100 ms wide
-
-cfg_Q = [];
-
-nEvt = length(evt.tend);
-Q_leftSWR = []; Q_rightSWR = [];
-
-if ~isempty(S_pc_left.t)
-    for iEvt = nEvt:-1:1
+    %% z-scored co-occurrence
+    cx = [-20 20];
+    
+    cfg_cc = []; cfg_cc.nShuffle = cfg.nShuffles; cfg_cc.num_tt = S_lr.usr.tt_num;
+    [c_crossed,mask_both] = CoOccurQ(cfg_cc,Q_lrR);
+    
+    if cfg.plotOutput
+        figure;
+        imagesc(c_crossed.p4); colorbar;
+        hold on; plot(xlim,[nLeft+0.5 nLeft+0.5],'k--'); plot([nLeft+0.5 nLeft+0.5],ylim,'k--');
+        tl = [FieldOrder_left FieldOrder_right];
+        set(gca,'XTick',1:length(tl),'XTickLabel',tl,'YTick',1:length(tl),'YTickLabel',tl);
+        title(sprintf('RUN - coOcc z (dt = %.3f)',cfg.dt)); caxis(cx);
+    end
+    % write fig -- could be helper function
+    if cfg.writeFiles && cfg.plotOutput, cd(output_fd);
+        out_fn = cat(2,base_fn,'-RUN_coOccurZ.png');
+        print(gcf,'-r300','-dpng',out_fn);
+        close(gcf);
+        cd(this_fd)
+    end
+    
+    % some stats
+    all_left = c_crossed.p4(1:nLeft,1:nLeft);
+    all_right = c_crossed.p4(nLeft+1:end,nLeft+1:end);
+    all_crossed = c_crossed.p4(1:nLeft,nLeft+1:end);
+    
+    fprintf('\nRUN left mean z %.2f +/- %.2f, median %.2f\n',nanmean(all_left(:)),nanstd(all_left(:)),nanmedian(all_left(:)));
+    fprintf('RUN right mean z %.2f +/- %.2f, median %.2f\n',nanmean(all_right(:)),nanstd(all_right(:)),nanmedian(all_right(:)));
+    fprintf('RUN crossed mean z %.2f +/- %.2f, median %.2f\n',nanmean(all_crossed(:)),nanstd(all_crossed(:)),nanmedian(all_crossed(:)));
+    
+    % keep
+    out.run.full_cc = c_crossed;
+    out.run.left = all_left;
+    out.run.right = all_right;
+    out.run.crossed = all_crossed;
+    out.nLeft = nLeft; out.nRight = nRight;
+    out.TCleft = TC_left; out.TCright = TC_right;
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%
+    %% get SWR candidates %%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%
+    %load(FindFile('*candidates.mat'));
+    LoadCandidates
+    if isfield(evt,'data'), evt = rmfield(evt,'data'); end
+    
+    fprintf('nEvents loaded: %d\n',length(evt.tstart));
+    
+    switch cfg.whichEvents
+        case 'all'
+            % do nothing
+        case 'prerecord'
+            evt = restrict(evt,ExpKeys.prerecord(1),ExpKeys.prerecord(2));
+        case 'postrecord'
+            evt = restrict(evt,ExpKeys.postrecord(1),ExpKeys.postrecord(2));
+        case 'taskrest'
+            evt = restrict(evt,metadata.taskvars.trial_iv.tstart,metadata.taskvars.trial_iv.tend);
+        case 'task'
+            evt = restrict(evt,ExpKeys.task(1),ExpKeys.task(2));
+        otherwise
+            error('Unrecognized cfg.whichEvents')
+    end
+    fprintf('nEvents after cfg.whichEvents restrict: %d\n',length(evt.tstart));
+    
+    
+    %% remove some events
+    % remove events during theta
+    if cfg.removeTheta
+        fprintf('current nEvents: %d\n',length(evt.tstart));
         
-        %cfg_Q.tvec_edges = [evt.tstart(iEvt) evt.tend(iEvt)];
-        center_t = mean([evt.tstart(iEvt) evt.tend(iEvt)]);
-        cfg_Q.tvec_edges = [center_t-cfg.win/2 center_t+cfg.win/2];
-        cfg_Q.dt = diff(cfg_Q.tvec_edges);
+        cfg_theta = []; cfg_theta.f = [6 10]; cfg_theta.order = 4; cfg_theta.display_filter = 0; cfg_theta.type = 'fdesign';
+        lfp_theta = FilterLFP(cfg_theta,lfp_theta);
         
-        qtemp = MakeQfromS(cfg_Q,S_pc_left);
-        Q_leftSWR(:,iEvt) = qtemp.data;
+        tpow = LFPpower([],lfp_theta);
         
+        cfg_theta = []; cfg_theta.method = 'zscore'; cfg_theta.threshold = 2; cfg_theta.dcn =  '<';
+        low_theta_iv = TSDtoIV(cfg_theta,tpow);
+        
+        evt = restrict(evt,low_theta_iv);
+        fprintf('nEvents after theta filtering: %d\n',length(evt.tstart));
+    end
+    
+    % remove events during running
+    if cfg.removeRunning
+        fprintf('current nEvents: %d\n',length(evt.tstart));
+        
+        cfg_run = []; cfg_run.method = 'raw'; cfg_run.threshold = 10; cfg_run.dcn = '<';
+        run_iv = TSDtoIV(cfg_run,spd);
+        
+        evt = restrict(evt,run_iv);
+        fprintf('nEvents after speed filtering: %d\n',length(evt.tstart));
+    end
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %% co-coccurrence per SWR %%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    % make a Q-matrix
+    %A Q-matrix is organized such that each row corresponds to a cell, and each
+    %column groups the spikes into time bins. Thus, each column contains information
+    %about which cells were active together in a given time bin.
+    % the time bins here are +/- 50 ms of the center time of the candidate
+    % events; thus, each time bin is 100 ms wide
+    
+    cfg_Q = [];
+    
+    nEvt = length(evt.tend);
+    Q_leftSWR = []; Q_rightSWR = [];
+    
+    if ~isempty(S_pc_left.t)
+        for iEvt = nEvt:-1:1
+            
+            %cfg_Q.tvec_edges = [evt.tstart(iEvt) evt.tend(iEvt)];
+            center_t = mean([evt.tstart(iEvt) evt.tend(iEvt)]);
+            cfg_Q.tvec_edges = [center_t-cfg.win/2 center_t+cfg.win/2];
+            cfg_Q.dt = diff(cfg_Q.tvec_edges);
+            
+            qtemp = MakeQfromS(cfg_Q,S_pc_left);
+            Q_leftSWR(:,iEvt) = qtemp.data;
+            
+        end
+    end
+    
+    if ~isempty(S_pc_right.t)
+        for iEvt = nEvt:-1:1
+            
+            %cfg_Q.tvec_edges = [evt.tstart(iEvt) evt.tend(iEvt)];
+            center_t = mean([evt.tstart(iEvt) evt.tend(iEvt)]);
+            cfg_Q.tvec_edges = [center_t-cfg.win/2 center_t+cfg.win/2];
+            cfg_Q.dt = diff(cfg_Q.tvec_edges);
+            
+            qtemp = MakeQfromS(cfg_Q,S_pc_right);
+            Q_rightSWR(:,iEvt) = qtemp.data;
+            assignin('base','Q',Q_rightSWR)
+            
+        end
+    end
+    
+    Q_leftSWRq.data = Q_leftSWR;
+    Q_rightSWRq.data = Q_rightSWR;
+    
+    %% z-scored
+    cfg_cc = []; cfg_cc.num_tt = cat(2,S_pc_left.usr.tt_num,S_pc_right.usr.tt_num);
+    cfg_cc.nShuffle = cfg.nShuffles;
+    
+    Q_leftright_SWRq = [];
+    Q_leftright_SWRq.data = cat(1,Q_leftSWRq.data,Q_rightSWRq.data);
+    
+    % "crossed" is the term for pairs with one cell on the left
+    %arm and another on the right arm -- so those we would expect to be less
+    %co-active (at least during behavior) than pairs of cells on the same arm.
+    c_crossed = CoOccurQ(cfg_cc,Q_leftright_SWRq);
+    
+    if cfg.plotOutput
+        figure;
+        cx = [-5 5];
+        imagesc(c_crossed.p4); colorbar;
+        hold on; plot(xlim,[nLeft+0.5 nLeft+0.5],'k--'); plot([nLeft+0.5 nLeft+0.5],ylim,'k--');
+        tl = [FieldOrder_left FieldOrder_right];
+        set(gca,'XTick',1:length(tl),'XTickLabel',tl,'YTick',1:length(tl),'YTickLabel',tl);
+        title(sprintf('SWR_z - coOcc z (dt = %.3f)',cfg.dt)); caxis(cx);
+    end
+    % write fig -- could be helper function
+    if cfg.writeFiles && cfg.plotOutput, cd(output_fd);
+        out_fn = cat(2,base_fn,'-coOccur_SWR_z.png');
+        print(gcf,'-r300','-dpng',out_fn);
+        close(gcf);
+        cd(this_fd);
+    end
+    
+    % some stats
+    all_left = c_crossed.p4(1:nLeft,1:nLeft); % nLeft is number of left cells. this is keeping stat data made from the upper left quadrant of the Q-matrix, which is the left-only cells
+    %since left and then right data are concatenated, the first nLeft entries are for left cells, and the rest are for right cells
+    all_right = c_crossed.p4(nLeft+1:end,nLeft+1:end); % this is keeping the stat data made from lower right quadrant of the Q-matrix, which is the right-only cells
+    all_crossed = c_crossed.p4(1:nLeft,nLeft+1:end); % this is keeping stat data from the ?upper right?, which is for
+    % left-right pairs. the remaining quadrant should be indentical to this one because it's a symmetrical matrix?
+    
+    fprintf('\nSWRz left mean z %.2f +/- %.2f, median %.2f\n',nanmean(all_left(:)),nanstd(all_left(:)),nanmedian(all_left(:)));
+    fprintf('SWRz right mean z %.2f +/- %.2f, median %.2f\n',nanmean(all_right(:)),nanstd(all_right(:)),nanmedian(all_right(:)));
+    fprintf('SWRz crossed mean z %.2f +/- %.2f, median %.2f\n',nanmean(all_crossed(:)),nanstd(all_crossed(:)),nanmedian(all_crossed(:)));
+    
+    % keep
+    out.SWRz.full_cc = c_crossed;
+    out.SWRz.left = all_left;
+    out.SWRz.right = all_right;
+    out.SWRz.crossed = all_crossed;
+    
+    %% moving window version
+    if cfg.doMovingWindow
+        winsize = 100;
+        dw = 25;
+        win_start = 1:dw:nEvt-winsize;
+        win_end = win_start+winsize-1;
+        win_centers = win_start+winsize/2;
+        
+        %clear l_mean r_mean c_mean l_sd r_sd c_sd;
+        for iW = length(win_start):-1:1
+            
+            fprintf('Moving window %d/%d...\n',iW,length(win_start));
+            
+            this_Q = Q_leftright_SWRq;
+            this_Q.data = this_Q.data(:,win_start(iW):win_end(iW));
+            
+            c_crossed = CoOccurQ(cfg_cc,this_Q);
+            
+            all_left = c_crossed.p4(1:nLeft,1:nLeft);
+            all_right = c_crossed.p4(nLeft+1:end,nLeft+1:end);
+            all_crossed = c_crossed.p4(1:nLeft,nLeft+1:end);
+            
+            out.l_mean(iW) = nanmean(all_left(:)); out.l_sd(iW) = nanstd(all_left(:));
+            out.r_mean(iW) = nanmean(all_right(:)); out.r_sd(iW) = nanstd(all_right(:));
+            out.c_mean(iW) = nanmean(all_crossed(:)); out.c_sd(iW) = nanstd(all_crossed(:));
+            
+            out.tvec_centerEvent = evt.tstart(win_centers);
+            out.tvec_firstEvent = evt.tstart(win_start);
+            out.tvec_lastEvent = evt.tstart(win_end);
+            
+        end
+    end
+    
+    out.cfg = cfg;
+    
+    %% write data -- could be helper function
+    if cfg.writeFiles
+        cd(output_fd);
+        out_fn = cat(2,base_fn,'-coOccur_data.mat');
+        save(out_fn,'out');
+        cd(this_fd)
     end
 end
-
-if ~isempty(S_pc_right.t)
-    for iEvt = nEvt:-1:1
-        
-        %cfg_Q.tvec_edges = [evt.tstart(iEvt) evt.tend(iEvt)];
-        center_t = mean([evt.tstart(iEvt) evt.tend(iEvt)]);
-        cfg_Q.tvec_edges = [center_t-cfg.win/2 center_t+cfg.win/2];
-        cfg_Q.dt = diff(cfg_Q.tvec_edges);
-        
-        qtemp = MakeQfromS(cfg_Q,S_pc_right);
-        Q_rightSWR(:,iEvt) = qtemp.data;
-        
-    end
-end
-
-Q_leftSWRq.data = Q_leftSWR;
-Q_rightSWRq.data = Q_rightSWR;
-
-%% z-scored
-cfg_cc = []; cfg_cc.num_tt = cat(2,S_pc_left.usr.data,S_pc_right.usr.data);
-cfg_cc.nShuffle = cfg.nShuffles;
-
-Q_leftright_SWRq = [];
-Q_leftright_SWRq.data = cat(1,Q_leftSWRq.data,Q_rightSWRq.data);
-
-% "crossed" is the term for pairs with one cell on the left
-%arm and another on the right arm -- so those we would expect to be less
-%co-active (at least during behavior) than pairs of cells on the same arm.
-c_crossed = CoOccurQ(cfg_cc,Q_leftright_SWRq);
-
-if cfg.plotOutput
-    figure;
-    cx = [-5 5];
-    imagesc(c_crossed.p4); colorbar;
-    hold on; plot(xlim,[nLeft+0.5 nLeft+0.5],'k--'); plot([nLeft+0.5 nLeft+0.5],ylim,'k--');
-    tl = [FieldOrder_left FieldOrder_right];
-    set(gca,'XTick',1:length(tl),'XTickLabel',tl,'YTick',1:length(tl),'YTickLabel',tl);
-    title(sprintf('SWR_z - coOcc z (dt = %.3f)',cfg.dt)); caxis(cx);
-end
-% write fig -- could be helper function
-if cfg.writeFiles, cd(output_fd);
-    out_fn = cat(2,base_fn,'-coOccur_SWR_z.png');
-    print(gcf,'-r300','-dpng',out_fn);
-    close(gcf);
-    cd(this_fd);
-end
-
-% some stats
-all_left = c_crossed.p4(1:nLeft,1:nLeft); % nLeft is number of left cells. this is keeping stat data made from the upper left quadrant of the Q-matrix, which is the left-only cells
-%since left and then right data are concatenated, the first nLeft entries are for left cells, and the rest are for right cells
-all_right = c_crossed.p4(nLeft+1:end,nLeft+1:end); % this is keeping the stat data made from lower right quadrant of the Q-matrix, which is the right-only cells
-all_crossed = c_crossed.p4(1:nLeft,nLeft+1:end); % this is keeping stat data from the ?upper right?, which is for 
-% left-right pairs. the remaining quadrant should be indentical to this one because it's a symmetrical matrix?
-
-fprintf('\nSWRz left mean z %.2f +/- %.2f, median %.2f\n',nanmean(all_left(:)),nanstd(all_left(:)),nanmedian(all_left(:)));
-fprintf('SWRz right mean z %.2f +/- %.2f, median %.2f\n',nanmean(all_right(:)),nanstd(all_right(:)),nanmedian(all_right(:)));
-fprintf('SWRz crossed mean z %.2f +/- %.2f, median %.2f\n',nanmean(all_crossed(:)),nanstd(all_crossed(:)),nanmedian(all_crossed(:)));
-
-% keep
-out.SWRz.full_cc = c_crossed;
-out.SWRz.left = all_left;
-out.SWRz.right = all_right;
-out.SWRz.crossed = all_crossed;
-
-%% moving window version
-if cfg.doMovingWindow
-    winsize = 100;
-    dw = 25;
-    win_start = 1:dw:nEvt-winsize;
-    win_end = win_start+winsize-1;
-    win_centers = win_start+winsize/2;
-    
-    %clear l_mean r_mean c_mean l_sd r_sd c_sd;
-    for iW = length(win_start):-1:1
-        
-        fprintf('Moving window %d/%d...\n',iW,length(win_start));
-        
-        this_Q = Q_leftright_SWRq;
-        this_Q.data = this_Q.data(:,win_start(iW):win_end(iW));
-        
-        c_crossed = CoOccurQ(cfg_cc,this_Q);
-        
-        all_left = c_crossed.p4(1:nLeft,1:nLeft);
-        all_right = c_crossed.p4(nLeft+1:end,nLeft+1:end);
-        all_crossed = c_crossed.p4(1:nLeft,nLeft+1:end);
-        
-        out.l_mean(iW) = nanmean(all_left(:)); out.l_sd(iW) = nanstd(all_left(:));
-        out.r_mean(iW) = nanmean(all_right(:)); out.r_sd(iW) = nanstd(all_right(:));
-        out.c_mean(iW) = nanmean(all_crossed(:)); out.c_sd(iW) = nanstd(all_crossed(:));
-        
-        out.tvec_centerEvent = evt.tstart(win_centers);
-        out.tvec_firstEvent = evt.tstart(win_start);
-        out.tvec_lastEvent = evt.tstart(win_end);
-        
-    end
-end
-
-out.cfg = cfg;
-
-%% write data -- could be helper function
-if cfg.writeFiles
-    cd(output_fd);
-    out_fn = cat(2,base_fn,'-coOccur_data.mat');
-    save(out_fn,'out');
-    cd(this_fd)
-end
+cd(this_fd)

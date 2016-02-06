@@ -158,6 +158,8 @@ cfg_tc.binSize = 1;
 
 TC(1) = MakeTC(cfg_tc,ENC_data(1).S,ENC_data(1).pos);
 TC(2) = MakeTC(cfg_tc,ENC_data(2).S,ENC_data(2).pos);
+TC(1).tc = TC(1).tc';
+TC(2).tc = TC(2).tc';
 
 if cfg.matchFields % NOTE, could consider this after going to fields beyond CP only...
    [TC(1),TC(2)] = GetMatchedFields([],TC(1),TC(2));
@@ -249,18 +251,21 @@ end
 %% How to plot reordered tuning cirves? should be option in TCPlot...
 
 %% Extract SWR events (or load)
-load(FindFile('*candidates.mat')); % loads an evt structure with candidates
+%load(FindFile('*candidates.mat')); % loads an evt structure with candidates
+LoadCandidates
 evt = rmfield(evt,'data');
 
 fprintf('nEvents loaded: %d\n',length(evt.tstart));
 
 switch cfg.whichEvents
     case 'all'
-        evt = restrict(evt,ExpKeys.prerecord(1),ExpKeys.postrecord(2));
+        %evt = restrict(evt,ExpKeys.prerecord(1),ExpKeys.postrecord(2));
     case 'prerecord'
         evt = restrict(evt,ExpKeys.prerecord(1),ExpKeys.prerecord(2));
     case 'postrecord'
         evt = restrict(evt,ExpKeys.postrecord(1),ExpKeys.postrecord(2));
+    case 'task'
+        evt = restrict(evt,ExpKeys.task(1),ExpKeys.task(2));
 end
 fprintf('nEvents after cfg.whichEvents restrict: %d\n',length(evt.tstart));
 
@@ -295,7 +300,7 @@ end
 
 %% add some padding
 cfg_pad = []; cfg_pad.d = [-0.1 0.1];
-evt = addIV(cfg_pad,evt);
+evt = ResizeIV(cfg_pad,evt);
 
 %% remove events with less than some number of cells
 cfg_n = []; cfg_n.label = 'NActiveCells_left';

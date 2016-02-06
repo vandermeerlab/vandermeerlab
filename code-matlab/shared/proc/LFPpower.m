@@ -16,9 +16,10 @@ function lfp_tsd = LFPpower(cfg_in,lfp_tsd)
 
 cfg_def = [];
 cfg_def.output = 'envelope';
+cfg_def.verbose = 1;
 
-cfg = ProcessConfig2(cfg_def,cfg_in); % this takes fields from cfg_in and puts them into cfg
 mfun = mfilename;
+cfg = ProcessConfig(cfg_def,cfg_in,mfun); % this takes fields from cfg_in and puts them into cfg
 
 % do some checks on the data
 if ~CheckTSD(lfp_tsd)
@@ -30,7 +31,7 @@ nSignals = size(lfp_tsd.data,1);
 % process signals
 for iS = 1:nSignals
     
-    fprintf('PowerLFP.m: Hilberting signal %d/%d...\n',iS,nSignals);
+    if cfg.verbose; fprintf('LFPpower.m: Hilberting signal %d/%d...\n',iS,nSignals); end
     
     % check for NaNs in the data; if there are, issue a warning and replace by
     % zeros
@@ -39,7 +40,7 @@ for iS = 1:nSignals
     nan_idx = find(isnan(temp_sig));
     
     if ~isempty(nan_idx)
-        fprintf('WARNING: FilterLFP.m: signal %d contains NaNs (%d).\n',iS,length(nan_idx));
+        fprintf('WARNING: LFPpower.m: signal %d contains NaNs (%d).\n',iS,length(nan_idx));
         temp_sig(nan_idx) = 0;
     end
     

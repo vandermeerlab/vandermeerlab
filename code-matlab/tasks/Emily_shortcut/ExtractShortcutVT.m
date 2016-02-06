@@ -90,7 +90,7 @@ end
 
 % expand IVs -- this is apparently needed to catch stray position samples which fall outside the LED event window
 cfg_iv = []; cfg_iv.d = [-1/60 1/60];
-led0 = addIV(cfg_iv,led0); led1 = addIV(cfg_iv,led1);
+led0 = ResizeIV(cfg_iv,led0); led1 = ResizeIV(cfg_iv,led1);
 
 % get idxs corresponding to "LED on"
 fprintf('Getting idxs for LED on times...\n');

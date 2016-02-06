@@ -1,19 +1,21 @@
-function AMPX_to_ntt_JG(fname, cfg)
+function AMPX_to_ntt_JG(cfg)
 
 %% load data of interest
-% fname = 'R053-2015-01-11-right.dat';
-cd(['G:\Naris\' fname(1:4) '\' fname(1:15)]);
+ cfg.fname = 'R060-2015-02-03-post.dat';
+ fname = cfg.fname;
+cfg.cd = ['G:\Naris\' fname(1:4) '\' fname(1:15)]; 
+cd(cfg.cd)
 
 addpath(genpath('C:\Users\mvdm\Documents\GitHub\vandermeerlab\code-matlab\toolboxes\ums2k_02_23_2012'));
 
-tts_to_process = cfg.tts_to_process;
+tts_to_process =6;
 cfg = [];
 cfg.ref_tt = 0;
 cfg.useAverage = 0;
 
-cfg.showData = 0;
+cfg.showData = 1;
 
-mkdir(['G:\Naris\' fname(1:4) '\' fname(1:end-8) '\FD'])
+% mkdir(['G:\Naris\' fname(1:4) '\' fname(1:end-8) '\FD'])
 clear av;
 for iTT = 1:length(tts_to_process)
     
@@ -66,7 +68,7 @@ for iTT = 1:length(tts_to_process)
     
     %% take a look
     if cfg.showData
-        t_end = 200; % number of seconds to plot
+        t_end = 20; % number of seconds to plot
         
         figure(1)
         clf

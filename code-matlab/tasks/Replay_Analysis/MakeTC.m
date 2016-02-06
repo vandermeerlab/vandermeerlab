@@ -18,6 +18,7 @@ function tc_out = MakeTC(cfg_in,S,pos)
 %    cfg_def.conv2Sec = 1;
 %    cfg_def.p_thr = 5; % threshold for detecting place fields in Hz
 %    cfg_def.max_meanfr = 5; % mean fr to rule out interneurons
+%    cfg_def.verbose = 1; 1 display command window text, 0 don't
 %
 % youkitan 2014-12-28, MvdM edits
 
@@ -33,8 +34,12 @@ cfg_def.minSize = 4; % minimum size of field (in bins)
 %cfg_def.maxSize = 20; % maximum size of field (in bins)
 cfg_def.edges = []; % edge vector to use for binning; defaults to min(pos):binSize:max(pos)
 cfg_def.nSpikesInField = 20; % minimum number of spikes in field
+cfg_def.verbose = 1;
 
-cfg = ProcessConfig2(cfg_def,cfg_in);
+mfun = mfilename;
+cfg = ProcessConfig(cfg_def,cfg_in,mfun);
+
+if cfg.verbose; disp([mfun,': gathering tuning curve and place cell data...']); end
 
 %% Detect place cells and get tuning curves
 
@@ -84,7 +89,8 @@ for iC = 1:nCells
     all_tc(iC,:) = tc;
 end
 
-tc = all_tc'; % for compatibility with 2d version
+tc_temp.tc = all_tc;
+tc_temp.usr = S.usr;
 spk_hist = spk_hist_mat;
 
 % detect place fields
@@ -92,12 +98,16 @@ detect_cfg = [];
 detect_cfg.S = S;
 detect_cfg.pos = pos;
 detect_cfg.nSpikesInField = cfg.nSpikesInField;
-detect_cfg.p_thr = cfg.p_thr; % threshold for detecting place fields in Hz
+%detect_cfg.p_thr = cfg.p_thr; % threshold for detecting place fields in Hz
 detect_cfg.max_meanfr = cfg.max_meanfr;
 detect_cfg.minSize = cfg.minSize;
 %detect_cfg.maxSize = cfg.maxSize; 
 detect_cfg.debug = cfg.debug;
-[template_idx,peak_idx,peak_loc] = DetectPlaceCells1D(detect_cfg,tc);
+tc_out = DetectPlaceCells1D(detect_cfg,tc_temp);
+
+template_idx = tc_out.template_idx;
+peak_idx = tc_out.peak_idx;
+peak_loc = tc_out.peak_loc;
 
 % create field template
 fpeak_val = []; fpeak_idx = [];
@@ -112,8 +122,8 @@ end
 fpeak_idx = fpeak_idx(sort_idx);
 
 %store all data in a single struct
-tc_out.tc = tc;
-tc_out.template_idx = template_idx;
+tc_out.tc = tc_out.tc';
+%tc_out.template_idx = template_idx;
 tc_out.field_template_idx = fpeak_idx;
 tc_out.field_loc = fpeak_val;
 tc_out.peak_idx = peak_idx;

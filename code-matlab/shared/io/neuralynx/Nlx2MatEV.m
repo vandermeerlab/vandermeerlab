@@ -4,7 +4,10 @@
 %                      Nlx2MatEV( Filename, FieldSelection, ExtractHeader,
 %                                 ExtractMode, ModeArray );
 %
-%   Version 5.0.1 
+%   Version 6.0.0 
+%
+%	Requires MATLAB R2012b (8.0) or newer
+%
 %
 %   INPUT ARGUMENTS:
 %   FileName: String containing either the complete ('C:\CheetahData\
@@ -94,7 +97,7 @@
 %   2. The value of N in the output descriptions below is the total number of
 %      records extracted.
 %   3. For more information on Neuralynx records see:
-%      http://www.neuralynx.com/static/software/NeuralynxDataFileFormats.pdf
+%      http://neuralynx.com/software/NeuralynxDataFileFormats.pdf
 %   4. Output data will always be assigned in the order indicated in the
 %      FieldSelectionFlags. If data is not imported via a FieldSelectionFlags
 %      index being 0, simply omit the output variable from the command.
@@ -102,13 +105,13 @@
 %      [Timestamps,EventStrings] = Nlx2MatEV('test.nev',FieldSelectionFlags,0,1,[]);
 %
 %   OUTPUT VARIABLES:
-%   Timestamps: A 1xN vector of timestamps.
-%   Event ID: A 1xN vector of the event ID of each record.
-%   TTL: A 1xN vector of the decimal representation of the TTL value of each record.
-%   Extras: A 8xN matrix of extra values for each record. These values are
+%   Timestamps: A 1xN integer vector of timestamps.
+%   Event ID: A 1xN integer vector of the event ID of each record.
+%   TTL: A 1xN integer vector of the decimal representation of the TTL value of each record.
+%   Extras: A 8xN integer matrix of extra values for each record. These values are
 %           generally not used.
-%   Event Strings: A 1xN vector of the event string of each record.
-%   Header: A Mx1 vector of all the text from the Neuralynx file header, where
+%   Event Strings: A 1xN string vector of the event string of each record.
+%   Header: A Mx1 string vector of all the text from the Neuralynx file header, where
 %           M is the number of lines of text in the header.
 %
 %

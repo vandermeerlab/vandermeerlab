@@ -15,6 +15,12 @@ function col = TmazeColors(colormode)
 % colormode = 
 %    'inventory1'; as in Tmaze data inventory, with combined rats in grey
 %    'inventory2'; as in inventory, with combined rats in red and blue
+%    'inventory3'; " " with red and blue less saturated
+%    'inventory4'; as with inventory 3, but with individual rat colors less
+%    saturated
+%    'single'; coordinating colors when not using food AND water data in
+%    same plot; in this case, use only the "f" field ex: col.R042.f, but not
+%    col.R042.w. For all data, col.all.w = 'k' and col.all.f = 'w'.
 %    'rb'; food is always red and water is always blue, regardless of rat
 %    'grey'; food is dark grey and water is light grey
 %
@@ -61,6 +67,32 @@ switch colormode
         col.all.f =  'r';
         col.all.w =  'b';
         
+    case 'inventory3' % with rb for combined data
+        
+        col.R042.f = [0 100/255 0];  %dark green
+        col.R042.w = [143/255 188/255 143/255];  % lighter green
+        col.R044.f = [54/255 100/255 139/255];  %dark blue
+        col.R044.w = [176/255 196/255 222/255];  % lighter blue
+        col.R050.f = [104/255 34/255 139/255];  %dark purple
+        col.R050.w = [216/255 191/255 216/255];  % lighter purple
+        col.R064.f = [198/255 113/255 113/255];  %dark salmon
+        col.R064.w = [238/255 213/255 210/255];  % lighter salmon/dusty pink
+        col.all.f =  [176/255 23/255 31/255]; % deep red
+        col.all.w =  [39/255 64/255 139/255]; % dark blue
+        
+    case 'inventory4' % with rb for combined data
+        
+        col.R042.f = [92/255 121/255 75/255];
+        col.R042.w = [191/255 213/255 178/255];
+        col.R044.f = [89/255 101/255 135/255];
+        col.R044.w = [194/255 198/255 210/255];
+        col.R050.f = [106/255 75/255 121/255];
+        col.R050.w = [197/255 181/255 205/255];
+        col.R064.f = [198/255 113/255 113/255];
+        col.R064.w = [238/255 213/255 210/255];
+        col.all.f =  [176/255 23/255 31/255];
+        col.all.w =  [39/255 64/255 139/255];
+      
     case 'rb'
         col.R042.f = 'r';
         col.R042.w = 'b';

@@ -29,9 +29,10 @@ cfg_def.gausswin_size = 1; % in seconds; only used if cfg.smooth = 1
 cfg_def.gausswin_sd = 0.02; % in seconds
 cfg_def.boxcar_size = 5; % in nBins
 cfg_def.tvec_edges = [];
+cfg_def.verbose = 1;
 
-cfg = ProcessConfig2(cfg_def,cfg_in);
 mfun = mfilename;
+cfg = ProcessConfig(cfg_def,cfg_in,mfun);
 
 % check inputs
 if isempty(S.t)
@@ -52,8 +53,8 @@ tvec_centers = cfg.tvec_edges(1:end-1)+cfg.dt/2;
 if ~isempty(cfg.smooth)
     switch cfg.smooth
         case 'gauss'
-            gauss_window = cfg_def.gausswin_size./cfg.dt; % 1 second window
-            gauss_SD = cfg_def.gausswin_sd./cfg.dt; % 0.02 seconds (20ms) SD
+            gauss_window = cfg.gausswin_size./cfg.dt; % 1 second window
+            gauss_SD = cfg.gausswin_sd./cfg.dt; % 0.02 seconds (20ms) SD
             gk = gausskernel(gauss_window,gauss_SD)'; %gk = gk./cfg.dt; % normalize by binsize
         case 'boxcar'
             gk = ones(1,cfg.boxcar_size);

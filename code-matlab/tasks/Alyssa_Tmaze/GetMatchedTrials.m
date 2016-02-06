@@ -7,10 +7,10 @@ function [left,right,left_indices,right_indices] = GetMatchedTrials(cfg_in,metad
 % MvdM
 % AC edit, handles bad trials
 
-cfg_def = [];
+cfg_def.verbose = 1;
 
-[~] = ProcessConfig2(cfg_def,cfg_in);
-
+mfun = mfilename;
+cfg = ProcessConfig(cfg_def,cfg_in,mfun);
 
 %% account for bad (discarded) trials:
 
@@ -43,7 +43,7 @@ nRtrials = length(R_trial_numbers);
 
 % choose which set to downsize
 if nLtrials == nRtrials
-    fprintf('Equal good trials: nLtrials %d, nRTrials %d...\n',nLtrials,nRtrials);
+    if cfg.verbose; fprintf('%s: Equal good trials: nLtrials %d, nRTrials %d...\n',mfun,nLtrials,nRtrials); end
     left = metadata.taskvars.trial_iv_L;
     right = metadata.taskvars.trial_iv_R;
     left_indices = L_trial_numbers;
@@ -51,7 +51,7 @@ if nLtrials == nRtrials
     return;
 
 elseif nLtrials > nRtrials
-    fprintf('Good trial counts: nLtrials %d, nRTrials %d...\n',nLtrials,nRtrials);
+    if cfg.verbose; fprintf('%s: Good trial counts: nLtrials %d, nRTrials %d...\n',mfun,nLtrials,nRtrials); end
     match = 'R';
      
     % these contain a list of the pool of trial numbers for each trial type
@@ -60,7 +60,7 @@ elseif nLtrials > nRtrials
     max_trial_no = L_trial_numbers;
     
 else
-    fprintf('Good trial counts: nLtrials %d, nRTrials %d...\n',nLtrials,nRtrials);
+    if cfg.verbose; fprintf('%s: Good trial counts: nLtrials %d, nRTrials %d...\n',mfun,nLtrials,nRtrials); end
     match = 'L';
     
     % these contain a list of the pool of trial numbers for each trial type

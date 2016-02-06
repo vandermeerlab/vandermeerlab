@@ -1,12 +1,44 @@
 function iv_out = iv(varargin)
-% function iv_out = iv(varargin)
+% IV Interval datatype constructor
+%   Interval, or iv, data is one of the main datatypes. Each iv struct
+%   contains a set of intervals and accompanying information (in usr field).
+%   Many functions require or assume that the intervals are non-overlapping.
 %
-% constructor for iv (interval) struct
+%   function iv_out = IV([tstart tend])
+%
+%   function iv_out = IV(tstart,tend)
+%
+%   INPUTS:
+%
+%     [tstart end]: [nx2] double containing interval start times and end times
+%
+%          OR
+%  
+%      tstart: [nx1] double or [1xn] double containing interval start times
+%        tend: [nx1] double or [1xn] double containing interval end times 
+%
+%   OUTPUTS
+%      iv_out: iv struct with fields:
+%           .type   - 'iv'; datatype identification
+%           .tstart - [nx1] double containing interval start times
+%           .tend   - [nx1] double containing interval end times
+%           .usr    - [] initialized field that can be used to store data
+%                     or information pertaining to individual intervals
+%                     within the iv struct. For example, signal power can be
+%                     stored as iv1.usr.power = [nx1] double (NOTE: usr data
+%                     must have the same dimensions as the tstart and tend 
+%                     fields).
+%           .cfg    - record of the data's history including config 
+%                     parameters and functions visited
+%
 %
 % MvdM 2014-06-24
+% aacarey edit, Nov 2015
 
+iv_out.type = 'iv';
 iv_out.tstart = [];
 iv_out.tend = [];
+iv_out.usr = [];
 
 if nargin == 1
     

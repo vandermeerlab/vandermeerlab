@@ -6,8 +6,10 @@ function metadata = TrimTrialTimes(cfg_in,metadata)
 cfg_def = [];
 cfg_def.verbose = 0; % print output
 cfg_def.mode = 'times'; % 'times', 'evt' (times.mat is specific to R042, evt mimics that)
+cfg_def.verbose = 1;
 
-cfg = ProcessConfig2(cfg_def,cfg_in);
+mfun = mfilename;
+cfg = ProcessConfig(cfg_def,cfg_in,mfun);
 
 switch cfg.mode
     
@@ -40,10 +42,10 @@ switch cfg.mode
             
         end
         
-        if cfg.verbose
-            fprintf('start dt:\n'); disp(start_dt);
-            fprintf('end dt:\n'); disp(end_dt);
-        end
+%         if cfg.verbose
+%             fprintf('start dt:\n'); disp(start_dt);
+%             fprintf('end dt:\n'); disp(end_dt);
+%         end
         
     case 'evt'
         

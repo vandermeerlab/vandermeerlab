@@ -1,30 +1,49 @@
-function PlotTSDfromIV(cfg_in,iv,tsd_in)
-% function PlotTSDfromIV(cfg,iv,tsd)
+function h = PlotTSDfromIV(cfg_in,iv_in,tsd_in)
+% function PlotTSDfromIV(cfg,iv_in,tsd_in)
 %
-% create interval data from tsd by tresholding
+% display intervals defined relative to tsd
 %
 % INPUTS:
 %
+% iv_in: input iv
 % tsd_in: input tsd
 %
+% OUTPUTS:
+%
+% h: struct with handles to LFP and highlighted iv's
+%
 % CFG OPTIONS:
-% cfg.display = 'tsd'; % 'iv'
-% cfg.mode = 'edges'; % 'center'
-% cfg.width = 0.5; % in s
-% cfg.subplotdim = [10 8];
-% cfg.target = []; % if tsd has multiple data dimensions
+% cfg_def.display = 'tsd'; % {'tsd','iv'}, if 'tsd' then plot tsd and
+%   highlight iv's within it; if 'iv' then only plot iv's
+% cfg_def.bgcol = 'k'; % tsd color outside iv's
+% cfg_def.fgcol = 'r'; % tsd color within iv's
+% cfg_def.target = []; % which tsd channel to use if tsd has multiple data dimensions
 %
+% ONLY USED IN 'IV' DISPLAY MODE:
+% cfg_def.mode = 'edges'; % {'edges','center'}: plot each iv either using a
+%   specific time window ('center') or relative to each iv's edges ('edges')
+% cfg_def.width = 0.2; % size of time window in s (for 'center') or time
+%   window to be added to each edge (for 'edges')
+% cfg_def.subplotdim = [10 8]; % for 'iv' display mode only, specifies
+%   subplots to use in single figure
+% cfg_def.title = []; % for each iv, add contents of specified usr
+%  field as title (SHOULD GENERALIZE TO ARBITRARY STRING WITH MULTIPLE
+%  FIELDS, FORMATTING...)
 %
-% MvdM 2014-06-24
+% MvdM 2014-06-24, edit 2016-01-0y to add title option
 
+cfg_def = [];
+cfg_def.verbose = 1;
 cfg_def.display = 'tsd'; % 'iv'
 cfg_def.mode = 'edges'; % 'center'
 cfg_def.width = 0.2; % in s
 cfg_def.subplotdim = [10 8];
 cfg_def.bgcol = 'k';
 cfg_def.fgcol = 'r';
+cfg_def.iv_only = 0; % if 1, don't plot tsd
+cfg_def.title = [];
 
-cfg = ProcessConfig2(cfg_def,cfg_in); % should take whatever is in cfg_in and put it into cfg!
+cfg = ProcessConfig(cfg_def,cfg_in); % should take whatever is in cfg_in and put it into cfg!
 mfun = mfilename;
 
 % check if conditions are in place
@@ -40,25 +59,32 @@ else
 end
 
 % find indices for iv
+tstart_idx = nearest_idx3(iv_in.tstart,tsd_in.tvec);
+tend_idx = nearest_idx3(iv_in.tend,tsd_in.tvec);
+
+% if iv display mode, also find indices for background
 switch cfg.mode
     case 'edges'
-        tstart_idx = nearest_idx3(iv.tstart,tsd_in.tvec);
-        tend_idx = nearest_idx3(iv.tend,tsd_in.tvec);
+        bg_tstart_idx = nearest_idx3(iv_in.tstart-cfg.width,tsd_in.tvec);
+        bg_tend_idx = nearest_idx3(iv_in.tend+cfg.width,tsd_in.tvec);
     case 'center'
-        ctr = mean(cat(2,iv.tstart,iv.tend),2);
-        tstart_idx = nearest_idx3(ctr-cfg.width/2,tsd_in.tvec);
-        tend_idx = nearest_idx3(ctr+cfg.width/2,tsd_in.tvec);
+        ctr = mean(cat(2,iv_in.tstart,iv_in.tend),2);
+        bg_tstart_idx = nearest_idx3(ctr-cfg.width/2,tsd_in.tvec);
+        bg_tend_idx = nearest_idx3(ctr+cfg.width/2,tsd_in.tvec);
 end
 
 switch cfg.display
     case 'tsd' % plot tsd with highlighted iv
         
-        plot(tsd_in.tvec,temp_data,cfg.bgcol,'MarkerSize',1);
+        if ~cfg.iv_only
+        h.LFP = plot(tsd_in.tvec,temp_data,cfg.bgcol,'MarkerSize',1);
+        end
         hold on;
         
+        h.LFP_iv = nan(size(tstart_idx));
         for iI = 1:length(tstart_idx)
         
-            plot(tsd_in.tvec(tstart_idx(iI):tend_idx(iI)),temp_data(tstart_idx(iI):tend_idx(iI)),cfg.fgcol,'MarkerSize',1);
+            h.LFP_iv(iI) = plot(tsd_in.tvec(tstart_idx(iI):tend_idx(iI)),temp_data(tstart_idx(iI):tend_idx(iI)),cfg.fgcol,'MarkerSize',1);
             
         end
             
@@ -74,10 +100,15 @@ switch cfg.display
             figure(figno);
             subtightplot(cfg.subplotdim(1),cfg.subplotdim(2),plotno);
             
-            plot(tsd_in.tvec(tstart_idx(iI):tend_idx(iI)),temp_data(tstart_idx(iI):tend_idx(iI)),cfg.fgcol,'MarkerSize',1);
+            h.LFP(iI) = plot(tsd_in.tvec(bg_tstart_idx(iI):bg_tend_idx(iI)),temp_data(bg_tstart_idx(iI):bg_tend_idx(iI)),cfg.bgcol,'MarkerSize',1);
             hold on;
-            
+            h.LFP_iv(iI) = plot(tsd_in.tvec(tstart_idx(iI):tend_idx(iI)),temp_data(tstart_idx(iI):tend_idx(iI)),cfg.fgcol,'MarkerSize',1);
+                        
             axis off; axis tight;
+            if ~isempty(cfg.title)
+               all_usr = iv_in.usr.(cfg.title);
+               title(all_usr(iI));
+            end
             
         end
     

@@ -9,12 +9,13 @@ function lfp_tsd = FilterLFP(cfg_in,lfp_tsd)
 %
 % CFG OPTIONS with defaults:
 %
-% cfg.type = 'cheby1'; % 'butter' -- type of filter to be used
-% cfg.order = 4; % filter order;
-% cfg.display_filter = 1; % show output of fvtool on filter
+% cfg.type = 'butter'; % {'cheby1','butter','fdesign'} -- type of filter to be used
+% cfg.order = 4; % filter order
+% cfg.display_filter = 0; % show output of fvtool on filter
 % cfg.bandtype = 'bandpass'; % 'highpass', 'lowpass'
 % cfg.R = 0.5; % passband ripple (in dB) for Chebyshev filters only
 % cfg.f = [6 10]; filter range to use (in Hz)
+% cfg.verbose = 1; If 1 display helpful text in command window, if 0 don't
 %
 % MvdM 2014-06-24, 25 (update cfg_in)
 
@@ -24,9 +25,10 @@ cfg_def.display_filter = 0;
 cfg_def.band = 'bandpass'; % not used
 cfg_def.R = 0.5; % passband ripple (in dB) for Chebyshev filters only
 cfg_def.f = [6 10];
+cfg_def.verbose = 1;
 
-cfg = ProcessConfig2(cfg_def,cfg_in); % this takes fields from cfg_in and puts them into cfg
 mfun = mfilename;
+cfg = ProcessConfig(cfg_def,cfg_in,mfun); % this takes fields from cfg_in and puts them into cfg
 
 % do some checks on the data
 if ~CheckTSD(lfp_tsd)
@@ -34,10 +36,17 @@ if ~CheckTSD(lfp_tsd)
 end
 
 % check reported Fs in headers
-nSignals = size(lfp_tsd.data,1);
+nSignals = length(lfp_tsd.cfg.hdr);
 for iS = nSignals:-1:1
     
-   reported_Fs(iS) = lfp_tsd.cfg.hdr{iS}.SamplingFrequency;
+   if isfield(lfp_tsd.cfg.hdr{iS},'SamplingFrequency')
+       reported_Fs(iS) = lfp_tsd.cfg.hdr{iS}.SamplingFrequency;
+   elseif isfield(lfp_tsd.cfg.hdr{iS},'Fs')
+       reported_Fs(iS) = lfp_tsd.cfg.hdr{iS}.Fs;
+   else
+      error('Unknown Fs.'); 
+   end
+   
     
 end
 
@@ -49,7 +58,7 @@ end
 tvec_diffs = diff(lfp_tsd.tvec);
 median_Fs = 1./median(tvec_diffs);
 
-fprintf('FilterLFP.m: reported Fs %.2f, median tvec Fs %.2f.\n',reported_Fs,median_Fs);
+if cfg.verbose; fprintf('FilterLFP.m: reported Fs %.2f, median tvec Fs %.2f.\n',reported_Fs,median_Fs); end
 
 Fs = reported_Fs;
 
@@ -93,7 +102,7 @@ end
 % process signals
 for iS = 1:nSignals
     
-    fprintf('FilterLFP.m: filtering signal %d/%d...\n',iS,nSignals);
+    if cfg.verbose; fprintf('FilterLFP.m: filtering signal %d/%d...\n',iS,nSignals); end
     
     % check for NaNs in the data; if there are, issue a warning and replace by
     % zeros

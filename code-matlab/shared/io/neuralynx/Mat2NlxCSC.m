@@ -4,7 +4,10 @@
 %              FieldSelectionFlags, Timestamps, ChannelNumbers,
 %              SampleFrequencies, NumberOfValidSamples, Samples, Header);
 %
-%   Version 5.0.1 
+%   Version 6.0.0 
+%
+%	Requires MATLAB R2012b (8.0) or newer
+%
 %   
 %   Notes on export data:
 %   1. Each export variable's Nth element corresponds to the Nth element in
@@ -16,7 +19,7 @@
 %      smallest export variable.
 %   3. An item is an individual value in an array or matrix.
 %   3. For more information on Neuralynx records see:
-%      http://www.neuralynx.com/static/software/NeuralynxDataFileFormats.pdf
+%      http://neuralynx.com/software/NeuralynxDataFileFormats.pdf
 %   4. Export data will always be assigned in the order indicated in the
 %      FieldSelectionFlags. If data is not imported via a FieldSelectionFlags
 %      index being 0, simply omit the export variable from the command.
@@ -118,13 +121,13 @@
 %                           FieldSelectionFlags(6): Header
 %                        EXAMPLE: [1 0 0 0 1 0] exports timestamp and sample
 %                        vectors and excludes all other data.
-%   Timestamps: A 1xN vector of timestamps. This must be in ascending order.
-%   ChannelNumbers: A 1xN vector of channel numbers.
-%   SampleFrequencies: A 1xN vector of sample frequencies.
-%   NumberOfValidSamples: A 1xN vector of the number of valid samples in the
+%   Timestamps: A 1xN integer vector of timestamps. This must be in ascending order.
+%   ChannelNumbers: A 1xN integer vector of channel numbers.
+%   SampleFrequencies: A 1xN integer vector of sample frequencies.
+%   NumberOfValidSamples: A 1xN integer vector of the number of valid samples in the
 %                         corresponding item in the Sample output variable.
-%   Samples: A 512xN matrix of the data points. These values are in AD counts.
-%   Header: A Mx1 vector of all the text from the Neuralynx file header, where
+%   Samples: A 512xN integer matrix of the data points. These values are in AD counts.
+%   Header: A Mx1 string vector of all the text from the Neuralynx file header, where
 %           M is the number of lines of text in the header.
 %
 %   EXAMPLE: Mat2NlxCSC('test.ncs', 0, 1, 1, [1 1 1 1 1 1], Timestamps,

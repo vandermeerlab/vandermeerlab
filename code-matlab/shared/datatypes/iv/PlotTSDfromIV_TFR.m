@@ -50,12 +50,12 @@ if nData > 1
 end
 
 % create trials from iv
-cfg.t = IVcenters(iv_in);
-cfg.mode = 'ft';
-cfg.hdr = ft_in.hdr;
+trl_cfg = [];
+trl_cfg.t = IVcenters(iv_in);
+trl_cfg.mode = 'ft';
+trl_cfg.hdr = ft_in.hdr;
 
-trl_cfg = cfg;
-trl_cfg.twin = trl_cfg.twin + [-2 2]; % padding for spectrogram
+trl_cfg.twin = cfg.twin + [-2 2]; % padding for spectrogram
 trl_cfg.hdr.FirstTimeStamp = ft_in.time{1}(1); 
 trl_cfg.tvec = ft_in.time{1}; % For neuralynx data conversion
 

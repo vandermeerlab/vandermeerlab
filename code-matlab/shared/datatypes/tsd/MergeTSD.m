@@ -28,7 +28,8 @@ function tsd_out = MergeTSD(cfg_in,varargin)
 cfg_def.method = 'mean';
 cfg_def.verbose = 1;
 
-cfg = ProcessConfig2(cfg_def,cfg_in);
+mfun = mfilename;
+cfg = ProcessConfig(cfg_def,cfg_in,mfun);
 
 numArgs = length(varargin);
 if numArgs < 2
@@ -82,7 +83,7 @@ switch cfg.method
     case 'mean'
         data = mean(allTSDs,1);
     case 'geometricmean'
-        data = nthroot(mean(allTSDs,1),numArgs);        
+        data = nthroot(prod(allTSDs,1),numArgs);        
     otherwise
         error('Unrecognized cfg.method. Better check that spelling ^_^')
 end
@@ -92,6 +93,8 @@ end
 tsd_out = tsd(varargin{1}.tvec,data);
 
 % need to add label if csc???
+
+tsd_out = History(tsd_out,mfun,cfg);
 
 end
 

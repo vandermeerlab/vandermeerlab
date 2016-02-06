@@ -13,15 +13,17 @@ function linpos_tsd = LinearizePos(cfg_in,pos_tsd)
 %
 % cfg_def.Coord = []; % Coord file geneated by makeCoord, if not defined tries to load
 % cfg_def.debugMode = 0; % if 1, also return z_dist (distance from
+% cfg_def.verbose = 1; 1 display command window text, 0 don't
 %  linearized path)
 
 cfg_def.Coord = [];
 cfg_def.debugMode = 0;
-cfg = ProcessConfig2(cfg_def,cfg_in); % remember this will overwrite Coord if defined in cfg
+cfg_def.verbose = 1;
 
 mfun = mfilename;
+cfg = ProcessConfig(cfg_def,cfg_in,mfun); % remember this will overwrite Coord if defined in cfg
 
-disp('LinearizePos.m: linearizing data...');
+if cfg.verbose; disp('LinearizePos: linearizing data...'); end
 
 % try to load Coord file if not specified
 if isempty(cfg.Coord)

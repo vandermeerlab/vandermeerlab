@@ -4,7 +4,10 @@
 %                      Nlx2MatVT(  Filename, FieldSelection, ExtractHeader,
 %                                 ExtractMode, ModeArray );
 %
-%   Version 5.0.1 
+%   Version 6.0.0 
+%
+%	Requires MATLAB R2012b (8.0) or newer
+%
 %
 %   INPUT ARGUMENTS:
 %   FileName: String containing either the complete ('C:\CheetahData\
@@ -95,7 +98,7 @@
 %   2. The value of N in the output descriptions below is the total number of
 %      records extracted.
 %   3. For more information on Neuralynx records see:
-%      http://www.neuralynx.com/static/software/NeuralynxDataFileFormats.pdf
+%      http://neuralynx.com/software/NeuralynxDataFileFormats.pdf
 %   4. Output data will always be assigned in the order indicated in the
 %      FieldSelectionFlags. If data is not imported via a FieldSelectionFlags
 %      index being 0, simply omit the output variable from the command.
@@ -103,16 +106,16 @@
 %      [Timestamps,Points] = Nlx2MatVT('test.nvt',FieldSelectionFlags,0,1,[]);
 %
 %   OUTPUT VARIABLES:
-%   Timestamps: A 1xN vector of timestamps.
-%   Extracted X: A 1xN vector of the calculated X coordinate for each record.
-%   Extracted Y: A 1xN vector of the calculated Y coordinate for each record.
-%   Extracted Angle: A 1xN vector of the calculated head direction angle for
+%   Timestamps: A 1xN integer vector of timestamps.
+%   Extracted X: A 1xN integer vector of the calculated X coordinate for each record.
+%   Extracted Y: A 1xN integer vector of the calculated Y coordinate for each record.
+%   Extracted Angle: A 1xN integer vector of the calculated head direction angle for
 %                    each record. This value is in degrees.
-%   Targets: A 50xN matrix of the targets found for each frame. These values
+%   Targets: A 50xN integer matrix of the targets found for each frame. These values
 %            are encoded using the VT bitfield encoding.
-%   Points: A 480xN matrix of the threshold crossings found for each frame.
+%   Points: A 480xN integer matrix of the threshold crossings found for each frame.
 %           These values are encoded using the VT bitfield encoding.
-%   Header: A Mx1 vector of all the text from the Neuralynx file header, where
+%   Header: A Mx1 string vector of all the text from the Neuralynx file header, where
 %           M is the number of lines of text in the header.
 %
 %
