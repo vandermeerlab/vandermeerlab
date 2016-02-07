@@ -235,6 +235,7 @@ hfig = gcf;
 set(hfig,'Name',mfilename,'KeyPressFcn',@keystuff,'WindowButtonDownFcn',@clickstuff,'CloseRequestFcn',@leaveme);
 
 % I'm pulling some things out of cfg so I can "trace" them easier if I want to
+LFP = cfg.lfp; cfg = rmfield(cfg,'lfp'); % lfp is huge. don't let it be saved in config history
 mode = cfg.mode;
 trapwin = cfg.trapwin;
 clickColor = cfg.clickColor;
@@ -312,7 +313,7 @@ if ~isempty(cfg.segments) && CheckIV(cfg.segments)
     segmentCenters = IVcenters(cfg.segments); % for segment center navigation
 end
 
-if isfield(cfg,'lfp')
+if exist('LFP','var')
     % spectrogram button
     uicontrol('Style', 'pushbutton', 'String', 'Spectrogram',...
         'TooltipString','Plot spectrogram for current window',...
@@ -492,7 +493,7 @@ end
             end
             H = [];
         else
-            if isfield(cfg,'lfp') && ~isempty(cfg.lfp)               
+            if exist('LFP','var');               
                 HideSpectraxis
             end
             navigate(source,event)
@@ -528,20 +529,22 @@ end
                         end
                         centers = sort(centers);
                         evt = iv(centers - trapwin/2,centers + trapwin/2);
-                        if isfield(cfg,'lfp')
-                            evt.label = cfg.lfp.label;
+                        if exist('LFP','var')
+                            evt.label = LFP.label;
                         end
                         
                     case 'unfixed'
                         if ~isempty(cfg.resume)
                            intervals.tstart = [clicktimes.tstart cfg.resume.tstart']; 
-                           intervals.tend = [clicktimes.tend cfg.resume.tend']; 
+                           intervals.tend = [clicktimes.tend cfg.resume.tend'];
+                        else
+                            intervals = iv(clicktimes.tstart,clicktimes.tend);
                         end
                         [intervals.tstart,idx] = sort(intervals.tstart);
                         intervals.tend = intervals.tend(idx);
                         evt = iv(intervals.tstart,intervals.tend);  
-                        if isfield(cfg,'lfp')
-                            evt.label = cfg.lfp.label;
+                        if exist('LFP','var')
+                            evt.label = LFP.label;
                         end
                 end
                 
@@ -579,7 +582,7 @@ end
         uipressed = 1; % focus has been taken off of axes because of ui button press
         RoboDuck
         
-        if isfield(cfg,'lfp') && ~isempty(cfg.lfp)            
+        if exist('LFP','var')            
             HideSpectraxis
         end
         
@@ -626,7 +629,7 @@ end
         xlims = get(gca,'XLim');
         xticks = get(gca,'XTick');
         
-        CSCr = restrict(cfg.lfp,xlims(1),xlims(2)); % restrict to count the numbers of samples in viewing window
+        CSCr = restrict(LFP,xlims(1),xlims(2)); % restrict to count the numbers of samples in viewing window
         
         if length(CSCr.tvec) > 50000
             % outright refuse
@@ -654,7 +657,7 @@ end
         fs = length(CSCr.data)/(xlims(2)-xlims(1)); % get the local approx sampling frequency
         
         buffer = (nSamples/2)/fs; % how much time buffer is needed so that the spectrogram lines up with the data in viewing window
-        CSCr = restrict(cfg.lfp,xlims(1)-buffer,xlims(2)+buffer); % re-restrict with buffer
+        CSCr = restrict(LFP,xlims(1)-buffer,xlims(2)+buffer); % re-restrict with buffer
         
         % get frequencies of interest
         foi = str2double(get(frange(1),'String')):str2double(get(frange(2),'String')); % don't be evil..numbers only
