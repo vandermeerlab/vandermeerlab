@@ -83,7 +83,9 @@ switch cfg.method
     case 'mean'
         data = mean(allTSDs,1);
     case 'geometricmean'
-        data = nthroot(prod(allTSDs,1),numArgs);        
+        data = nthroot(prod(allTSDs,1),numArgs);
+    case 'sum'
+        data = sum(allTSDs,1);
     otherwise
         error('Unrecognized cfg.method. Better check that spelling ^_^')
 end
