@@ -26,6 +26,13 @@ function iv_out = TSDtoIV2(cfg_in,tsd_in)
 %         add '=' to any of the above strings:
 %        ex: '>=' - data >= threshold
 %           '><=' - data >= threshold(1) & data <= threshold(2)
+%
+%     cfg.ResizeAtMean = 0; If 1, redraw the intervals so that the
+%                   boundaries sit at the mean of tsd_in.data; If 0, don't
+%                   (this is done for ripple detection in some papers such
+%                   as Hippocampal replay of extended experience)
+%                   Note: think about whether this makes sense with respect
+%                   to your other config options (don't ask for garbage).
 %     
 %     cfg.target = []; Which data (label) to use
 %     cfg.verbose = 1; 1 - tell me how many intervals you found, 0 - don't
@@ -36,12 +43,13 @@ function iv_out = TSDtoIV2(cfg_in,tsd_in)
 %  see also iv TSDtoIV 
 %
 % MvdM 2014-06-24
-% aacarey edit Oct 2015
+% aacarey edit Oct 2015, Feb 2016
 
 % set cfg defaults
 cfg_def.method = 'zscore';
 cfg_def.threshold = 0;
 cfg_def.operation =  '>'; % return intervals where threshold is exceeded
+cfg_def.ResizeAtMean = 0;
 cfg_def.target = [];
 cfg_def.verbose = 1;
 
@@ -104,7 +112,7 @@ up_keep = dfs == 1;
 down_keep = dfs == -1;
 
 % account for padding (added extra samples)
-down_keep = circshift(down_keep,[-1,0]); down_keep(end) = 0;
+down_keep = circshift(down_keep,[0,-1]); down_keep(end) = 0;
 
 % make output
 up_t = tsd_in.tvec(up_keep);
@@ -112,10 +120,24 @@ down_t = tsd_in.tvec(down_keep);
 
 iv_out = iv(up_t,down_t);
 
-if cfg.verbose
-    disp([mfun,': ',num2str(length(up_t)),' intervals found.'])
+if cfg.ResizeAtMean
+    % this implementation is probably slow, because the logical operations
+    % in OverlapIV are slow.
+    
+    % threshold at the mean
+    cfg_temp = []; cfg_temp.verbose = 0; cfg_temp.method = 'zscore'; cfg_temp.threshold = 0; cfg_temp.operation = '>=';
+    iv_mean = TSDtoIV2(cfg_temp,tsd_in); % so meta
+    
+    % Keep intervals in iv_mean that overlap with intervals in iv_out
+    cfg_temp = []; cfg_temp.verbose = 0;
+    iv_out = OverlapIV(cfg_temp,iv_mean,iv_out);
+   
 end
 
-% housekeeping
-iv_out.cfg.history.mfun = cat(1,tsd_in.cfg.history.mfun,{mfun});
-iv_out.cfg.history.cfg = cat(1,tsd_in.cfg.history.cfg,{cfg});
+if cfg.verbose
+    disp([mfun,': ',num2str(length(iv_out.tstart)),' intervals found.'])
+end
+
+% write history
+iv_out.cfg.history = tsd_in.cfg.history;
+iv_out = History(iv_out,mfun,cfg);
