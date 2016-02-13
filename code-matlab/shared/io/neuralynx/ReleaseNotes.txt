@@ -5,23 +5,6 @@
 *********************************************
 
 ****************
-* v6.0.0
-****************
-Added Features:
--Nlx2MatNDE and Mat2NlxNDE MEX files added for NDE file processing.
-
-General Changes:
--Requires Matlab R2012b (8.0) or newer.
--Improved help documentation.
-
-****************
-* v5.0.2
-****************
-Fixed Bugs:
--All Mat2Nlx MEX files properly write and update headers containing a close date/time.
--All Mat2Nlx MEX files now use ## Time for opened and closed header item.
-
-****************
 * v5.0.1
 ****************
 Fixed Bugs:

@@ -4,10 +4,7 @@
 %                      Nlx2MatSpike( Filename, FieldSelectionFlags,
 %                      HeaderExtractionFlag, ExtractMode, ExtractionModeVector);
 %
-%   Version 6.0.0 
-%
-%	Requires MATLAB R2012b (8.0) or newer
-%
+%   Version 5.0.1 
 %
 %   INPUT ARGUMENTS:
 %   FileName: String containing either the complete ('C:\CheetahData\
@@ -97,7 +94,7 @@
 %   2. The value of N in the output descriptions below is the total number of
 %      records extracted.
 %   3. For more information on Neuralynx records see:
-%      http://neuralynx.com/software/NeuralynxDataFileFormats.pdf
+%      http://www.neuralynx.com/static/software/NeuralynxDataFileFormats.pdf
 %   4. Output data will always be assigned in the order indicated in the
 %      FieldSelectionFlags. If data is not imported via a FieldSelectionFlags
 %      index being 0, simply omit the output variable from the command.
@@ -105,18 +102,18 @@
 %      [Timestamps,Samples] = Nlx2MatSpike('test.ntt',FieldSelectionFlags,0,1,[]);
 %
 %   OUTPUT VARIABLES:
-%   Timestamps: A 1xN integer vector of timestamps.
-%   ScNumbers: A 1xN integer vector of spike channel numbers. This is the order that
+%   Timestamps: A 1xN vector of timestamps.
+%   ScNumbers: A 1xN vector of spike channel numbers. This is the order that
 %              the spike AEs were created and have nothing to do with the
 %              AD channel number.
-%   CellNumbers: A 1xN integer vector of classified cell numbers. If no cell was
+%   CellNumbers: A 1xN vector of classified cell numbers. If no cell was
 %                classified for this spike, this value will be zero.
-%   Features: A 8xN integer vector of the features (e.g. Peak, Valley, etc.) calculated
+%   Features: A 8xN vector of the features (e.g. Peak, Valley, etc.) calculated
 %             by Cheetah.
-%   Samples: A 32xMxN integer matrix of the data points. Where M is the number of
+%   Samples: A 32xMxN matrix of the data points. Where M is the number of
 %            subchannels in the spike file (NTT M = 4, NST M = 2, NSE M = 1).
 %            These values are in AD counts.
-%   Header: A Mx1 string vector of all the text from the Neuralynx file header, where
+%   Header: A Mx1 vector of all the text from the Neuralynx file header, where
 %           M is the number of lines of text in the header.
 %
 %

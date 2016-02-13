@@ -3,10 +3,7 @@
 %   [TimeStamps, Header] = Nlx2MatTS( Filename, FieldSelection, ExtractHeader,
 %                                 ExtractMode, ModeArray );
 %
-%   Version 6.0.0 
-%
-%	Requires MATLAB R2012b (8.0) or newer
-%
+%   Version 5.0.1 
 %
 %   INPUT ARGUMENTS:
 %   FileName: String containing either the complete ('C:\CheetahData\
@@ -91,7 +88,7 @@
 %   2. The value of N in the output descriptions below is the total number of
 %      records extracted.
 %   3. For more information on Neuralynx records see:
-%      http://neuralynx.com/software/NeuralynxDataFileFormats.pdf
+%      http://www.neuralynx.com/static/software/NeuralynxDataFileFormats.pdf
 %   4. Output data will always be assigned in the order indicated in the
 %      FieldSelectionFlags. If data is not imported via a FieldSelectionFlags
 %      index being 0, simply omit the output variable from the command.
@@ -99,8 +96,8 @@
 %      [Timestamps] = Nlx2MatTS('test.nts',FieldSelectionFlags,0,1,[]);
 %
 %   OUTPUT VARIABLES:
-%   Timestamps: A 1xN integer vector of timestamps.
-%   Header: A Mx1 string vector of all the text from the Neuralynx file header, where
+%   Timestamps: A 1xN vector of timestamps.
+%   Header: A Mx1 vector of all the text from the Neuralynx file header, where
 %           M is the number of lines of text in the header.
 %
 %
