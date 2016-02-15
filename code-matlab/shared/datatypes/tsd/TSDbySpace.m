@@ -11,11 +11,11 @@ function space_av = TSDbySpace(cfg_in,pos,tsd_in)
 %
 %
 
-cfg = [];
-cfg.x_edges = [];
-cfg.y_edges = [];
+cfg_def = [];
+cfg_def.x_edges = [];
+cfg_def.y_edges = [];
 
-ProcessConfig;
+cfg = ProcessConfig(cfg_def,cfg_in);
 
 pos_mat(:,1) = getd(pos,'y');
 pos_mat(:,2) = getd(pos,'x'); 
