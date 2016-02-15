@@ -23,7 +23,7 @@ function iv_out = RemoveIV(cfg_in,iv_in)
 % aacarey oct 2015
 %
 %   see also SelectIV
-%%
+
 % set cfg defaults
 cfg_def.mindur = 0;
 cfg_def.maxdur = [];
@@ -45,17 +45,24 @@ cfg_temp.verbose = 0; % prevent SelectIV from talking inside of RemoveIV
 % check that there aren't any doubles
 checkstart = find(diff(iv_temp.tstart)== 0);
 checkend = find(diff(iv_temp.tend) == 0);
-if any(checkend ~= checkstart) && cfg.verbose
-    disp(['WARNING in ',mfun,': Some intervals have the same start or end times.'])
-elseif ~isempty(checkstart) && cfg.rmdoubles
-    if cfg.verbose
-        disp([mfun,': ',num2str(length(checkstart>0)), ' doubles found, removing.'])
+if ~isempty(checkstart) && ~isempty(checkend)
+    if (length(checkstart) ~= length(checkend)) || ~isequal(checkstart,checkend)
+        if ~isempty(checkstart)
+            fprintf('WARNING in %s: %d intervals have the same start times.\n',mfun,length(checkstart))
+        end
+        if ~isempty(checkend)
+            fprintf('WARNING in %s: %d intervals have the same end times.\n',mfun,length(checkend))
+        end
+    elseif isequal(checkstart,checkend) && cfg.rmdoubles
+        if cfg.verbose
+            disp([mfun,': ',num2str(length(checkstart>0)), ' doubles found, removing.'])
+        end
+        iv_temp.tstart(checkstart) = [];
+        iv_temp.tend(checkstart) = [];
+        
+    elseif isequal(checkstart,checkend) && ~cfg.rmdoubles && cfg.verbose
+        disp(['WARNING in ',mfun,': ',num2str(length(checkstart>0)),' doubles found, but removal was not requested.'])
     end
-    iv_temp.tstart(checkstart) = [];
-    iv_temp.tend(checkstart) = [];
-    
-elseif ~isempty(checkstart) && ~cfg.rmdoubles && cfg.verbose
-    disp(['WARNING in ',mfun,': ',num2str(length(checkstart>0)),' doubles found, but removal was not requested.'])
 end
 
 % removal based on duration of intervals
@@ -77,17 +84,6 @@ end
 
 % make output
 iv_out = SelectIV(cfg_temp,iv_temp,keep);
-% iv_out = iv_temp;
-% iv_out.tstart = iv_temp.tstart(keep);
-% iv_out.tend = iv_temp.tend(keep);
-% 
-% % also remove data from other same-length usr fields
-% if isfield(iv_in,'usr')
-%     ivfields = fieldnames(iv_in.usr);
-%     for iField = 1:length(ivfields)
-%         iv_out.usr.(ivfields{iField}) = iv_out.usr.(ivfields{iField})(keep);
-%     end
-% end
 
 % tell me how many
 if cfg.verbose
@@ -95,8 +91,8 @@ if cfg.verbose
 end
 
 % housekeeping
-iv_out.cfg.history.mfun = cat(1,iv_temp.cfg.history.mfun,mfun);
-iv_out.cfg.history.cfg = cat(1,iv_temp.cfg.history.cfg,{cfg});
+iv_out.cfg.history = iv_temp.cfg.history;
+iv_out = History(iv_out,mfun,cfg);
 
 end
 
