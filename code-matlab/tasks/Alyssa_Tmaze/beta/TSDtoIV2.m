@@ -28,11 +28,12 @@ function iv_out = TSDtoIV2(cfg_in,tsd_in)
 %           '><=' - data >= threshold(1) & data <= threshold(2)
 %
 %     cfg.ResizeAtMean = 0; If 1, redraw the intervals so that the
-%                   boundaries sit at the mean of tsd_in.data; If 0, don't
+%                   boundaries sit at the mean of tsd_in.data (often results
+%                   in merging of nearby events); If 0, don't
 %                   (this is done for ripple detection in some papers such
 %                   as Hippocampal replay of extended experience)
 %                   Note: think about whether this makes sense with respect
-%                   to your other config options (don't ask for garbage).
+%                   to your other config options.
 %     
 %     cfg.target = []; Which data (label) to use
 %     cfg.verbose = 1; 1 - tell me how many intervals you found, 0 - don't

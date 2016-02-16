@@ -11,7 +11,7 @@ function IV = CommonIV(cfg,ivA,ivB,varargin)
 %   IV    _________   _______                   __________
 %
 %       IV contains the time intervals where ivA and ivB intersect if
-%       cfg.keepGaps = 1 and cfg.threshold = 100.
+%       cfg.keepGaps = 1 and cfg.threshold = 1.
 %
 %       For more information about what this function is doing, open it and
 %       read the main body of the code (contains ASCII drawings of steps)
@@ -31,7 +31,8 @@ function IV = CommonIV(cfg,ivA,ivB,varargin)
 %                    for deciding whether the intervals intersect. If the
 %                    binsize is too large, merging can occur.
 %      cfg.threshold = 1; What proportion of inputs need to agree on a 
-%                    timespan for it to be kept as an interval?
+%                    timespan for it to be kept as an interval? (this is a
+%                    number between 0 and 1, such as 2/3 or 9/10)
 %
 %      cfg.keepGaps = 1; If 1, preserves regions where at least one of the
 %                    inputs considered to be separate; if 0, doesn't. Note
