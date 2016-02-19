@@ -103,18 +103,19 @@ end
 
     function freqs = freakHelper(SWRtimes,csc,timewin)
         sampwin = timewin*cfg.fs; % the window size in nSamples = timewindow * sampling frequency 
-        %tstart = SWRtimes.tcent - timewin/2;
-        %tend = SWRtimes.tcent + timewin/2;
-        midIndices = nearest_idx3(SWRtimes.tcent,csc.tvec);
+        %tstart = tcent - timewin/2;
+        %tend = tcent + timewin/2;
+        tcent = IVcenters(SWRtimes);
+        midIndices = nearest_idx3(tcent,csc.tvec);
         SWRsum = 0;
-        for iSWR = 1:length(SWRtimes.tcent) 
+        for iSWR = 1:length(tcent) 
             nextFFT = windowedFFT(cfg,csc.data,sampwin,midIndices(iSWR));
             SWRsum = SWRsum + nextFFT;
         end
 
-        midIndices = nearest_idx3(SWRtimes.tcent+2,csc.tvec); % Add 2 seconds to each clicked time -> random time (this could error if a clicked time was closer than 2 s away from the end of recording?)
+        midIndices = nearest_idx3(tcent+2,csc.tvec); % Add 2 seconds to each clicked time -> random time (this could error if a clicked time was closer than 2 s away from the end of recording?)
         SWRsumNoise = 0;
-        for iSWR = 1:length(SWRtimes.tcent)
+        for iSWR = 1:length(tcent)
             nextFFT = windowedFFT(cfg,csc.data,sampwin,midIndices(iSWR));
             SWRsumNoise = SWRsumNoise + nextFFT;
         end
@@ -168,7 +169,7 @@ end
                 y_label = 'Fourier coefficients';
             end
             xlim(cfg.fig.xlim); ylim([ymin-0.01 ymax+0.01])
-            title([type,sprintf('%d SWRs, %d ms window',length(SWRtimes.tcent),timewin*1000)],'FontSize',cfg.fig.TitleFontSize);
+            title([type,sprintf('%d SWRs, %d ms window',length(tcent),timewin*1000)],'FontSize',cfg.fig.TitleFontSize);
             ylabel(y_label,'Fontsize',cfg.fig.xyFontSize);
             box on
             hL = legend('SWR','background noise','SWR - noise');

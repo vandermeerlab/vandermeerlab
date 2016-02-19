@@ -49,12 +49,11 @@ cfg_def.operation = '>=';
 cfg_def.threshold = 0;
 cfg_def.str = ''; % if this is not empty, it overrides numerical selection
 cfg_def.verbose = 1;
+mfun = mfilename;
 
-if ~CheckIV(iv_in)
+if ~CheckIV(iv_in,mfun)
     error('iv_in must be an iv data type.')
 end
-
-mfun = mfilename;
 
 % parse cfg parameters
 cfg = ProcessConfig(cfg_def,cfg_in,mfun);

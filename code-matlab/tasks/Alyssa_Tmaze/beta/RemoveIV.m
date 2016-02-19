@@ -29,12 +29,11 @@ cfg_def.mindur = 0;
 cfg_def.maxdur = [];
 cfg_def.rmdoubles = 0;
 cfg_def.verbose = 1;
+mfun = mfilename;
 
-if ~CheckIV(iv_in)
+if ~CheckIV(iv_in,mfun)
     error('iv_in must be an iv datatype.')
 end
-
-mfun = mfilename;
 
 % parse cfg parameters
 cfg = ProcessConfig(cfg_def,cfg_in,mfun);

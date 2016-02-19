@@ -92,7 +92,8 @@ cfg.whichEpochs = {'prerecord','task','postrecord'}; %  {'prerecord','task','pos
 cfg.nSeconds = 720; % 720 seconds = 12 minutes
 
 % Select t files or tt files
-cfg.whichSFiles = 'tt'; % 't' for MClust t files (isolated units), or 'tt' for MakeTTFiles tt files (all spikes from tetrode)
+cfg.whichSFiles = 'none'; % 't' for MClust t files (isolated units), or 'tt' for MakeTTFiles tt files (all spikes from tetrode)
+% 'none' for no spike files available
 
 % Do you want the LFP filtered?
 cfg.FilterLFP = 1; % If 1, filters LFP between 40-450 Hz bfore plotting; if 0, doesn't
@@ -114,6 +115,17 @@ cfg.fn = 'manualIV'; % unique string identifier for the file you saved from a pr
 
 % Load some things, check some things
 
+if ~any(strcmp(cfg.whichEpochs,{'prerecord','task','postrecord'}))
+    error('cfg.whichEpochs contains unrecognized recording segment')
+end
+
+% get CSC
+LoadExpKeys
+please = [];
+please.fc = ExpKeys.goodSWR(1);
+please.resample = 2000;
+CSC = LoadCSC(please);
+
 % Load Spikes
 switch cfg.whichSFiles
     case 'tt'
@@ -126,20 +138,13 @@ switch cfg.whichSFiles
        please = []; % load 
        please.load_questionable_cells = 1;
        S = LoadSpikes(please);
+    case 'none'
+        S = ts;
+        S.t{1}(1,1) = CSC.tvec(1); % make a fake S because MultiRaster requires this as an input in order to work
+        S.t{1}(2,1) = CSC.tvec(end);
     otherwise
         error('Unrecognized cfg.whichSFiles. Better check that spelling.')
 end
-
-% Just cuz
-if ~any(strcmp(cfg.whichEpochs,{'prerecord','task','postrecord'}))
-    error('cfg.whichEpochs contains unrecognized recording segment')
-end
-
-% get CSC
-LoadExpKeys
-please = [];
-please.fc = ExpKeys.goodSWR(1);
-CSC = LoadCSC(please);
 
 % get restriction times
 nSecondsPerEpoch = cfg.nSeconds/(length(cfg.whichEpochs));

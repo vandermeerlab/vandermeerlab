@@ -208,7 +208,8 @@ if ~isempty(cfg.segments) && ~CheckIV(cfg.segments)
 elseif ~isempty(cfg.segments) && CheckIV(cfg.segments)
     % then plot interval boundaries as vertical lines
     cfg_temp.showLegend = 0;
-    cfg_temp.ColVal = [0 0 0; 1 1 1]; % black first, then white
+    cfg_temp.Color = [0 0 0; 1 1 1]; % black first, then white
+    cfg_temp.patch = 0;
     hSK = sidekick(cfg_temp,cfg.segments,cfg.segments);
     set(hSK(1),'LineWidth',3.5) % make the black line thicker than the white line
     
@@ -526,6 +527,8 @@ end
                     case 'fixed'
                         if ~isempty(cfg.resume)
                            centers = [clicktimes IVcenters(cfg.resume)]; 
+                        else
+                            centers = clicktimes;
                         end
                         centers = sort(centers);
                         evt = iv(centers - trapwin/2,centers + trapwin/2);
