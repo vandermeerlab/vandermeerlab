@@ -27,7 +27,7 @@ function TSD_out = ConvTSD(cfg,TSD)
 %                       'thorn' or 'needle' are recommended for ripple 
 %                       separation.
 %
-%      cfg.kernel = 'gauss1'; Kernel that will be convolved with the data
+%      cfg.kernel = 'wizard'; Kernel that will be convolved with the data
 %           'wizard'       - preset gausskernel(60,20)
 %           'fang'         - preset gausskernel(200,10)
 %           'thorn'        - preset gausskernel(20,2)
