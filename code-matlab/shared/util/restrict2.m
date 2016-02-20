@@ -16,6 +16,7 @@ function in = restrict2(in,varargin)
 %
 % MvdM 2014-07-20 initial version
 % youkitan 2015-07-11 version 2
+% aacarey edit, Nov 25 2015
 
 % convert input arguments to iv if not already done
 if nargin == 2
@@ -35,7 +36,7 @@ end
  
 % get indices to keep
 if isfield(in,'tstart') % iv
-    
+    type = 'iv';
     keep = [];
     
     for iT = 1:length(iv_use.tstart)
@@ -44,36 +45,26 @@ if isfield(in,'tstart') % iv
         ind_end = nearest_idx3(iv_use.tend(iT),in.tstart,-1);
         keep = [keep ind_start:ind_end];
         
-        assert(ind_start <= ind_end,'Indicies incorrect!')
+        assert(ind_start <= ind_end,'Indices incorrect!')
 
     end
     
 elseif isfield(in,'tvec') % tsd
-%     keep = false(size(in.tvec));
+    type = 'tsd';
     
-    keep = [];
-    for iT = 1:length(iv_use.tstart)
-        %currently takes too long this way O(n^2)
-%         keep = keep | (in.tvec >= iv_use.tstart(iT) & in.tvec <= iv_use.tend(iT));
-        iv_start = iv_use.tstart(iT);
-        iv_end = iv_use.tend(iT);
-        lookups = in.tvec;
-        
-        ind_start = nearest_idx3(iv_start,lookups,-1);
-        ind_end = nearest_idx3(iv_end,lookups,-1);
-
-        keepvals_new = [ind_start:ind_end];
-%         keepvals_old = find(in.tvec >= iv_use.tstart(iT) & in.tvec <= iv_use.tend(iT))';
-%         [not_in_new,not_in_new_ind] = setdiff(keepvals_old,keepvals_new);
-%         [not_in_old,not_in_old_ind] = setdiff(keepvals_new,keepvals_old);
-        keep = [keep keepvals_new];
-        
-        assert(ind_start <= ind_end,'Indicies incorrect!')
-%         assert(isequal(keepvals_old,keepvals_new),'Different values!\n')
+    idx_start = nearest_idx3(iv_use.tstart,in.tvec,1);
+    idx_end = nearest_idx3(iv_use.tend,in.tvec,-1);
+    keep =[];
+    
+    for iT = 1:length(idx_start)
+        keep = [keep idx_start(iT):idx_end(iT)];
     end
     
-elseif isfield(in,'t') % ts
+    % there are multiple copies of some indices, so remove them
+    keep = unique(keep);
     
+elseif isfield(in,'t') % ts
+    type = 'ts';
     for iC = length(in.t):-1:1
         keep{iC} = [];
             
@@ -92,14 +83,11 @@ elseif isfield(in,'t') % ts
 
             iv_start = iv_use.tstart(iT);
             iv_end = iv_use.tend(iT);
-
-            if iv_start < min(lookups) || iv_end > max(lookups)
-                continue
-            end
-            
+              
             ind_start = nearest_idx3(iv_start,lookups,1);
             ind_end = nearest_idx3(iv_end,lookups,-1);
-            keepvals_new = [ind_start:ind_end];
+            
+            keepvals_new = ind_start:ind_end;
 %             keepvals_old = find(in.t{iC} >= iv_use.tstart(iT) & in.t{iC} <= iv_use.tend(iT))';
 
             if (ind_start == 1 && ind_end == 1) ||...
@@ -121,7 +109,7 @@ elseif isfield(in,'t') % ts
 end
 
 % do the right thing depending on data type
-switch in.cfg.history.mfun{1}
+switch type
     
     case 'ts'
         for iC = 1:length(in.t)

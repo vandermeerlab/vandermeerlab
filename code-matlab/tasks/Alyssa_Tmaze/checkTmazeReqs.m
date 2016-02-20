@@ -1,4 +1,4 @@
-function proceed = checkTmazeReqs(cfg_in)
+function pass_flag = checkTmazeReqs(cfg_in)
 %CHECKTMAZEREQS Verify that requisites exist before continuing analysis
 % ExpKeys, metadata, VT file, candidates, times (R042 only), files (for
 % stuff generated during analysis)
@@ -10,24 +10,27 @@ function proceed = checkTmazeReqs(cfg_in)
 % and metadata fields (unless additional ones were added after this was
 % written)
 %
-%cfg_def.requireExpKeys = 0;
-%cfg_def.ExpKeysFields = {}; list of strings specifying field names
+% cfg_def.requireExpKeys = 0;
+% cfg_def.ExpKeysFields = {}; list of strings specifying field names
 %           ex: {'nTrials','badTrials'}
-%cfg_def.requireMetadata = 0;
-%cfg_def.MetadataFields = {}; list of strings specifying field names
-%cfg_def.requireVT = 0;
-%cfg_def.requireCandidates = 0;
-%cfg_def.requireTimes = 0; for R042 only
-%cfg_def.requireHSdetach = 0; for R044 only
-%cfg_def.requireFiles = 0; files folder for images generated during
-%analysis
+% cfg_def.requireMetadata = 0;
+% cfg_def.MetadataFields = {}; list of strings specifying field names
+% cfg_def.requireVT = 0;
+% cfg_def.requireCandidates = 0;
+% cfg_def.requireTimes = 0; for R042 only
+% cfg_def.requireHSdetach = 0; for R044 only
+% cfg_def.requireFiles = 0; files folder for images generated during
+%   analysis
+% cfg_def.ratsToProcess = {'R042','R044','R050','R064'}; % only process these
+%   rats
+% cfg_def.verbose = 1; 1 display command window text, 0 don't
 %
 % ACarey May 2015, for Tmaze project 
 
 %% 
 if isempty(cfg_in)
     disp('checkTmazeReqs: cfg is empty, not checking requisites')
-    proceed = 1;
+    pass_flag = 1;
     return
 end
 
@@ -39,25 +42,32 @@ cfg_def.requireMetadata = 0;
 cfg_def.MetadataFields = {};
 cfg_def.requireVT = 0;
 cfg_def.requireCandidates = 0;
+cfg_def.requirePrecandidates = 0;
 cfg_def.requireTimes = 0;
 cfg_def.requireHSdetach = 0;
 cfg_def.requireFiles = 0;
+cfg_def.ratsToProcess = {'R042','R044','R050','R064'};
+cfg_def.verbose = 1;
 
-cfg = ProcessConfig2(cfg_def,cfg_in);
+mfun = mfilename;
+cfg = ProcessConfig(cfg_def,cfg_in,mfun);
 cfg.verbose = 1; % i want checkfields to tell me which ones are missing
 
 if cfg.checkall
     cfg.requireExpKeys = 1;
-    cfg.ExpKeysFields = {'Behavior','RestrictionType','Session','Layout','Pedestal','pathlength','patharms','realTrackDims','convFact','nPellets','waterVolume','nTrials','forcedTrials','nonConsumptionTrials','badTrials','TimeOnTrack','TimeOffTrack','prerecord','task','postrecord','goodSWR','goodTheta'};
+    cfg.ExpKeysFields = {'RestrictionType','Session','Layout','Pedestal','pathlength','patharms','realTrackDims','convFact','nPellets','waterVolume','nTrials','forcedTrials','nonConsumptionTrials','badTrials','TimeOnTrack','TimeOffTrack','prerecord','task','postrecord','goodSWR','goodTheta'};
     cfg.requireMetadata = 1;
     cfg.MetadataFields = {'coord','taskvars','SWRtimes','SWRfreqs'};
     cfg.requireVT = 1;
     cfg.requireCandidates = 1;
+    cfg.requirePrecandidates = 1;
     cfg.requireTimes = 1; % R042 only
-    def.requireHSdetach = 1; % R044 only
+    cfg.requireHSdetach = 1; % R044 only
     cfg.requireFiles = 1;
 end
 %% 
+
+disp([mfun,': searching for required data in session folders...'])
 
 if ispc
     machinename = getenv('COMPUTERNAME');
@@ -69,19 +79,19 @@ switch machinename
     
     case 'ISIDRO'
         base_fp = 'C:\data\';
-    case 'EQUINOX'
+    case {'EQUINOX','BERGKAMP'}
         base_fp = 'D:\data\';
     case 'MVDMLAB-ATHENA'
         base_fp = 'D:\vandermeerlab\';
-    case 'MVDMLAB-EUROPA'
+    case {'MVDMLAB-EUROPA','DIONYSUS'}
         base_fp = 'D:\data\promoted\';
-    case 'DIONYSUS'
-        base_fp = 'D:\data\promoted\';
+    case 'CALLISTO'
+        base_fp = 'E:\data\promoted\';
 end
 
 %%
 
-proceed = 1;
+pass_flag = 1;
 
 % Remember where you started
 original_folder = pwd; % pwd is your current directory ("print working directory")
@@ -92,8 +102,15 @@ cd(base_fp);
 % Work though each rat's folder
 rat_list = dir(pwd); % dir() lists folder contents
 
+% keep only entries that are actually folders
+rat_list = rat_list([rat_list.isdir]);
+
 % It seems that MATLAB pulls up some crap "folders" that are called "." or ".." ... ignore them  
 rat_list = rat_list(arrayfun(@(x) x.name(1), rat_list) ~= '.');
+
+% keep only requested rats
+[~,ix,~] = intersect({rat_list.name},cfg.ratsToProcess);
+rat_list = rat_list(ix);
 
 for iRat = 1:length(rat_list)
     
@@ -103,6 +120,7 @@ for iRat = 1:length(rat_list)
     
     % Get all the sessions
     session_list = dir(pwd);
+    session_list = session_list([session_list.isdir]);
     session_list = session_list(arrayfun(@(x) x.name(1), session_list) ~= '.');
    
     for iSession = 1:length(session_list)
@@ -117,12 +135,12 @@ for iRat = 1:length(rat_list)
             fn = FindFiles('*keys.m');
             if isempty(fn)
                 disp(['ExpKeys file not found in ',sessionID])
-                proceed = 0;
+                pass_flag = 0;
             end
             if ~isempty(fn) && ~isempty(cfg.ExpKeysFields)
                 [ismissing,~] = checkfields(cfg,'*keys.m',cfg.ExpKeysFields);
                 if ismissing
-                    proceed = 0;
+                    pass_flag = 0;
                 end
             end
         end
@@ -131,12 +149,12 @@ for iRat = 1:length(rat_list)
             fn = FindFiles('*metadata.mat');
             if isempty(fn)
                 disp(['metadata file not found in ',sessionID])
-                proceed = 0;
+                pass_flag = 0;
             end
             if ~isempty(fn) && ~isempty(cfg.MetadataFields)
                 [ismissing,~] = checkfields(cfg,'*metadata.mat',cfg.MetadataFields);
                 if ismissing
-                    proceed = 0;
+                    pass_flag = 0;
                 end
             end
         end
@@ -145,15 +163,23 @@ for iRat = 1:length(rat_list)
             fn = FindFiles('*.nvt');
             if isempty(fn)
                 disp(['Video tracking file not found in ',sessionID])
-                proceed = 0;
+                pass_flag = 0;
             end
         end
         
         if cfg.requireCandidates
-            fn = FindFiles('*candidates.mat');
+            fn = FindFiles('*-candidates.mat');
             if isempty(fn)
                 disp(['Candidates file not found in ',sessionID])
-                proceed = 0;
+                pass_flag = 0;
+            end
+        end
+        
+        if cfg.requirePrecandidates
+            fn = FindFiles('*-precandidates.mat');
+            if isempty(fn)
+                disp(['Precandidates file not found in ',sessionID])
+                pass_flag = 0;
             end
         end
         
@@ -161,31 +187,31 @@ for iRat = 1:length(rat_list)
             fn = FindFiles('*-times.mat');
             if isempty(fn)
                 disp(['Times file not found in ',sessionID])
-                proceed = 0;
+                pass_flag = 0;
             end
         end   
         if cfg.requireTimes && sum(strcmp(sessionID,{'R044-2013-12-21','R044-2013-12-22'})) >= 1 % for these sessions only
             fn = FindFiles('*HS_detach_times.mat');
             if isempty(fn)
                 disp(['HS_detach_times file not found in ',sessionID])
-                proceed = 0;
+                pass_flag = 0;
             end
         end
         
         if cfg.requireFiles 
             if ~exist('files','dir')
                 disp(['Files folder not found in ',sessionID])
-                proceed = 0;
+                pass_flag = 0;
             end
         end 
         
     end
-    if ~proceed 
+    if ~pass_flag 
         disp(' ') % for formatting, kind of
     end
 end
-if proceed
-    disp('checkTmazeReqs: all requisites exist')
+if pass_flag
+    disp('checkTmazeReqs: all known requisites exist')
 end
 % return to the original folder
 cd(original_folder)

@@ -1,9 +1,10 @@
-function tc_out = DetectPlaceCells1D(cfg_in,tc)
+function tc_out = DetectPlaceCells1D(cfg_in,tc_in)
 % function [idx,peak_idx,peak_loc] = DetectPlaceCells1D(cfg,tc)
 %
 % inputs:
 %
-% tc: nBins x nCells matrix of tuning curves
+% tc: tuning curves
+%   - nBins x nCells matrix of tuning curves OR tc struct with tc field
 %
 % outputs:
 %
@@ -21,11 +22,18 @@ function tc_out = DetectPlaceCells1D(cfg_in,tc)
 % cfg_def.thr = 5; % min threshold for detecting candidate place fields in Hz
 % cfg_def.minSize = 4; % minimum size (in bins) that must exceed threshold
 % cfg_def.max_meanfr = 10; % max mean firing rate (exclude interneurons)
-% cfg_def.nSpikesInField = []; % minimum number of spikes in field; if not empty, must also provide cfg_in.S
+% cfg_def.nSpikesInField = []; % minimum number of spikes in field; if not
+% empty, must also provide cfg_in.S and cfg.pos
+% cfg_def.S = [];
+% cfg_def.pos = [];
 %
 % MvdM, youkitan
 
-tc = tc'; % FIX!!!!!
+if isstruct(tc_in)
+    tc = tc_in.tc';
+else
+    tc = tc_in'; % FIX!!!!!
+end
 
 cfg_def = [];
 cfg_def.debug = 0; % set to 1 to get verbose output
@@ -33,24 +41,37 @@ cfg_def.thr = 5; % min threshold for detecting candidate place fields in Hz
 cfg_def.minSize = 4; % minimum size (in bins) that must exceed threshold
 cfg_def.max_meanfr = 10; % max mean firing rate (exclude interneurons)
 cfg_def.nSpikesInField = []; % minimum number of spikes in field; if not empty, must also provide cfg_in.S and cfg_in.pos
+cfg_def.S = [];
+cfg_def.pos = [];
+cfg_def.verbose = 1; % controls whether ProcessConfig will warn you if there's a typo
+mfun = mfilename;
 
-cfg = ProcessConfig2(cfg_def,cfg_in);
+cfg = ProcessConfig(cfg_def,cfg_in,mfun);
 
 nCells = size(tc,2);
 
 ctr = 1; % counter for detected cells
 
 peak_idx = []; peak_loc = []; template_idx = [];
+
+% get firing rate
+if isstruct(tc_in) && isfield(tc_in,'usr') && isfield(tc_in.usr,'rate')
+    % whole session firing rate
+    frate = tc_in.usr.rate;
+else
+    frate = nanmean(tc);
+end
+
 for iC = 1:nCells
 
     this_tc = tc(:,iC);
     
     % first, decide if we are considering this cell at all based on average
-    % firing rate -- could improve by having knowledge of whole-session
     % firing rate
-    this_frate = nanmean(this_tc);
-
-    if ~(max(this_tc) > cfg.thr & this_frate < cfg.max_meanfr) % too low or too high firing, reject
+    
+    this_frate = frate(iC);
+    
+    if ~(max(this_tc) > cfg.thr && this_frate < cfg.max_meanfr) % too low or too high firing, reject
         if cfg.debug, fprintf('Cell %d rejected: max TC %.1f, mean FR %.1f\n',iC,max(this_tc),this_frate); end
         continue;
     end
@@ -62,12 +83,12 @@ for iC = 1:nCells
         
         keep = pks.val > cfg.thr;
         pks.loc = pks.loc(keep); pks.val = pks.val(keep); pks.full = pks.full(keep);
-        if cfg.debug & isempty(keep), fprintf('Cell %d, no peaks passed threshold.\n',iC); end
+        if cfg.debug && isempty(keep), fprintf('Cell %d, no peaks passed threshold.\n',iC); end
     else
         if cfg.debug, fprintf('Cell %d, no peaks detected.\n',iC); end
     end
     
-    if ~isempty(pks.loc) & ~isempty(cfg.nSpikesInField) % get number of spikes in field
+    if ~isempty(pks.loc) && ~isempty(cfg.nSpikesInField) % get number of spikes in field
         
         clear nSpikes;
         for iF = 1:length(pks.loc)
@@ -85,7 +106,7 @@ for iC = 1:nCells
            this_s = restrict(cfg.S,infield_iv);
            nSpikes(iF) = length(this_s.t{iC});
             
-           if cfg.debug & nSpikes(iF) < cfg.nSpikesInField, fprintf('Cell %d, field %d rejected (nSpikes = %d).\n',iC,iF,nSpikes(iF)); end
+           if cfg.debug && nSpikes(iF) < cfg.nSpikesInField, fprintf('Cell %d, field %d rejected (nSpikes = %d).\n',iC,iF,nSpikes(iF)); end
            
         end
         
@@ -128,3 +149,12 @@ tc_out.field_template_idx = fpeak_idx;
 tc_out.field_loc = fpeak_val;
 tc_out.peak_idx = peak_idx;
 tc_out.peak_loc = peak_loc;
+
+% write history
+if isstruct(tc_in) && isfield(tc_in,'cfg')
+    tc_out.cfg.history = tc_in.cfg.history;
+end
+tc_out = History(tc_out,mfun,cfg);
+
+end
+

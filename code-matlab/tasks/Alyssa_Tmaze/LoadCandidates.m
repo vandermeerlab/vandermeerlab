@@ -14,7 +14,7 @@ function LoadCandidates
 
 %[~,name,~] = fileparts(pwd); 
 
-fn = FindFiles('*candidates.mat');
+fn = FindFiles('*-candidates.mat');
 if isempty(fn)
     disp(['LoadCandidates: No files matching',' ''*candidates.mat'' ','were found in', [' ',pwd]])
 elseif length(fn) > 1

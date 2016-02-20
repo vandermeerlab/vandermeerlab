@@ -10,7 +10,7 @@
 % SWR & MUA detection
 % Speed & Theta thresholding
 % NActive cells thresholding
-% addIV (interval expansion/contraction) optional
+% ResizeIV (interval expansion/contraction) optional
 
 % ACarey May 2015
 
@@ -22,6 +22,8 @@ suffix = ''; %[date,'']; appended to filename
 writeDiary = 1; % if 1, save command window text to session 'files' folders;
 %                  the command window text includes things like "n events
 %                  left after theta thresholding" and so on.
+
+gen.load_questionable_cells = 0;
 
 %% verify requisites: detection is a long process, don't want it erroring partway through 
 
@@ -37,7 +39,7 @@ if writeDiary, cfg.requireFiles = 1; end
 proceed = checkTmazeReqs(cfg); 
 
 %%
-cfg.rats = {'R042','R044','R050'};
+cfg.rats = {'R064'};%{'R042','R044','R050'};
 originalFolder = pwd;
 
 if proceed % Detect candidate replay events and save them as a .mat file
@@ -62,7 +64,7 @@ if proceed % Detect candidate replay events and save them as a .mat file
         disp(' ');
     
         % generate candidates 
-        evt = GenCandidateEvents([]); % T-maze specific
+        evt = GenCandidateEvents(gen); % T-maze specific
         
         if writeDiary, diary off, end
         

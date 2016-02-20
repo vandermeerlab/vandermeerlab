@@ -11,19 +11,22 @@ function iv_in = AddNActiveCellsIV(cfg_in,iv_in,S)
 %
 %   CFG OPTIONS:
 %
+%       cfg_def.label = 'nActiveCells'; What to call the field that
+%                    contains this data.
 %       cfg_def.dt = 0.001; % bin size for binning spikes
 %
 % mvdm 2015-02-01 initial version
 % note: uses binning method for speed, i.e. is not exact
-% note: adding usr fields needs to be standardized globally
 
 % parse cfg parameters
 cfg_def = [];
-cfg_def.dt = 0.005;
 cfg_def.label = 'nActiveCells';
+cfg_def.dt = 0.005;
+cfg_def.verbose = 1;
 
-cfg = ProcessConfig2(cfg_def,cfg_in);
 mfun = mfilename;
+cfg = ProcessConfig(cfg_def,cfg_in,mfun);
+
 
 % check inputs
 if ~CheckIV(iv_in)
@@ -34,8 +37,12 @@ if isempty(iv_in.tstart)
     error('Interval data is empty')
 end
 
+if cfg.verbose; disp([mfun,': Adding the number of active units during each interval']); end
+
 % make matrix of spike counts (nCells x nTimeBins) 
-Q = MakeQfromS(cfg,S);
+cfg_temp.dt = cfg.dt;
+cfg_temp.verbose = 0;
+Q = MakeQfromS(cfg_temp,S);
 
 % get number of active cells for each
 for iIV = length(iv_in.tstart):-1:1
@@ -51,15 +58,15 @@ for iIV = length(iv_in.tstart):-1:1
     
 end
 
-% NOTE adding usr fields to ivs needs to be handled better
-if isfield(iv_in,'usr')
-    iUsr = length(iv_in.usr)+1;
-else
-    iUsr = 1;
+if ~isfield(iv_in,'usr') 
+    iv_in.usr = [];
 end
 
-iv_in.usr(iUsr).data = nC;
-iv_in.usr(iUsr).label = cfg.label;
+if cfg.verbose && isfield(iv_in.usr,cfg.label)
+    disp(['WARNING in ',mfun,': iv data already includes usr.',cfg.label,', overwriting...'])
+end
+iv_in.usr.(cfg.label) = nC;
+
 
 % housekeeping
 iv_in.cfg.history.mfun = cat(1,iv_in.cfg.history.mfun,mfun);

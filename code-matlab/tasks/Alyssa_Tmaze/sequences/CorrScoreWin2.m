@@ -53,7 +53,7 @@ parfor iEvt = 1:nEvt
     fprintf('Event %d/%d...\n',iEvt,nEvt);
     
     % original S
-    full_S = restrict2(S,iv_in.tstart(iEvt),iv_in.tend(iEvt));
+    full_S = restrict(S,iv_in.tstart(iEvt),iv_in.tend(iEvt));
     
     % create shuffled S's so that we don't have to do this for each
     % start-end combination later
@@ -88,7 +88,7 @@ parfor iEvt = 1:nEvt
             this_end = ends(iEnd);
             if this_end <= this_start, continue; end
             
-            this_S = restrict2(full_S,this_start,this_end);
+            this_S = restrict(full_S,this_start,this_end);
             
             if ~isempty(vertcat(this_S.t{:}))
                 [OBS_seq_temp,OBS_templ_temp] = GetSeq(cfg,this_S);
@@ -119,7 +119,7 @@ parfor iEvt = 1:nEvt
             
             for iSh = 1:cfg.nShuffles
                 
-                temp_S = restrict2(shuf_S{iSh},this_start,this_end);
+                temp_S = restrict(shuf_S{iSh},this_start,this_end);
                                                                 
                 [SHUF_seq,SHUF_templ] = GetSeq(cfg,temp_S);
                 

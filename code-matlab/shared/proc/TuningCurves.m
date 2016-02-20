@@ -35,7 +35,7 @@ if ~CheckTSD(tuning_var)
    error('tuning_var input is not a well-formed tsd.'); 
 end
 
-cfg = [];
+cfg_def = [];
 
 nDefaultBins = 100;
 nDim = size(tuning_var.data,1); % set up default bins
@@ -44,14 +44,14 @@ for iDim = 1:nDim
         mn = min(tuning_var.data(iDim,:));
         mx = max(tuning_var.data(iDim,:));
         
-        cfg.binEdges{iDim} = linspace(mn,mx,nDefaultBins+1);
+        cfg_def.binEdges{iDim} = linspace(mn,mx,nDefaultBins+1);
 end
 
-cfg.smoothingKernel = []; % example for 1-D: gausskernel(11,2);
-cfg.occ_dt = 1/30;
-cfg.minOcc = 1;
+cfg_def.smoothingKernel = []; % example for 1-D: gausskernel(11,2);
+cfg_def.occ_dt = 1/30;
+cfg_def.minOcc = 1;
 
-ProcessConfig;
+cfg = ProcessConfig(cfg_def,cfg_in);
 
 % work
 switch nDim
@@ -74,6 +74,8 @@ switch nDim
         nCells = length(S.t);
         for iC = 1:nCells
             spk_z = interp1(tuning_var.tvec,tuning_var.data(1,:),S.t{iC},'linear');
+            
+            if isempty(spk_z), spk_z = zeros(0,1); end % ensures histc generates histogram with all zeros -- MvdM
             
             [spk_hist,~] = histc(spk_z,cfg.binEdges{1},1);
             spk_hist = trim_histc(spk_hist);

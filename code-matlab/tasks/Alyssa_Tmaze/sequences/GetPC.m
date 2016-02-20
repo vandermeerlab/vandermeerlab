@@ -93,8 +93,9 @@ clear TC %in case you are re-running
 cfg_tc = [];
 cfg_tc.binSize = 1;
 
-TC(1) = MakeTC(cfg_tc,ENC_data(1).S,ENC_data(1).pos);
-TC(2) = MakeTC(cfg_tc,ENC_data(2).S,ENC_data(2).pos);
+TC(1) = MakeTC(cfg_tc,ENC_data(1).S,ENC_data(1).pos); TC(1).tc = TC(1).tc';
+TC(2) = MakeTC(cfg_tc,ENC_data(2).S,ENC_data(2).pos); TC(2).tc = TC(2).tc';
+
 
 if cfg.matchFields % NOTE, could consider this after going to fields beyond CP only...
    [TC(1),TC(2)] = GetMatchedFields([],TC(1),TC(2));

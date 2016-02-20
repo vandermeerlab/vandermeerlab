@@ -18,6 +18,7 @@ function dx = dxdt(tvec,x,varargin)
 
 window = 1; % seconds
 postSmoothing = 0.5; % seconds --- 0 means don't
+verbose = 1;
 extract_varargin;
 
 dT = nanmean(diff(tvec));
@@ -33,10 +34,10 @@ MSE = zeros(nX, nW);
 b = zeros(nX,nW);
 
 MSE(:,1:2) = Inf;
-nanvector = repmat(nan, nW,1);
+nanvector = nan(nW,1);
 
 for iN = 3:nW
-	fprintf(2,'.');
+	if verbose; fprintf(2,'.'); end
 	b(:,iN) = ([nanvector(1:iN); x(1:(end-iN))] - x)/iN;
 	for iK = 1:iN
 		q = ([nanvector(1:iK); x(1:(end-iK))] - x + b(:,iN) * iK);
@@ -44,19 +45,20 @@ for iN = 3:nW
 	end
 	MSE(:,iN) = MSE(:,iN)/iN;	
 end
-fprintf(2, '!');
+if verbose; fprintf(2, '!'); end;
 
-[ignore, nSelect] = min(MSE,[],2);
+[~, nSelect] = min(MSE,[],2);
 dx = nan .* ones(size(x));
 for iX = 1:nX
 	dx(iX) = b(iX,nSelect(iX)) / dT;
 end
 
-if postSmoothing
+if postSmoothing ~= 0
 	nS = ceil(postSmoothing/dT);
 	dx = conv2(dx,ones(nS)/nS,'same');
 end
 
 dx = dx'; 
 
-fprintf('\n');
+if verbose; fprintf('\n'); end
+end

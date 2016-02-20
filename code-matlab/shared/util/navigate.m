@@ -1,10 +1,27 @@
 function navigate(src,event)
-% function navigate(src,event)
+% NAVIGATE Dynamically alter figure xlimits using keyboard and user input
 % 
-% Use: Navigate is used by plotting functions such as MultiRaster by sending 
-% data in via global variables, and calling on the function like so: 
-% figure('KeyPressFcn',@navigate). See MultiRaster for an example.
-% Purpose: Moves viewing window according to keyboard input.
+% Navigate is a callback/KeyPress function. Navigate requires that some variables 
+% be set to global. Note that Navigate will overwrite figure titles during
+% event navigation.
+%
+% Navigate's global variables:
+%    evtTimes: the center times of events/iv (for event navigation)
+%    time: the time vector 
+%    windowSize: the desired size of the viewing window in time vector units
+%
+% See MultiRaster for basic usage.
+%
+% If I have my own keypress function that does other things, how can I use 
+% navigate at the same time?  
+%  -- Global variables must be properly assigned, then make your callback
+%   function myKeyPressFcn(source,event)
+%       if strcmp(event.Key,'return')
+%           % do some stuff here
+%       else
+%           navigate(source,event)
+%       end
+%   end
 %
 % KEYBOARD COMMANDS:
 %
@@ -41,16 +58,10 @@ function navigate(src,event)
 %    m:           middle of the recording
 %    e:           end of the recording
 %    
-% SHORTCOMINGS:
-% **If you are inbetween events, navigate will skip the nearest left or
-% right event; in this case, just hit 'd' or 'a' to get the one you missed.
-% **Navigate will cause an error if you try to move beyond the first and 
-% last events. You can just reverse directions using the opposite key 
-% combination or the arrow keys.
-%
-% ACarey. Aug 2014. 
+% aacarey. Aug 2014. 
 % youkitan edit, 2015-01-20 (can display candidate score).
-% ACarey edit, Feb 2015 (added j and w commands), Mar 2015 (added zoom and h)
+% aacarey edit, Feb 2015 (added j and w commands), Mar 2015 (added zoom and h)
+% aacarey edit, Nov 2015 (fixed problems/"shortcomings" with event navigation)
 
 %% ****Some notes on how this function works internally****
 
@@ -266,37 +277,69 @@ next_idx = current_index;
 %all type 2: output is a next_location, which later is converted to new limits
         if shiftPressed == 0 && ctrlPressed == 0 && strcmp(event.Key,'a')==1 %string comparison
                 %shift figure axes one event left
-                next_idx = current_index - 1;
-                next_location = evtTimes(next_idx);
+                if any(evtTimes == current_location)
+                    if current_index-1 == 0
+                        next_idx = 1;
+                    else
+                        next_idx = current_index -1;
+                    end
+                    next_location = evtTimes(next_idx);
+                else
+                    next_location = nearval3(current_location,evtTimes,-1);
+                end
                 evtTitle = 1;
             
         elseif shiftPressed == 0 && ctrlPressed == 0 && strcmp(event.Key,'d')==1 %string comparison
-                %shift figure axes one event right
-                next_idx = current_index + 1;
+            %shift figure axes one event right
+            if any(evtTimes == current_location)
+                if current_index == length(evtTimes)
+                    next_idx = current_index;
+                else
+                    next_idx = current_index + 1;
+                end
                 next_location = evtTimes(next_idx);
-                evtTitle = 1;
+            else
+                next_location = nearval3(current_location,evtTimes,1);
+            end
+            evtTitle = 1;
 
         elseif shiftPressed == 1 && strcmp(event.Key,'a') == 1
-                %shift figure axes ten events left
-                next_idx = current_index - 10; 
+                %shift figure axes ten events left 
+                if current_index == 0 || current_index - 10 <= 0
+                    next_idx = 1;
+                else 
+                    next_idx = current_index - 10;
+                end
                 next_location = evtTimes(next_idx);
                 evtTitle = 1;
 
         elseif shiftPressed == 1 && strcmp(event.Key,'d') == 1 
             %shift figure axes ten events right
-                next_idx = current_index + 10;
+                if current_index == length(evtTimes) || current_index + 10 >= length(evtTimes)
+                    next_idx = length(evtTimes);
+                else 
+                    next_idx = current_index + 10;
+                end
                 next_location = evtTimes(next_idx);
                 evtTitle = 1;
                 
         elseif ctrlPressed == 1 && strcmp(event.Key,'a') == 1
             %shift figure axes 50 events left
-                next_idx = current_index - 50;
+                if current_index == 0 || current_index - 50 <= 0
+                    next_idx = 1;
+                else 
+                    next_idx = current_index - 50;
+                end
                 next_location = evtTimes(next_idx);
                 evtTitle = 1;
             
         elseif ctrlPressed == 1 && strcmp(event.Key,'d') == 1 
             %shift figure axes 50 events right
-                next_idx = current_index + 50;
+                if current_index == length(evtTimes) || current_index + 50 >= length(evtTimes)
+                    next_idx = length(evtTimes);
+                else 
+                    next_idx = current_index + 50;
+                end
                 next_location = evtTimes(next_idx);
                 evtTitle = 1;
                 
@@ -332,17 +375,17 @@ next_idx = current_index;
         leftLim = next_location - flank;
         rightLim = next_location + flank;
         limits = [leftLim rightLim];
-        
-        if ~isempty(usrfield)
-            str_title = sprintf('event %d/%d',next_idx,length(evtTimes));
-
-            for iU = 1:length(usrfield)  
-                str_font = '\fontsize{8}';
-                str_usr{iU} = [str_font,sprintf('%s: %.3f',usrfield(iU).label,usrfield(iU).data(next_idx))];
-            end
-            
-            str = [{str_title},str_usr];
-            title(str)
+        if false
+%         if ~isempty(usrfield)
+%             str_title = sprintf('event %d/%d',next_idx,length(evtTimes));
+% 
+%             for iU = 1:length(usrfield)  
+%                 str_font = '\fontsize{8}';
+%                 str_usr{iU} = [str_font,sprintf('%s: %.3f',usrfield(iU).label,usrfield(iU).data(next_idx))];
+%             end
+%             
+%             str = [{str_title},str_usr];
+%             title(str)
            
         % no usr field input for events
         elseif evtTitle == 1

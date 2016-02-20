@@ -96,7 +96,7 @@ cfg.minlen = 0.01; % minimum interval length
 noise_iv = UnionIV([],noise_iv,TSDtoIV(cfg,cscF));
 
 cfg = []; cfg.d = [-0.1 0.1];
-noise_iv = addIV(cfg,noise_iv);
+noise_iv = ResizeIV(cfg,noise_iv);
 %%
 if strcmp(display, 'on')
     PlotTSDfromIV([],noise_iv,csc);
