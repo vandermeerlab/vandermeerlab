@@ -8,37 +8,37 @@ function tc_out = DetectPlaceCells1D(cfg_in,tc)
 % outputs:
 %
 % tc_out.tc: original nCells x nBins tuning curves
-% tc_out.template_idx: indices (into tc) of detected place cells
-% tc_out.peak_idx: location of firing rate peak
-% tc_out.peak_loc: cell array of detected peak idx's
-% tc_out.field_loc = fpeak_val; single field locations (in cm?)
-% tc_out.peak_idx = peak_idx; multiple field indicies
-% tc_out.peak_loc = peak_loc; multiple field locations
-%
+% tc_out.template_idx: 1 x nPlaceCells idxs (into tc) of detected place
+%   cells, ordered by peak_idx
+% tc_out.peak_idx: 1 x nPlaceCells idxs (into tc) indicating location of firing rate peak
+% tc_out.peak_loc: 1 x nPlaceCells cell array of detected peak idxs (because one field can
+%   have multiple peaks)
+% tc_out.field_loc: 1 x nFields location of field peaks
+% tc_out.peak_idx: ??
 %
 % cfg options:
+% cfg_def.debug = 0; % set to 1 to get verbose output
+% cfg_def.thr = 5; % min threshold for detecting candidate place fields in Hz
+% cfg_def.minSize = 4; % minimum size (in bins) that must exceed threshold
+% cfg_def.max_meanfr = 10; % max mean firing rate (exclude interneurons)
+% cfg_def.nSpikesInField = []; % minimum number of spikes in field; if not empty, must also provide cfg_in.S
 %
-%
-tc = tc' % FIX!!!!!
+% MvdM, youkitan
+
+tc = tc'; % FIX!!!!!
 
 cfg_def = [];
-cfg_def.debug = 0;
-cfg_def.thr = 7; % threshold for detecting place field, in Hz
-cfg_def.thr_sd = 1; % in SD
-cfg_def.mean_norm = 0.33; % max mean firing rate (peak is 1)
-cfg_def.minSize = 4;
-%cfg_def.maxSize = 20;
-cfg_def.max_meanfr = 10;
-cfg_def.S = []; % optionally provide actual spike data for computing true mean frate, nSpikes per field etc.
-cfg_def.pos = []; % optionally provide position data for getting nSpikes per field
-cfg_def.nSpikesInField = [];
+cfg_def.debug = 0; % set to 1 to get verbose output
+cfg_def.thr = 5; % min threshold for detecting candidate place fields in Hz
+cfg_def.minSize = 4; % minimum size (in bins) that must exceed threshold
+cfg_def.max_meanfr = 10; % max mean firing rate (exclude interneurons)
+cfg_def.nSpikesInField = []; % minimum number of spikes in field; if not empty, must also provide cfg_in.S and cfg_in.pos
 
 cfg = ProcessConfig2(cfg_def,cfg_in);
 
 nCells = size(tc,2);
 
 ctr = 1; % counter for detected cells
-
 
 peak_idx = []; peak_loc = []; template_idx = [];
 for iC = 1:nCells
@@ -55,19 +55,8 @@ for iC = 1:nCells
         continue;
     end
     
-    pf_z = zscore(this_tc);
-    pf_norm = this_tc./max(this_tc);
-    mean_norm = mean(pf_norm);
-    %
-    if mean_norm > cfg.mean_norm
-        if cfg.debug, fprintf('Cell %d rejected: mean norm %.2f\n',iC,mean_norm); end
-        continue;
-    end
-    
-    %[pks.loc,pks.full] = find_fields(pf_z,cfg.thr_sd,'min_size',cfg.minSize);
-%     [pks.loc,pks.full] = find_fields(this_tc,cfg.thr,'min_size',cfg.minSize);
     [pks.loc,pks.full] = find_fields(cfg,this_tc);
-        
+    
     if ~isempty(pks.loc) % some peaks were detected
         pks.val = this_tc(pks.loc); % get firing rate at peak
         
@@ -89,7 +78,7 @@ for iC = 1:nCells
            % get field entries and exits as an iv
            cfg_infield = [];
            cfg_infield.method = 'raw'; cfg_infield.threshold = [field_start field_end]; 
-           cfg_infield.dcn = 'range'; cfg_infield.target = 'z';
+           cfg_infield.dcn = 'range'; cfg_infield.target = 'z'; cfg_infield.verbose = 0;
            infield_iv = TSDtoIV(cfg_infield,cfg.pos);
            
            % now get number of spikes
@@ -139,5 +128,3 @@ tc_out.field_template_idx = fpeak_idx;
 tc_out.field_loc = fpeak_val;
 tc_out.peak_idx = peak_idx;
 tc_out.peak_loc = peak_loc;
-
-
