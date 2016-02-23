@@ -16,7 +16,7 @@ function p_tsd = DecodeZ(cfg_in,Q,tc)
 %
 % CFG OPTIONS:
 %
-% cfg.noSpikesInBin = 'zeros'; % what to do with time bins without spikes
+% cfg.noSpikesInBin = 'zeros'; % {'zeros','nans'}, what to put in time bins without spikes
 % cfg.mode = 'oneStep'; % 'twoStep'; algorithm to use, see Zhang et al. (1998)
 % cfg.kernel = gausskernel(10,1); % kernel to use for model-based
 %   prior (only used if cfg.mode = 'twoStep')
@@ -26,13 +26,13 @@ function p_tsd = DecodeZ(cfg_in,Q,tc)
 %
 % MvdM 2014-08-22 initial version
 
-cfg = [];
-cfg.noSpikesInBin = 'zeros';
-cfg.kernel = gausskernel(10,1);
-cfg.resetTimes = [];
-cfg.mode = 'oneStep';
+cfg_def = [];
+cfg_def.noSpikesInBin = 'nans';
+cfg_def.kernel = gausskernel(10,1);
+cfg_def.resetTimes = [];
+cfg_def.mode = 'oneStep';
 
-ProcessConfig;
+cfg = ProcessConfig(cfg_def,cfg_in);
 mfun = mfilename;
 
 %
