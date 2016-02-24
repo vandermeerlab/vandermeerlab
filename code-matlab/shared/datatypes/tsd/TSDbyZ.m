@@ -11,10 +11,10 @@ function z_av = TSDbyZ(cfg_in,z,tsd_in)
 %
 %
 
-cfg = [];
-cfg.edges = [];
+cfg_def = [];
+cfg_def.edges = [];
 
-ProcessConfig;
+cfg = ProcessConfig(cfg_def,cfg_in);
 
 [~,z_idx] = histc(z.data(1,:),cfg.edges); % need to fix points that fall on last edge
 
