@@ -43,6 +43,7 @@ cfg_def.min_cluster_quality = 5;
 cfg_def.getRatings = 0;
 cfg_def.getTTnumbers = 1;
 cfg_def.verbose = 1;
+cfg_def.uint = '32';
 
 mfun = mfilename;
 cfg = ProcessConfig(cfg_def,cfg_in,mfun); % this takes fields from cfg_in and puts them into cfg
@@ -107,8 +108,12 @@ for iF = 1:nFiles
         end
         
         ReadHeader(tfp);
-        %S.t{iF} = fread(tfp,inf,'uint64');	% read as 64 bit ints
-        S.t{iF} = fread(tfp,inf,'uint32');	% read as 64 bit ints
+        switch cfg.uint
+            case '32'
+                S.t{iF} = fread(tfp,inf,'uint32'); % read as 32 bit ints
+            case '64'
+                S.t{iF} = fread(tfp,inf,'uint64');	% read as 64 bit ints
+        end
         
         % set appropriate time units
         switch cfg.tsflag
