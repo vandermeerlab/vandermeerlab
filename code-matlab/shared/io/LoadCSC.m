@@ -18,6 +18,7 @@ function csc_tsd = LoadCSC(cfg_in)
 % csc_tsd: CSC data tsd struct
 %
 % MvdM 2014-06-18, 25 (use cfg_in)
+% youkitan 2016-02-20 (fixed reading Header file)
 
 cfg_def.fc = {};
 cfg_def.TimeConvFactor = 10^-6; % 10^-6 means convert nlx units to seconds
@@ -194,16 +195,20 @@ function csc_info = readCSCHeader(Header)
 
 csc_info = [];
 for hline = 1:length(Header)
-   
+    
     line = strtrim(Header{hline});
     
     if isempty(line) || ~strcmp(line(1),'-') % not an informative line, skip
         continue;
     end
     
-    a = regexp(line(2:end),'(?<key>\w+)\s+(?<val>\S+)','names');
+    % This expression captures the first chunk of alphanumeric characters and puts it into
+    % <key> then puts whatever is to the right of it into <val>. If there is only one
+    % character chunk (e.g., missing value) then it returns <val> as empty.
+    a = regexp(line(2:end),'(?<key>^\S+)\s+(?<val>.*)|(?<key>\S+)','names');
     
     % deal with characters not allowed by MATLAB struct
+    
     if strcmp(a.key,'DspFilterDelay_µs')
         a.key = 'DspFilterDelay_us';
     end
