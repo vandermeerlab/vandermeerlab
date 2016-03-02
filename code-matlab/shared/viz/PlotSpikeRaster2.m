@@ -69,7 +69,7 @@ if  nTrials == 1
     end
     
     % Set ylims
-    ylims = [1 nCells];
+    ylims = [cfg.SpikeHeight nCells+cfg.SpikeHeight*1.5];
     
     
 else %equivalent to elseif nTrials > 1 (nTrials is always a positive integer)

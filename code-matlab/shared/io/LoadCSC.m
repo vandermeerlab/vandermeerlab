@@ -9,6 +9,8 @@ function csc_tsd = LoadCSC(cfg_in)
 %   if no file_list field is specified, loads all *.Ncs files in current dir
 % cfg.TimeConvFactor = 10^-6; % from nlx units to seconds
 % cfg.VoltageConvFactor = 1; % factor of 1 means output will be in volts
+% cfg.resample = []; % In Hz, the sample rate you want to use. If the
+%   original sampling rate is lower than cfg.resample, the data is left as-is
 % cfg.verbose = 1; Allow or suppress displaying of command window text
 %
 % OUTPUTS:
@@ -16,10 +18,12 @@ function csc_tsd = LoadCSC(cfg_in)
 % csc_tsd: CSC data tsd struct
 %
 % MvdM 2014-06-18, 25 (use cfg_in)
+% youkitan 2016-02-20 (fixed reading Header file)
 
 cfg_def.fc = {};
 cfg_def.TimeConvFactor = 10^-6; % 10^-6 means convert nlx units to seconds
 cfg_def.VoltageConvFactor = 1; % 1 means output in volts, 1000 in mV, 10^6 in uV
+cfg_def.resample = [];
 cfg_def.verbose = 1;
 
 mfun = mfilename;
@@ -61,8 +65,7 @@ for iF = 1:nFiles
      
     % disabled channels cannot be loaded
     if Timestamps == 0 
-        message = ['No csc data (disabled tetrode channel). Consider deleting ',fname,'.'];
-        error(message);
+        error(['No csc data (disabled tetrode channel). Consider deleting ',fname,'.']);
     end
     
     % check for each data 
@@ -140,6 +143,17 @@ for iF = 1:nFiles
         error(message);
     end
     
+    % resample data at a lower frequency
+    if ~isempty(cfg.resample) && hdr.SamplingFrequency > cfg.resample
+        
+        fprintf('%s: Resampling from %d Hz to %d Hz...\n',mfun,hdr.SamplingFrequency,cfg.resample)
+        decimationFactor = hdr.SamplingFrequency / cfg.resample;
+        data = decimate(data,decimationFactor);
+        tvec = decimate(tvec,decimationFactor);
+        hdr.SamplingFrequency = cfg.resample;
+        
+    end
+    
     % done, add to tsd
     csc_tsd.tvec = tvec;
     csc_tsd.data(iF,:) = data;
@@ -181,16 +195,20 @@ function csc_info = readCSCHeader(Header)
 
 csc_info = [];
 for hline = 1:length(Header)
-   
+    
     line = strtrim(Header{hline});
     
     if isempty(line) || ~strcmp(line(1),'-') % not an informative line, skip
         continue;
     end
     
-    a = regexp(line(2:end),'(?<key>\w+)\s+(?<val>\S+)','names');
+    % This expression captures the first chunk of alphanumeric characters and puts it into
+    % <key> then puts whatever is to the right of it into <val>. If there is only one
+    % character chunk (e.g., missing value) then it returns <val> as empty.
+    a = regexp(line(2:end),'(?<key>^\S+)\s+(?<val>.*)|(?<key>\S+)','names');
     
     % deal with characters not allowed by MATLAB struct
+    
     if strcmp(a.key,'DspFilterDelay_µs')
         a.key = 'DspFilterDelay_us';
     end

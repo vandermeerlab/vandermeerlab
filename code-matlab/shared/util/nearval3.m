@@ -23,7 +23,7 @@ function nearestvalues = nearval3(queryvalues, lookupvalues, direction)
 switch nargin
     
     case 2
-        nearestvalues = lookupvalues(nearest_idx3(queryvalues,lookupvalues));
+        nearestvalues = lookupvalues(nearest_idx3(queryvalues,lookupvalues,0));
         
     case 3
         nearestvalues = lookupvalues(nearest_idx3(queryvalues,lookupvalues,direction));

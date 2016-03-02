@@ -11,6 +11,8 @@ function iv_in = AddNActiveCellsIV(cfg_in,iv_in,S)
 %
 %   CFG OPTIONS:
 %
+%       cfg_def.label = 'nActiveCells'; What to call the field that
+%                    contains this data.
 %       cfg_def.dt = 0.001; % bin size for binning spikes
 %
 % mvdm 2015-02-01 initial version
@@ -18,6 +20,7 @@ function iv_in = AddNActiveCellsIV(cfg_in,iv_in,S)
 
 % parse cfg parameters
 cfg_def = [];
+cfg_def.label = 'nActiveCells';
 cfg_def.dt = 0.005;
 cfg_def.verbose = 1;
 
@@ -44,7 +47,7 @@ Q = MakeQfromS(cfg_temp,S);
 % get number of active cells for each
 for iIV = length(iv_in.tstart):-1:1
     
-    Qr = restrict2(Q,iv_in.tstart(iIV),iv_in.tend(iIV));
+    Qr = restrict(Q,iv_in.tstart(iIV),iv_in.tend(iIV));
     
     if ~isempty(Qr.tvec)
         spk_counts = sum(Qr.data,2);
@@ -59,10 +62,10 @@ if ~isfield(iv_in,'usr')
     iv_in.usr = [];
 end
 
-if cfg.verbose && isfield(iv_in.usr,'nActiveCells')
-    disp(['WARNING in ',mfun,': iv data already includes usr.nActiveCells, overwriting...'])
+if cfg.verbose && isfield(iv_in.usr,cfg.label)
+    disp(['WARNING in ',mfun,': iv data already includes usr.',cfg.label,', overwriting...'])
 end
-iv_in.usr.nActiveCells = nC;
+iv_in.usr.(cfg.label) = nC;
 
 
 % housekeeping

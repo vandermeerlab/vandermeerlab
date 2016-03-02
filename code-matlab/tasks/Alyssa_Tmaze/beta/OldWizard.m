@@ -19,12 +19,15 @@ function SWR = OldWizard(cfg_in,CSC)
 %       cfg.rippleband = [140 250]; Frequency band to use (Hz). If you 
 %                        choose a different band, consider changing 
 %                        cfg.kernel accordingly.
+%
 %       cfg.smooth = 1; If 1 apply smoothing, if 0 don't. Smoothing is
 %                       recommended for better performance.
-%       cfg.kernel = []; Kernel to use for smoothing. The default kernel is 
-%                        gausskernel(60,20), and is used when cfg.kernel is
-%                        empty. cfg.kernel should be [n x 1] double.
-%       cfg.verbose = 1; Tell me what you are doing.   
+%
+%       cfg.kernel = 'wizard'; Kernel to use for smoothing. See cfg.kernel
+%                        options in ConvTSD.
+%
+%       cfg.verbose = 1; If 1, print informative text to the command
+%                        window, if 0, don't.
 %
 % (proposed mundane name for OldWizard: htSWR for "hilbert transform SWR")
 % aacarey Nov 2015.
@@ -34,7 +37,7 @@ function SWR = OldWizard(cfg_in,CSC)
 %% Parse cfg parameters
 cfg_def.rippleband = [140 250]; % in Hz
 cfg_def.smooth = 1; % do you want to smooth the detector or not
-cfg_def.kernel =[]; % which kernel (if empty, goes to default)
+cfg_def.kernel = 'wizard'; % which kernel (if empty, goes to default)
 cfg_def.verbose = 1; % talk to me or not
 
 mfun = mfilename;
@@ -46,7 +49,6 @@ if cfg.verbose
 end
 
 % filter in the ripple band
-
 cfg_temp = [];
 cfg_temp.type = 'fdesign';
 cfg_temp.f = cfg.rippleband;
@@ -55,20 +57,13 @@ CSCf = FilterLFP(cfg_temp,CSC);
 
 % ask hilbert what he thinks
 score = abs(hilbert(CSCf.data)).^2;
+SWR = tsd(CSC.tvec,score);
 
 % apply smoothing, if desired
-
 if cfg.smooth
-    if isempty(cfg.kernel)
-        kernel = gausskernel(60,20);
-    else
-        kernel = cfg.kernel;
-    end   
-   score = conv(score,kernel,'same'); 
+    cfg_temp = []; cfg_temp.verbose = 0; cfg_temp.kernel = cfg.kernel; cfg_temp.where = 'all';
+    SWR = ConvTSD(cfg_temp,SWR);
 end
-
-% make output
-SWR = tsd(CSC.tvec,score);
 
 SWR = History(SWR,mfun,cfg);
 
