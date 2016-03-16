@@ -28,7 +28,9 @@ switch cfg.method
         err = abs(true_z-decoded_z');
         
         % also make confusion matrix based on decoded_z
-        confMat.thr = confusionmat(true_z,decoded_z);
+        confMat.thr = confusionmat(true_z,decoded_z,'order',1:nBins);
+        confMat.thr = confMat.thr./repmat(nansum(confMat.thr,2),[1 nBins]); % normalize
+                
 end
 
 % confusion matrix with full posterior
