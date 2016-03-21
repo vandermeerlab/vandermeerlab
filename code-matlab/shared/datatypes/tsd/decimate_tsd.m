@@ -6,7 +6,7 @@ function tsd_in = decimate_tsd(cfg_in,tsd_in)
 
 cfg = [];
 cfg.decimateFactor = 4;
-ProcessConfig;
+cfg = ProcessConfig(cfg, cfg_in);
 
 mfun = mfilename;
 
