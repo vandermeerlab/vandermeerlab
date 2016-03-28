@@ -28,27 +28,31 @@ cfg_def.removenan = 1;
 cfg = ProcessConfig2(cfg_def,cfg_in); % this takes fields from cfg_in and puts them into cfg
 mfun = mfilename;
 
-%% Error checking
-if isempty(cfg.tvec)
-   error('cfg.tvec is not defined or empty!'); 
+%% Get spikes and tvec
+
+% concatenate all spikes
+spk = [];
+for iC = 1:length(S.t)
+    spk = cat(1,spk,S.t{iC});
 end
+
+% construct internal tvec
+if ~isempty(cfg.tvec)
+    if ~cfg.convFlag
+        tveci_edges = cfg.tvec;
+    else
+        tveci_edges = cfg.tvec(1):cfg.dt:cfg.tvec(end);
+    end
+    
+else
+    sprintf('warning: cfg.tvec is not defined or empty. Making new internal tvec!');
+    tveci_edges = min(spk)-cfg.dt:cfg.dt:max(spk)+cfg.dt;
+end
+
+tveci_centers = tveci_edges(1:end-1)+cfg.dt/2;
 
 %% Make NAU tsd
 NAU = tsd; NAU.label{1} = 'NAU';
-
-% construct internal tvec
-if ~cfg.convFlag
-    tveci_edges = cfg.tvec;
-else
-    tveci_edges = cfg.tvec(1):cfg.dt:cfg.tvec(end);
-end
-tveci_centers = tveci_edges(1:end-1)+cfg.dt/2;
-
-% Concatenate all spikes
-spk = [];
-for iC = 1:length(S.t)
-   spk = cat(1,spk,S.t{iC}); 
-end
 
 % Count spikes per bin, for each cell
 spk_binned = zeros(length(S.t),length(tveci_centers));

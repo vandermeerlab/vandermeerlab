@@ -58,8 +58,11 @@ if  nTrials == 1
         xvals = xvals(:);
         yvals = yvals(:);
 
-        h(iC) = plot(xvals,yvals,'Color',cfg.spkColor(iC,:),'LineWidth',cfg.LineWidth);
-        
+        if isempty(xvals) && isempty(yvals)
+            h(iC) = nan;
+        else
+            h(iC) = plot(xvals,yvals,'Color',cfg.spkColor(iC,:),'LineWidth',cfg.LineWidth);
+        end
     end
     
     if strcmp(cfg.axislabel,'on')

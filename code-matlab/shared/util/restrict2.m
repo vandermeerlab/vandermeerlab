@@ -17,6 +17,7 @@ function in = restrict2(in,varargin)
 % MvdM 2014-07-20 initial version
 % youkitan 2015-07-11 version 2
 % aacarey edit, Nov 25 2015
+% youkitan edit 2016-03-28
 
 % convert input arguments to iv if not already done
 if nargin == 2
@@ -67,37 +68,35 @@ elseif isfield(in,'t') % ts
     type = 'ts';
     for iC = length(in.t):-1:1
         keep{iC} = [];
-            
+           
         lookups = in.t{iC};
         if isempty(lookups)
             continue
         end
-        
-%         valid_idx = find((iv_use.tstart >= min(lookups) & iv_use.tstart <= max(lookups)) | (iv_use.tend >= min(lookups) & iv_use.tend <= max(lookups))); %speeds things up    
-%         if isempty(valid_idx)
-%            sprintf('hi') 
-%         end
             
         for iT = 1:length(iv_use.tstart) %for each input interval...
-%             keep{iC} = keep{iC} | (in.t{iC} >= iv_use.tstart(iT) & in.t{iC} <= iv_use.tend(iT));
 
             iv_start = iv_use.tstart(iT);
             iv_end = iv_use.tend(iT);
               
+            % makes valid lookups "within" start/end times
             ind_start = nearest_idx3(iv_start,lookups,1);
             ind_end = nearest_idx3(iv_end,lookups,-1);
             
-            keepvals_new = ind_start:ind_end;
-%             keepvals_old = find(in.t{iC} >= iv_use.tstart(iT) & in.t{iC} <= iv_use.tend(iT))';
+            % accounts for lookup values that equal a start/end time
+            if ind_start >= ind_end && ind_start ~= 1
+                if lookups(ind_start-1) == iv_start
+                    ind_start = ind_start-1;
+                end
+            end
 
+            keepvals_new = ind_start:ind_end;
+            
             if (ind_start == 1 && ind_end == 1) ||...
                     (ind_start == length(lookups) && ind_end == length(lookups))
                 keepvals_new = find(in.t{iC} >= iv_use.tstart(iT) & in.t{iC} <= iv_use.tend(iT))';
             end
                
-%             assert(isequal(keepvals_old,keepvals_new),...
-%                 'Different values for cell %d during event %d!\n',iC,iT)
-            
             if ind_start <= ind_end
                 keep{iC} = [keep{iC} keepvals_new];
             end

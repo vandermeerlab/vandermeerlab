@@ -67,6 +67,11 @@ switch type
     case 'ts'
         for iC = 1:length(in.t)
             in.t{iC} = in.t{iC}(keep{iC});
+            
+            % fixes issues with weird 0x0 cells
+            if isempty(in.t{iC})
+                in.t{iC} = zeros(0,1);
+            end
         end
         
     case 'tsd'
