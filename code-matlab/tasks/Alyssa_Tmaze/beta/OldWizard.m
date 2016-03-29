@@ -20,6 +20,11 @@ function SWR = OldWizard(cfg_in,CSC)
 %                        choose a different band, consider changing 
 %                        cfg.kernel accordingly.
 %
+%       cfg.weightby = 'amplitude'; Do you want the amplitude envelope or
+%                       the power envelope?
+%            'amplitude' - abs(hilbert(filtered_signal))
+%            'power'     - abs(hilbert(filtered_signal)).^2
+%
 %       cfg.smooth = 1; If 1 apply smoothing, if 0 don't. Smoothing is
 %                       recommended for better performance.
 %
@@ -36,6 +41,7 @@ function SWR = OldWizard(cfg_in,CSC)
 
 %% Parse cfg parameters
 cfg_def.rippleband = [140 250]; % in Hz
+cfg_def.weightby = 'amplitude';
 cfg_def.smooth = 1; % do you want to smooth the detector or not
 cfg_def.kernel = 'wizard'; % which kernel (if empty, goes to default)
 cfg_def.verbose = 1; % talk to me or not
@@ -56,7 +62,17 @@ cfg_temp.verbose = 0;
 CSCf = FilterLFP(cfg_temp,CSC);
 
 % ask hilbert what he thinks
-score = abs(hilbert(CSCf.data)).^2;
+
+switch cfg.weightby
+    case 'amplitude'
+        score = abs(hilbert(CSCf.data));
+    case 'power'
+        score = abs(hilbert(CSCf.data)).^2;
+    otherwise
+        error('Unrecognized option specified in cfg.weightby')
+end
+
+% convert to tsd struct
 SWR = tsd(CSC.tvec,score);
 
 % apply smoothing, if desired

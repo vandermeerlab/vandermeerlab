@@ -50,20 +50,24 @@
 % In this particular script, the data is divided into three segments: one for
 % each of the prerecord, task, and postrecord. When you run this script for
 % the first time, make sure that cfg.resumeSession = 0. A figure window
-% will open showing you the full length of data. 
-% Press the 'f' key to go to the beginning of the data. Now, hit the 
+% will open showing you the full length of data. The local field potential
+% is plotted at the bottom of the window in black. Intervals where the ripple
+% envelope exceeds the mean are plotted in red on the LFP, and this can
+% serve as a hint to narrow down what could be a ripple.
+% Press the 'b' key to go to the beginning of the data. Now, hit the 
 % "Teleport" button on the far right of the window with the drop down menus
 % set to '1' and 'beginning'. Now you should see a vertical bar in the
 % middle of the window with a purple patch object to the left and a white
 % background to the right. (Do not identify SWRs that are in the purple
-% regions unless the SWR straddles the boundry.)
+% regions unless the SWR straddles the boundary.)
 % To scroll through the data, move the figure window right and
 % left using the arrow keys. When you have reached the end of the first
 % segment of data you will see another vertical bar. You do not have to
 % navigate to the next segment using the keyboard (that might take a while
 % or some luck). Instead, select '2' and 'beginning' in the dropdown menus
 % and hit "Teleport". This takes you to the beginning of the second
-% segment.
+% segment. You can navigate between red LFP intervals using the 'a' key to
+% go left and the 'd' key to go right.
 %
 % Save your progress frequently because ducktrap is in beta and power
 % outages don't care about you.
@@ -92,11 +96,11 @@ cfg.whichEpochs = {'prerecord','task','postrecord'}; %  {'prerecord','task','pos
 cfg.nSeconds = 720; % 720 seconds = 12 minutes
 
 % Select t files or tt files
-cfg.whichSFiles = 'none'; % 't' for MClust t files (isolated units), or 'tt' for MakeTTFiles tt files (all spikes from tetrode)
+cfg.whichSFiles = 'tt'; % 't' for MClust t files (isolated units), or 'tt' for MakeTTFiles tt files (all spikes from tetrode)
 % 'none' for no spike files available
 
 % Do you want the LFP filtered?
-cfg.FilterLFP = 1; % If 1, filters LFP between 40-450 Hz bfore plotting; if 0, doesn't
+cfg.FilterLFP = 0; % If 1, filters LFP between 40-450 Hz before plotting; if 0, doesn't
 
 % Do you want to restrict the data?
 cfg.Restrict = 0; % If 1, restricts data to regions of interest, if 0 doesn't
@@ -156,6 +160,21 @@ for iEpoch = 1:length(cfg.whichEpochs)
     tstart(iEpoch) = ExpKeys.(cfg.whichEpochs{iEpoch})(2) - nSecondsPerEpoch;
     tend(iEpoch) = ExpKeys.(cfg.whichEpochs{iEpoch})(2);
 end
+
+
+%% Get intervals where envelope is above the mean
+
+% Ripple detection
+please = []; please.weightby = 'amplitude'; % return envelope
+envelope = OldWizard(please,CSC);
+
+% Threshold to produce intervals
+please = []; please.method = 'zscore'; please.threshold = 0;
+envelopeIV = TSDtoIV2(please,envelope);
+
+% Remove events that are too short
+please = []; please.mindur = 0.015;
+envelopeIV = RemoveIV(please,envelopeIV);
 
 %% Filter LFP
 
@@ -228,4 +247,5 @@ end
 please.hdr = hdr;
 please.mode = 'unfixed';
 please.segments = hdr.segments;
+please.evt = envelopeIV;
 ducktrap(please,S,CSC)
