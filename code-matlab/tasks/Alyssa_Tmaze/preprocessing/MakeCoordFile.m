@@ -1,65 +1,84 @@
-%% MAKE COORD FILE (DRAW TRAJECTORIES) for T-maze motivational shift
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%                                                                     %%%
+%%%      MAKE COORD FILE (DRAW TRAJECTORIES) for motivational shift     %%%
+%%%                                                                     %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% This script creates the coord.mat file containing trajectories with
+% This script makes metadata.coord containing trajectories with
 % coordinates in units of both pixels and centimeters. You need the version
 % of MakeCoord that has varargins YDir and rot.
 % A coord file contains the idealized trajectory that your rat would take
-% along your track (rather than the wobbly one he takes in reality)
-% The coord information is useful later, in scripts that order place cells
-% based on their positions on the track. 
-
-% ACarey, Jan 1, 2015. Happy New Year...yaaaaaay (-_-)
+% along your track (rather than the wobbly one he takes in reality). Do not
+% draw your coords to perfectly lie on the 90 degree bends in your track: 
+% try to draw a good average of the rat's trajectory. So, if he cuts 
+% corners, draw your coords with rounded edges.
+%
+% convFact is also created here, so add it to the corresponding ExpKeys script.
+% Calculating the pixel-to-centimeter conversion factor requires the field 
+% ExpKeys.realTrackDims. How to measure this properly is explained in the
+% section "convert units to cm" down below.
+%
+% This script will probably work with other rats for tasks with TWO
+% trajectory options. However, make sure you find out the value of
+% rotation in [rotation,~] = view when you plot the raw position data.
+% This will help you orient the figure so that LEFT and RIGHT are
+% intuitively plotted. (Note: choice point might not be applicable for
+% certain layouts.)
+%
+% aacarey Jan 2015
+% edit March 2016
 
 %% Set your current directory to the session you want to work with
 
 clear
 
 % load position data with units in pixels:
-
 cfg = [];
 pos = LoadPos(cfg);
+
+% find out which rat we're working with
+[~,sessionID,~] = fileparts(pwd);
+rat = sessionID(1:4);
+
+% the rotation of the position data when plotted in a figure
+rotation = 0;
+%[rotation,el] = view; % look at default values for rotation and el (they are 90,90),we want to change rotation to get the proper view
+
+if isequal(rat,'R042'); rotation = 270; end % rotate the view for R042's data so the T is upright when plotted
 
 %% This is what your position data looks like; is the maze orientation as you prefer?
 % getd says "pull out the x data from pos"
 
 % plot x pixels vs y pixels, reverse Y axis and/or change view to see proper maze orientation
 
-% When you find the desired rotation, you will pass the first variable of 
-% view() into MakeCoord as the varargin 'rot' (R042 only)
-
-% R050 (and R044?) T-maze
-
 figure; plot(getd(pos,'x'),getd(pos,'y')); title('Default, as exists in data'); xlabel('x data'); ylabel('y data');
-figure; plot(getd(pos,'x'),getd(pos,'y')); set(gca,'YDir','reverse'); title('Figure flipped, values preserved'); xlabel('x data'); ylabel('y data');
+view(rotation,90); set(gca,'YDir','reverse'); xlabel('x data'); ylabel('y data');
 
-% R042 T-maze is rotated 90 deg compared to R050 and R044, so let's give it the same orientation in all plots
-
-%figure; plot(getd(pos,'x'),getd(pos,'y')); title('Default, as exists in data'); xlabel('x data'); ylabel('y data');
-%figure; plot(getd(pos,'x'),getd(pos,'y')); 
-% %[az,el] = view; % look at default values for az and el (they are 90,90),we want to change az to get the proper view
-%view(270,90); set(gca,'YDir','reverse'); title('Figure rotated and flipped, preserving original axes values'); xlabel('x data'); ylabel('y data');
+if isequal(rat,'R042')
+    title('Figure rotated and flipped, preserving original axes values');
+else
+    % R044, R050, R064
+    title('Figure flipped, values preserved');
+end
 
 %% draw trajectories for L and R trials (output is in pixel units)
 % figure will open that will prompt you to click/draw out a trajectory.
 % press enter to commit your trajectory.
 
-% R050, R044
-coordL = MakeCoord(getd(pos,'x'),getd(pos,'y'),'titl','Draw left trajectory','YDir','reverse'); % CoordL is in units of pixels
-coordR = MakeCoord(getd(pos,'x'),getd(pos,'y'),'titl','Draw right trajectory','YDir','reverse'); % CoordR is in units of pixels
-
-
-% R042
-%coordL = MakeCoord(getd(pos,'x'),getd(pos,'y'),'titl','Draw left trajectory','YDir','reverse','rot',270); % CoordL is in units of pixels
-%coordR = MakeCoord(getd(pos,'x'),getd(pos,'y'),'titl','Draw right trajectory','YDir','reverse','rot',270); % CoordR is in units of pixels
+coordL = MakeCoord(getd(pos,'x'),getd(pos,'y'),'titl','Draw left trajectory','YDir','reverse','rot',rotation); % CoordL is in units of pixels
+coordR = MakeCoord(getd(pos,'x'),getd(pos,'y'),'titl','Draw right trajectory','YDir','reverse','rot',rotation); % CoordR is in units of pixels
 
 %% click on choice point
 
 % plot coordL and coordR so I can see where they sit
 
-figure; plot(getd(pos,'x'),getd(pos,'y'),'.','Color',[0.7 0.7 0.7],'MarkerSize',4); set(gca,'YDir','reverse'); hold on;
+figure; set(gca,'YDir','reverse'); view(rotation,90); hold on;
+
+plot(getd(pos,'x'),getd(pos,'y'),'.','Color',[0.7 0.7 0.7],'MarkerSize',4);
 plot(coordL(1,:),coordL(2,:),'ob'); plot(coordR(1,:),coordR(2,:),'og'); title('Click choice point; press enter');
 maximize
 
+% get data values where user clicks
 [x,y] = ginput; 
 
 plot(x,y,'or','MarkerSize',10,'LineWidth',4); pause(1); close
@@ -131,26 +150,22 @@ chp_cm = [x/convFact(1); y/convFact(2)];
 % put it all in a struct for tighter packing in the base workspace (when loading variables later)
 coord = struct('coordL',coordL,'coordL_cm',coordL_cm,'coordR',coordR,'coordR_cm',coordR_cm,'chp',chp,'chp_cm',chp_cm);
 
-%% plot cm coord and cp
+%% plot cm coord and choice point
 
-figure;set(gca,'YDir','reverse'); hold on; title('Your coords in centimeters')
+figure; set(gca,'YDir','reverse'); view(rotation,90); hold on; 
+
+title('Your coords in centimeters')
 plot(coordL_cm(1,:),coordL_cm(2,:),'ob'); plot(coordR_cm(1,:),coordR_cm(2,:),'og'); plot(chp_cm(1),chp_cm(2),'or','MarkerSize',10,'LineWidth',4)
 
 %% Save coord field in metadata
 
 % WARNING: running this section overwrites existing coord field (if one exists already)!
 
-% first check if metadata exists yet
-[~,name,~] = fileparts(pwd); % pwd is your current folder, we just want its namepart
-
-loaded = LoadMetadata2;
-
-if ~loaded % then it doesn't exist yet, so make a metadata struct
-    metadata.coord = coord;
-else % it does, so add a new field
-    metadata.coord = coord;
-end
+% If metadata exists, it is loaded (LoadMetadata [at the time this was
+% written] does not error if it does not find a metadata file). If metadata
+% does not exist it is created here.
+LoadMetadata
+metadata.coord = coord;
 
 % now save
-savename = strcat(name,'-metadata.mat'); % use the folder's name, but concatenate it with '-metadata'
-save(savename,'metadata'); % this saves the specified variables under the given [save]name
+save([sessionID,'-metadata.mat'],'metadata'); % this saves the specified variables under the given savename
