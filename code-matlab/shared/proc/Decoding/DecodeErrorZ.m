@@ -1,8 +1,8 @@
-function err = DecodeErrorZ(cfg_in,P,z)
-% function err = DecodeErrorZ(cfg_in,P,z)
+function [err,confMat] = DecodeErrorZ(cfg_in,P,z)
+% function [err,confMat] = DecodeErrorZ(cfg_in,P,z)
 %
-% computes decoding error based on decoded posterior tsd P and true value
-% tsd z
+% computes decoding error and confusion matrices based on decoded posterior 
+% tsd P and true value tsd z
 %
 % MvdM 2016-02-23
 
@@ -10,6 +10,8 @@ cfg_def = [];
 cfg_def.method = 'max'; % {'max','com','p(true'}
 
 cfg = ProcessConfig(cfg_def,cfg_in);
+
+nBins = size(P.data,2);
 
 % for each time sample in P, find true Z
 true_z_idx = nearest_idx3(P.tvec,z.tvec);
@@ -22,8 +24,20 @@ P.data = P.data(keep_idx,:);
 
 switch cfg.method
     case 'max'
-    [~,decoded_z] = max(P.data,[],2);
-    err = abs(true_z-decoded_z');
+        [~,decoded_z] = max(P.data,[],2);
+        err = abs(true_z-decoded_z');
+        
+        % also make confusion matrix based on decoded_z
+        confMat.thr = confusionmat(true_z,decoded_z,'order',1:nBins);
+        confMat.thr = confMat.thr./repmat(nansum(confMat.thr,2),[1 nBins]); % normalize
+                
+end
+
+% confusion matrix with full posterior
+confMat.full = nan(nBins);
+for iB = 1:nBins
+    this_z_idx = find(true_z == iB);
+    confMat.full(iB,:) = nanmean(P.data(this_z_idx,:));
 end
 
 temp_err = nan(size(P.tvec));
