@@ -5,7 +5,7 @@ function ctrl_evts = AMPX_match_events(cfg_in, evts, detect_csc)
 %
 %
 %  INPUTS:
-%     - cfg [struct] contains parameters for control event width 
+%     - cfg [struct] contains parameters for control event width
 %     - evts [struct]: output from AMPX_JulienDetectEvents
 %
 %  Outputs
@@ -22,8 +22,8 @@ cfg = ProcessConfig(cfg_def, cfg_in);
 
 % create fixed-size events
 lg_t = IVcenters(evts.low); hg_t = IVcenters(evts.high);
-% this_lg = iv(lg_t-cfg.PARAM_twin,lg_t+cfg.PARAM_twin); %this_lg_control = iv(lg_t-PARAM_twin+PARAM_control_dt,lg_t+PARAM_twin+PARAM_control_dt);
-% this_hg = iv(hg_t-cfg.PARAM_twin,hg_t+cfg.PARAM_twin); %this_hg_control = iv(hg_t-PARAM_twin+PARAM_control_dt,hg_t+PARAM_twin+PARAM_control_dt);
+this_lg = iv(lg_t-cfg.PARAM_twin,lg_t+cfg.PARAM_twin); %this_lg_control = iv(lg_t-PARAM_twin+PARAM_control_dt,lg_t+PARAM_twin+PARAM_control_dt);
+this_hg = iv(hg_t-cfg.PARAM_twin,hg_t+cfg.PARAM_twin); %this_hg_control = iv(hg_t-PARAM_twin+PARAM_control_dt,hg_t+PARAM_twin+PARAM_control_dt);
 
 % find matched events, as a control
 cfg_match = []; cfg_match.twin = [-cfg.PARAM_control_dt cfg.PARAM_control_dt]; cfg_match.evt_twin = [-cfg.PARAM_twin cfg.PARAM_twin];
@@ -34,6 +34,15 @@ this_hg_control = iv(ctrl_evt.hg-cfg.PARAM_twin,ctrl_evt.hg+cfg.PARAM_twin);
 
 ctrl_evts.low = this_lg_control;
 ctrl_evts.high = this_hg_control;
+
+%%
+if cfg.debug == 1
+    cfg_plot = []; cfg_plot.display = 'tsd';
+    PlotTSDfromIV(cfg_plot,this_lg,detect_csc);
+    cfg_plot.iv_only = 1; cfg_plot.fgcol = 'g';
+    PlotTSDfromIV(cfg_plot,this_lg_control,detect_csc);
+end
+
 
 %% print the output
 fprintf(['\nlg events in:           ' num2str(length(evts.low.tstart)) '\n'])
