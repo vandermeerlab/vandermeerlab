@@ -18,7 +18,7 @@ true_z_idx = nearest_idx3(P.tvec,z.tvec);
 true_z = z.data(true_z_idx);
 
 % but only keep values of P with no NaNs
-keep_idx = ~isnan(P.data(:,1));
+keep_idx = ~isnan(nansum(P.data,2));
 true_z = true_z(keep_idx);
 P.data = P.data(keep_idx,:);
 
