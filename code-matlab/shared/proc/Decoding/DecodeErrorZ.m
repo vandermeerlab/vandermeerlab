@@ -37,7 +37,11 @@ end
 confMat.full = nan(nBins);
 for iB = 1:nBins
     this_z_idx = find(true_z == iB);
-    confMat.full(iB,:) = nanmean(P.data(this_z_idx,:));
+    if length(this_z_idx) > 1
+        confMat.full(iB,:) = nanmean(P.data(this_z_idx,:));
+    elseif length(this_z_idx) == 1 % if only one sample, don't nanmean
+        confMat.full(iB,:) = P.data(this_z_idx,:);
+    end
 end
 
 temp_err = nan(size(P.tvec));
