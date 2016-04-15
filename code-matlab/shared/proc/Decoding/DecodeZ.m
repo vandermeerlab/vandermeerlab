@@ -56,8 +56,12 @@ switch cfg.noSpikesInBin
 end
 
 %
-p_tsd = tsd(Q.tvec,p);
+p_tsd = tsd(Q.tvec,p');
 p_tsd.usr.nActiveNeurons = nActiveNeurons;
+
+if ~CheckTSD(p_tsd)
+   error('DecodeZ: malformed TSD.'); 
+end
 
 % housekeeping
 p_tsd.cfg.history.mfun = cat(1,p_tsd.cfg.history.mfun,mfun);

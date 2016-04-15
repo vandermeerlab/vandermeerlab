@@ -15,6 +15,7 @@ function tsd_out = UnionTSD(cfg_in,tsd1,tsd2)
 % - output tvec will be sorted
 %
 % MvdM 2016-04-15 initial version
+% NOTE merging of usr fields doesn't work well if one input is empty
 
 cfg_def = [];
 cfg = ProcessConfig2(cfg_def,cfg_in);
@@ -36,10 +37,15 @@ if ~isempty(common_values)
 end
 
 % check if any usr field names are different; if so, give up
-fn1 = fieldnames(tsd1.usr); fn2 = fieldnames(tsd2.usr);
-fnx = setxor(fn1,fn2); % names that are in one, but not the other
-if ~isempty(fnx)
-    error('tsd1 and tsd2 have different usr field names'); 
+fn1 = []; fn2 = [];
+if xor(isfield(tsd1,'usr'),isfield(tsd2,'usr')) & (~isempty(tsd1.tvec) & ~isempty(tsd2.tvec)) % OK if one is empty...
+    error('tsd1/tsd2 usr field presence mismatch');
+elseif isfield(tsd1,'usr') & isfield(tsd2,'usr')
+    fn1 = fieldnames(tsd1.usr); fn2 = fieldnames(tsd2.usr);
+    fnx = setxor(fn1,fn2); % names that are in one, but not the other
+    if ~isempty(fnx)
+        error('tsd1 and tsd2 have different usr field names');
+    end
 end
 
 %%%%%%%%%%%%%
