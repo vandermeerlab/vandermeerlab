@@ -16,7 +16,10 @@ function p_tsd = DecodeZ(cfg_in,Q,tc)
 %
 % CFG OPTIONS:
 %
-% cfg.noSpikesInBin = 'zeros'; % {'zeros','nans'}, what to put in time bins without spikes
+% cfg.noSpikesInBin = 'zeros'; % {'zeros','nans'}, what to put in time bins
+%   below threshold
+% cfg_def.nMinSpikes = 1; % minimum number of spike (sum) for bin to be
+%   included
 %
 % NOTE: assumes Q.data is in format [nCells x nTimeBins]
 %
@@ -25,6 +28,7 @@ function p_tsd = DecodeZ(cfg_in,Q,tc)
 
 cfg_def = [];
 cfg_def.noSpikesInBin = 'nans';
+cfg_def.nMinSpikes = 1;
 
 cfg = ProcessConfig(cfg_def,cfg_in);
 mfun = mfilename;
@@ -47,7 +51,7 @@ end
 p = p./repmat(nansum(p,2),1,nBins); % renormalize
 
 % deal with bins without any spikes
-nActiveNeurons = sum(Q.data > 0);
+nActiveNeurons = sum(Q.data > cfg.nMinSpikes);
 
 switch cfg.noSpikesInBin
     case 'zeros'
