@@ -18,6 +18,7 @@ function p_tsd = DecodeZ(cfg_in,Q,tc)
 %
 % cfg.noSpikesInBin = 'zeros'; % {'zeros','nans'}, what to put in time bins without spikes
 %
+% NOTE: assumes Q.data is in format [nCells x nTimeBins]
 %
 % MvdM 2014-08-22 initial version, later simplified to include only
 % one-step
