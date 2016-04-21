@@ -228,7 +228,7 @@ for iEpoch = 1:length(epochs)
         
         box off
         set(gca,'XTick',location,'XTickLabel',{'L' 'R' 'L' 'R'},'FontSize',FontSize,'LineWidth',1,'XLim',xlims);
-        set(gca,'YTick',[])
+        %set(gca,'YTick',[])
         set(gca,'Layer','top')
         
     end % of rats
@@ -250,8 +250,11 @@ yTickStep = round(length(yticks_all)/(nTickLabels_all));
 yticks_all = yticks_all(1:yTickStep:length(yticks_all));
 %yticks_all(end) = yticks_all(end) + diff([yticks_all(end-1) yticks_all(end)]);
 
-set(h_all(1),'YTick',yticks_all)
-set(h_all,'YLim',[yticks_all(1),yticks_all(end)])
+if ~ isempty(yticks_all)
+    set(h_all,'YTick',[])
+    set(h_all(1),'YTick',yticks_all)
+    set(h_all,'YLim',[yticks_all(1),yticks_all(end)])
+end
    
 %~~~~~~~~~ some auto formatting of y axis stuff for single rat plots ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

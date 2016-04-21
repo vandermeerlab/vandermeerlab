@@ -29,7 +29,7 @@
 %
 % aacarey Jan 2015 from code by MvdM
 
-clearvars -except CFG
+%clearvars -except CFG
 
 %% WHAT DO YOU WANT THIS SCRIPT TO DO?
 

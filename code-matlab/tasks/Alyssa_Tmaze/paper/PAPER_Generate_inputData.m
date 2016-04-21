@@ -87,10 +87,13 @@
 %                    fields on the left arm only, ordered; no fields on the right
 %                    arm (these will be used for co-occurrence analysis)
 %
-%                 ...L.tc_ordered = ...; ordered tuning curves for the
+%                 ...L.tc_traj = ...; ordered tuning curves for the
+%                    units in S_traj
+%
+%                 ...L.tc_arm = ...; ordered tuning curves for the
 %                    units in S_arm
 %
-%                 ...L.tc_unique_ordered = ...; ordered tuning curves for
+%                 ...L.tc_arm_unique = ...; ordered tuning curves for
 %                    the units in S_arm_unique
 %
 % aacarey Sept 2015, Nov 2015
@@ -121,7 +124,7 @@ end
 
 % remove bad trials? (these are trials where the rat attempted to reverse
 % directions and/or was interfered with by the researcher)
-cfg.rmbadtrl = 0; % 1 yes, 0 no
+cfg.rmbadtrl = 1; % 1 yes, 0 no
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                                                                     %%%
@@ -243,6 +246,15 @@ for iRat = 1:length(rats)
         please.getRatings = 1;
         S = LoadSpikes(please);
         
+        % load LFP data
+        please = [];
+        please.fc = ExpKeys.goodSWR(1);
+        CSC = LoadCSC(please);
+        
+        % add a usr firing rate field in S
+        please = [];
+        S = AddRateTS(please,S,CSC.tvec);
+        
         % add a usr field that allows cell# tracking when cells are selected and reordered
         S.usr.cell_num = 1:length(S.t);
         
@@ -358,13 +370,29 @@ for iRat = 1:length(rats)
         for iArm = 1:nArms
             disp(['  ',arms{iArm},' arm...']); fprintf('\b')
             please = []; please.verbose = 1;
-            sessionData.(arms{iArm}).S_traj = OrderSelectS(please,S,sessionData.(arms{iArm}).PF.template_idx);
+            sessionData.(arms{iArm}).S_traj = SelectTS(please,S,sessionData.(arms{iArm}).PF.template_idx);
+        end
+        
+        %~~~~~~ get cells that were active on only one trajectory ~~~~~~~~~
+        disp('~~ Ordering and selecting unique trajectory place cells (fire only for a L or R run) ~~')
+        
+        % find cell IDs that are common to both L and R spiketrains
+        [~,remove.L,remove.R] = intersect(sessionData.L.S_traj.usr.cell_num,sessionData.R.S_traj.usr.cell_num);
+        
+        % remove the common cells from each group
+        for iArm = 1:nArms
+            keep.(arms{iArm}) = sessionData.(arms{iArm}).S_traj.usr.cell_num;
+            keep.(arms{iArm})(remove.(arms{iArm})) = [];
+            disp(['  ',arms{iArm},' arm...']); fprintf('\b')
+            please = []; please.verbose = 1;
+            sessionData.(arms{iArm}).S_traj_unique = SelectTS(please,S,keep.(arms{iArm}));
         end
         
         %~~~~~~~~~~ find cells with fields after choice point ~~~~~~~~~~~~~
         for iArm = 1:nArms
             fields.(arms{iArm}) = [];
             fields.(arms{iArm}) = sessionData.(arms{iArm}).PF.field_template_idx(sessionData.(arms{iArm}).PF.field_loc > sessionData.(arms{iArm}).chp.data(1)); % oh my
+            uniquefields.(arms{iArm}) = []; % initialize as empty for later step
         end
         
         %~~~~~~~~~~~~~~ get cells with fields on the arms ~~~~~~~~~~~~~~~~~
@@ -372,28 +400,39 @@ for iRat = 1:length(rats)
         for iArm = 1:nArms
             disp(['  ',arms{iArm},' arm...']); fprintf('\b')
             please = []; please.verbose = 1;
-            sessionData.(arms{iArm}).S_arm = OrderSelectS(please,S,fields.(arms{iArm}));
+            sessionData.(arms{iArm}).S_arm = SelectTS(please,S,fields.(arms{iArm}));
         end
         
         %~~~~~~~~~~~~~~~ find unique cells (L or R only) ~~~~~~~~~~~~~~~~~~
-        [~,removeL,removeR] = intersect(fields.L,fields.R);
-        fields.L(removeL) = []; fields.R(removeR) = [];
-        fields.L = unique(fields.L); fields.R = unique(fields.R); % comment this line out to match Generate_CoOccur
+        % find fields that are common to both groups
+        [~,remove.L,remove.R] = intersect(fields.L,fields.R);
+        uniquefields = fields;
+        % remove the cells with common fields
+        for iArm = 1:nArms
+            uniquefields.(arms{iArm})(remove.(arms{iArm})) = [];
+            
+            % do this to maintain order (unique sorts ascending, but we want
+            % same order as what went it)
+            [~,idx.(arms{iArm})] = unique(uniquefields.(arms{iArm}));
+            uniquefields.(arms{iArm}) = sort(idx.(arms{iArm}));
+        end
         
         %~~~~~~~~~~~~~~~ get unique cells and order them ~~~~~~~~~~~~~~~~~~
         disp('~~ Ordering and selecting unique place cells (fire on one arm only) ~~')
         for iArm = 1:nArms
             disp(['  ',arms{iArm},' arm...']); fprintf('\b')
             please = []; please.verbose = 1;
-            sessionData.(arms{iArm}).S_arm_unique = OrderSelectS(please,S,(fields.(arms{iArm})));
+            sessionData.(arms{iArm}).S_arm_unique = SelectTS(please,S,(uniquefields.(arms{iArm})));
         end
                
         %~~~~~~~~~~~~~~~~~~~~ order the tuning curves ~~~~~~~~~~~~~~~~~~~~~
         for iArm = 1:nArms
             disp(['Ordering ',arms{iArm},' tuning curves'])
             please = [];
-            sessionData.(arms{iArm}).tc_ordered = sessionData.(arms{iArm}).PF.tc(sessionData.(arms{iArm}).PF.field_template_idx,:);
-            sessionData.(arms{iArm}).tc_unique_ordered = sessionData.(arms{iArm}).PF.tc(fields.(arms{iArm}),:);
+            sessionData.(arms{iArm}).tc_traj = sessionData.(arms{iArm}).PF.tc(sessionData.(arms{iArm}).PF.template_idx,:);
+            sessionData.(arms{iArm}).tc_traj_unique = sessionData.(arms{iArm}).PF.tc(keep.(arms{iArm}),:);
+            sessionData.(arms{iArm}).tc_arm = sessionData.(arms{iArm}).PF.tc(fields.(arms{iArm}),:);
+            sessionData.(arms{iArm}).tc_arm_unique = sessionData.(arms{iArm}).PF.tc(uniquefields.(arms{iArm}),:);
         end
         
         inputData.(rats{iRat})(iSession) = sessionData;

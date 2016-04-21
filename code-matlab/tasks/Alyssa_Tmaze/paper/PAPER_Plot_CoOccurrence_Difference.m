@@ -261,7 +261,9 @@ for iRat = 1:length(rats)
             
             extreme = max([abs(mindata.(epochs{iEpoch})) abs(maxdata.(epochs{iEpoch}))]);
             extreme = extreme + extreme*0.1;
+            if ~isnan(extreme)
             set(h.(rats{iRat})(iEpoch), 'YLim', [-extreme extreme],'YDir','reverse')
+            end
             
         else
             

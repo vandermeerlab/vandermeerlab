@@ -70,6 +70,9 @@ cfg.useSubset = 0;
 % Number of shuffles to use for permutation test in CoOccurQ
 cfg.nShuffle = 250; % use 10 000
 
+% Which method do you want CoOccurQ to use for shuffling?
+cfg.method = 'naive'; % 'naive','ballot','continuous'
+
 % which events to use for computing shuffled (expected) co-occurrence?
 cfg.shuffleQ = 'selectedEvents'; % 'selectedEvents' or 'allEvents' 
 
@@ -83,6 +86,9 @@ cfg.win = 0.1; % if empty [], co-occurrence is computed based on the exact
 
 % Do you want to exclude pairs recorded on the same tetrode?
 cfg.useMask = 1; % If 1, exclude pairs from the same tt, if 0, don't
+
+% Do you want to reseed the random number generator?
+cfg.resetRNG = 1; % 1 yes, 0 no.
 
 % WHICH RATS (caution, highly suggested to include all rats)
 cfg.rats = TmazeRats; 
@@ -133,11 +139,14 @@ end
 disp(' ')
 switch cfg.whichS
     case 'unique'
-        disp('You have selected [unique] left-only and right-only spiketrains')
+        disp('You have selected [unique] left-arm-only and right-arm-only spiketrains')
         cfg.whichS = 'S_arm_unique';
     case 'nonunique'
-        disp('You have selected [nonunique] left and right spiketrains')
+        disp('You have selected [nonunique] left and right arm spiketrains')
         cfg.whichS = 'S_arm';
+    case 'uniquetrajectory';
+        disp('You have selected [unique] left and right trajectory spiketrains')
+        cfg.whichS = 'S_traj_unique';
     case 'trajectory'
         disp('You have selected left and right [trajectory] spiketrains')
         cfg.whichS = 'S_traj';
@@ -207,6 +216,12 @@ for iRat = 1:length(cfg.rats)
         evt = loadpop([sessionID,cfg.whichCandidates,'.mat']); % assign the loaded variable to "evt" regardless of what it is actually called
         
         LoadExpKeys; LoadMetadata;
+        
+        if strcmp(cfg.method,'ballot') % load CSC
+            cfg_temp = [];
+            cfg_temp.fc = ExpKeys.goodSWR(1);
+            CSC = LoadCSC(cfg_temp);
+        end
         
         % choose which events to use       
         fprintf('nEvents loaded: %d\n',length(evt.tstart));
@@ -291,23 +306,32 @@ for iRat = 1:length(cfg.rats)
         
         % compute co-occurrence (this could have been done in the loop above)
         
+        cfg_temp = [];
+        cfg_temp.useMask = cfg.useMask;
+        cfg_temp.nShuffle = cfg.nShuffle;
+        cfg_temp.outputFormat = 'vectorU';
+        cfg_temp.resetRNG = cfg.resetRNG;
+        
+        switch cfg.method
+            case 'naive'
+            case 'ballot'
+                cfg_temp.lfp = CSC;
+                cfg_temp.iv = evt;
+            otherwise
+                error('Unrecognized config option in cfg.method')
+        end
+        cfg_temp.method = cfg.method;
+        
         for iArm = 1:length(arms)
             if ~isempty(sessionCC.(arms{iArm}).Q)
-                cfg_temp = [];
-                cfg_temp.useMask = cfg.useMask;
-                cfg_temp.nShuffle = cfg.nShuffle;
-                cfg_temp.outputFormat = 'vectorU';
-                cfg_temp.resetRNG = 1;
-                
                 switch cfg.shuffleQ
                     case 'selectedEvents'
                         cfg_temp.shuffleQ = [];
                     case 'allEvents'
                         cfg_temp.shuffleQ = sessionCC.(arms{iArm}).fullQ;
                 end
-                
                 Q_temp = sessionCC.(arms{iArm}).Q;
-                sessionCC.(arms{iArm}).ALLp = CoOccurQ2(cfg_temp,Q_temp);
+                sessionCC.(arms{iArm}).ALLp = CoOccurQ3(cfg_temp,Q_temp);
             else
                % equalBehaviorITI ended up with an empty Q for R042-19th. this was put in to bypass cases of empty Q which causes CoOccurQ to error
                sessionCC.(arms{iArm}).ALLp = struct('p0',NaN,'p1',NaN,'p2',NaN,'p3',NaN,'p4',NaN,'p5',NaN);
