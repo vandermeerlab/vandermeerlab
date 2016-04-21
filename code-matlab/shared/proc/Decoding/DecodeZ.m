@@ -17,20 +17,13 @@ function p_tsd = DecodeZ(cfg_in,Q,tc)
 % CFG OPTIONS:
 %
 % cfg.noSpikesInBin = 'zeros'; % {'zeros','nans'}, what to put in time bins without spikes
-% cfg.mode = 'oneStep'; % 'twoStep'; algorithm to use, see Zhang et al. (1998)
-% cfg.kernel = gausskernel(10,1); % kernel to use for model-based
-%   prior (only used if cfg.mode = 'twoStep')
-% cfg.resetTimes = []; % times in which model-based prediction is
-%   discarded so that only likelihood is used (only used if cfg.mode =
-%   'twoStep')
 %
-% MvdM 2014-08-22 initial version
+%
+% MvdM 2014-08-22 initial version, later simplified to include only
+% one-step
 
 cfg_def = [];
 cfg_def.noSpikesInBin = 'nans';
-cfg_def.kernel = gausskernel(10,1);
-cfg_def.resetTimes = [];
-cfg_def.mode = 'oneStep';
 
 cfg = ProcessConfig(cfg_def,cfg_in);
 mfun = mfilename;
@@ -43,13 +36,14 @@ binsize = median(diff(Q.tvec)); % NOTE: should have a stronger check for this
 occUniform = ones(1,nBins)./nBins;
 p = nan(len,nBins);
 
-% main decoding loop
+% main decoding loop -- note, use a version of nansum that returns nan when summing over
+% nans only!
 for iB = 1:nBins
     tempProd = nansum(log(repmat(tc(:,iB),1,len).^Q.data));
     tempSum = exp(-binsize*nansum(tc(:,iB)));
     p(:,iB) = exp(tempProd)*tempSum*occUniform(iB);
 end
-p = p./repmat(sum(p,2),1,nBins); % renormalize
+p = p./repmat(nansum(p,2),1,nBins); % renormalize
 
 % deal with bins without any spikes
 nActiveNeurons = sum(Q.data > 0);
