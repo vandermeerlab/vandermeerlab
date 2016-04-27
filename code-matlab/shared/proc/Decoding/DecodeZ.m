@@ -18,8 +18,9 @@ function p_tsd = DecodeZ(cfg_in,Q,tc)
 %
 % cfg.noSpikesInBin = 'zeros'; % {'zeros','nans'}, what to put in time bins
 %   below threshold
-% cfg_def.nMinSpikes = 1; % minimum number of spike (sum) for bin to be
-%   included
+% cfg_def.nMinSpikes = 1; % minimum number of spikes (sum) for bin to be
+%   included -- note this gets hard to interpret when smoothing; could
+%   normalize to firing rate?
 %
 % NOTE: assumes Q.data is in format [nCells x nTimeBins]
 %
@@ -51,18 +52,19 @@ end
 p = p./repmat(nansum(p,2),1,nBins); % renormalize
 
 % deal with bins without any spikes
-nActiveNeurons = sum(Q.data > cfg.nMinSpikes);
+nActiveNeurons = sum(Q.data);
 
 switch cfg.noSpikesInBin
     case 'zeros'
-        p(nActiveNeurons < 1,:) = 0;
+        p(nActiveNeurons < cfg.nMinSpikes,:) = 0;
     case 'nans'
-        p(nActiveNeurons < 1,:) = NaN;
+        p(nActiveNeurons < cfg.nMinSpikes,:) = NaN;
 end
 
 %
 p_tsd = tsd(Q.tvec,p');
 p_tsd.usr.nActiveNeurons = nActiveNeurons;
+p_tsd.usr.nActiveNeuronsPassed = (nActiveNeurons >= cfg.nMinSpikes);
 
 if ~CheckTSD(p_tsd)
    error('DecodeZ: malformed TSD.'); 
