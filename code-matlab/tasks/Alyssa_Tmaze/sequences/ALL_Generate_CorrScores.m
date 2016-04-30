@@ -1,14 +1,15 @@
 %%
-cfg = []; cfg.rats = {'R042','R050'};
+cfg = []; cfg.rats = {'R050'};
 cfg.requireMetadata = 1;
 cfg.requireCandidates = 1;
 fd = sort(getTmazeDataPath(cfg));
 
 %% 
-tic
-for iFD = 12%:length(fd)
+profile on
+for iFD = 1:length(fd)
     
     cd(fd{iFD});
+    mkdir('files')
     
 %     cfg = [];
 %     cfg.output_file_prefix = 'CS_PRE_'; % prefix use when writing files
@@ -24,4 +25,4 @@ for iFD = 12%:length(fd)
     
 end
 
-toc
+profile viewer

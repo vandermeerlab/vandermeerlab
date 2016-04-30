@@ -69,8 +69,8 @@ end
 %[L_trl,R_trl] = GetMatchedTrials([],metadata,ExpKeys);
 [L_trl,R_trl] = GetMatchedTrials_old([],metadata);
 
-S_left = restrict(S_orig,L_trl); posL = restrict(pos,L_trl);
-S_right = restrict(S_orig,R_trl); posR = restrict(pos,R_trl);
+S_left = restrict2(S_orig,L_trl); posL = restrict2(pos,L_trl);
+S_right = restrict2(S_orig,R_trl); posR = restrict2(pos,R_trl);
 
 % linearize runs and bin positions
 CoordL = metadata.coord.coordL; CoordR = metadata.coord.coordR;
@@ -145,11 +145,11 @@ clear CoordL CoordLrs CoordR CoordRrs S_left S_right posL posL_binned posR posR_
 spd = getLinSpd([],pos);
 cfg_spd = []; cfg_spd.method = 'raw'; cfg_spd.threshold = 10; run_iv = TSDtoIV(cfg_spd,spd);
 
-ENC_data(1).S = restrict(ENC_data(1).S,run_iv);
-ENC_data(2).S = restrict(ENC_data(2).S,run_iv);
+ENC_data(1).S = restrict2(ENC_data(1).S,run_iv);
+ENC_data(2).S = restrict2(ENC_data(2).S,run_iv);
 
 % keep this for later display
-S_run = restrict(S_orig,metadata.taskvars.trial_iv);
+S_run = restrict2(S_orig,metadata.taskvars.trial_iv);
 
 %% Make tuning curves for left or right trajectorie 
 clear TC %in case you are re-running
@@ -275,7 +275,7 @@ fprintf('nEvents after cfg.whichEvents restrict: %d\n',length(evt.tstart));
 if cfg.removeTheta
     fprintf('current nEvents: %d\n',length(evt.tstart));
     
-    cfg_theta = []; cfg_theta.f = [6 10]; cfg_theta.order = 4; cfg_theta.display_filter = 0; cfg_theta.type = 'fdesign';
+    cfg_theta = []; cfg_theta.f = [6 10]; cfg_theta.order = 4; cfg_theta.display_filter = 0; %cfg_theta.type = 'fdesign';
     lfp_theta = FilterLFP(cfg_theta,lfp_theta);
     
     tpow = LFPpower([],lfp_theta);
@@ -308,22 +308,26 @@ evt = AddNActiveCellsIV(cfg_n,evt,S_pc(1)); % note this has binning at 5ms by de
 cfg_n = []; cfg_n.label = 'NActiveCells_right';
 evt = AddNActiveCellsIV(cfg_n,evt,S_pc(2)); % note this has binning at 5ms by default
 
-keep_idx = find(evt.usr(1).data > cfg.nActiveCells | evt.usr(2).data > cfg.nActiveCells);
-evt = SelectIV_idx(evt,keep_idx);
+keep_idx = find(evt.usr.(cfg_n.label) > cfg.nActiveCells | evt.usr.(cfg_n.label) > cfg.nActiveCells);
+evt = SelectIV([],evt,keep_idx);
+
 
 fprintf('nEvents after nActiveCells filtering: %d\n',length(evt.tstart));
 
 %% plot SWR events
 % iT = 1;
 % cfg = [];
-% cfg.lfp = lfp;
+% % cfg.lfp = lfp;
 % cfg.lfp = lfp_theta;
 % cfg.evt = evt_lt;
 % cfg.evt = manual_iv;
 % cfg.windowSize = 0.5; %in seconds
 % MultiRaster(cfg,S_pc(1)); %NOTE: MultiRaster has the navigate function inside!!!
-% 
+
 % % or..
+% cfg = [];
+% cfg.evt = evt;
+% cfg.lfp = lfp_theta;
 % MultiRasterTwin(cfg,S_pc(1),S_pc(2));
 
 %% score?
@@ -337,40 +341,42 @@ for iT = 1:2
     cfg_cs_shuf3.twin = cfg.twin;
     cfg_cs_shuf3.shuffleType = 3;
     
-    out.score3(iT) = CorrScoreWin2(cfg_cs_shuf3,evt,S_pc(iT));
+    out.score3(iT) = CorrScoreWin3(cfg_cs_shuf3,evt,S_pc(iT));
     
     cfg_cs_shuf1 = cfg_cs_shuf3;
     cfg_cs_shuf1.shuffleType = 1;
     
-    out.score1(iT) = CorrScoreWin2(cfg_cs_shuf1,evt,S_pc(iT));
+    out.score1(iT) = CorrScoreWin3(cfg_cs_shuf1,evt,S_pc(iT));
 end
 
 out.cfg = cfg; out.nLcells = length(S_pc(1).t); out.nRcells = length(S_pc(2).t);
 
 %% need to do some fancy post-processing now...
-% iT = 2; % 1 left, 2 right
-% 
-% %keep_idx = find(score1(iT).WIN_rho_perc > 0.99 & score1(iT).WIN_rho_obs_pval < 0.01);
-% keep_idx = find(score1(iT).WIN_rho_perc > 0.99 & score3(iT).WIN_rho_perc > 0.99);
-% sign_evt = evt_lt;
-% 
-% sign_evt.tstart = sign_evt.tstart(keep_idx);
-% sign_evt.tend = sign_evt.tend(keep_idx);
-% 
-% sign_evt = rmfield(sign_evt,'usr');
-% sign_evt.usr(1).label = 'rho (obs)';
-% sign_evt.usr(1).data = score1(iT).WIN_rho_obs(keep_idx);
-% sign_evt.usr(2).label = 'idshuf perc';
-% sign_evt.usr(2).data = 1-score1(iT).WIN_rho_perc(keep_idx);
-% sign_evt.usr(3).label = 'tshuf perc';
-% sign_evt.usr(3).data = 1-score3(iT).WIN_rho_perc(keep_idx);
-% 
-% cfg = [];
-% cfg.lfp = lfp;
-% %cfg.evt = evt;
-% cfg.evt = sign_evt;
-% cfg.windowSize = 0.5; %in seconds
-% MultiRaster(cfg,S_pc(iT)); %NOTE: MultiRaster has the navigate function inside!!!
+iT = 1; % 1 left, 2 right
+
+%keep_idx = find(score1(iT).WIN_rho_perc > 0.99 & score1(iT).WIN_rho_obs_pval < 0.01);
+keep_idx = find(score1(iT).WIN_rho_perc > 0.95 & score3(iT).WIN_rho_perc > 0.95);
+keep_idx = find(score1(iT).WIN_rho_perc < 0.05 & score3(iT).WIN_rho_perc < 0.05);
+
+sign_evt = evt_lt;
+
+sign_evt.tstart = sign_evt.tstart(keep_idx);
+sign_evt.tend = sign_evt.tend(keep_idx);
+
+sign_evt = rmfield(sign_evt,'usr');
+sign_evt.usr(1).label = 'rho (obs)';
+sign_evt.usr(1).data = score1(iT).WIN_rho_obs(keep_idx);
+sign_evt.usr(2).label = 'idshuf perc';
+sign_evt.usr(2).data = 1-score1(iT).WIN_rho_perc(keep_idx);
+sign_evt.usr(3).label = 'tshuf perc';
+sign_evt.usr(3).data = 1-score3(iT).WIN_rho_perc(keep_idx);
+
+cfg = [];
+cfg.lfp = lfp;
+%cfg.evt = evt;
+cfg.evt = sign_evt;
+cfg.windowSize = 0.5; %in seconds
+MultiRaster(cfg,S_pc(iT)); %NOTE: MultiRaster has the navigate function inside!!!
 
 %% write data -- could be helper function
 if cfg.writeFiles
