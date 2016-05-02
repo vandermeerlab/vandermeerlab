@@ -372,7 +372,7 @@ sign_evt.usr(3).label = 'tshuf perc';
 sign_evt.usr(3).data = 1-score3(iT).WIN_rho_perc(keep_idx);
 
 cfg = [];
-cfg.lfp = lfp;
+cfg.lfp = csc;
 %cfg.evt = evt;
 cfg.evt = sign_evt;
 cfg.windowSize = 0.5; %in seconds
