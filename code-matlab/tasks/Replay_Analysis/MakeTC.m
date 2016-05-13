@@ -122,7 +122,7 @@ end
 fpeak_idx = fpeak_idx(sort_idx);
 
 %store all data in a single struct
-tc_out.tc = tc_out.tc;
+tc_out.tc = tc_out.tc';
 %tc_out.template_idx = template_idx;
 tc_out.field_template_idx = fpeak_idx;
 tc_out.field_loc = fpeak_val;

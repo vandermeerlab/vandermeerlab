@@ -1,5 +1,5 @@
 %%
-cfg = []; cfg.rats = {'R050'};
+cfg = []; cfg.rats = {'R064'};
 cfg.requireMetadata = 1;
 cfg.requireCandidates = 1;
 fd = sort(getTmazeDataPath(cfg));
@@ -16,8 +16,8 @@ for iFD = 1:length(fd)
 %     cfg.whichEvents = 'prerecord';
 %     
 %     Generate_CorrScores(cfg);
-    
-    cfg.output_file_prefix = 'CS_M_ALL_'; % prefix use when writing files
+       
+    cfg .output_file_prefix = 'YTPOSTER_'; % prefix use when writing files
     cfg.whichEvents = 'all';
     cfg.matchFields = 1;
     
