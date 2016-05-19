@@ -29,7 +29,7 @@ nSignals = size(tsd_in.data,1);
 nSamples_data = size(tsd_in.data,2);
 
 if nSignals > nSamples_data
-   pass_flag = 0;
+   %pass_flag = 0;
    fprintf('WARNING: more signals (%d) than samples (%d) in data.\n',nSignals,nSamples_data);
 end
 
