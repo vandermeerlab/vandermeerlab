@@ -48,7 +48,8 @@ end
 
 if  nTrials == 1
     hold on;
-    h = nan(size(S_in.t));
+    %     h = nan(size(S_in.t));
+    h = cell(size(S_in.t));
     for iC = 1:nCells
         nSpikes = length(S_in.t{iC});
         xvals = [ S_in.t{iC}' ; S_in.t{iC}' ; nan(size(S_in.t{iC}')) ];
@@ -57,11 +58,14 @@ if  nTrials == 1
         
         xvals = xvals(:);
         yvals = yvals(:);
-
+        
         if isempty(xvals) && isempty(yvals)
-            h(iC) = nan;
+%             h(iC) = nan;
+            h{iC} = nan;
         else
-            h(iC) = plot(xvals,yvals,'Color',cfg.spkColor(iC,:),'LineWidth',cfg.LineWidth);
+%             h(iC) = plot(xvals,yvals,'Color',cfg.spkColor(iC,:),'LineWidth',cfg.LineWidth);
+            plot(xvals,yvals,'Color',cfg.spkColor(iC,:),'LineWidth',cfg.LineWidth);
+            h{iC} = get(gca);
         end
     end
     

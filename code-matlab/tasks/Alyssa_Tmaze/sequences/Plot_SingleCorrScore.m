@@ -29,17 +29,17 @@ for iT = 1:2
         shuffled_rhos_h = hist(shuffled_rhos(:),bin_c);
         
         % plot (v1)
-        subplot(2,2,2*(iT-1)+iW);
-        h(1) = plot(bin_c,observed_rhos_h./nScored,'LineWidth',1);
-        hold on;
-        plot(bin_c,observed_rhos_h./nScored,'b.','MarkerSize',15);
-        
-        h(2) = plot(bin_c,shuffled_rhos_h./length(shuffled_rhos),'r','LineWidth',1);
-        plot(bin_c,shuffled_rhos_h./length(shuffled_rhos),'r.','MarkerSize',15);
-        
-        set(gca,'XLim',[-1 1],'FontSize',18,'YLim',[0 0.1]); box off;
-        legend(h,{'observed',whatlabel{iW}}); legend boxoff; grid on;
-        
+%         subplot(2,2,2*(iT-1)+iW);
+%         h(1) = plot(bin_c,observed_rhos_h./nScored,'LineWidth',1);
+%         hold on;
+%         plot(bin_c,observed_rhos_h./nScored,'b.','MarkerSize',15);
+%         
+%         h(2) = plot(bin_c,shuffled_rhos_h./length(shuffled_rhos),'r','LineWidth',1);
+%         plot(bin_c,shuffled_rhos_h./length(shuffled_rhos),'r.','MarkerSize',15);
+%         
+%         set(gca,'XLim',[-1 1],'FontSize',18,'YLim',[0 0.1]); box off;
+%         legend(h,{'observed',whatlabel{iW}}); legend boxoff; grid on;
+%         
         % plot (v2) -- bars seem to be necessary to draw in grouped mode..
 %         subplot(2,2,2*(iT-1)+iW);
 %         h(1) = bar(bin_c,observed_rhos_h./nScored); 
@@ -47,9 +47,23 @@ for iT = 1:2
 %         hold on;
 %         h(2) = bar(bin_c,shuffled_rhos_h./length(shuffled_rhos)); 
 %         set(h(2),'FaceColor','r','EdgeColor','none','BarWidth',0.4);
+%         
+%         set(gca,'XLim',[-1 1],'FontSize',18,'YLim',[0 0.1]); box off;
+%         legend(h,{'observed',whatlabel{iW}}); legend boxoff; grid on;
+%         
+        
+        subplot(2,2,2*(iT-1)+iW);
+        h = bar(bin_c,[observed_rhos_h./nScored;shuffled_rhos_h/length(shuffled_rhos)]'); 
+        set(h(1),'FaceColor','b','EdgeColor','none','BarWidth',0.5);
+        set(h(2),'FaceColor','r','EdgeColor','none','BarWidth',0.5);
         
         set(gca,'XLim',[-1 1],'FontSize',18,'YLim',[0 0.1]); box off;
         legend(h,{'observed',whatlabel{iW}}); legend boxoff; grid on;
+        
+        
+        
+        
+        
         
         switch iT
             case 1

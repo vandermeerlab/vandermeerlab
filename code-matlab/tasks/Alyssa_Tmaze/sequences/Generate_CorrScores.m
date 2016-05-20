@@ -37,8 +37,8 @@ cfg_def.matchFields = 0;
 cfg = ProcessConfig2(cfg_def,cfg_in);
 
 %
-load(FindFile('*metadata.mat'));
-run(FindFile('*keys.m'));
+LoadMetadata
+LoadExpKeys
 
 % Load spikes
 please = [];
@@ -66,8 +66,8 @@ pos = LoadPos([]);
 if strcmp(S_orig.cfg.SessionID(1:4),'R042')
     metadata = TrimTrialTimes([],metadata); % R042 only!!
 end
-%[L_trl,R_trl] = GetMatchedTrials([],metadata,ExpKeys);
-[L_trl,R_trl] = GetMatchedTrials_old([],metadata);
+[L_trl,R_trl] = GetMatchedTrials([],metadata,ExpKeys);
+% [L_trl,R_trl] = GetMatchedTrials_old([],metadata);
 
 S_left = restrict2(S_orig,L_trl); posL = restrict2(pos,L_trl);
 S_right = restrict2(S_orig,R_trl); posR = restrict2(pos,R_trl);
@@ -247,6 +247,7 @@ for iT = 1:2
     
     S_pc(iT).t = S_pc(iT).t(lags1.perm_idx); S_pc(iT).label = S_pc(iT).label(lags1.perm_idx);
     
+    out.ENC_data = ENC_data;
 end
 %% How to plot reordered tuning cirves? should be option in TCPlot...
 
@@ -308,10 +309,8 @@ evt = AddNActiveCellsIV(cfg_n,evt,S_pc(1)); % note this has binning at 5ms by de
 cfg_n = []; cfg_n.label = 'NActiveCells_right';
 evt = AddNActiveCellsIV(cfg_n,evt,S_pc(2)); % note this has binning at 5ms by default
 
-keep_idx = find(evt.usr.(cfg_n.label) > cfg.nActiveCells | evt.usr.(cfg_n.label) > cfg.nActiveCells);
+keep_idx = find(evt.usr.('NActiveCells_left') > cfg.nActiveCells | evt.usr.('NActiveCells_right') > cfg.nActiveCells);
 evt = SelectIV([],evt,keep_idx);
-
-
 fprintf('nEvents after nActiveCells filtering: %d\n',length(evt.tstart));
 
 %% plot SWR events
@@ -328,55 +327,66 @@ fprintf('nEvents after nActiveCells filtering: %d\n',length(evt.tstart));
 % cfg = [];
 % cfg.evt = evt;
 % cfg.lfp = lfp_theta;
-% MultiRasterTwin(cfg,S_pc(1),S_pc(2));
+% PolyRaster(cfg,S_pc(1),S_pc(2));
 
-%% score?
-%score = CorrScore([],evt,S_pc);
+%% Run sequence analysis
 
-%%
-clear score1 score3;
-for iT = 1:2
-    cfg_cs_shuf3 = [];
-    cfg_cs_shuf3.dt = cfg.dt;
-    cfg_cs_shuf3.twin = cfg.twin;
-    cfg_cs_shuf3.shuffleType = 3;
+%make sure that there are any significant sequences
+if isempty(evt.tstart)
+    out.score1 = nan;
+    out.score3 = nan;
+    out.sign_evt = nan;
+else
+    for iT = 1:2
+        cfg_cs_shuf3 = [];
+        cfg_cs_shuf3.dt = cfg.dt;
+        cfg_cs_shuf3.twin = cfg.twin;
+        cfg_cs_shuf3.shuffleType = 3;
+        %     cfg_cs_shuf3.nShuffles = 10;
+        out.score3(iT) = CorrScoreWin3(cfg_cs_shuf3,evt,S_pc(iT));
+        
+        cfg_cs_shuf1 = cfg_cs_shuf3;
+        cfg_cs_shuf1.shuffleType = 1;
+        %     cfg_cs_shuf1.nShuffles = 10;
+        out.score1(iT) = CorrScoreWin3(cfg_cs_shuf1,evt,S_pc(iT));
+        
+        keep_idx = find(out.score1(iT).WIN_rho_perc > 0.95 & out.score3(iT).WIN_rho_perc > 0.95);
+        %     keep_idx = find(score1(iT).WIN_rho_perc < 0.05 & score3(iT).WIN_rho_perc < 0.05);
+        
+        sign_evt = iv;
+        sign_evt.tstart = vertcat(out.score1(iT).WIN_iv(keep_idx).tstart);
+        sign_evt.tend = vertcat(out.score1(iT).WIN_iv(keep_idx).tend);
+        sign_evt.usr = out.score1(iT).WIN_iv(1).usr;
+        sign_evt.cfg = out.score1(iT).WIN_iv(1).cfg;
+        
+        % sign_evt = evt_lt;
+        % sign_evt.tstart = sign_evt.tstart(keep_idx);
+        % sign_evt.tend = sign_evt.tend(keep_idx);
+        %
+        % sign_evt = rmfield(sign_evt,'usr');
+        % sign_evt.usr(1).label = 'rho (obs)';
+        % sign_evt.usr(1).data = score1(iT).WIN_rho_obs(keep_idx);
+        % sign_evt.usr(2).label = 'idshuf perc';
+        % sign_evt.usr(2).data = 1-score1(iT).WIN_rho_perc(keep_idx);
+        % sign_evt.usr(3).label = 'tshuf perc';
+        % sign_evt.usr(3).data = 1-score3(iT).WIN_rho_perc(keep_idx);
+        
+        % cfg_SWR = []; cfg_SWR.fc = ExpKeys.goodSWR(1);
+        % lfp_SWR = LoadCSC(cfg_SWR);
+        
+        % cfg = [];
+        % cfg.lfp = lfp_SWR;
+        % cfg.evt = sign_evt;
+        % cfg.windowSize = 0.5; %in seconds
+        % MultiRaster(cfg,S_pc(iT)); %NOTE: MultiRaster has the navigate function inside!!!
+    end
     
-    out.score3(iT) = CorrScoreWin3(cfg_cs_shuf3,evt,S_pc(iT));
-    
-    cfg_cs_shuf1 = cfg_cs_shuf3;
-    cfg_cs_shuf1.shuffleType = 1;
-    
-    out.score1(iT) = CorrScoreWin3(cfg_cs_shuf1,evt,S_pc(iT));
 end
 
-out.cfg = cfg; out.nLcells = length(S_pc(1).t); out.nRcells = length(S_pc(2).t);
-
-%% need to do some fancy post-processing now...
-iT = 1; % 1 left, 2 right
-
-%keep_idx = find(score1(iT).WIN_rho_perc > 0.99 & score1(iT).WIN_rho_obs_pval < 0.01);
-keep_idx = find(score1(iT).WIN_rho_perc > 0.95 & score3(iT).WIN_rho_perc > 0.95);
-keep_idx = find(score1(iT).WIN_rho_perc < 0.05 & score3(iT).WIN_rho_perc < 0.05);
-
-sign_evt = evt_lt;
-
-sign_evt.tstart = sign_evt.tstart(keep_idx);
-sign_evt.tend = sign_evt.tend(keep_idx);
-
-sign_evt = rmfield(sign_evt,'usr');
-sign_evt.usr(1).label = 'rho (obs)';
-sign_evt.usr(1).data = score1(iT).WIN_rho_obs(keep_idx);
-sign_evt.usr(2).label = 'idshuf perc';
-sign_evt.usr(2).data = 1-score1(iT).WIN_rho_perc(keep_idx);
-sign_evt.usr(3).label = 'tshuf perc';
-sign_evt.usr(3).data = 1-score3(iT).WIN_rho_perc(keep_idx);
-
-cfg = [];
-cfg.lfp = csc;
-%cfg.evt = evt;
-cfg.evt = sign_evt;
-cfg.windowSize = 0.5; %in seconds
-MultiRaster(cfg,S_pc(iT)); %NOTE: MultiRaster has the navigate function inside!!!
+out.cfg = cfg; 
+out.nLcells = length(S_pc(1).t); 
+out.nRcells = length(S_pc(2).t);
+out.cand_evt = evt;
 
 %% write data -- could be helper function
 if cfg.writeFiles
@@ -384,12 +394,12 @@ if cfg.writeFiles
     out_fn = cat(2,base_fn,'-CorrScores.mat');
     save(out_fn,'out');
     
-    Plot_SingleCorrScore;
-    
-    out_fn = cat(2,base_fn,'-corrSummary.png');
-    set(gcf, 'InvertHardCopy', 'off');
-    print(gcf,'-r300','-dpng',out_fn);
-    close all;
-    
+    if ~isempty(evt.tstart)
+        Plot_SingleCorrScore;
+        out_fn = cat(2,base_fn,'-corrSummary.png');
+        set(gcf, 'InvertHardCopy', 'off');
+        print(gcf,'-r300','-dpng',out_fn);
+        close all;
+    end
     cd(this_fd)
 end
