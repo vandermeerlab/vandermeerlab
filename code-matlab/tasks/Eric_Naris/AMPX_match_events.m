@@ -14,7 +14,7 @@ function ctrl_evts = AMPX_match_events(cfg_in, evts, detect_csc)
 %% set up default parameters
 cfg_def.PARAM_twin = 0.2; % half-width of time window
 cfg_def.PARAM_control_dt = 5; % offset for control classifier
-
+cfg_def.debug = 0;
 cfg = ProcessConfig(cfg_def, cfg_in);
 
 %% run the low gamma power matching epochs
@@ -32,8 +32,8 @@ this_lg_control = iv(ctrl_evt.lg-cfg.PARAM_twin,ctrl_evt.lg+cfg.PARAM_twin);
 this_hg_control = iv(ctrl_evt.hg-cfg.PARAM_twin,ctrl_evt.hg+cfg.PARAM_twin);
 
 
-ctrl_evts.low = this_lg_control;
-ctrl_evts.high = this_hg_control;
+ctrl_evts.lg = this_lg_control;
+ctrl_evts.hg = this_hg_control;
 
 %%
 if cfg.debug == 1

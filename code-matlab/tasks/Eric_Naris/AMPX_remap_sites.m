@@ -32,6 +32,8 @@ switch type
         for iChan = length(data.channels):-1:1
             data_out.channel{iChan} = data.channels{ExpKeys.Probe_layout(iChan)};
             data_out.label_remap(iChan) = ExpKeys.Probe_layout(iChan);
+            sites_out(iChan) = iChan;
+            sites_in(iChan) = ExpKeys.Probe_layout(iChan);
         end
         
         
@@ -40,6 +42,8 @@ switch type
         for iChan = length(data.label):-1:1
             data_out.trial{1}(iChan,:) = data.trial{1}(ExpKeys.Probe_layout(iChan),:);
             data_out.label_remap{iChan} = ExpKeys.Probe_layout(iChan);
+            sites_out(iChan) = iChan;
+            sites_in(iChan) = ExpKeys.Probe_layout(iChan);
         end
         
         
@@ -48,5 +52,12 @@ switch type
         for iChan = length(data.labels):-1:1
             data_out.channels{iChan} = data.channels{ExpKeys.Probe_layout(iChan)};
             data_out.labels_remap(iChan) = ExpKeys.Probe_layout(iChan);
+            sites_out(iChan) = iChan;
+            sites_in(iChan) = ExpKeys.Probe_layout(iChan);
         end
 end
+
+disp('Sites In')
+reshape(sites_in, 8,8)
+disp('Sites Out')
+reshape(sites_out,8,8)

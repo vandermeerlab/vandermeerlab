@@ -1,4 +1,4 @@
-function [evts, detect_csc] = AMPX_Julien_DetectEvents(data, ExpKeys)
+function [evts, detect_csc, detect_chan] = AMPX_Julien_DetectEvents(data, ExpKeys)
 
 %% MASTER_CollectGammaEvents.m
 % detects and organizes gamma events from raw LFP data
@@ -11,6 +11,7 @@ data_tsd = AMPX_to_tsd(data);
 csc = data_tsd;
 csc.data = csc.data(ExpKeys.DetectChan,:);
 csc.detect_chan = ExpKeys.DetectChan;
+detect_chan = ExpKeys.DetectChan;
 %% set params
 % gamma event detection
 PARAM_f_label = {'low','high', 'low_low_tr', 'high_low_tr'};
@@ -61,7 +62,7 @@ csc.data(artif_idx) = NaN;
 cfg_chew = [];
 cfg_chew.epoch = 'all'; % chewing occurs during task mostly
 cfg_chew.minlen = 0.02;
-cfg_chew.filter_cfg.f = [125 500]; % default [200 300]
+cfg_chew.filter_cfg.f = [200 500]; % default [200 300]
 cfg_chew.threshold = PARAM_chew_thr; % 0.25 for session 2, 0.5 for session 1?
 cfg_chew.smooth = 0.05; % convolve with Gaussian of this SD
 evt_chew = Julien_DetectEvents(cfg_chew,csc,ExpKeys);
@@ -269,13 +270,18 @@ evts.low = temp_lg;
 evts.high = temp_hg;
 evts.high_tr = temp_hg_low;
 evts.low_tr = temp_lg_low;
+evts.spindles = evt_spindl;
+evts.spindles.firstTimestamp = csc.tvec(1);
 %%
 
 
 for iFreq = 1:length(PARAM_f_label)
     fprintf(['\n ' PARAM_f_label{iFreq} ' found: ' num2str(length(evts.(PARAM_f_label{iFreq}).tstart)) ' events'])
 end
+
+fprintf(['\nSpindles found:'  num2str(length(evts.spindles.tstart)) ' events'])
 fprintf('\n')
+
 % output the same csc used to detect the events (used for pseudo random
 % non-gamma epochs selection
 detect_csc = csc;

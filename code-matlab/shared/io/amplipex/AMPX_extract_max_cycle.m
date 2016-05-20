@@ -1,4 +1,4 @@
-function [keep_cycle keep_idx] = AMPX_extract_max_cycle(cfg, data_filt)
+function [keep_cycle, keep_idx] = AMPX_extract_max_cycle(cfg, data_filt)
 %% AMPX_extract_max_cycle: find the maximum amplitude cycle in a filtered
 % data event.  Finds the highest peak in the filtered data, then it finds
 % the two adjacent troughs to complete one cycle around the center of the
@@ -90,6 +90,7 @@ for iChan = size(data_filt.data,1):-1:1
         subplot(414)
         hold on
         plot(data_filt.tvec(prev_peak: next_peak), keep_cycle(iChan,:))
+        xlim([data_filt.tvec(prev_peak), data_filt.tvec(next_peak)])
     end
 end
 

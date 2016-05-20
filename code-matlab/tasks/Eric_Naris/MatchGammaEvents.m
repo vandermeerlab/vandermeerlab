@@ -43,6 +43,7 @@ gPow = FilterLFP(cfg_filter,csc);
 gPow.data = abs(hilbert(gPow.data));
 dt = median(diff(gPow.tvec));
 span = round(sum(abs(cfg.evt_twin))./dt);
+gPow.data = Match_filt_fnc(gPow.data, span);
 gPow.data = smooth(gPow.data,span);
 
 % initialize mask: can't use times that overlap with input events
