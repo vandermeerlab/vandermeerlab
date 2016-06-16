@@ -42,7 +42,7 @@ nDetected = 0;
 this_start_idx = [];
 prev_val = -100;
 
-clear tstart tend;
+tstart = []; tend = [];
 for iT = 1:length(decoded_z.data)
     
     this_jump = abs(decoded_z.data(iT)-prev_val);
