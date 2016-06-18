@@ -3,7 +3,7 @@ clear all;
 
 cfg = [];
 cfg.prefix = 'R2_'; % which files to load
-cfg.whichEvents = 'taskrest'; % {'prerecord','taskrest','taskrun','postrecord'}; % which events to process?
+cfg.whichEvents = 'postrecord'; % {'prerecord','taskrest','taskrun','postrecord'}; % which events to process?
 cfg.whichSeq = 'either'; % {'all','fwd','bwd','either'}; % which sequences to process?
 cfg.sessions = {'food','water'};
 cfg.arms = {'left','right'};
@@ -184,10 +184,12 @@ for iFD = 1:length(fd)
         % requires some number of neurons active in a bin
         % (nMinNeurons in Generate_DecSeq)
         
-        this_seqR = AddNActiveCellsIV([],this_seqR,out.expCond(iCond).decS);
-        
-        keep_idx = this_seqR.usr.nActiveCells >= cfg.minActiveCells;
-        this_seqR = SelectIV([],this_seqR,keep_idx);
+        if ~isempty(this_seqR.tstart)
+            this_seqR = AddNActiveCellsIV([],this_seqR,out.expCond(iCond).decS);
+            
+            keep_idx = this_seqR.usr.nActiveCells >= cfg.minActiveCells;
+            this_seqR = SelectIV([],this_seqR,keep_idx);
+        end
         
         % count events
         nEvents = length(this_seqR.tstart);
@@ -432,10 +434,12 @@ for iRat = 1:length(cfg.rats)
             % requires some number of neurons active in a bin
             % (nMinNeurons in Generate_DecSeq)
             
-            this_seqR = AddNActiveCellsIV([],this_seqR,out.expCond(iCond).decS);
-            
-            keep_idx = this_seqR.usr.nActiveCells >= cfg.minActiveCells;
-            this_seqR = SelectIV([],this_seqR,keep_idx);
+            if ~isempty(this_seqR.tstart)
+                this_seqR = AddNActiveCellsIV([],this_seqR,out.expCond(iCond).decS);
+                
+                keep_idx = this_seqR.usr.nActiveCells >= cfg.minActiveCells;
+                this_seqR = SelectIV([],this_seqR,keep_idx);
+            end
             
             % count events
             nEvents = length(this_seqR.tstart);
