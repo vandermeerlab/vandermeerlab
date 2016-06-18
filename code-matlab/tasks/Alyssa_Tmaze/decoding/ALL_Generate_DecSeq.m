@@ -17,6 +17,10 @@ if proceed
     fd = sort(getTmazeDataPath(cfg));
     
     cfg_decSeq = [];
+    cfg_decSeq.minSeqLength = 8;
+    cfg_decSeq.removeInterneurons = 1;
+    cfg_decSeq.nMinNeurons = 1;
+    cfg_decSeq.output_file_prefix = 'R2_';
     
     for iFD = 1:length(fd)
         

@@ -29,6 +29,7 @@ function out = Generate_DecSeq(cfg_in)
 % cfg_def.Qdt = 0.005;
 % cfg_def.Qboxcar = 5;
 % cfg_def.writeFiles = 1;
+% cfg_def.removeInterneurons = 1;
 %
 % MvdM 2015
 
@@ -55,6 +56,7 @@ cfg_def.plotOutput = 0;
 cfg_def.Qdt = 0.005;
 cfg_def.Qboxcar = 5;
 cfg_def.writeFiles = 1;
+cfg_def.removeInterneurons = 1;
 
 nMaxLaps = 20;
 %cfg_def.encdecmat = 1-eye(20);
@@ -68,6 +70,12 @@ S = LoadSpikes(please);
 
 LoadExpKeys;
 LoadMetadata;
+
+if cfg.removeInterneurons
+    cfg_temp = []; cfg_temp.fc = ExpKeys.goodSWR(1);
+    csc = LoadCSC(cfg_temp);
+    S = RemoveInterneuronsHC([],S,csc);
+end
 
 cfg_pos = []; cfg_pos.convFact = ExpKeys.convFact;
 pos = LoadPos(cfg_pos); % pos is now in cm

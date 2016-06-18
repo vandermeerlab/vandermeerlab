@@ -2,19 +2,21 @@
 clear all;
 
 cfg = [];
-cfg.prefix = []; % which files to load
-cfg.whichEvents = 'postrecord'; % {'prerecord','taskrest','taskrun','postrecord'}; % which events to process?
-cfg.whichSeq = 'all'; % {'all','fwd','bwd'}; % which sequences to process?
+cfg.prefix = 'R2_'; % which files to load
+cfg.whichEvents = 'taskrest'; % {'prerecord','taskrest','taskrun','postrecord'}; % which events to process?
+cfg.whichSeq = 'either'; % {'all','fwd','bwd','either'}; % which sequences to process?
 cfg.sessions = {'food','water'};
 cfg.arms = {'left','right'};
 cfg.writeDiary = 1; % keep a text file record of command window history
 cfg.output_fd = 'D:\projects\AlyssaTmaze\resultsFiles'; % where to place output files
 cfg.saveData = 1;
-%cfg.rats = {'R042','R044','R050','R064'};
-cfg.rats = {'R042','R050','R064'};
-cfg.cpbin = 70; % if non-empty, restrict to sequences with start or end beyond this
-%cfg.output_prefix = cat(2,cfg.prefix,'DecSeq_',cfg.whichEvents,'_',cfg.whichSeq,'_');
-cfg.output_prefix = cat(2,cfg.prefix,'DecSeq_',cfg.whichEvents,'_',cfg.whichSeq,'_cp70_');
+cfg.rats = {'R042','R044','R050','R064'};
+cfg.cpbin = []; % if non-empty, restrict to sequences with start or end beyond this
+cfg.minActiveCells = 5;
+cfg.minlen = 0.08; % otherwise, minimum length in s
+cfg.output_prefix = cat(2,cfg.prefix,'DecSeq_',cfg.whichEvents,'_',cfg.whichSeq,'_');
+cfg.SWRoverlap = 0; % if 1, only keep events detected as SWR candidates
+%cfg.output_prefix = cat(2,cfg.prefix,'DecSeq_',cfg.whichEvents,'_',cfg.whichSeq,'_cp70_');
 
 
 %%
@@ -83,7 +85,7 @@ for iFD = 1:length(fd)
     this_file = FindFiles([cfg.prefix,sessionID,'-DecSeq_data.mat']);
     
     if isempty(this_file)
-        fprintf('Session %s: no CorrScores file found, skipping...\n',fd{iFD});
+        fprintf('Session %s: no DecSeq file found, skipping...\n',fd{iFD});
         continue;
     end
     
@@ -105,8 +107,18 @@ for iFD = 1:length(fd)
         this_seqR = [];
         
         % only include events that overlap with SWRs
-        this_seq = out.expCond(iCond).seq_iv;
-        this_seqR = IntersectIV([],this_seq,evt);
+        if cfg.SWRoverlap
+            this_seq = out.expCond(iCond).seq_iv;
+            this_seqR = IntersectIV([],this_seq,evt);
+            else
+                this_seqR = out.expCond(iCond).seq_iv;
+        end
+        
+        % only select events with some minimum length
+        if ~isempty(cfg.minlen)
+            evt_len = this_seqR.tend-this_seqR.tstart;
+            this_seqR = SelectIV([],this_seqR,evt_len >= cfg.minlen);
+        end
         
         seq_tosave = UnionIV([],seq_tosave,this_seqR); % for exporting as "candidates", keep both L and R
         
@@ -160,10 +172,22 @@ for iFD = 1:length(fd)
                     keep_idx = (this_seqR.usr.pval < 0.05 & this_seqR.usr.beta > 0);
                 case 'bwd'
                     keep_idx = (this_seqR.usr.pval < 0.05 & this_seqR.usr.beta < 0);
+                case 'either'
+                    keep_idx = (this_seqR.usr.pval < 0.05);
                     
             end
             this_seqR = SelectIV([],this_seqR,keep_idx);
         end
+        
+        % only select events with some minimum number of cells active
+        % note this is in addition to decoding-level selection which
+        % requires some number of neurons active in a bin
+        % (nMinNeurons in Generate_DecSeq)
+        
+        this_seqR = AddNActiveCellsIV([],this_seqR,out.expCond(iCond).decS);
+        
+        keep_idx = this_seqR.usr.nActiveCells >= cfg.minActiveCells;
+        this_seqR = SelectIV([],this_seqR,keep_idx);
         
         % count events
         nEvents = length(this_seqR.tstart);
@@ -310,7 +334,7 @@ for iRat = 1:length(cfg.rats)
         this_file = FindFiles([cfg.prefix,sessionID,'-DecSeq_data.mat']);
         
         if isempty(this_file)
-            fprintf('Session %s: no CorrScores file found, skipping...\n',fd{iFD});
+            fprintf('Session %s: no DecSeq_data file found, skipping...\n',fd{iFD});
             continue;
         end
         
@@ -332,8 +356,18 @@ for iRat = 1:length(cfg.rats)
             this_seqR = [];
             
             % only include events that overlap with SWRs
-            this_seq = out.expCond(iCond).seq_iv;
-            this_seqR = IntersectIV([],this_seq,evt);
+            if cfg.SWRoverlap
+                this_seq = out.expCond(iCond).seq_iv;
+                this_seqR = IntersectIV([],this_seq,evt);
+            else
+                this_seqR = out.expCond(iCond).seq_iv;
+            end
+            
+            % only select events with some minimum length
+            if ~isempty(cfg.minlen)
+                evt_len = this_seqR.tend-this_seqR.tstart;
+                this_seqR = SelectIV([],this_seqR,evt_len >= cfg.minlen);
+            end
             
             seq_tosave = UnionIV([],seq_tosave,this_seqR); % for exporting as "candidates", keep both L and R
             
@@ -387,10 +421,21 @@ for iRat = 1:length(cfg.rats)
                         keep_idx = (this_seqR.usr.pval < 0.05 & this_seqR.usr.beta > 0);
                     case 'bwd'
                         keep_idx = (this_seqR.usr.pval < 0.05 & this_seqR.usr.beta < 0);
-                        
+                    case 'either'
+                        keep_idx = (this_seqR.usr.pval < 0.05); 
                 end
                 this_seqR = SelectIV([],this_seqR,keep_idx);
             end
+            
+            % only select events with some minimum number of cells active
+            % note this is in addition to decoding-level selection which
+            % requires some number of neurons active in a bin
+            % (nMinNeurons in Generate_DecSeq)
+            
+            this_seqR = AddNActiveCellsIV([],this_seqR,out.expCond(iCond).decS);
+            
+            keep_idx = this_seqR.usr.nActiveCells >= cfg.minActiveCells;
+            this_seqR = SelectIV([],this_seqR,keep_idx);
             
             % count events
             nEvents = length(this_seqR.tstart);
