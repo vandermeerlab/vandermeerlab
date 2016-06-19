@@ -120,6 +120,9 @@ base_fn = cat(2,cfg.output_file_prefix,S.cfg.SessionID);
 %% linearize paths (snap x,y position samples to nearest point on experimenter-drawn idealized track)
 fprintf('Linearizing...');
 
+
+chp = tsd(0,metadata.coord.chp_cm,{'x','y'}); % make choice point useable by cobebase functions
+
 nCond = length(expCond);
 for iCond = 1:nCond
     
@@ -129,6 +132,10 @@ for iCond = 1:nCond
     % ensure that linpos is now in cm
     expCond(iCond).linpos.data = (expCond(iCond).linpos.data ./ length(cfg_linpos.Coord)).*ExpKeys.pathlength;
     
+    % get cp in linpos coordinates
+    expCond(iCond).cp = LinearizePos(cfg_linpos,chp);
+    expCond(iCond).cp.data = (expCond(iCond).cp.data ./ length(cfg_linpos.Coord)).*ExpKeys.pathlength;
+        
 end
     
 %% find intervals where rat is running
@@ -233,6 +240,9 @@ for iCond = 1:nCond
     end
     
     expCond(iCond).tc = TuningCurves(cfg_tc,enc_S,enc_linpos);
+    
+    % keep track of cp
+    [~,expCond(iCond).cp_bin] = histc(expCond(iCond).cp.data,cfg_tc.binEdges{1});
     
     if cfg.plotOutput
         figure;

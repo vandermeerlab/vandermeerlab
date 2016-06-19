@@ -8,14 +8,14 @@ cfg.whichSeq = 'either'; % {'all','fwd','bwd','either'}; % which sequences to pr
 cfg.sessions = {'food','water'};
 cfg.arms = {'left','right'};
 cfg.writeDiary = 1; % keep a text file record of command window history
-cfg.output_fd = 'D:\projects\AlyssaTmaze\resultsFiles'; % where to place output files
+cfg.output_fd = 'C:\projects\AlyssaTmaze\resultsFiles'; % where to place output files
 cfg.saveData = 1;
 cfg.rats = {'R042','R044','R050','R064'};
-cfg.cpbin = []; % if non-empty, restrict to sequences with start or end beyond this
+cfg.cpbin = 10; % if non-empty, restrict to sequences with start or end beyond this (relative to CP)
 cfg.minActiveCells = 5;
-cfg.minlen = 0.08; % otherwise, minimum length in s
+cfg.minlen = 0.05; % otherwise, minimum length in s
 cfg.output_prefix = cat(2,cfg.prefix,'DecSeq_',cfg.whichEvents,'_',cfg.whichSeq,'_');
-cfg.SWRoverlap = 0; % if 1, only keep events detected as SWR candidates
+cfg.SWRoverlap = 1; % if 1, only keep events detected as SWR candidates
 %cfg.output_prefix = cat(2,cfg.prefix,'DecSeq_',cfg.whichEvents,'_',cfg.whichSeq,'_cp70_');
 
 
@@ -153,7 +153,7 @@ for iFD = 1:length(fd)
             this_seqR.usr.pval(iS) = stat(3); % p-value
             
             if ~isempty(cfg.cpbin) % does this sequence include a piece beyond the choice point?
-                this_seqR.usr.loc(iS) = double(this_seq.data(1) > cfg.cpbin | this_seq.data(end) > cfg.cpbin); % start or end should be beyond cp
+                this_seqR.usr.loc(iS) = double(this_seq.data(1) > out.expCond(iCond).cp_bin + cfg.cpbin | this_seq.data(end) > out.expCond(iCond).cp_bin + cfg.cpbin); % start or end should be beyond cp
             end
             
         end
@@ -404,7 +404,7 @@ for iRat = 1:length(cfg.rats)
                 this_seqR.usr.pval(iS) = stat(3); % p-value
                 
                 if ~isempty(cfg.cpbin) % does this sequence include a piece beyond the choice point?
-                    this_seqR.usr.loc(iS) = double(this_seq.data(1) > cfg.cpbin | this_seq.data(end) > cfg.cpbin); % start or end should be beyond cp
+                    this_seqR.usr.loc(iS) = double(this_seq.data(1) > out.expCond(iCond).cp_bin + cfg.cpbin | this_seq.data(end) > out.expCond(iCond).cp_bin + cfg.cpbin); % start or end should be beyond cp
                 end
                 
             end
