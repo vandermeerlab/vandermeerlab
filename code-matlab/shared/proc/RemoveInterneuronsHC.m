@@ -1,7 +1,9 @@
-function S = RemoveInterneuronsHC(cfg_in,S,lfp)
-% function S = RemoveInterneuronsHC(cfg_in,S,lfp)
+function [S,int_idx] = RemoveInterneuronsHC(cfg_in,S,lfp)
+% function [S,int_idx] = RemoveInterneuronsHC(cfg_in,S,lfp)
 %
 % removes neurons with mean firing rate above cfg.max_fr
+%
+% int_idx contains idx's of interneurons
 %
 % MvdM 2016
 
@@ -29,6 +31,7 @@ if cfg.showFRhist
 end
 
 keep_idx = this_fr <= cfg.max_fr;
+int_idx = setdiff(1:nCells,find(keep_idx));
 
 S = SelectTS([],S,keep_idx);
 
