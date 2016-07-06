@@ -49,7 +49,7 @@ switch type
         
     case 'AMPX'
         disp('Data is in AMPX format')
-        for iChan = length(data.labels):-1:1
+        for iChan = 64:-1:1
             data_out.channels{iChan} = data.channels{ExpKeys.Probe_layout(iChan)};
             data_out.labels_remap(iChan) = ExpKeys.Probe_layout(iChan);
             sites_out(iChan) = iChan;

@@ -19,7 +19,7 @@ function [all_cycles] = AMPX_phase_cycle(cfg_in, all_cycles)
 cfg_def.debug = 0;
 cfg_def.spec_window = 512;
 cfg_def.bands = {'low', 'high'};
-cfg_def.ref = all_cycles.cfg.chan_used;
+cfg_def.ref = Naris_BestChan_remap(all_cycles.ExpKeys, 'location', 'vl');
 cfg = ProcessConfig2(cfg_def, cfg_in);
 cfg.date_processed = datestr(now);
 
@@ -66,6 +66,8 @@ end
 
 all_cycles.phase.avg.mean(all_cycles.phase.avg.mean ==0) = NaN;
 all_cycles.phase.avg.median(all_cycles.phase.avg.median ==0) = NaN;
+all_cycles.phase.avg.mean(cfg.ref) = 0;
+all_cycles.phase.avg.median(cfg.ref) = 0;
 all_cycles.phase.cfg = cfg;
 %%
 close all

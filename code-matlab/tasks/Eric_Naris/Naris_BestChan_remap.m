@@ -15,7 +15,7 @@ if strcmp(location, 'all')
         location = all_loc{iL};
         
         if strcmp(location, 'vl')
-            best_chans = [64 56 63 55 48 62 54 47 61 ];
+            best_chans = [64 63 56 55 48 62  54 47 61 ];
         elseif strcmp(location, 'dm')
             best_chans = [1 9 2 10 17 3 11 18 3];
         elseif strcmp(location, 'dl')
@@ -38,7 +38,7 @@ if strcmp(location, 'all')
     end
 else
         if strcmp(location, 'vl')
-            best_chans = [64 56 63 55 48 62 54 47 61 ];
+            best_chans = [64 56 63 55 62 48 54 47 61 ];
         elseif strcmp(location, 'dm')
             best_chans = [1 9 2 10 17 3 11 18 3];
         elseif strcmp(location, 'dl')

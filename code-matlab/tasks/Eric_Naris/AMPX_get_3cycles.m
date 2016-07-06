@@ -24,7 +24,6 @@ cfg_def.clims = [-800 1000]; % range of colour scale in LFP image
 cfg_def.clims_csd = [-700 700]; % range of colour scale in CSD image
 cfg_def.font_size = 13; % fontsize
 cfg_def.t_font_size = 14; % fontsize for title
-cfg_def.ref_chan = 57;
 cfg_def.data_smooth = 10;
 cfg_def.session_type = 'pre';
 cfg_def.smooth = 10;

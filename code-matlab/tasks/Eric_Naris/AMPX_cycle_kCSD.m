@@ -1,4 +1,4 @@
-function [cycle_csd] = AMPX_cycle_kCSD(cfg_in, all_cycles)
+function [CSD] = AMPX_cycle_kCSD(cfg_in, all_cycles)
 %% AMPX_cycle_kCSD: computes the kernal current source density (kCSD) for
 %  each three cycle event in all_cycles.
 %
@@ -33,27 +33,18 @@ cfg_def.peak_to_use = 'next';
 cfg = ProcessConfig2(cfg_def,cfg_in);
 
 %% cycle all the event
-for ievt =length(all_cycles.(peak{iPeak}).):-1:1;
-    
-    cfg_kCSD = [];
-    cfg_kCSD.R = 0.2;
-    csd_struct = AMPX_kCSD(cfg_kCSD, all_cycles.tvec{ievt}, all_cycles.data{ievt}, all_cycles.ExpKeys);
-    CSD.(cfg.band).(peaks{ipeak}).all_csd_1d(:,:,ievt) = csd_struct.csd_1d;
-    CSD.(cfg.band).(peaks{ipeak}).cfg{ievt} = csd_struct.cfg;
-    CSD.(cfg.band).(peaks{ipeak}).R(ievt) = csd_struct.cfg.R;
-    CSD.(cfg.band).failures(1, ievt) = 0;
-    %% save a figure to check what happened.
-    figure(h_cycle)
-    if strcmp((peaks{ipeak}), 'prev')
-        subplot(5,3,13)
-    elseif strcmp((peaks{ipeak}), 'center')
-        subplot(5,3,14)
-    elseif strcmp((peaks{ipeak}), 'next')
-        subplot(5,3,15)
+peaks = {'prev', 'center', 'next'};
+
+for ievt =length(all_cycles.peaks.center.data):-1:1;
+    for iPeak = 1:length(peaks)
+        cfg_kCSD = [];
+        cfg_kCSD.R = 0.2;
+        csd_struct = AMPX_kCSD(cfg_kCSD, all_cycles.peaks.(peaks{iPeak}).tvec{ievt}, all_cycles.peaks.(peaks{iPeak}).data{ievt}, all_cycles.ExpKeys);
+        CSD.(peaks{iPeak}).all_csd_1d(:,:,ievt) = csd_struct.csd_1d;
+        CSD.(peaks{iPeak}).cfg{ievt} = csd_struct.cfg;
+        CSD.(peaks{iPeak}).R(ievt) = csd_struct.cfg.R;
+        axis off
     end
-    imagesc(csd_struct.csd_1d)
-    axis off
-    
 end
 %     if CSD.(cfg.band).failures(1, ievt) ==0
 %         mkdir([datestr(date, 'yyyy-mm-dd') '/CSD/'])
@@ -67,14 +58,14 @@ close all
 h_avg = figure(10);
 h1 = subplot(1,3,1);
 set(gcf, 'position', [677 526 736 215])
-imagesc(mean(CSD.(cfg.band).prev.all_csd_1d, 3))
+imagesc(mean(CSD.prev.all_csd_1d, 3))
 p = get(h1, 'pos');
 p(3) = p(3) + 0.05;
 set(h1, 'pos', p);
 % text(30, 5, 'prev')
 axis off
 h2 = subplot(1,3,2);
-imagesc(mean(CSD.(cfg.band).center.all_csd_1d, 3))
+imagesc(mean(CSD.center.all_csd_1d, 3))
 % text(30, 5, 'center')
 axis off
 p = get(h2, 'pos');
@@ -83,7 +74,7 @@ set(h2, 'pos', p);
 
 
 h3 = subplot(1,3,3);
-imagesc(mean(CSD.(cfg.band).next.all_csd_1d, 3))
+imagesc(mean(CSD.next.all_csd_1d, 3))
 % text(30, 5, 'next')
 axis off
 p = get(h3, 'pos');

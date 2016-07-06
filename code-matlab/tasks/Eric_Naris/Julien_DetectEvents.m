@@ -21,7 +21,7 @@ cfg_def.signalType = 'amplitude'; % {'amplitude','power'}
 cfg_def.threshold = 3; % threshold for detecting events
 cfg_def.method = 'zscore'; % what threshold means
 cfg_def.minlen = 0.05; % minimum event length
-
+cfg_def.verbose = 0; 
 cfg = ProcessConfig(cfg_def,cfg_in);
 
 if isempty(cfg.filter_cfg)

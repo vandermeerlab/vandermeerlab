@@ -1,5 +1,5 @@
-function [csd_struct] = AMPX_kCSD(cfg_in, filt_tvec, filt_data, ExpKeys)
-%% AMPX_kCSD: 
+function [csd_struct] = AMPX_kCSD_example(cfg_in, all_data_pre)
+%% AMPX_kCSD_example: 
 % takes a piece of data (idealy filtered and only an event of interest) and
 % applies the kernal Current Source Density 
 

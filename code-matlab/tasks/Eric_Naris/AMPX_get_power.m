@@ -1,12 +1,10 @@
-function power = AMPX_get_power(cfg_in, evts, data_ft, ExpKeys)
+function power = AMPX_get_power(cfg_in, data_ft, ExpKeys)
 %% AMPX_get_power: extracts the power within a specified frequency range
 %
 %
 %   INPUTS:
 %      - cfg_in [struct]: contains parameters for the ft_freqanalysis
 %      function as well as the frequency range of interest.
-%      - evts [struct]: contains all the ivs for low, high gamma events and
-%      thier matched control ivs
 %      - data_ft [struct]: FieldTrip data format that has not bee
 %      trilified.
 %      - ExpKeys [struct]: contains all the experimental parameters like
