@@ -24,6 +24,7 @@ function pass_flag = checkTmazeReqs(cfg_in)
 % cfg_def.ratsToProcess = {'R042','R044','R050','R064'}; % only process these
 %   rats
 % cfg_def.verbose = 1; 1 display command window text, 0 don't
+% cfg_def.unzip = 1; % attempt to unzip vt file if no *.nvt found with 7zip.org
 %
 % ACarey May 2015, for Tmaze project 
 
@@ -48,6 +49,7 @@ cfg_def.requireHSdetach = 0;
 cfg_def.requireFiles = 0;
 cfg_def.ratsToProcess = {'R042','R044','R050','R064'};
 cfg_def.verbose = 1;
+cfg_def.unzip = 1;
 
 mfun = mfilename;
 cfg = ProcessConfig(cfg_def,cfg_in,mfun);
@@ -163,6 +165,10 @@ for iRat = 1:length(rat_list)
             fn = FindFiles('*.nvt');
             if isempty(fn)
                 disp(['Video tracking file not found in ',sessionID])
+                vt_fn = FindFiles('*VT1.zip');
+                if ~isempty(vt_fn) & cfg.unzip
+                    system(cat(2,'7z x ',vt_fn{1}));
+                end
                 pass_flag = 0;
             end
         end
@@ -184,7 +190,7 @@ for iRat = 1:length(rat_list)
         end
         
         if cfg.requireTimes && strcmp(rat_list(iRat).name,'R042') % for R042 only
-            fn = FindFiles('*-times.mat');
+            fn = FindFiles('*times.mat');
             if isempty(fn)
                 disp(['Times file not found in ',sessionID])
                 pass_flag = 0;
@@ -201,6 +207,7 @@ for iRat = 1:length(rat_list)
         if cfg.requireFiles 
             if ~exist('files','dir')
                 disp(['Files folder not found in ',sessionID])
+                mkdir('files');
                 pass_flag = 0;
             end
         end 

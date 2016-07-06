@@ -42,7 +42,7 @@ nDetected = 0;
 this_start_idx = [];
 prev_val = -100;
 
-clear tstart tend;
+tstart = []; tend = [];
 for iT = 1:length(decoded_z.data)
     
     this_jump = abs(decoded_z.data(iT)-prev_val);
@@ -57,7 +57,7 @@ for iT = 1:length(decoded_z.data)
     else % sequence broken
     
         % check if long enough
-        if (iT-1) - this_start_idx >= cfg.minLength % criterion met
+        if iT - this_start_idx >= cfg.minLength % criterion met
             nDetected = nDetected + 1;
             tstart(nDetected) = decoded_z.tvec(this_start_idx);
             tend(nDetected) = decoded_z.tvec(iT-1);

@@ -8,11 +8,21 @@ function iv1 = UnionIV(cfg_in,iv1,iv2)
 % MvdM 2014-08-28 initial version
 
 cfg_def = [];
-cfg = ProcessConfig2(cfg_def,cfg_in);
+cfg = ProcessConfig(cfg_def,cfg_in);
 
 mfun = mfilename;
 
-% should add a CheckIV function here
+if isempty(iv1) % function should work for empty arguments
+    iv1 = iv([],[]);
+end
+
+if isempty(iv2)
+    iv2 = iv([],[]);
+end
+
+if ~CheckIV(iv1) | ~CheckIV(iv2)
+   error('Malformed IV.'); 
+end
 
 iv1.tstart = cat(1,iv1.tstart,iv2.tstart); % note that constructor guarantees column vectors
 iv1.tend = cat(1,iv1.tend,iv2.tend);

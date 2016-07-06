@@ -203,7 +203,7 @@ if ~isempty(keys_f)
 end
 
 % add tt numbers
-if cfg_def.getTTnumbers
+if cfg.getTTnumbers
     for iC = length(S.t):-1:1
         
         out = regexp(S.label{iC},'TT(\d\d)','tokens');

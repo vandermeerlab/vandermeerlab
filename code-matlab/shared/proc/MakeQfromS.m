@@ -10,11 +10,13 @@ function Q = MakeQfromS(cfg_in,S)
 % CONFIG OPTIONS:
 %
 % cfg_def = [];
-% cfg_def.dt = 0.05;
-% cfg_def.smooth = 0;
-% cfg_def.gausswin_size = 1; % in seconds; only used if cfg.smooth = 1
-% cfg_def.gausswin_sd = 0.02; % in seconds
-% cfg_def.tvec_edges = [];
+% cfg_def.dt = 0.05; % binsize in s
+% cfg_def.smooth = []; % [], 'gauss'
+% cfg_def.gausswin_size = 1; % gaussian window size in seconds; only used if cfg.smooth = 'gauss'
+% cfg_def.gausswin_sd = 0.02; % SD for gaussian convolution in seconds
+% cfg_def.boxcar_size = []; % [], indicates nBins to use for boxcar convolution if not empty
+% cfg_def.tvec_edges = []; % can manually pass edges, if empty then compute using dt
+% cfg_def.verbose = 1;
 % 
 % OUTPUTS:
 %
@@ -24,10 +26,10 @@ function Q = MakeQfromS(cfg_in,S)
 
 cfg_def = [];
 cfg_def.dt = 0.05;
-cfg_def.smooth = []; % [], 'gauss', 'boxcar'
+cfg_def.smooth = []; % [], 'gauss'
 cfg_def.gausswin_size = 1; % in seconds; only used if cfg.smooth = 1
 cfg_def.gausswin_sd = 0.02; % in seconds
-cfg_def.boxcar_size = 5; % in nBins
+cfg_def.boxcar_size = []; % [], indicates nBins if not empty
 cfg_def.tvec_edges = [];
 cfg_def.verbose = 1;
 
@@ -56,8 +58,6 @@ if ~isempty(cfg.smooth)
             gauss_window = cfg.gausswin_size./cfg.dt; % 1 second window
             gauss_SD = cfg.gausswin_sd./cfg.dt; % 0.02 seconds (20ms) SD
             gk = gausskernel(gauss_window,gauss_SD)'; %gk = gk./cfg.dt; % normalize by binsize
-        case 'boxcar'
-            gk = ones(1,cfg.boxcar_size);
     end
 end
 
@@ -69,6 +69,12 @@ for iC = length(S.t):-1:1
     
     if ~isempty(cfg.smooth)
         Q(iC,:) = conv2(Q(iC,:),gk,'same'); % convolve with smoothing kernel
+    end
+    
+    % if requested, boxcar-smooth (bin)
+    if ~isempty(cfg.boxcar_size)
+        bk = ones(1,cfg.boxcar_size);
+        Q(iC,:) = conv2(Q(iC,:),bk,'same'); % convolve with smoothing kernel
     end
     
 end
