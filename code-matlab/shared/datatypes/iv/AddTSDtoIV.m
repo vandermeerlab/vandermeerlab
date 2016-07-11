@@ -21,7 +21,7 @@ function iv = AddTSDtoIV(cfg_in,iv,tsd_in)
 
 cfg_def.method = 'max';
 
-cfg = ProcessConfig2(cfg_def,cfg_in); % should take whatever is in cfg_in and put it into cfg!
+cfg = ProcessConfig(cfg_def,cfg_in); % should take whatever is in cfg_in and put it into cfg!
 mfun = mfilename;
 
 % check for well formed input
@@ -54,14 +54,7 @@ switch cfg.method
         end
 end
 
-if ~isfield(iv,'usr')
-    nu = 1;
-else
-    nu = length(iv.usr)+1;
-end
-
-iv.usr(nu).data = data_temp;
-iv.usr(nu).label = cfg.label;
+iv.usr.(cfg.label) = data_temp;
 
 % housekeeping
 iv.cfg.history.mfun = cat(1,iv.cfg.history.mfun,mfun);
