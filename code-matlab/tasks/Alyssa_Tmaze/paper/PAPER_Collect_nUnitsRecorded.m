@@ -17,6 +17,7 @@
 %
 % aacarey Sept 2015 (poster version, two separate scripts)
 %  --edit Jan 2016 (paper version, single script)
+%  --mvdm ugly edit Jul 2016 (also count questionable units)
 
 clearvars -except CFG
 
@@ -65,13 +66,15 @@ please.load_questionable_cells = cfg.load_questionable_cells;
 empty = struct('s1',[],'s2',[],'s3',[],'s4',[],'s5',[],'s6',[],'total',[]);
 
 TotalAllRats = 0; % grand number of units for experiment
+TotalAllRatsQ = 0; % grand number of questionable units for experiment
 
 % go through each rat and collect the data
 for iRat = 1:length(cfg.rats);
     
     collect = empty; % make a copy of empty to put stuff into
     total = 0; % this will collect the number of units in total for a single rat
-
+    totalQ = 0;
+    
     disp('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
     disp(['  Data for ',cfg.rats{iRat},':']); 
     disp('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
@@ -90,14 +93,20 @@ for iRat = 1:length(cfg.rats);
         S = LoadSpikes(please);
         n = length(S.t);
         
+        Snq = LoadSpikes([]); % no questionable cells
+        nQ = n-length(Snq.t);
+        
         % collect total cells recorded for all rats
         TotalAllRats = TotalAllRats + n;
+        TotalAllRatsQ = TotalAllRatsQ + nQ;
         
         % collect total for each rat     
         total = total + n;
+        totalQ = totalQ + nQ;
         
         % collect cells from each session
         collect.(['s',num2str(iFD)]).n = n; %  wow eh. 
+        collect.(['s',num2str(iFD)]).nQ = nQ;
         % ^ tells matlab to assign the value to (for ex), empty.s1 for the first file directory
         % ['s',num2str(iFD)] if run, generates s1 or s2 and so on
         collect.(['s',num2str(iFD)]).sessionID = sessionID; % if needed for future data handling
@@ -105,14 +114,16 @@ for iRat = 1:length(cfg.rats);
     end
     
     collect.total = total; % the total cells recorded for the current rat
+    collect.totalQ = totalQ; % the total cells recorded for the current rat
     nUnits.(cfg.rats{iRat}) = collect; % makes, for example, nUnits.R042 = collect;
     disp(' ')
-    disp(['***Total units for ',cfg.rats{iRat},': ',num2str(total)]); disp(' ')
+    disp(['***Total units for ',cfg.rats{iRat},': ',num2str(total),' (',num2str(totalQ),')']); disp(' ')
 end
 
 nUnits.TotalAllRats = TotalAllRats;
+nUnits.TotalAllRatsQ = TotalAllRatsQ;
 
-disp(['Total units from all rats: ',num2str(nUnits.TotalAllRats)]); disp(' '); disp(' '); disp(' ')
+disp(['Total units from all rats: ',num2str(nUnits.TotalAllRats),' (',num2str(nUnits.TotalAllRatsQ),')']); disp(' '); disp(' '); disp(' ')
 
 %% print LaTeX code
 disp('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
@@ -130,10 +141,10 @@ switch cfg.tablemode
         disp('    \hline')
         disp('    \textbf{Rat ID} & \textbf{Session 1}    &   \textbf{Session 2}    & \textbf{Session 3} & \textbf{Session 4}  & \textbf{Session 5}  & \textbf{Session 6} & \textbf{Total} \\')
 		disp('    \hline')
-		disp(['    \textbf{R042}    &     ',num2str(nUnits.R042.s1.n),'   &   ',num2str(nUnits.R042.s2.n),'  &  ',num2str(nUnits.R042.s3.n),'  &   ',num2str(nUnits.R042.s4.n),'  &   ',num2str(nUnits.R042.s5.n),'  &   ',num2str(nUnits.R042.s6.n),'  &\textbf{',num2str(nUnits.R042.total),'}\\ '])
-		disp(['    \textbf{R044}    &     ',num2str(nUnits.R044.s1.n),'   &   ',num2str(nUnits.R044.s2.n),'  &   ',num2str(nUnits.R044.s3.n),'  &   ',num2str(nUnits.R044.s4.n),'  &   ',num2str(nUnits.R044.s5.n),'  &   ',num2str(nUnits.R044.s6.n),'  &\textbf{',num2str(nUnits.R044.total),'}\\ '])
-        disp(['    \textbf{R050}    &     ',num2str(nUnits.R050.s1.n),'   &   ',num2str(nUnits.R050.s2.n),'  &   ',num2str(nUnits.R050.s3.n),'  &  ',num2str(nUnits.R050.s4.n),'  &  ',num2str(nUnits.R050.s5.n),'  &  ',num2str(nUnits.R050.s6.n),'  &\textbf{',num2str(nUnits.R050.total),'}\\ '])
-        disp(['    \textbf{R064}    &    ',num2str(nUnits.R064.s1.n),'   &  ',num2str(nUnits.R064.s2.n),'  &  ',num2str(nUnits.R064.s3.n),'  &  ',num2str(nUnits.R064.s4.n),'  &  ',num2str(nUnits.R064.s5.n),'  &  ',num2str(nUnits.R064.s6.n),'  &\textbf{',num2str(nUnits.R064.total),'}\\ '])
+		disp(['    \textbf{R042}    &     ',num2str(nUnits.R042.s1.n),' (',num2str(nUnits.R042.s1.nQ),')   &   ',num2str(nUnits.R042.s2.n),' (',num2str(nUnits.R042.s2.nQ),')  &  ',num2str(nUnits.R042.s3.n),' (',num2str(nUnits.R042.s3.nQ),')  &   ',num2str(nUnits.R042.s4.n),' (',num2str(nUnits.R042.s4.nQ),')  &   ',num2str(nUnits.R042.s5.n),' (',num2str(nUnits.R042.s5.nQ),')  &   ',num2str(nUnits.R042.s6.n),' (',num2str(nUnits.R042.s6.nQ),')  &\textbf{',num2str(nUnits.R042.total),' (',num2str(nUnits.R042.totalQ),')}\\ '])
+		disp(['    \textbf{R044}    &     ',num2str(nUnits.R044.s1.n),' (',num2str(nUnits.R044.s1.nQ),')   &   ',num2str(nUnits.R044.s2.n),' (',num2str(nUnits.R044.s2.nQ),')  &  ',num2str(nUnits.R044.s3.n),' (',num2str(nUnits.R044.s3.nQ),')  &   ',num2str(nUnits.R044.s4.n),' (',num2str(nUnits.R044.s4.nQ),')  &   ',num2str(nUnits.R044.s5.n),' (',num2str(nUnits.R044.s5.nQ),')  &   ',num2str(nUnits.R044.s6.n),' (',num2str(nUnits.R044.s6.nQ),')  &\textbf{',num2str(nUnits.R044.total),' (',num2str(nUnits.R044.totalQ),')}\\ '])
+		disp(['    \textbf{R050}    &     ',num2str(nUnits.R050.s1.n),' (',num2str(nUnits.R050.s1.nQ),')   &   ',num2str(nUnits.R050.s2.n),' (',num2str(nUnits.R050.s2.nQ),')  &  ',num2str(nUnits.R050.s3.n),' (',num2str(nUnits.R050.s3.nQ),')  &   ',num2str(nUnits.R050.s4.n),' (',num2str(nUnits.R050.s4.nQ),')  &   ',num2str(nUnits.R050.s5.n),' (',num2str(nUnits.R050.s5.nQ),')  &   ',num2str(nUnits.R050.s6.n),' (',num2str(nUnits.R050.s6.nQ),')  &\textbf{',num2str(nUnits.R050.total),' (',num2str(nUnits.R050.totalQ),')}\\ '])
+		disp(['    \textbf{R064}    &     ',num2str(nUnits.R064.s1.n),' (',num2str(nUnits.R064.s1.nQ),')   &   ',num2str(nUnits.R064.s2.n),' (',num2str(nUnits.R064.s2.nQ),')  &  ',num2str(nUnits.R064.s3.n),' (',num2str(nUnits.R064.s3.nQ),')  &   ',num2str(nUnits.R064.s4.n),' (',num2str(nUnits.R064.s4.nQ),')  &   ',num2str(nUnits.R064.s5.n),' (',num2str(nUnits.R064.s5.nQ),')  &   ',num2str(nUnits.R064.s6.n),' (',num2str(nUnits.R064.s6.nQ),')  &\textbf{',num2str(nUnits.R064.total),' (',num2str(nUnits.R064.totalQ),')}\\ '])
         disp('    \hline')
         disp('    & & & & & & & &\\ % spacing hack')
         disp('  \end{tabular}')
