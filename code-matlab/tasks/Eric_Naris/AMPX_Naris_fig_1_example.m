@@ -17,24 +17,25 @@ function [h1, h_sub2] = AMPX_Naris_fig_1_example(all_data_pre, all_data_post, va
 
 %% set up parameters
 
-cfg = [];
-cfg.markers = {'#', '+', 'x', 'o'};
-cfg.mrk_off = -5;
-cfg.raw_plot_boost = 300;
-cfg.line_end  =.5;
-cfg.width = .5;
-cfg.ft_size = 20;
-cfg.linewidth = 2;
+cfg_def = [];
+cfg_def.markers = {'#', '+', 'x', 'o'};
+cfg_def.mrk_off = -5;
+cfg_def.raw_plot_boost = 300;
+cfg_def.line_end  =.5;
+cfg_def.width = .5;
+cfg_def.ft_size = 20;
+cfg_def.linewidth = 2;
+cfg_def.example = [];
+cfg_def.session_name = [];
+cfg = ProcessConfig(cfg_def, cfg_in);
 
-extract_varargin
-
-if exist('session_name') ~=1
-    session_name = 'R061_2014_09_26'; % most channels & best positioning
+if isempty(cfg.session_name) ~=1
+    cfg.session_name = 'R061_2014_09_26'; % most channels & best positioning
 end
 %% load the data file to get the raw traces
-fname = strrep(session_name, '_', '-');
+fname = strrep(cfg.session_name, '_', '-');
 cd(['D:\DATA\' fname(1:4) '\' fname(1:15) ])
-fname = strrep(session_name, '-', '_');
+fname = strrep(cfg.session_name, '-', '_');
 [data, ~] = AMPX_Naris_preprocess([],fname,'pre');
 LoadExpKeys
 data_remap_AMPX = AMPX_remap_sites(data, ExpKeys);
@@ -47,11 +48,11 @@ clear data_remap_AMPX
 %% Collect the an example event
 
 evts = all_data_pre.(fname).lg.evts;
-if exist('Example', 'var') ~=1  % R061-2014_09_26 Low 
-    Example = randi([1 length(evts.tstart)],1,1);
-end
+% if exist('cfg.example', 'var') ~=1  % R061-2014_09_26 Low 
+%     cfg.example = randi([1 length(evts.tstart)],1,1);
+% end
 
-ctr = mean(cat(2,evts.tstart(Example),evts.tend(Example)),2);
+ctr = mean(cat(2,evts.tstart(cfg.example),evts.tend(cfg.example)),2);
 bg_tstart_idx = nearest_idx3(ctr-cfg.width/2,data_tsd.tvec);
 bg_tend_idx = nearest_idx3(ctr+cfg.width/2,data_tsd.tvec);
 
@@ -84,7 +85,7 @@ xlim([data_tsd.tvec(bg_tstart_idx), data_tsd.tvec(bg_tend_idx)])
 set(gca, 'xtick', data_tsd.tvec(bg_tstart_idx):.5: data_tsd.tvec(bg_tend_idx),'xTickLabel', 0:500:500, 'fontsize', cfg.ft_size, 'fontname', 'helvetica','fontweight','bold')
 set(gca, 'ytick', [], 'yticklabel', [], 'TickDir','out')
 
-rectangle('position',[evts.tstart(Example), y_lim(1)+10, evts.tend(Example) - evts.tstart(Example), 25], 'facecolor', [.6 .6 .6], 'edgecolor', [.6 .6 .6])
+rectangle('position',[evts.tstart(cfg.example), y_lim(1)+10, evts.tend(cfg.example) - evts.tstart(cfg.example), 25], 'facecolor', [.6 .6 .6], 'edgecolor', [.6 .6 .6])
 
 % label the axes
 text(data_tsd.tvec(bg_tstart_idx+round(.4*length(data_tsd.tvec(bg_tstart_idx:bg_tend_idx)))), y_lim(1)-75, 'Time (ms)','fontsize',cfg.ft_size, 'fontweight','bold', 'fontname', 'helvetica')
@@ -95,7 +96,8 @@ text(data_tsd.tvec(bg_tstart_idx-cfg.mrk_off), (plot_loop-0.45)*cfg.raw_plot_boo
 h_sub2 = subplot(3,11,[8:11, 19:22]);
 og_size = get(h_sub2, 'position');
 % imagesc walkaround
-nan_imagesc_ec(all_data_pre.(fname).lg.power.power_distrib{Example});
+all_data_pre.(fname).lg.power.power_distrib{cfg.example}(8,7)  = NaN;
+nan_imagesc_ec(all_data_pre.(fname).lg.power.power_distrib{cfg.example});
 
 % put the channel markers on the heatmap
 text(1-.15,1,cfg.markers{4},'fontsize',cfg.ft_size+6, 'fontweight','bold', 'color', 'w', 'BackgroundColor', 'none', 'Margin', 1.5);
@@ -108,7 +110,7 @@ set(h_sub2, 'position', og_size)
 set(gca, 'xtick',[], 'ytick',[])
 ax = axes('position',[0,0,1,1],'visible','off');
 t_pos = get(h_sub2, 'position');
-tx = text(t_pos(1),0.95,[strrep(fname, '_', '-') ' low evt: ' num2str(Example)]);
+tx = text(t_pos(1),0.95,[strrep(fname, '_', '-') ' low evt: ' num2str(cfg.example)]);
     set(tx,'fontweight','bold');set(tx,'fontsize',10);
 %% figure 1e: averages across rats (column) for low/high (row)
 % average across the sessions for each rat.
@@ -234,7 +236,7 @@ for isub = 1:4
 end
 
 %% save the figures
-% save the example
+% save the cfg.example
 saveas(h1, 'D:\DATA\Paper_figs\Fig1_C_D', 'epsc')
 
 saveas(h2, 'D:\DATA\Paper_figs\Fig1_E', 'epsc')
