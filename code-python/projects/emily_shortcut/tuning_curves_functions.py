@@ -1,9 +1,39 @@
+import os
+import numpy as np
+import pickle
 from shapely.geometry import Point, LineString
 
 import vdmlab as vdm
 
+from maze_functions import spikes_by_position
+
 
 def linearize(info, pos, t_start, t_stop, expand_by=6):
+    """Finds linear and zones for ideal trajectories.
+
+        Parameters
+        ----------
+        info : module
+            Contains session-specific information.
+        pos : dict
+            With x, y, time as keys. Each value is a np.array.
+        t_start : float
+        t_stop : float
+        expand_by : int or float
+            This is how much you wish to expand the line to fit
+            the animal's actual movements. Default is set to 6.
+
+        Returns
+        -------
+        linear : dict
+            With u, shortcut, novel keys. Each value is a unique
+            Shapely LineString object.
+        zone : dict
+            With 'ushort', 'u', 'novel', 'uped', 'unovel', 'pedestal',
+            'novelped', 'shortcut', 'shortped' keys.
+            Each value is a unique Shapely Polygon object.
+
+        """
     # Slicing position to only Phase 3
     t_start_idx = vdm.find_nearest_idx(pos['time'], t_start)
     t_end_idx = vdm.find_nearest_idx(pos['time'], t_stop)
@@ -67,3 +97,77 @@ def linearize(info, pos, t_start, t_stop, expand_by=6):
     linear['novel'] = vdm.linear_trajectory(novel_pos, novel_line, t_start, t_stop)
 
     return linear, zone
+
+
+def get_tc(info, pos, pickle_filepath):
+    """Loads saved tuning curve if it exists, otherwise computes tuning curve.
+
+        Parameters
+        ----------
+        info : module
+            Contains session-specific information.
+        pos : dict
+            With x, y, time as keys. Each value is a np.array.
+        pickle_filepath: str
+            Absolute (or relative) location of where tuning_curve.pkl files are saved.
+
+        Returns
+        -------
+        tc : dict
+            With u, shortcut, novel keys. Each value is a list of list, where
+            each inner list represents an individual neuron's tuning curve.
+
+        """
+    pickled_tc = pickle_filepath + info.session_id + '_tuning_curves_phase3.pkl'
+    if os.path.isfile(pickled_tc):
+        with open(pickled_tc, 'rb') as fileobj:
+            tc = pickle.load(fileobj)
+    else:
+        t_start = info.task_times['phase3'][0]
+        t_stop = info.task_times['phase3'][1]
+
+        spikes = info.get_spikes()
+
+        linear, zone = linearize(info, pos, t_start, t_stop)
+
+        pickled_spike_pos = pickle_filepath + info.session_id + '_spike_position_phase3.pkl'
+        if os.path.isfile(pickled_spike_pos):
+            with open(pickled_spike_pos, 'rb') as fileobj:
+                spike_position = pickle.load(fileobj)
+        else:
+            sliced_spikes = vdm.time_slice(spikes['time'], t_start, t_stop)
+            spike_position = spikes_by_position(sliced_spikes, zone, pos['time'], pos['x'], pos['y'])
+            with open(pickled_spike_pos, 'wb') as fileobj:
+                pickle.dump(spike_position, fileobj)
+
+        tc = dict()
+        tc['u'] = vdm.tuning_curve(linear['u'], spike_position['u'], num_bins=47)
+        tc['shortcut'] = vdm.tuning_curve(linear['shortcut'], spike_position['shortcut'], num_bins=47)
+        tc['novel'] = vdm.tuning_curve(linear['novel'], spike_position['novel'], num_bins=47)
+        with open(pickled_tc, 'wb') as fileobj:
+            pickle.dump(tc, fileobj)
+
+    return tc
+
+
+def get_odd_firing_idx(tuning_curve, max_mean_firing=10):
+    """Find indices where neuron is firing too much to be condidered a place cell
+
+    Parameters
+    ----------
+    tuning_curve :
+    max_mean_firing : int or float
+        A neuron with a max mean firing above this level is considered to have odd
+        firing and it's index will be added to the odd_firing_idx.
+
+    Returns
+    -------
+    odd_firing_idx : list of ints
+        Where each int is an index into the full list of neurons.
+
+        """
+    odd_firing_idx = []
+    for idx in range(len(tuning_curve)):
+        if (np.mean(tuning_curve[idx]) > max_mean_firing):
+            odd_firing_idx.append(idx)
+    return odd_firing_idx

@@ -57,14 +57,14 @@ def cooccur_probabilities(count_matrix, shuffle=10000):
     -----
     p0 : probability (fraction of time bins) each neuron is active.
     p1 : expected co-occurrence under independence assumption
-        ..math:: p(x,y) = p(x) * p(y)
+        .. math:: p(x,y) = p(x) * p(y)
     p2 : Observed conditional probability
-        ..math:: p(x|y)
+        .. math:: p(x|y)
     p3 : Observed co-occurrence (joint) probability
-        ..math:: p(x,y)
+        .. math:: p(x,y)
     p4 : z-score of p3 against shuffled data
     p5 : Observed co-occurrence (joint) probability of shuffled data
-        ..math:: p(x,y)
+        .. math:: p(x,y)
 
         """
     # Boolean for if at least on spike happened in this time bin

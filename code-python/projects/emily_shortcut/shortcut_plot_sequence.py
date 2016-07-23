@@ -1,17 +1,18 @@
+import os
+
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
-import os
 import seaborn as sns
 
 import vdmlab as vdm
 
-from maze_functions import spikes_by_position
-from tuning_curves_functions import linearize
+from tuning_curves_functions import get_tc, get_odd_firing_idx
+
+thisdir = os.path.dirname(os.path.realpath(__file__))
 
 import sys
-sys.path.append('C:\\Users\\Emily\\Code\\vandermeerlab\\code-python\\projects\\emily_shortcut\\info')
-# sys.path.append('E:\\code\\shortcut\\analysis\\info')
+sys.path.append(os.path.join(thisdir, 'info'))
 import R063d2_info as r063d2
 import R063d3_info as r063d3
 import R063d4_info as r063d4
@@ -23,11 +24,8 @@ import R066d4_info as r066d4
 
 info = r063d4
 
-# pickle_filepath = 'E:\\code\\vandermeerlab\\code-python\\projects\\emily_shortcut\\cache\\pickled\\'
-# output_filepath = 'E:\\code\\vandermeerlab\\code-python\\projects\\emily_shortcut\\plots\\sequence\\'
-pickle_filepath = 'C:\\Users\\Emily\\Code\\vandermeerlab\\code-python\\projects\\emily_shortcut\\cache\\pickled\\'
-output_filepath = 'C:\\Users\\Emily\\Code\\vandermeerlab\\code-python\\projects\\emily_shortcut\\plots\\sequence\\'
-
+pickle_filepath = os.path.join(thisdir, 'cache', 'pickled')
+output_filepath = os.path.join(thisdir, 'plots', 'sequence')
 
 print(info.session_id)
 pos = info.get_pos(info.pxl_to_cm)
@@ -35,36 +33,7 @@ csc = info.get_csc()
 spikes = info.get_spikes()
 
 
-pickled_tc = pickle_filepath + info.session_id + '_tuning_curves_phase3.pkl'
-if os.path.isfile(pickled_tc):
-    with open(pickled_tc, 'rb') as fileobj:
-        tc = pickle.load(fileobj)
-else:
-    t_start = info.task_times['phase3'][0]
-    t_stop = info.task_times['phase3'][1]
-
-    linear, zone = linearize(info, pos, t_start, t_stop)
-
-    pickled_spike_pos = pickle_filepath + info.session_id + '_spike_position_phase3.pkl'
-    if os.path.isfile(pickled_spike_pos):
-        with open(pickled_spike_pos, 'rb') as fileobj:
-            spike_position = pickle.load(fileobj)
-    else:
-        sliced_spikes = vdm.time_slice(spikes['time'], t_start, t_stop)
-        spike_position = spikes_by_position(sliced_spikes, zone, pos['time'], pos['x'], pos['y'])
-        with open(pickled_spike_pos, 'wb') as fileobj:
-            pickle.dump(spike_position, fileobj)
-
-    tc_u = vdm.tuning_curve(linear['u'], spike_position['u'], num_bins=47)
-    tc_shortcut = vdm.tuning_curve(linear['shortcut'], spike_position['shortcut'], num_bins=47)
-    tc_novel = vdm.tuning_curve(linear['novel'], spike_position['novel'], num_bins=47)
-
-    tc = dict()
-    tc['u'] = tc_u
-    tc['shortcut'] = tc_shortcut
-    tc['novel'] = tc_novel
-    with open(pickled_tc, 'wb') as fileobj:
-        pickle.dump(tc, fileobj)
+tc = get_tc(info, pos, pickle_filepath)
 
 
 pickled_spike_heatmaps = pickle_filepath + info.session_id + '_spike_heatmaps.pkl'
@@ -97,12 +66,7 @@ swr_times, swr_idx, filtered_butter = vdm.detect_swr_hilbert(sliced_csc, fs=info
 
 sort_idx = vdm.get_sort_idx(tc['u'])
 
-hz_thres = 5
-max_mean_firing = 7
-odd_firing_idx = []
-for idx in range(len(tc['u'])):
-    if np.any(tc['u'][idx] > hz_thres) and (np.mean(tc['u'][idx]) > max_mean_firing):
-        odd_firing_idx.append(idx)
+odd_firing_idx = get_odd_firing_idx(tc['u'])
 
 
 all_u_fields = vdm.find_fields(tc['u'])

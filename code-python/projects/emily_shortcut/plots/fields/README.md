@@ -1,0 +1,1 @@
+# Plots from Shortcut place field detection

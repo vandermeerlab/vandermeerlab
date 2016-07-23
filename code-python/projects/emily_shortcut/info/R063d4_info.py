@@ -1,28 +1,27 @@
+import os
+
 from startup import load_csc, load_position, load_videotrack, load_events, load_spikes, convert_to_cm
 
 session_id = 'R063d4'
+dataloc = 'C:\\Users\\Emily\\Code\\vandermeerlab\\code-python\\projects\\emily_shortcut\\cache\\data\\'
 
 def get_csc():
-    return load_csc('C:\\Users\\Emily\\Code\\vandermeerlab\\code-python\\projects\\emily_shortcut\\cache\\'
-                    'cscs\\R063-2015-03-23-csc.mat')
+    return load_csc(os.path.join(dataloc, 'R063-2015-03-23-csc.mat'))
 
 
 def get_pos(pxl_to_cm):
-    pos = load_videotrack('C:\\Users\\Emily\\Code\\vandermeerlab\\code-python\\projects\\emily_shortcut\\cache\\'
-                          'positions\\R063-2015-03-23-vt.mat')
+    pos = load_videotrack(os.path.join(dataloc, 'R063-2015-03-23-vt.mat'))
     pos['x'] = pos['x'] / pxl_to_cm[0]
     pos['y'] = pos['y'] / pxl_to_cm[1]
     return pos
 
 
 def get_events():
-    return load_events('C:\\Users\\Emily\\Code\\vandermeerlab\\code-python\\projects\\emily_shortcut\\cache\\'
-                       'events\\R063-2015-03-23-event.mat')
+    return load_events(os.path.join(dataloc, 'R063-2015-03-23-event.mat'))
 
 
 def get_spikes():
-    return load_spikes('C:\\Users\\Emily\\Code\\vandermeerlab\\code-python\\projects\\emily_shortcut\\cache\\'
-                       'spikes\\R063-2015-03-23-spike.mat')
+    return load_spikes(os.path.join(dataloc, 'R063-2015-03-23-spike.mat'))
 
 
 # Experimental session-specific task times for R063 day 4

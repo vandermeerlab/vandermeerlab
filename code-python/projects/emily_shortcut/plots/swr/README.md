@@ -1,0 +1,1 @@
+# Plots from Shortcut sharp-wave ripple (SWR) detection

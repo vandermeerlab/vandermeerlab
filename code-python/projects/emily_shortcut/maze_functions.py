@@ -4,7 +4,30 @@ from shapely.geometry import Point, LineString
 import vdmlab as vdm
 
 
-def get_trial_idx(low_priority, mid_priority, high_priority, feeder1_times, feeder2_times, phase_start, phase_stop):
+def get_trial_idx(low_priority, mid_priority, high_priority, feeder1_times, feeder2_times, phase_stop):
+    """Gets the indices associated with each behavioral trial.
+
+    Parameters
+    ----------
+    low_priority : np.array
+        Spike_pos times. This track segment is considered last. Eg. U for the shortcut analysis.
+    mid_priority : np.array
+        Spike_pos times. This track segment is considered second. Eg. Shortcut for the shortcut analysis.
+    high_priority : np.array
+        Spike_pos times. This track segment is considered first. Eg. Novel for the shortcut analysis.
+    feeder1_times : list
+        List of times (floats) the photobeam was broken for feeder1.
+    feeder2_times : list
+        List of times (floats) the photobeam was broken for feeder1.
+    phase_stop : float
+        Time (float) of the end of the phase.
+
+    Returns
+    -------
+    trials_idx : dict
+        With start_trials, stop_trials, u, shortcut, novel keys that are lists of indices.
+
+    """
     start_trials = []
     stop_trials = []
 
@@ -70,6 +93,27 @@ def get_trial_idx(low_priority, mid_priority, high_priority, feeder1_times, feed
 
 
 def spikes_by_position(spikes, zone, pos_time, pos_x, pos_y):
+    """Finds the spikes that occur while the animal is in certain positions.
+
+    Parameters
+    ----------
+    spikes : list of np.arrays
+        Where each inner array is an individual neuron's spike times (floats)
+    zone : dict
+        With 'ushort', 'u', 'novel', 'uped', 'unovel', 'pedestal',
+        'novelped', 'shortcut', 'shortped' keys.
+        Each value is a unique Shapely Polygon object.
+    pos_time : np.array
+    pos_x : np.array
+    pos_y : np.array
+
+    Returns
+    -------
+    spike_position : dict
+        With u, shortcut, novel, other keys. Each value is a list of np.arrays,
+        where each inner np.array represents an individual neuron's spike times (floats).
+
+    """
     spike_position = dict(u=[], shortcut=[], novel=[], other=[])
     counter = 0
     for neuron in spikes:
@@ -100,17 +144,22 @@ def spikes_by_position(spikes, zone, pos_time, pos_x, pos_y):
     return spike_position
 
 
-def get_zones(info, t_start, t_stop):
-    pos = info.get_pos(info.pxl_to_cm)
-    # Slicing position to only Phase 3
-    t_start_idx = vdm.find_nearest_idx(np.array(pos['time']), t_start)
-    t_end_idx = vdm.find_nearest_idx(np.array(pos['time']), t_stop)
+def get_zones(info, pos):
+    """Finds the spikes that occur while the animal is in certain positions.
 
-    sliced_pos = dict()
-    sliced_pos['x'] = pos['x'][t_start_idx:t_end_idx]
-    sliced_pos['y'] = pos['y'][t_start_idx:t_end_idx]
-    sliced_pos['time'] = pos['time'][t_start_idx:t_end_idx]
+    Parameters
+    ----------
+    info : module
+        Module with session-specific information
+    pos : dict
+        Has x, y, time keys that are each lists of floats.
 
+    Returns
+    -------
+    spike_pos : dict
+        With u, shortcut, novel, other keys that are each dicts with x, y, time keys
+
+    """
     # Here I define the ideal trajectories in cm that I project onto
     # to make the 1D linear position.
     u_line = LineString(info.u_trajectory)
@@ -135,8 +184,8 @@ def get_zones(info, t_start, t_stop):
     shortcut_idx = []
     novel_idx = []
     other_idx = []
-    for pos_idx in list(range(len(sliced_pos['time']))):
-        point = Point([sliced_pos['x'][pos_idx], sliced_pos['y'][pos_idx]])
+    for pos_idx in list(range(len(pos['time']))):
+        point = Point([pos['x'][pos_idx], pos['y'][pos_idx]])
         if zones['u'].contains(point) or zones['ushort'].contains(point) or zones['unovel'].contains(point):
             u_idx.append(pos_idx)
         elif zones['shortcut'].contains(point):
@@ -147,9 +196,9 @@ def get_zones(info, t_start, t_stop):
             other_idx.append(pos_idx)
 
     spike_pos = dict()
-    spike_pos['u'] = vdm.idx_in_pos(sliced_pos, u_idx)
-    spike_pos['shortcut'] = vdm.idx_in_pos(sliced_pos, shortcut_idx)
-    spike_pos['novel'] = vdm.idx_in_pos(sliced_pos, novel_idx)
-    spike_pos['other'] = vdm.idx_in_pos(sliced_pos, other_idx)
+    spike_pos['u'] = vdm.idx_in_pos(pos, u_idx)
+    spike_pos['shortcut'] = vdm.idx_in_pos(pos, shortcut_idx)
+    spike_pos['novel'] = vdm.idx_in_pos(pos, novel_idx)
+    spike_pos['other'] = vdm.idx_in_pos(pos, other_idx)
 
     return spike_pos

@@ -1,14 +1,14 @@
-import pickle
 import os
 
 import vdmlab as vdm
 
-from maze_functions import spikes_by_position
-from tuning_curves_functions import linearize
+from tuning_curves_functions import get_tc, get_odd_firing_idx
+from plotting_functions import plot_sorted_tc
+
+thisdir = os.path.dirname(os.path.realpath(__file__))
 
 import sys
-sys.path.append('C:\\Users\\Emily\\Code\\vandermeerlab\\code-python\\projects\\emily_shortcut\\info')
-# sys.path.append('E:\\code\\vandermeerlab\\code-python\\projects\\emily_shortcut\\info')
+sys.path.append(os.path.join(thisdir, 'info'))
 import R042d3_info as r042d3
 import R063d2_info as r063d2
 import R063d3_info as r063d3
@@ -24,39 +24,27 @@ import R066d4_info as r066d4
 # infos = [r063d2]
 infos = [r063d2, r063d3, r063d4, r063d5, r063d6, r066d1, r066d2, r066d4]
 
-# pickle_filepath = 'E:\\code\\vandermeerlab\\code-python\\projects\\emily_shortcut\\cache\\pickled\\'
-# output_filepath = 'E:\\code\\vandermeerlab\\code-python\\projects\\emily_shortcut\\plots\\'
-pickle_filepath = 'C:\\Users\\Emily\\Code\\vandermeerlab\\code-python\\projects\\emily_shortcut\\cache\\pickled\\'
-output_filepath = 'C:\\Users\\Emily\\Code\\vandermeerlab\\code-python\\projects\\emily_shortcut\\plots\\'
+pickle_filepath = os.path.join(thisdir, 'cache', 'pickled')
+output_filepath = os.path.join(thisdir, 'plots', 'tuning')
 
 for info in infos:
+    print(info.session_id)
     pos = info.get_pos(info.pxl_to_cm)
 
-    pickled_tc = pickle_filepath + info.session_id + '_tuning_curves_phase3.pkl'
-    if os.path.isfile(pickled_tc):
-        with open(pickled_tc, 'rb') as fileobj:
-            tc = pickle.load(fileobj)
-    else:
-        t_start = info.task_times['phase3'][0]
-        t_stop = info.task_times['phase3'][1]
+    tc = get_tc(info, pos, pickle_filepath)
 
-        spikes = info.get_spikes()
+    sort_idx = dict()
+    odd_firing_idx = dict()
+    sorted_tc = dict(u=[], shortcut=[], novel=[])
 
-        linear, zone = linearize(info, pos, t_start, t_stop)
+    for key in tc:
+        sort_idx[key] = vdm.get_sort_idx(tc[key])
+        odd_firing_idx[key] = get_odd_firing_idx(tc[key])
 
-        pickled_spike_pos = pickle_filepath + info.session_id + '_spike_position_phase3.pkl'
-        if os.path.isfile(pickled_spike_pos):
-            with open(pickled_spike_pos, 'rb') as fileobj:
-                spike_position = pickle.load(fileobj)
-        else:
-            sliced_spikes = vdm.time_slice(spikes['time'], t_start, t_stop)
-            spike_position = spikes_by_position(sliced_spikes, zone, pos['time'], pos['x'], pos['y'])
-            with open(pickled_spike_pos, 'wb') as fileobj:
-                pickle.dump(spike_position, fileobj)
+        for idx in sort_idx[key]:
+            if idx not in odd_firing_idx[key]:
+                sorted_tc[key].append(tc[key][idx])
 
-        tc = dict()
-        tc['u'] = vdm.tuning_curve(linear['u'], spike_position['u'], num_bins=47)
-        tc['shortcut'] = vdm.tuning_curve(linear['shortcut'], spike_position['shortcut'], num_bins=47)
-        tc['novel'] = vdm.tuning_curve(linear['novel'], spike_position['novel'], num_bins=47)
-        with open(pickled_tc, 'wb') as fileobj:
-            pickle.dump(tc, fileobj)
+        filename = info.session_id + '-sorted_tc-' + key + '.png'
+        savepath = os.path.join(output_filepath, filename)
+        plot_sorted_tc(sorted_tc[key], savepath)

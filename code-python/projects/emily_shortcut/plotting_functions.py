@@ -12,19 +12,53 @@ sns.set_style('white')
 sns.set_style('ticks')
 
 
-def raster_plot(spikes, colour='k'):
+def raster_plot(spikes, savepath, savefig=False):
+    """Plots raster plot of spikes from multiple neurons.
+
+    Parameters
+    ----------
+    spikes : list of np.arrays
+        Where each inner array contains the spike times (floats) for an individual
+        neuron.
+    savepath : str
+        Location and filename for the saved plot.
+    savefig : boolean
+        Default is False show the plot without saving it. True and will save the
+        plot to the specified location.
+
+    """
     location = 1
     for neuron in spikes:
         if len(neuron) > 0:
-            plt.plot(neuron, np.ones(len(neuron))+location, '|', color=colour, ms=4, mew=1)
+            plt.plot(neuron, np.ones(len(neuron))+location, '|', color='k', ms=4, mew=1)
             location += 1
     plt.xlabel('Time (ms)')
     plt.ylabel('Neuron number')
     sns.despine()
     plt.ylim(0, location+1)
 
+    if savefig:
+        plt.savefig(savepath, dpi=300, bbox_inches='tight')
+        plt.close()
+    else:
+        plt.show()
 
-def plot_sorted_tc(sorted_tc, filepath):
+
+def plot_sorted_tc(sorted_tc, savepath, savefig=True):
+    """Plots sorted tuning curves from a single trajectory for a session.
+
+    Parameters
+    ----------
+    sorted_tc : list of lists
+        Where each inner list contains the tuning curve (floats) for an individual
+        neuron.
+    savepath : str
+        Location and filename for the saved plot.
+    savefig : boolean
+        Default is True and will save the plot to the specified location.
+        False shows with plot without saving it.
+
+    """
     fig, ax = plt.subplots()
     heatmap = ax.pcolor(sorted_tc, cmap='YlGn')
     plt.ylim(0, len(sorted_tc))
@@ -32,22 +66,53 @@ def plot_sorted_tc(sorted_tc, filepath):
     plt.ylabel('Neuron number')
     plt.xlabel('Location (cm)')
     sns.despine()
-    #     plt.show()
-    plt.savefig(filepath, dpi=300, bbox_inches='tight')
-    plt.close()
+
+    if savefig:
+        plt.savefig(savepath, dpi=300, bbox_inches='tight')
+        plt.close()
+    else:
+        plt.show()
 
 
 # Behavior
 def plot_intersects(zone):
+    """Plots intersections of zones of ideal trajectory
+
+    Parameters
+    ----------
+    zone : Shapely's Polygon object
+
+    """
     for intersect in zone:
         plt.plot(intersect.exterior.xy[0], intersect.exterior.xy[1], 'b', lw=1)
 
 
 def plot_zone(zone):
+    """Plots zone of ideal trajectory
+
+        Parameters
+        ----------
+        zone : Shapely's Polygon object
+
+        """
     plt.plot(zone.exterior.xy[0], zone.exterior.xy[1], 'b', lw=1)
 
 
-def plot_bydurations(durations, filepath):
+def plot_bydurations(durations, savepath, savefig=True):
+    """Plots duration for each trial separated by trajectories. Behavior only.
+
+        Parameters
+        ----------
+        durations : dict
+            With u, shortcut, novel, num_sessions as keys.
+            Each value is a list of durations (float) for a each session.
+        savepath : str
+            Location and filename for the saved plot.
+        savefig : boolean
+            Default is True and will save the plot to the specified location. False
+            shows with plot without saving it.
+
+        """
     ax = sns.boxplot(data=[durations['u'], durations['shortcut'], durations['novel']])
     sns.color_palette("hls", 18)
     ax.set(xticklabels=['U', 'Shortcut', 'Novel'])
@@ -55,12 +120,35 @@ def plot_bydurations(durations, filepath):
     plt.xlabel('sessions=' + str(durations['num_sessions']))
     plt.ylim(0, 140)
     sns.despine()
-    #     plt.show()
-    plt.savefig(os.path.join(filepath, 'shortcut_behavior_durations.png'), dpi=300, bbox_inches='tight')
-    plt.close()
+
+    if savefig:
+        plt.savefig(savepath, dpi=300, bbox_inches='tight')
+        plt.close()
+    else:
+        plt.show()
 
 
-def plot_proportions(us, shortcuts, novels, filepath):
+def plot_proportions(us, shortcuts, novels, savepath, savefig=True):
+    """Plots proportion of each trajectory taken. Behavior only.
+
+        Parameters
+        ----------
+        us : list of floats
+            Proportion along the u trajectory for each session.
+            len(us) == num_sessions evaluated
+        shortcuts : list of floats
+            Proportion along the shortcut trajectory for each session.
+            len(shortcut) == num_sessions evaluated
+        novels : list of floats
+            Proportion along the novel trajectory for each session.
+            len(novel) == num_sessions evaluated
+        savepath : str
+            Location and filename for the saved plot.
+        savefig : boolean
+            Default is True and will save the plot to the specified location. False
+            shows with plot without saving it.
+
+        """
     all_us = np.mean(us)
     us_sem = stats.sem(us)
     all_shortcuts = np.mean(shortcuts)
@@ -88,13 +176,30 @@ def plot_proportions(us, shortcuts, novels, filepath):
     ax.xaxis.set_ticks_position('bottom')
     plt.xticks(n_groups, ['U', 'Shortcut', 'Novel'])
 
-    plt.tight_layout()
-    # plt.show()
-    plt.savefig(os.path.join(filepath, 'shortcut_behaviour_proportions.png'), dpi=300, bbox_inches='tight')
-    plt.close('all')
+    # plt.tight_layout()
+    if savefig:
+        plt.savefig(savepath, dpi=300, bbox_inches='tight')
+        plt.close()
+    else:
+        plt.show()
 
 
-def plot_bytrial(togethers, filepath, min_length=30):
+def plot_bytrial(togethers, savepath, min_length=30, savefig=True):
+    """Plots choice of trajectory by trial. Behavior only.
+
+        Parameters
+        ----------
+        togethers : list
+        savepath : str
+            Location and filename for the saved plot.
+        min_length = int
+            This is the number of trials to be considered.
+            The default is set to 30 (Eg. trials 1-30 are considered).
+        savefig : boolean
+            Default is True and will save the plot to the specified location.
+            False shows with plot without saving it.
+
+        """
     bytrial = bytrial_counts(togethers, min_length)
 
     means, sems = summary_bytrial(bytrial, min_length)
@@ -117,13 +222,43 @@ def plot_bytrial(togethers, filepath, min_length=30):
     ax.yaxis.set_ticks_position('left')
     ax.xaxis.set_ticks_position('bottom')
     plt.legend(loc=1, prop={'size': 10})
-    # plt.show()
-    plt.savefig(os.path.join(filepath, 'shortcut_behaviour_bytrial.png'), dpi=300, bbox_inches='tight')
-    plt.close()
+
+    if savefig:
+        plt.savefig(savepath, dpi=300, bbox_inches='tight')
+        plt.close()
+    else:
+        plt.show()
 
 
 # Place fields
-def plot_fields(heatmaps, pos, savepath, num, plot_log=True, num_bins=100, vmax=None):
+def plot_fields(heatmaps, pos, num_neurons, savepath, savefig=True, plot_log=True, num_bins=100, vmax=None):
+    """Plots spiking in 2D position space.
+
+        Parameters
+        ----------
+        heatmaps : dict of lists
+            Where the key is the neuron number and the value is the heatmap for
+            that individual neuron.
+        pos : dict
+            With time(float), x(float), y(float) as keys
+        savepath : str
+            Location and filename for the saved plot.
+        num_neurons = int
+            Number of neurons used for this plot.
+        savefig : boolean
+            Default is True and will save the plot to the specified location.
+            False shows with plot without saving it.
+        plot_log : boolean
+            Range for plot in log scale. Allows for better visualization of
+            areas with large amount of spikes. Default is set to True.
+        num_bins : int
+            Number of bins the 2D space is divided into.
+            Default is set to 100.
+        vmax : float, optional
+            Default is set to None. Used to scale the heatmaps for different
+            neurons or sessions to better directly compare.
+
+        """
     plt.figure()
     plt.plot(pos['x'], pos['y'], 'k.', ms=0.2)
     xedges = np.linspace(np.min(pos['x'])-2, np.max(pos['x'])+2, num_bins+1)
@@ -137,14 +272,40 @@ def plot_fields(heatmaps, pos, savepath, num, plot_log=True, num_bins=100, vmax=
     print(np.max(heatmaps))
     plt.colorbar(pp)
     plt.axis('off')
-    plt.text(2, 6, r'n=' + str(num), fontsize=15)
-    # plt.show()
-    plt.savefig(savepath, dpi=300)
-    plt.close()
+    plt.text(2, 6, r'n=' + str(num_neurons), fontsize=15)
+
+    if savefig:
+        plt.savefig(savepath, dpi=300, bbox_inches='tight')
+        plt.close()
+    else:
+        plt.show()
 
 
 # Co-occurrence
-def plot_cooccur(probs, filename):
+def plot_cooccur(probs, savepath, savefig=True):
+    """Plots co-occurrence probabilities from p0, p2, p3, p4.
+
+        Parameters
+        ----------
+        probs : dict
+            Where the keys are p0, p1, p2, p3, p4, p5. P1 through p4 are
+            np.arrays of length num_neurons
+        savepath : str
+            Location and filename for the saved plot.
+        savefig : boolean
+            Default is True and will save the plot to the specified location.
+            False shows with plot without saving it.
+
+        Notes
+        -----
+        p0 : probability (fraction of time bins) each neuron is active.
+        p2 : Observed conditional probability
+            .. math:: p(x|y)
+        p3 : Observed co-occurrence (joint) probability
+            .. math:: p(x,y)
+        p4 : z-score of p3 against shuffled data
+
+        """
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
     ind = np.arange(3)
     width = 0.8
@@ -194,24 +355,54 @@ def plot_cooccur(probs, filename):
     ax4.get_xaxis().tick_bottom()
     ax4.get_yaxis().tick_left()
 
-    plt.tight_layout()
-    # plt.show()
-    print(filename)
-    plt.savefig(filename, dpi=300, bbox_inches='tight')
-    plt.close()
+    # plt.tight_layout()
+
+    if savefig:
+        plt.savefig(savepath, dpi=300, bbox_inches='tight')
+        plt.close()
+    else:
+        plt.show()
 
 
-def plot_solo_coprob(probabilities, filepath, metric, title, ylabel):
-    # Example function call:
-    # plot_ind_coprob(probs, output_filepath, metric='p4', title='Co-activation above chance levels (p4)',
-    # ylabel='SWR co-activation z-scored')
+def plot_solo_coprob(probs, savepath, metric, title, ylabel, savefig=False):
+    """Plots co-occurrence probabilities from p0, p2, p3, p4.
+
+        Parameters
+        ----------
+        probs : dict
+            Where the keys are p0, p1, p2, p3, p4, p5. P1 through p4 are
+            np.arrays of length num_neurons
+        savepath : str
+            Location and filename for the saved plot.
+        metric : str
+            One of the keys in probs.
+        title : str
+        ylabel : str
+        savefig : boolean
+            Default is False and will show the plot without saving it.
+            True will save the plot to the specified location.
+
+        Notes
+        -----
+        p0 : probability (fraction of time bins) each neuron is active.
+        p1 : expected co-occurrence under independence assumption
+            .. math:: p(x,y) = p(x) * p(y)
+        p2 : Observed conditional probability
+            .. math:: p(x|y)
+        p3 : Observed co-occurrence (joint) probability
+            .. math:: p(x,y)
+        p4 : z-score of p3 against shuffled data
+        p5 : Observed co-occurrence (joint) probability of shuffled data
+            .. math:: p(x,y)
+
+        """
     ind = np.arange(3)
     width = 0.8
     colours = ['#5975a4', '#5f9e6e', '#b55d5f']
     fig, ax = plt.subplots()
-    ax.bar(ind, [np.nanmean(probabilities['u'][metric]),
-                 np.nanmean(probabilities['shortcut'][metric]),
-                 np.nanmean(probabilities['novel'][metric])],
+    ax.bar(ind, [np.nanmean(probs['u'][metric]),
+                 np.nanmean(probs['shortcut'][metric]),
+                 np.nanmean(probs['novel'][metric])],
            width, color=colours)
 
     ax.set_ylabel(ylabel)
@@ -223,12 +414,37 @@ def plot_solo_coprob(probabilities, filepath, metric, title, ylabel):
     ax.get_xaxis().tick_bottom()
     ax.get_yaxis().tick_left()
 
-    plt.show()
-    # plt.savefig(os.path.join(filepath, 'cooccur_', metric, '.png'), dpi=300, bbox_inches='tight')
-    # plt.close()
+    if savefig:
+        plt.savefig(savepath, dpi=300, bbox_inches='tight')
+        plt.close()
+    else:
+        plt.show()
 
 
-def plot_swrs(csc, swr_idx, savepath, row=10, col=8, buffer=20):
+def plot_swrs(csc, swr_idx, saveloc, row=10, col=8, buffer=20, savefig=True):
+    """Plots all local field potentials (LFP) around sharp-wave ripple (SWR) times
+        for each given SWR.
+
+        Parameters
+        ----------
+        csc : dict
+            With time(np.array), data(np.array) as keys
+        swr_idx : dict
+            With start(int), stop(int) as keys
+        saveloc : str
+            Location and filename for the saved plot. Do not add '.png', it is
+            added here to include the multiple figures into the filename.
+        row = int
+            Number of rows in each figure.
+        col : int
+            Number of columns in each figure.
+        buffer : int
+            Amount of LFP shown on either side of SWR.
+        savefig : boolean
+            Default is True and will save the plot to the specified location.
+            False shows with plot without saving it.
+
+        """
     plots_per_fig = row * col
     num_figures = range(int(np.ceil(len(swr_idx['start']) / plots_per_fig)))
 
@@ -250,6 +466,8 @@ def plot_swrs(csc, swr_idx, savepath, row=10, col=8, buffer=20):
 
             plt.axis('off')
 
-        # plt.show()
-        plt.savefig(savepath + str(fig + 1) + '.png', dpi=300)
-        plt.close('all')
+        if savefig:
+            plt.savefig(saveloc + str(fig + 1) + '.png', dpi=300, bbox_inches='tight')
+            plt.close()
+        else:
+            plt.show()

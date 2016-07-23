@@ -16,5 +16,5 @@ def test_swr():
     toy_csc['data'] = toy_lfp
 
     toy_times, toy_idx, toy_butter = vdm.detect_swr_hilbert(toy_csc, power_thres=0.5, z_thres=0.4)
-    assert toy_times['start'][0] == 0.1985
-    assert toy_times['stop'][0] == 0.3015
+    assert np.allclose(toy_times['start'][0], 0.1995)
+    assert np.allclose(toy_times['stop'][0], 0.3005)

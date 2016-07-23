@@ -1,11 +1,15 @@
+import os
+import numpy as np
+
 import vdmlab as vdm
 
 from maze_functions import get_trial_idx, get_zones
 from plotting_functions import plot_proportions, plot_bydurations, plot_bytrial
 
+thisdir = os.path.dirname(os.path.realpath(__file__))
+
 import sys
-sys.path.append('C:\\Users\\Emily\\Code\\vandermeerlab\\code-python\\projects\\emily_shortcut\\info')
-# sys.path.append('E:\\code\\vandermeerlab\\code-python\\projects\\emily_shortcut\\info')
+sys.path.append(os.path.join(thisdir, 'info'))
 import R063d2_info as r063d2
 import R063d3_info as r063d3
 import R063d4_info as r063d4
@@ -15,9 +19,8 @@ import R066d1_info as r066d1
 import R066d2_info as r066d2
 import R066d4_info as r066d4
 
-
-# filepath = 'E:\\code\\vandermeerlab\\code-python\\projects\\emily_shortcut\\plots\\behaviour\\'
-filepath = 'C:\\Users\\Emily\\Code\\vandermeerlab\\code-python\\projects\\emily_shortcut\\plots\\behaviour\\'
+pickle_filepath = os.path.join(thisdir, 'cache', 'pickled')
+output_filepath = os.path.join(thisdir, 'plots', 'behavior')
 
 # infos = [r063d2, r063d3]
 infos = [r063d2, r063d3, r063d4, r063d5, r063d6, r066d1, r066d2, r066d4]
@@ -33,6 +36,16 @@ for info in infos:
     t_start = info.task_times['phase3'][0]
     t_stop = info.task_times['phase3'][1]
 
+    pos = info.get_pos(info.pxl_to_cm)
+    # Slicing position to only Phase 3
+    t_start_idx = vdm.find_nearest_idx(np.array(pos['time']), t_start)
+    t_end_idx = vdm.find_nearest_idx(np.array(pos['time']), t_stop)
+
+    sliced_pos = dict()
+    sliced_pos['x'] = pos['x'][t_start_idx:t_end_idx]
+    sliced_pos['y'] = pos['y'][t_start_idx:t_end_idx]
+    sliced_pos['time'] = pos['time'][t_start_idx:t_end_idx]
+
     # Slicing events to only Phase 3
     events = info.get_events()
     sliced_events = dict()
@@ -42,10 +55,10 @@ for info in infos:
     feeder1_times = sliced_events['feeder1']
     feeder2_times = sliced_events['feeder2']
 
-    spike_pos = get_zones(info, t_start, t_stop)
+    spike_pos = get_zones(info, sliced_pos)
 
     trials_idx = get_trial_idx(spike_pos['u']['time'], spike_pos['shortcut']['time'], spike_pos['novel']['time'],
-                               feeder1_times, feeder2_times, t_start, t_stop)
+                               feeder1_times, feeder2_times, t_stop)
 
     trials.append(trials_idx)
 
@@ -70,6 +83,11 @@ for trial in trials:
     togethers.append(sorted(trial['u'] + trial['shortcut'] + trial['novel']))
 
 
-plot_proportions(us, shortcuts, novels, filepath)
-plot_bydurations(durations, filepath)
-plot_bytrial(togethers, filepath)
+savepath = os.path.join(output_filepath, 'shortcut_behaviour_proportions.png')
+plot_proportions(us, shortcuts, novels, savepath)
+
+savepath = os.path.join(output_filepath, 'shortcut_behavior_durations.png')
+plot_bydurations(durations, savepath)
+
+savepath = os.path.join(output_filepath, 'shortcut_behaviour_bytrial.png')
+plot_bytrial(togethers, savepath)

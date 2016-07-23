@@ -14,10 +14,7 @@ def find_nearest_idx(array, val):
     Index into array that is closest to val
 
     """
-    try:
-       return (np.abs(array-val)).argmin()
-    except:
-        import pdb; pdb.set_trace()
+    return (np.abs(array-val)).argmin()
 
 
 def time_slice(spikes, t_start, t_stop):

@@ -17,9 +17,9 @@ Workflow
 ========
 
 * Get sorted data from server. Put in a location that is convenient - this location will need to be modified in the following code to point to where the data is located on your machine.
-* Make an "cache" folder in your directory that contains subfolders of "cscs", "events", "positions", "spikes".
 * [MATLAB] run emi_loading_data.m -> This saves the data (cscs, poss, events, spikes) in a format that can be read in Python.
 * [Python] run analysis scripts (see below for details).
+* Note : Will need to maintain the same structure of the repository for the code to function as expected. This includes the "cache", "info", "plots" directories (and within "cache" and "pickled" and "data" sub-directory).
 
 ## Specific analyses
 
@@ -67,7 +67,7 @@ Behavioral recording sessions consisted of seven sequences (as outlined below, t
 
 #### Maze configurations
 
-![8_different_maze_configurations](shortcut_track_config.png)
+![8_different_maze_configurations](image_track_config.png)
 
 #### Recording
 
