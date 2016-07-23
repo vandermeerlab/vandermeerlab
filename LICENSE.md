@@ -1,6 +1,5 @@
-*************
-vandermeerlab codebase license
-*************
+Vandermeerlab codebase license
+==============================
 
 Copyright (c) 2012-2015,
 [contributors](https://github.com/mvdm/vandermeerlab/blob/master/LICENSE.md#contributors)
@@ -28,50 +27,42 @@ OR TORT ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED IN ADVANCE OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-*************
-licensed code
-*************
+Licensed code
+=============
 
-The vandermeerlab codebase licenses code from these sources:
-
-------------
+The vandermeerlab codebase licenses MATLAB code from these sources:
 
 - MClust 3.5 and 4.1 by AD Redish (freeware,
   http://redishlab.neuroscience.umn.edu/MClust/MClust.html)
 
-------------
-
 - KlustaKwik by KD Harris et al. (GNU General Public License,
   http://klusta-team.github.io/klustakwik/)
-
-------------
 
 - Chronux 2.0 by PP Mitra et al. (GNU Public License GPL v2,
   http://www.chronux.org/
 
-------------
-
 - Neuralynx to MATLAB import files
   (http://neuralynx.com/research_software/file_converters_and_utilities/)
 
-------------
-
 - UltraMegaSort2000 by DN Hill, SB Mehta, MS Fee and Kleinfeld Lab (https://physics.ucsd.edu/neurophysics/links.html)
 
-------------
+The vandermeerlab codebase licenses Python code from these sources:
+
+- [NumPy](http://www.numpy.org/) - Used under [BSD license](http://www.numpy.org/license.html)
+- [SciPy](https://www.scipy.org/) - Used under [BSD license](https://www.scipy.org/scipylib/license.html)
+- [Shapely](https://pypi.python.org/pypi/Shapely) - Used under [BSD license](https://github.com/Toblerity/Shapely/blob/master/LICENSE.txt)
+- [Sphynx](http://www.sphinx-doc.org/en/stable/) - Used under [BSD license](https://bitbucket.org/birkenfeld/sphinx/src/be5bd373a1a47fb68d70523b6e980e654e070e9f/LICENSE?at=default)
+- [numpydoc](https://github.com/numpy/numpydoc) - Used under [BSD license](https://github.com/numpy/numpydoc/blob/master/LICENSE.txt)
+- [pytest](http://docs.pytest.org/en/latest/) - Used under [MIT license](http://docs.pytest.org/en/latest/license.html)
+- [IPython](http://ipython.org/) - Used under [BSD license](https://github.com/ipython/ipython/blob/master/COPYING.rst)
 
 
-*************
-owners
-*************
-
-The following contributors retain the copyright over their
-contributions, as shown in the commit logs:
-
-- Alyssa Carey
-- Eric Carmichael
-- Jimmie Gmaz
-- Emily Irvine
-- Matthijs van der Meer
-- Youki Tanaka
+Contributors
+============
+- Alyssa Carey (MATLAB)
+- Eric Carmichael (MATLAB)
+- Jimmie Gmaz (MATLAB)
+- Emily Irvine (MATLAB, Python)
+- Matthijs van der Meer (MATLAB)
+- Youki Tanaka (MATLAB)
 

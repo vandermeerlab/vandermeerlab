@@ -1,3 +1,4 @@
+# code-matlab
 *.*~
 *.aux
 *.bbl
@@ -28,3 +29,18 @@
 *.mtc0
 *.asv
 code-matlab/shared/datatypes/tsd/UnionTSD.m
+
+# code-python
+*.pyc
+Thumbs.db
+.DS_Store
+.idea/
+_build
+build
+dist
+*.eggs/
+*.egg-info/
+.ipynb_checkpoints/
+.cache/
+code-python/projects/emily_shortcut/cache/
+code-python/projects/emily_shortcut/plots/
