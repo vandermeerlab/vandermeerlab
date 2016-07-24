@@ -2,7 +2,7 @@ Getting started for this project
 ================================
 * Download unique dependencies
 ```
-conda install matplotlib seaborn jupyter pickle
+conda install matplotlib seaborn jupyter
 ```
 
 Jupyter notebooks can be started by:

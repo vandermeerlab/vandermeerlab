@@ -1,10 +1,8 @@
-from __future__ import print_function
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import SymLogNorm
 import scipy.stats as stats
 import seaborn as sns
-import os
 
 from behavior_functions import bytrial_counts, summary_bytrial
 
