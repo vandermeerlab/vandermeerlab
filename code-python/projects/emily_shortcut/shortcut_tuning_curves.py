@@ -1,26 +1,22 @@
 import os
-
 import vdmlab as vdm
 
 from tuning_curves_functions import get_tc, get_odd_firing_idx
 from plotting_functions import plot_sorted_tc
 
+import info.R063d2_info as r063d2
+import info.R063d3_info as r063d3
+import info.R063d4_info as r063d4
+import info.R063d5_info as r063d5
+import info.R063d6_info as r063d6
+import info.R066d1_info as r066d1
+import info.R066d2_info as r066d2
+import info.R066d4_info as r066d4
+
+
 thisdir = os.path.dirname(os.path.realpath(__file__))
 
-import sys
-sys.path.append(os.path.join(thisdir, 'info'))
-import R042d3_info as r042d3
-import R063d2_info as r063d2
-import R063d3_info as r063d3
-import R063d4_info as r063d4
-import R063d5_info as r063d5
-import R063d6_info as r063d6
-import R066d1_info as r066d1
-import R066d2_info as r066d2
-import R066d4_info as r066d4
 
-
-# infos = [r042d3]
 # infos = [r063d2]
 infos = [r063d2, r063d3, r063d4, r063d5, r063d6, r066d1, r066d2, r066d4]
 

@@ -465,7 +465,7 @@ def plot_swrs(csc, swr_idx, saveloc, row=10, col=8, buffer=20, savefig=True):
             plt.axis('off')
 
         if savefig:
-            plt.savefig(saveloc + str(fig + 1) + '.png', dpi=300, bbox_inches='tight')
+            plt.savefig(saveloc + str(fig + 1) + '.png', dpi=300)
             plt.close()
         else:
             plt.show()
