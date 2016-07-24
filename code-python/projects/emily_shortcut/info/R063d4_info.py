@@ -5,6 +5,11 @@ from startup import load_csc, load_position, load_videotrack, load_events, load_
 session_id = 'R063d4'
 dataloc = 'C:\\Users\\Emily\\Code\\vandermeerlab\\code-python\\projects\\emily_shortcut\\cache\\data\\'
 
+species = 'rat'
+behavior = 'shortcut'
+target = 'dCA1'
+experimenter = 'Emily Irvine'
+
 def get_csc():
     return load_csc(os.path.join(dataloc, 'R063-2015-03-23-csc.mat'))
 
@@ -39,6 +44,8 @@ pxl_to_cm = (7.9628, 7.2755)
 fs = 2000
 
 good_lfp = ['R063-2015-03-23-CSC11b.ncs']
+good_swr = ['']
+good_theta = ['']
 
 # Session-specific path trajectory points
 path_pts = dict()
