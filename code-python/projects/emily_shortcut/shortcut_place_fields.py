@@ -28,13 +28,15 @@ output_filepath = os.path.join(thisdir, 'plots', 'fields')
 infos = [r063d2, r063d3, r063d4, r063d5, r063d6, r066d1, r066d2, r066d4]
 
 for info in infos:
+    print(info.session_id)
     pos = info.get_pos(info.pxl_to_cm)
 
     tc = get_tc(info, pos, pickle_filepath)
 
-    pickled_spike_heatmaps = pickle_filepath + info.session_id + '_spike_heatmaps.pkl'
+    heatmap_filename = info.session_id + '_spike_heatmaps.pkl'
+    pickled_spike_heatmaps = os.path.join(pickle_filepath, heatmap_filename)
     if os.path.isfile(pickled_spike_heatmaps):
-        with open(pickle_filepath + info.session_id + '_spike_heatmaps.pkl', 'rb') as fileobj:
+        with open(pickled_spike_heatmaps, 'rb') as fileobj:
             spike_heatmaps = pickle.load(fileobj)
     else:
         spikes = info.get_spikes()

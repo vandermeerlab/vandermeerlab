@@ -3,6 +3,7 @@ from scipy import signal
 import scipy.stats as stats
 from scipy.signal.signaltools import _next_regular
 
+import matplotlib.pyplot as plt
 
 def butter_bandpass(lowcut, highcut, fs, lfp, order=4):
     """ Filters signal using butterworth filter
@@ -33,7 +34,8 @@ def butter_bandpass(lowcut, highcut, fs, lfp, order=4):
     return filtered_butter
 
 
-def detect_swr_hilbert(csc, fs=2000, lowcut=140.0, highcut=250.0, z_thres=5, power_thres=4, merge_thres=0.0, min_length=0.02):
+def detect_swr_hilbert(csc, fs=2000, lowcut=140.0, highcut=250.0,
+                       z_thres=3, power_thres=3, merge_thres=0.02, min_length=0.01):
     """ Finds sharp-wave ripple (SWR) times and indices.
 
     Parameters
@@ -129,4 +131,4 @@ def detect_swr_hilbert(csc, fs=2000, lowcut=140.0, highcut=250.0, z_thres=5, pow
 
     print('Number of SWR events found: ', str(len(swr_idx['start'])))
 
-    return swr_times, swr_idx, filtered_butter
+    return swr_times, swr_idx

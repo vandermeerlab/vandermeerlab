@@ -18,14 +18,14 @@ thisdir = os.path.dirname(os.path.realpath(__file__))
 output_filepath = os.path.join(thisdir, 'plots', 'swr')
 
 
-infos = [r063d2]
-# infos = [r063d2, r063d3, r063d4, r063d5, r063d6, r066d1, r066d2, r066d4]
+# infos = [r063d2]
+infos = [r063d2, r063d3, r063d4, r063d5, r063d6, r066d1, r066d2, r066d4]
 
 for info in infos:
     print('Working on ' + info.session_id)
     csc = info.get_csc()
 
-    swr_times, swr_idx, filtered_butter = vdm.detect_swr_hilbert(csc, fs=info.fs)
+    swr_times, swr_idx = vdm.detect_swr_hilbert(csc, fs=info.fs)
 
     filename = info.session_id + '-swr_'
     saveloc = os.path.join(output_filepath, filename)

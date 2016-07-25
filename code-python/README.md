@@ -22,7 +22,7 @@
   (must be in the directory where this .whl is located).
 
   ```
-  conda install numpy scipy shapely pytest
+  conda install numpy scipy shapely pytest matplotlib
   ```
 
 * Clone the analysis code from Github and developer installation.

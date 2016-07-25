@@ -104,3 +104,11 @@ novel_trajectory = [path_pts['novel1'], path_pts['point20'], path_pts['point21']
                     path_pts['point22'], path_pts['novel2']]
 
 
+sequence = dict()
+sequence['swr_start'] = [8891.60441, 5377.22991]
+sequence['swr_stop'] = [8891.75241, 5377.25541]
+sequence['run_start'] = [2926.2, 3026.2]
+sequence['run_stop'] = [2956.2, 3056.2]
+sequence['ms'] = 20
+sequence['loc'] = 1
+sequence['colours'] = ['#bd0026', '#fe9929', '#41ab5d', '#1d91c0']

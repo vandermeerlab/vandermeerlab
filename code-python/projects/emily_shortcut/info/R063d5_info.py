@@ -97,4 +97,12 @@ shortcut_trajectory = [path_pts['shortcut1'], path_pts['point13'], path_pts['poi
 novel_trajectory = [path_pts['novel1'], path_pts['point19'], path_pts['point20'],
                     path_pts['point21'], path_pts['novel2']]
 
-
+sequence = dict()
+sequence['swr_start'] = [5730.325233, 6376.529733, 6967.243733]
+sequence['swr_stop'] = [5730.413733, 6376.624233, 6967.307233]
+sequence['run_start'] = [3997.6, 4062.6, 3892.6]
+sequence['run_stop'] = [4027.6, 4092.6, 3922.6]
+sequence['ms'] = 10
+sequence['loc'] = 1
+sequence['colours'] = ['#bd0026', '#fc4e2a', '#ef3b2c', '#ec7014', '#fe9929', '#78c679',
+                       '#41ab5d', '#238443', '#66c2a4', '#41b6c4', '#1d91c0']

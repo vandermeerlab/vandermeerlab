@@ -39,7 +39,7 @@ for info in infos:
         sliced_csc['time'] = csc['time'][t_start_idx:t_end_idx]
         sliced_csc['data'] = csc['data'][t_start_idx:t_end_idx]
 
-        swr_times, swr_idx, filtered_butter = vdm.detect_swr_hilbert(sliced_csc, fs=info.fs, power_thres=5)
+        swr_times, swr_idx = vdm.detect_swr_hilbert(sliced_csc, fs=info.fs, power_thres=5)
 
         tc = get_tc(info, pos, pickle_filepath)
 

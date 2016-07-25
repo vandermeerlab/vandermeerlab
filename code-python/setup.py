@@ -26,6 +26,7 @@ setup(
         "numpy",
         "scipy",
         "shapely"
+        "matplotlib"
     ],
     setup_requires=["numpy"],
     tests_require=["pytest"],
