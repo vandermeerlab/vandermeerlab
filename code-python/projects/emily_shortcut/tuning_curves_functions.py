@@ -118,7 +118,8 @@ def get_tc(info, pos, pickle_filepath):
             each inner list represents an individual neuron's tuning curve.
 
         """
-    pickled_tc = pickle_filepath + info.session_id + '_tuning_curves_phase3.pkl'
+    tc_filename = info.session_id + '_tuning_curves_phase3.pkl'
+    pickled_tc = os.path.join(pickle_filepath, tc_filename)
     if os.path.isfile(pickled_tc):
         with open(pickled_tc, 'rb') as fileobj:
             tc = pickle.load(fileobj)
@@ -130,7 +131,9 @@ def get_tc(info, pos, pickle_filepath):
 
         linear, zone = linearize(info, pos, t_start, t_stop)
 
-        pickled_spike_pos = pickle_filepath + info.session_id + '_spike_position_phase3.pkl'
+        spike_pos_filename = info.session_id + '_spike_position_phase3.pkl'
+        pickled_spike_pos = os.path.join(pickle_filepath, spike_pos_filename)
+        print(pickled_spike_pos)
         if os.path.isfile(pickled_spike_pos):
             with open(pickled_spike_pos, 'rb') as fileobj:
                 spike_position = pickle.load(fileobj)

@@ -29,11 +29,10 @@ pos = info.get_pos(info.pxl_to_cm)
 csc = info.get_csc()
 spikes = info.get_spikes()
 
-
 tc = get_tc(info, pos, pickle_filepath)
 
-
-pickled_spike_heatmaps = pickle_filepath + info.session_id + '_spike_heatmaps.pkl'
+filename = info.session_id + '_spike_heatmaps.pkl'
+pickled_spike_heatmaps = os.path.join(pickle_filepath, filename)
 if os.path.isfile(pickled_spike_heatmaps):
     with open(pickled_spike_heatmaps, 'rb') as fileobj:
         spike_heatmaps = pickle.load(fileobj)
@@ -130,6 +129,9 @@ idx = 46
 start_time_swr = swr_times['start'][idx]
 stop_time_swr = swr_times['stop'][idx]
 
+# start_time_swr = 1371.23
+# stop_time_swr = 1371.33
+
 
 rows = 12
 cols = 7
@@ -143,6 +145,7 @@ for i, neuron_spikes in enumerate(field_spikes):
     location += 2
 ax1.set_xlim([start_time, stop_time])
 ax1.set_ylim([1, location])
+vdm.add_scalebar(ax1, matchy=False, loc=1)
 plt.setp(ax1, xticks=[], xticklabels=[], yticks=[])
 
 location = 1
@@ -151,6 +154,7 @@ for i, neuron_spikes in enumerate(field_spikes):
     location += 2
 ax2.set_xlim([start_time_swr, stop_time_swr])
 ax2.set_ylim([1, location])
+vdm.add_scalebar(ax2, matchy=False, loc=1)
 plt.setp(ax2, xticks=[], xticklabels=[], yticks=[])
 
 x = list(range(0, len(field_tc[0])))
