@@ -1,14 +1,17 @@
 import os
 
-from startup import load_csc, load_position, load_videotrack, load_events, load_spikes, convert_to_cm
+from startup import load_csc, load_videotrack, load_events, load_spikes, convert_to_cm
 
 session_id = 'R066d4'
-dataloc = 'C:\\Users\\Emily\\Code\\vandermeerlab\\code-python\\projects\\emily_shortcut\\cache\\data\\'
+
+thisdir = os.path.dirname(os.path.realpath(__file__))
+dataloc = os.path.abspath(os.path.join(thisdir, '..', 'cache', 'data'))
 
 species = 'rat'
 behavior = 'shortcut'
 target = 'dCA1'
 experimenter = 'Emily Irvine'
+
 
 def get_csc():
     return load_csc(os.path.join(dataloc, 'R066-2014-12-01-csc.mat'))
