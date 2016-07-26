@@ -1,8 +1,7 @@
 Vandermeerlab codebase license
 ==============================
 
-Copyright (c) 2012-2015,
-[contributors](https://github.com/mvdm/vandermeerlab/blob/master/LICENSE.md#contributors)
+Copyright (c) 2012-2016, contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -30,8 +29,6 @@ ADVISED IN ADVANCE OF THE POSSIBILITY OF SUCH DAMAGE.
 Licensed code
 =============
 
-The vandermeerlab codebase licenses MATLAB code from these sources:
-
 - MClust 3.5 and 4.1 by AD Redish (freeware,
   http://redishlab.neuroscience.umn.edu/MClust/MClust.html)
 
@@ -46,23 +43,11 @@ The vandermeerlab codebase licenses MATLAB code from these sources:
 
 - UltraMegaSort2000 by DN Hill, SB Mehta, MS Fee and Kleinfeld Lab (https://physics.ucsd.edu/neurophysics/links.html)
 
-The vandermeerlab codebase licenses Python code from these sources:
-
-- [NumPy](http://www.numpy.org/) - Used under [BSD license](http://www.numpy.org/license.html)
-- [SciPy](https://www.scipy.org/) - Used under [BSD license](https://www.scipy.org/scipylib/license.html)
-- [Shapely](https://pypi.python.org/pypi/Shapely) - Used under [BSD license](https://github.com/Toblerity/Shapely/blob/master/LICENSE.txt)
-- [Sphynx](http://www.sphinx-doc.org/en/stable/) - Used under [BSD license](https://bitbucket.org/birkenfeld/sphinx/src/be5bd373a1a47fb68d70523b6e980e654e070e9f/LICENSE?at=default)
-- [numpydoc](https://github.com/numpy/numpydoc) - Used under [BSD license](https://github.com/numpy/numpydoc/blob/master/LICENSE.txt)
-- [pytest](http://docs.pytest.org/en/latest/) - Used under [MIT license](http://docs.pytest.org/en/latest/license.html)
-- [IPython](http://ipython.org/) - Used under [BSD license](https://github.com/ipython/ipython/blob/master/COPYING.rst)
-
-
 Contributors
 ============
-- Alyssa Carey (MATLAB)
-- Eric Carmichael (MATLAB)
-- Jimmie Gmaz (MATLAB)
-- Emily Irvine (MATLAB, Python)
-- Matthijs van der Meer (MATLAB)
-- Youki Tanaka (MATLAB)
-
+- Alyssa Carey
+- Eric Carmichael
+- Jimmie Gmaz
+- Emily Irvine
+- Matthijs van der Meer
+- Youki Tanaka
