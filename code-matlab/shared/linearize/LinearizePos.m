@@ -58,7 +58,8 @@ end
 NN(f_use) = griddata(cfg.Coord(1,:),cfg.Coord(2,:),1:length(cfg.Coord),x(f_use),y(f_use),'nearest');
 
 % also get distance
-d = sqrt((cfg.Coord(1,ceil(NN(f_use))) - x(f_use)).^2 + (cfg.Coord(2,ceil(NN(f_use))) - y(f_use)).^2);
+d = NaN(size(NN));
+d(f_use) = sqrt((cfg.Coord(1,ceil(NN(f_use))) - x(f_use)).^2 + (cfg.Coord(2,ceil(NN(f_use))) - y(f_use)).^2);
 
 % assemble output tsd
 linpos_tsd.tvec = pos_tsd.tvec;
