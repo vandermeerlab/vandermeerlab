@@ -38,8 +38,8 @@ end
 cfg_def = [];
 
 nDefaultBins = 100;
-nDim = size(tuning_var.data,1); % set up default bins
-for iDim = 1:nDim
+cfg_def.nDim = size(tuning_var.data,1); % set up default bins
+for iDim = 1:cfg_def.nDim
 
         mn = min(tuning_var.data(iDim,:));
         mx = max(tuning_var.data(iDim,:));
@@ -54,10 +54,10 @@ cfg_def.minOcc = 1;
 cfg = ProcessConfig(cfg_def,cfg_in);
 
 % work
-switch nDim
+switch cfg.nDim
     case 1
         % bin tuning variable
-        [tc.occ_hist,tc.pos_idx] = histc(tuning_var.data,cfg.binEdges{1},2);        
+        [tc.occ_hist,tc.pos_idx] = histc(tuning_var.data(1,:),cfg.binEdges{1},2);        
         [tc.occ_hist,tc.pos_idx] = trim_histc(tc.occ_hist,tc.pos_idx);
         
         tc.no_occ_idx = find(tc.occ_hist < cfg.minOcc);
