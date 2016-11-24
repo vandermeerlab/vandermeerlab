@@ -50,6 +50,9 @@ end
 cfg_def.smoothingKernel = []; % example for 1-D: gausskernel(11,2);
 cfg_def.occ_dt = 1/30;
 cfg_def.minOcc = 1;
+cfg_def.bootstrap = 0;
+cfg_def.nBoot = 1000; % number of bootstrap samples to run
+cfg_def.bootFrac = 0.9; % fraction of tuning variable data to use for each bootstrap sample
 
 cfg = ProcessConfig(cfg_def,cfg_in);
 
@@ -87,6 +90,64 @@ switch cfg.nDim
             spk_hist(tc.no_occ_idx) = NaN;
             
             tc.tc(iC,:) = spk_hist'./tc.occ_hist;
+            
+            % if requested, bootstrap
+            if cfg.bootstrap
+                tdata = tuning_var.data(1,:);
+                tt = tuning_var.tvec;
+                s = S.t{iC};
+                
+                s_idx = nearest_idx3(s,tt);
+                nT = length(tt);
+                
+                % intialize bootstrap var
+               for iBoot = cfg.nBoot:-1:1
+                
+                   this_idx = randperm(nT);
+                   this_idx = this_idx(1:round(cfg.bootFrac.*nT));
+                   this_tdata = tdata(this_idx);
+                   this_tt = tt(this_idx);
+                   [~,s_toss] = setxor(s_idx,this_idx); % can't use intersect because removes doubles
+                   this_s = s; this_s(s_toss) = [];
+                   
+                   % compute tuning curve over this_tdata and this_s
+                   % NOTE this is repeated code, should place in function
+                   
+                   % bin tuning variable
+                   this_occ_hist = histc(this_tdata,cfg.binEdges{1},2);
+                   this_occ_hist = trim_histc(this_occ_hist);
+                   
+                   this_no_occ_idx = find(this_occ_hist < cfg.minOcc);
+
+                   if ~isempty(cfg.smoothingKernel)
+                       this_occ_hist = conv(this_occ_hist,cfg.smoothingKernel,'same');
+                   end
+                   
+                   this_occ_hist(this_no_occ_idx) = NaN;
+                   this_occ_hist = this_occ_hist .* cfg.occ_dt;
+                   
+                   % bin spikes
+                   this_spk_z = interp1(this_tt,this_tdata,this_s,'linear');
+                   
+                   if isempty(this_spk_z), this_spk_z = zeros(0,1); end % ensures histc generates histogram with all zeros -- MvdM                
+                   
+                   [this_spk_hist,~] = histc(this_spk_z,cfg.binEdges{1},1);
+                   this_spk_hist = trim_histc(this_spk_hist);
+                   
+                   if ~isempty(cfg.smoothingKernel)
+                       this_spk_hist = conv(this_spk_hist,cfg.smoothingKernel,'same');
+                   end
+                   
+                   this_spk_hist(this_no_occ_idx) = NaN;
+                   
+                   this_boot_tc(iBoot,:) = this_spk_hist'./this_occ_hist;
+                   
+               end
+               
+               % compute SD over bootstrapped TCs
+               tc.tcboot(iC,:) = nanstd(this_boot_tc);
+            end
+        
             
         end
         
