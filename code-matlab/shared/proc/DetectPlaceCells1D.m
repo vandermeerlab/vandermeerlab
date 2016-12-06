@@ -76,7 +76,10 @@ for iC = 1:nCells
         continue;
     end
     
-    [pks.loc,pks.full] = find_fields(cfg,this_tc);
+    cfg_ff = [];
+    cfg_ff.thr = cfg.thr;
+    cfg_ff.minSize = cfg.minSize;
+    [pks.loc,pks.full] = find_fields(cfg_ff,this_tc);
     
     if ~isempty(pks.loc) % some peaks were detected
         pks.val = this_tc(pks.loc); % get firing rate at peak

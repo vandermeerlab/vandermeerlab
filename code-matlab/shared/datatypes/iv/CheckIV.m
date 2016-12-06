@@ -15,6 +15,7 @@ function pass_flag = CheckIV(iv_in,varargin)
 %
 % MvdM 2014-11-12
 % aacarey edit Sept 2015, additional checks
+% youkitan edit Sept 2016, additional checks
 
 pass_flag = 1;
 
@@ -32,6 +33,8 @@ if isstruct(iv_in)
     elseif ~iscolumn(iv_in.tstart) || ~iscolumn(iv_in.tend)
         pass_flag = 0;
         fprintf('FAIL%s: tstart and tend must be column vectors.\n',in_mfun);
+    elseif any(iv_in.tstart > iv_in.tend)
+        fprintf('WARNING%s: start-end pairs not unidirectional.\n',in_mfun);
     end
 else
     pass_flag = 0;

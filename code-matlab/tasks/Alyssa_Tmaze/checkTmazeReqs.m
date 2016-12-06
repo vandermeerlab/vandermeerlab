@@ -70,9 +70,13 @@ end
 %% 
 
 disp([mfun,': searching for required data in session folders...'])
+filesep = '\';
 
 if ispc
     machinename = getenv('COMPUTERNAME');
+elseif ismac
+    machinename = getenv('USER');
+    filesep = '/';
 else
     machinename = getenv('HOSTNAME');
 end
@@ -126,7 +130,7 @@ for iRat = 1:length(rat_list)
     session_list = session_list(arrayfun(@(x) x.name(1), session_list) ~= '.');
    
     for iSession = 1:length(session_list)
-        session = [ratfolder,'\',session_list(iSession).name]; 
+        session = [ratfolder,filesep,session_list(iSession).name]; 
         cd(strcat(session));
         [~,sessionID,~] = fileparts(session);
 
