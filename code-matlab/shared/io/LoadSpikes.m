@@ -35,6 +35,7 @@ function S = LoadSpikes(cfg_in)
 %
 % MvdM 2014-06-17 based on ADR LoadSpikes(), 25 edit to use cfg_in
 % aacarey edit Nov 2015
+% youkitan edit Aug 2016 fixed getRatings/min_cluster_quality issue
 
 cfg_def.fc = {};
 cfg_def.tsflag = 'sec';
@@ -136,6 +137,13 @@ for iF = 1:nFiles
     end 		% if tfn valid
 end		% for all files
 
+% this makes sure that if you specify a min cluster quality it will select appropriate clusters
+% otherwise you can have specified a min cluster quality without using the getRatings flag
+% and not have LoadSpikes restrict the cluster quality
+if cfg.min_cluster_quality < 5 && cfg.getRatings == 0
+    cfg.getRatings = 1;
+end
+    
 if cfg.getRatings
         
         warning('off','MATLAB:unknownElementsNowStruc');

@@ -44,7 +44,7 @@ end
 
 % assemble tvecs
 if isempty(cfg.tvec_edges)
-    cfg.tvec_edges = firstSpike(S):cfg.dt:lastSpike(S);
+    cfg.tvec_edges = firstSpike(S):cfg.dt:lastSpike(S)+cfg.dt;
 else
     cfg.dt = median(diff(cfg.tvec_edges));
 end

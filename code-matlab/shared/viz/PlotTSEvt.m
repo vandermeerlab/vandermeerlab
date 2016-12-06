@@ -15,12 +15,19 @@
     %
     %
     % youkitan 2014-11-20
+    % youkitan 2016-08-18 dimension fix for ts input, type checking
     
     %% Set cfg parameters and check inputs
     cfg_def = [];
     cfg_def.legend = 'off';
     cfg_def.openInAxes = 0; % may not need this, but is more transparent?
-    cfg = ProcessConfig2(cfg_def,cfg_in);
+    
+    mfun = mfilename;
+    cfg = ProcessConfig(cfg_def,cfg_in,mfun);
+    
+    if ~CheckTS(evt_in)
+       error('Input is not a correctly formed ts.') 
+    end
     
     %% Plot
     events = evt_in.t;
@@ -30,17 +37,17 @@
     h = [];
     legendnames = {};
 
-    if ~isempty(findall(0,'Type','Figure')) %checks to see if there is a figure open
+    if ~isempty(findall(0,'Type','Figure')) && cfg.openInAxes == 0 %checks to see if there is a figure open
         ylims = get(gca,'YLim');
     else
         ylims = [0 10];
     end
 
     hold on;
-    for iEvt = 1:length(events)                     
+    for iEvt = 1:size(events,2)                     
         numEvt = length(events{iEvt});
 
-        xvals = [ events{iEvt} ; events{iEvt} ; nan(size(events{iEvt})) ];
+        xvals = [ events{iEvt}' ; events{iEvt}' ; nan(size(events{iEvt}')) ];
         yvals = [ ylims(1).*ones(1,numEvt); ylims(2).*ones(1,numEvt) ; nan(1,numEvt) ];
 
         xvals = xvals(:);
