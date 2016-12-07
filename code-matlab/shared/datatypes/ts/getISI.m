@@ -53,9 +53,3 @@ for iI = 1:nIV % for each interval, get spike counts
    end  % of cells
     
 end % of intervals
-
-
-
-
-
-
