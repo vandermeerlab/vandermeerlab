@@ -15,10 +15,11 @@ function in = restrict(in,varargin)
 % will not get cut)
 %
 % MvdM 2014-07-20 initial version
+% youkitan 2016-11-27 edit: type checking update
 
 % convert input arguments to iv if not already done
 if nargin == 2
-    if ~strcmp(varargin{1}.cfg.history.mfun{1},'iv')
+    if ~strcmp(varargin{1}.type,'iv')
        error('Single input argument must be iv (interval) type.'); 
     end
     

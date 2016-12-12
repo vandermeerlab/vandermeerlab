@@ -17,7 +17,8 @@ function [] = tcplot(cfg_in,tc_in)
 %% set defaults and process cfg
 cfg_def.display = 'separate';
 
-cfg = ProcessConfig2(cfg_def,cfg_in);
+mfun = mfilename;
+cfg = ProcessConfig(cfg_def,cfg_in,mfun);
 
 %% create plot layout
 numPF = length(tc_in.firing_rates);

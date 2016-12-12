@@ -1,5 +1,5 @@
 function in = restrict2(in,varargin)
-% function out = restrict(in,varargin)
+%RESTRICT2 function out = restrict2(in,varargin)
 %
 % restricts times in data object to specific intervals
 %
@@ -21,7 +21,7 @@ function in = restrict2(in,varargin)
 
 % convert input arguments to iv if not already done
 if nargin == 2
-    if ~strcmp(varargin{1}.cfg.history.mfun{1},'iv')
+    if ~strcmp(varargin{1}.type,'iv')
        error('Single input argument must be iv (interval) type.'); 
     end
     
@@ -68,7 +68,7 @@ elseif isfield(in,'t') % ts
     type = 'ts';
     for iC = length(in.t):-1:1
         keep{iC} = [];
-           
+        
         lookups = in.t{iC};
         if isempty(lookups)
             continue
