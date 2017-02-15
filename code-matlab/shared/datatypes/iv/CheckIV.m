@@ -1,6 +1,6 @@
 function pass_flag = CheckIV(iv_in,varargin)
 %% CHECKIV Check IV for datatype violations
-%	pass_flag = CheckIV(ts_in,varargin) verifies that input is iv and is well formed.
+%	pass_flag = CheckIV(iv_in,varargin) verifies that input is iv and is well formed.
 %
 %	INPUTS:
 %       iv_in: iv to be checked

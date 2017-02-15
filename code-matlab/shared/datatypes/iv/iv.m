@@ -31,6 +31,7 @@ function iv_out = iv(varargin)
 %           .cfg    - record of the data's history including config 
 %                     parameters and functions visited
 %
+%   see also CheckIV
 %
 % MvdM 2014-06-24
 % aacarey edit, Nov 2015
