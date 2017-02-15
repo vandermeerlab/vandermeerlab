@@ -20,7 +20,9 @@ function pos_tsd = LoadPos(cfg_in)
 % MvdM 2014-06-17
 % youkitan 2014-11-05
 % A.Carey 2015-02-11 (added convFact)
-
+% youkitan edit Feb 2017, added units
+%
+%%
 cfg_def.fn = {};
 cfg_def.removeZeros = 1;
 cfg_def.tsflag = 'sec';
@@ -71,7 +73,10 @@ pos_tsd.label{2} = 'y';
 % Convert data from pixels to cm
 if ~isempty(cfg.convFact) 
     pos_tsd.data(1,:) = pos_tsd.data(1,:)./cfg.convFact(1); 
-    pos_tsd.data(2,:) = pos_tsd.data(2,:)./cfg.convFact(2); 
+    pos_tsd.data(2,:) = pos_tsd.data(2,:)./cfg.convFact(2);
+    pos_tsd.units = 'cm';
+else
+    pos_tsd.units = 'px';
 end
 
 % check if ExpKeys available

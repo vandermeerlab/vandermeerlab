@@ -1,5 +1,5 @@
-function Coord = MakeCoord(x, y, varargin)
-% function Coord = MakeCoord(x,y,varargin)
+function Coord_out = MakeCoord(tsd_in, varargin)
+% function Coord = MakeCoord(tsd_in,varargin)
 %
 % Opens a figure and prompts the user to draw an idealized path. Returns an 
 % array containing the x and y positions of points on the path. Commonly
@@ -21,9 +21,20 @@ function Coord = MakeCoord(x, y, varargin)
 % FOR NOTES ON CHANGING MAZE ORIENTATION 
 % open MakeCoord and read the section titled "MAZE ORIENTATION EXAMPLES"
 %
+% Coord metadata
+%   units: string, inherits unit information from tsd_in (what units does the position
+%          data use?)
+%   run_dist: numeric, distance of trajectory the coord represents in real life (e.g.,
+%             path length of a maze)
+%   nPoints: numeric, number of points in the Coord
+%   pointDist: numeric, distance from one point to the next. If unstandardized, distance
+%              is in coord units. If standardized, distance is in same units as run_dist.
+%   standardized: flag, 0 for raw coord, 1 for standardized coord
+%
 % original by NCST
 % modified MvdM 08, 2014-06-24
 % modified ACarey, 2014-12-31 (handles axes reversals and figure rotations)
+% youkitan Feb 2017 edit, tsd input, coord structs, meta-information perserved
 
 %% MAZE ORIENTATION EXAMPLES
 
@@ -96,7 +107,7 @@ function Coord = MakeCoord(x, y, varargin)
 % |_ _ _ _ _ _ _ _ _ _ |
 %      In your head
 
-%% 
+%% parse inputs adn error check
 MaxDist = 1; % Maximum separation between Coord points, used to linearly interpolate between user selected points.
 newX = [];
 newY = [];
@@ -105,14 +116,18 @@ wraparound = 0;
 YDir = 'normal'; % 'reverse' flips the y axis
 XDir = 'normal'; % 'reverse' flips the x axis
 rot = 0; % if user wants to change rotational orientation
+run_dist = [];
 extract_varargin;
 
-if isempty(x)
-    return
+if ~CheckTSD(tsd_in)
+    error('Input is not a well formed TSD.')
+elseif size(tsd_in.data,1) ~= 2
+    error('Input TSD must be 2-dimensional position data.')
 end
 
+%% start figure generation
 figure
-plot(x,y,'.','Color',[0.7 0.7 0.7],'MarkerSize',4)
+plot(tsd_in,'.','Color',[0.7 0.7 0.7],'MarkerSize',4)
 title(titl);
 set(gca,'YDir',YDir,'XDir',XDir); view(rot,90); % view(az,el) zaxis is rot and elevation is 90.
 xlabel('X data'); ylabel('Y data');
@@ -164,7 +179,8 @@ Coord = newPoints;
 
 % Show the idealized path
 plot(Coord(2,:),Coord(1,:),'og');
-plot(Coord(2,1),Coord(1,1),'*b');
+plot(Coord(2,1),Coord(1,1),'*b'); %start
+plot(Coord(2,end),Coord(1,end),'*r'); %end
 
 % trying to get the function to plot how user wants to see it, but also
 % output the coord correctly. So this hack seems to work (ACarey)
@@ -175,3 +191,13 @@ Coord(1,:) = temp;
 
 pause(2);
 close 
+
+%% housekeeping
+Coord_out = [];
+Coord_out.coord = Coord;
+Coord_out.units = tsd_in.units;
+Coord_out.run_dist = run_dist;
+Coord_out.nPoints = size(Coord,2);
+Coord_out.pointDist = pdist(Coord(:,1:2)','euclidean');
+Coord_out.standardized = 0;
+end

@@ -54,6 +54,16 @@ sample_count_data = nan(nFiles,1);
 
 csc_tsd = tsd;
 
+if cfg.VoltageConvFactor == 1
+    csc_tsd.units = 'V';
+elseif cfg.VoltageConvFactor == 1000
+    csc_tsd.units = 'mV';
+elseif cfg.VoltageConvFactor == 10^6
+    csc_tsd.units = 'uV';
+else
+    error('Input voltage conversion factor is not a valid value.')
+end
+
 if cfg.verbose; fprintf('%s: Loading %d file(s)...\n',mfun,nFiles); end
 
 for iF = 1:nFiles
