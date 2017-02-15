@@ -188,8 +188,8 @@ convFact = PosCon(pos,realTrackDims,'YDir','reverse');
 % should always flip the Y axis unless LoadPos() is changed to do load the
 % Y data differently
 
-coordL = MakeCoord(getd(pos,'x'),getd(pos,'y'),'titl','Draw left trajectory, press enter when done','YDir','reverse'); % CoordL is in units of pixels
-coordR = MakeCoord(getd(pos,'x'),getd(pos,'y'),'titl','Draw right trajectory, press enter when done','YDir','reverse'); % CoordR is in units of pixels
+coordL = MakeCoord_old(getd(pos,'x'),getd(pos,'y'),'titl','Draw left trajectory, press enter when done','YDir','reverse'); % CoordL is in units of pixels
+coordR = MakeCoord_old(getd(pos,'x'),getd(pos,'y'),'titl','Draw right trajectory, press enter when done','YDir','reverse'); % CoordR is in units of pixels
 
 % these coords should be converted to units of cm using the convFact you already
 % collected above:
