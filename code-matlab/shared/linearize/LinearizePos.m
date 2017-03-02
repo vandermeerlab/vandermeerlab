@@ -33,6 +33,9 @@ function [linpos_tsd,edges] = LinearizePos(cfg_in,pos_tsd,Coord_in,varargin)
 %   if run_dist = 10cm then the maximum distance (point 5) is 20cm. So, the possible
 %   distances are linspace(0,20,5) = [0,5,10,15,20]. The output data is then [0,5,15,15].
 %
+%   See also, MakeCoord, StandardizeCoord
+%   Workflow example Loading_and_Linearizing_Position_Data
+%
 % Mvdm init
 % youkitan edit Feb 2017, overhaul
 
