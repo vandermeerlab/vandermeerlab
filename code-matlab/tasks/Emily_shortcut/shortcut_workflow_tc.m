@@ -55,7 +55,7 @@ cfg = [];
 cfg.binEdges{1} = z_min:binsize:z_max;
 cfg.smoothingKernel = gausskernel(15,3); % (wide by std dev)
 clear tc;
-tc = TuningCurves(cfg, spikes_filtered, zlin);
+tc = TuningCurves_old(cfg, spikes_filtered, zlin);
 
 % Sorting neurons based on peak firing along position
 [~, tc_max_idx] = max(tc.tc, [], 2);

@@ -239,7 +239,7 @@ for iCond = 1:nCond
         continue;
     end
     
-    expCond(iCond).tc = TuningCurves(cfg_tc,enc_S,enc_linpos);
+    expCond(iCond).tc = TuningCurves_old(cfg_tc,enc_S,enc_linpos);
     
     % keep track of cp
     [~,expCond(iCond).cp_bin] = histc(expCond(iCond).cp.data,cfg_tc.binEdges{1});

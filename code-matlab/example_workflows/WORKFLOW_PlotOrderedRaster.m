@@ -41,7 +41,7 @@ nCond = length(expCond);
 for iCond = 1:nCond
    
     cfg_linpos = []; cfg_linpos.Coord = expCond(iCond).coord;
-    expCond(iCond).linpos = LinearizePos(cfg_linpos,pos);
+    expCond(iCond).linpos = LinearizePos_old(cfg_linpos,pos);
    
 end
 
@@ -67,7 +67,7 @@ end
 for iCond = 1:nCond
     
     cfg_tc = [];
-    expCond(iCond).tc = TuningCurves(cfg_tc,expCond(iCond).S,expCond(iCond).linpos); 
+    expCond(iCond).tc = TuningCurves_old(cfg_tc,expCond(iCond).S,expCond(iCond).linpos); 
     
 end
  
