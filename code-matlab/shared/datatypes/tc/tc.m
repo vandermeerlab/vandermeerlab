@@ -6,9 +6,10 @@ function tc_out = tc(varargin)
 %   tc_out = TC(varargin) is a constructor for the tc (tuning curve) struct.
 %
 %   INPUTS:
-%       tc/tc2D: firing rate map for each cell normalized by sampling of tuning variable
-%       occ_hist: total sampling of tuning variable (occupancy for position variable)
-%       spk_hist: binned raw firing rates (optionally smoothed)
+%       tc/tc2D: firing rate map for each cell (spike count normalized by sampling of
+%       tuning variable)
+%       occ_hist: total sampling of tuning variable (occupancy for
+%       position variable) spk_hist: binned raw firing rates (optionally smoothed)
 %
 %   OUTPUTS
 %       tc_out: tc struct with fields:
