@@ -43,8 +43,6 @@ if nargin == 2
         error('Input .label data are not in cell format.')
     end
     
-    
-    
 % initialization of an empty ts struct with prespecified number of data bins
 elseif nargin == 1 
     if isnumeric(varargin{1}) && size(varargin{1},1) == 1 && size(varargin{1},2) == 1
@@ -59,7 +57,11 @@ elseif nargin == 1
         ts_out.t = varargin{1};
     else
         error('Input is neither a numeric or cell type.')
-    end    
+    end
+
+% initialization of an empty ts struct
+elseif nargin == 0
+    %doesn't have to do aything
 else
     error('Invalid number of arguments.')
 end

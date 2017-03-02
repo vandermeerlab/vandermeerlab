@@ -49,7 +49,7 @@ function Coord_out = MakeCoord(tsd_in, varargin)
 % leave it as 90).
 
 % REVERSING THE Y AXIS TO CORRECT MIRRORING:
-% coord = MakeCoord(getd(pos,'x'),getd(pos,'y'),'titl','Omg upside down');
+% coord = MakeCoord(pos,'titl','Omg upside down');
 %  _ _ _ _ _ _ _ _ _ _ 
 % |                    |  
 % |         |          |
@@ -64,7 +64,7 @@ function Coord_out = MakeCoord(tsd_in, varargin)
 %      Camera view
 
 % but in your head, the maze looks like this:
-% coord = MakeCoord(getd(pos,'x'),getd(pos,'y'),'Ydir','reverse');
+% coord = MakeCoord(pos,'Ydir','reverse');
 %  _ _ _ _ _ _ _ _ _ _ 
 % |                    |
 % |    ____________    |             
@@ -79,7 +79,7 @@ function Coord_out = MakeCoord(tsd_in, varargin)
 
 % REVERSING THE Y-AXIS AND ROTATING BY 270 DEGREES
 % Or maybe the camera sees this (note: L and R are wrong!):
-% coord = MakeCoord(getd(pos,'x'),getd(pos,'y'),'titl','Omg rotated and mirrored');
+% coord = MakeCoord(pos,'titl','Omg rotated and mirrored');
 %  _ _ _ _ _ _ _ _ _ _
 % |                    |  
 % |        R _ _ _     |
@@ -94,7 +94,7 @@ function Coord_out = MakeCoord(tsd_in, varargin)
 %    Camera view
 
 % but in your head, the maze looks like this:
-% coord = MakeCoord(getd(pos,'y'),getd(pos,'x'),'YDir','reverse','rot',270);
+% coord = MakeCoord(pos,'YDir','reverse','rot',270);
 %  _ _ _ _ _ _ _ _ _ _ 
 % |                    |       
 % |    ____________    |             
