@@ -3,44 +3,47 @@
 %%%               Loading and Linearizing Position Data                 %%%
 %%%                                                                     %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+%
 % Walkthrough/tutorial workflow
-
+%
 % FUNCTIONS
 % LoadPos()
 % getd()
 % PosCon()
 % MakeCoord()
 % LinearizePos()
-
+% StandardizeCoord()
+%
 % SECTIONS:
 % Loading and Plotting Position Data
 % Getting Position Data Conversion Factors
 % Making Coords
 % Getting Choice Points Manually
 % Linearizing Position Data
-
+% Standardizing Coords
+%
 % BACKGROUND
-
+%
 % Position data is collected by an overhead camera and position tracking 
 % algorithm as it views the bright, point source of light emitted by the 
 % headstage LEDs. This position data is saved in the Neuralynx .nvt file.
-
+%
 % In the vandermeerlab codebase, position data is loaded using the function
 % LoadPos(), and the x and y coordinate positions are accessed using the
 % function getd().
-
+%
 % In analyses involving the use of trajectories, it is necessary to store
 % the idealized path a rat would take along the track. These idealized
 % paths, or coords, are saved for later use in scripts that order place 
 % cells based on their field positions on the track.
-
+%
 % This workflow takes you through position data loading and linearizing
 % using the example session R050-2014-04-02 recorded in RR1 at UW. R050's
 % maze is T-shaped and has one choice point. The end of the left arm has a
 % food reward and the end of the right arm has a water reward.
-
+%
 % A.Carey, Feb 2015
+% youkitan, Feb 2017 update to new functions
 
 %% Current Directory
 
@@ -84,7 +87,7 @@ title('This maze is upside down!')
 
 figure; plot(getd(pos,'x'),getd(pos,'y'),'.','Color',[0.7 0.7 0.7],'MarkerSize',4); xlabel('x data'); ylabel('y data');
 set(gca,'YDir','reverse') % this flips the Y axis
-title('This mazeis rightside up')
+title('This maze is rightside up')
 
 
 %% You can also rotate the maze:
@@ -118,7 +121,7 @@ title('Figure rotated AND flipped')
 % You might need to load position data in centimeters instead of in units
 % of pixels.
 
-% Do do this, you need the real dimensions of your track in cm but these 
+% To do this, you need the real dimensions of your track in cm but these 
 % dimensions must be as if the track fits perfectly into a box that has the 
 % same orientation as the camera's field of view (the box has to be orthogonal 
 % to the field of view, or whatever word it is). See digrams below.
@@ -174,6 +177,19 @@ convFact = PosCon(pos,realTrackDims,'YDir','reverse');
 % You should save convFact in ExpKeys
 %          ExpKeys.convFact = [xConvFact yConvFact];
 
+
+%% Load position data in units of centimeters
+% Now that we have the conversion factor for pixels to centimeters, we can also plot data
+% in cm using the .convFact flag in LoadPos()
+cfg = [];
+cfg.convFact = convFact;
+
+pos_cm = LoadPos(cfg);
+figure; plot(getd(pos_cm,'x'),getd(pos_cm,'y'),'.','Color',[0.7 0.7 0.7],'MarkerSize',4); xlabel('x data'); ylabel('y data');
+set(gca,'YDir','reverse') % this flips the Y axis
+title('Position in centimeters');
+
+
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                                                                     %%%
 %%%                    Making a Coord File                              %%%
@@ -188,24 +204,46 @@ convFact = PosCon(pos,realTrackDims,'YDir','reverse');
 % should always flip the Y axis unless LoadPos() is changed to do load the
 % Y data differently
 
-coordL = MakeCoord_old(getd(pos,'x'),getd(pos,'y'),'titl','Draw left trajectory, press enter when done','YDir','reverse'); % CoordL is in units of pixels
-coordR = MakeCoord_old(getd(pos,'x'),getd(pos,'y'),'titl','Draw right trajectory, press enter when done','YDir','reverse'); % CoordR is in units of pixels
+coordL = MakeCoord(pos,'titl','Draw left trajectory, press enter when done','YDir','reverse'); % CoordL is in units of pixels
+coordR = MakeCoord(pos,'titl','Draw right trajectory, press enter when done','YDir','reverse'); % CoordR is in units of pixels
 
+%% plot the coords
+figure('units','normalized','outerposition',[0,0.25,1,.75]); %a nice way of specifying figure size and position
+subplot(121)
+hold on;
+plot(pos,'.','MarkerSize',4,'Color',[.7 .7 .7]);
+plot(coordL.coord(1,:),coordL.coord(2,:),'o','MarkerSize',3);
+xlabel('x data'); ylabel('y data'); title('Left coords in px');
+set(gca,'YDir','reverse');
+
+subplot(122)
+hold on;
+plot(pos,'.','MarkerSize',4,'Color',[.7 .7 .7]);
+plot(coordR.coord(1,:),coordR.coord(2,:),'o','MarkerSize',3);
+xlabel('x data'); ylabel('y data'); title('Right coords in px');
+set(gca,'YDir','reverse');
+
+
+%% conver coords into cm
 % these coords should be converted to units of cm using the convFact you already
 % collected above:
 
 coordL_cm = coordL; % copy coordL under a new variable name, and apply some changes:
-coordL_cm(1,:) = coordL_cm(1,:)./convFact(1); % apply x conversion
-coordL_cm(2,:) = coordL_cm(2,:)./convFact(2); % apply y conversion
+coordL_cm.coord(1,:) = coordL_cm.coord(1,:)./convFact(1); % apply x conversion
+coordL_cm.coord(2,:) = coordL_cm.coord(2,:)./convFact(2); % apply y conversion
+coordL_cm.units = 'cm';
 
 coordR_cm = coordR; % as above, for R instead
-coordR_cm(1,:) = coordR_cm(1,:)./convFact(1); % apply x conversion
-coordR_cm(2,:) = coordR_cm(2,:)./convFact(2); % apply y conversion
+coordR_cm.coord(1,:) = coordR_cm.coord(1,:)./convFact(1); % apply x conversion
+coordR_cm.coord(2,:) = coordR_cm.coord(2,:)./convFact(2); % apply y conversion
+coordR_cm.units = 'cm';
 
 % put it all in a struct for tighter packing in the base workspace (when loading variables later)
 coord = struct('coordL',coordL,'coordL_cm',coordL_cm,'coordR',coordR,'coordR_cm',coordR_cm);
 
 clear coordL coordL_cm coordR coordR_cm
+
+
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                                                                     %%%
@@ -217,8 +255,10 @@ clear coordL coordL_cm coordR coordR_cm
 % coordinates of those choice points. Here's how you can do this using a
 % script:
 
-figure; plot(getd(pos,'x'),getd(pos,'y'),'.','Color',[0.7 0.7 0.7],'MarkerSize',4); set(gca,'YDir','reverse'); hold on;
-plot(coord.coordL(1,:),coord.coordL(2,:),'ob'); plot(coord.coordR(1,:),coord.coordR(2,:),'og'); title('Click choice point; press enter');
+figure; plot(getd(pos,'x'),getd(pos,'y'),'.','Color',[0.7 0.7 0.7],'MarkerSize',4); 
+set(gca,'YDir','reverse'); hold on;
+plot(coord.coordL.coord(1,:),coord.coordL.coord(2,:),'ob'); 
+plot(coord.coordR.coord(1,:),coord.coordR.coord(2,:),'og'); title('Click choice point; press enter');
 maximize
 
 % get user input:
@@ -259,37 +299,69 @@ trial_iv_R = iv(tstart,tend);
 
 clear tstart tend
 
-%% Load position data in units of centimeters
-
-% do do this, you need to specify conFact as a config field
-cfg.convFact = convFact;
-
-pos = LoadPos(cfg);
-
 
 %% Now, restrict the position data to the right trials only:
 
-pos_R = restrict(pos,trial_iv_R);
+pos_R = restrict(pos_cm,trial_iv_R);
 
 % You can plot the output to see what this looks like:
-figure; plot(getd(pos_R,'x'),getd(pos_R,'y')); set(gca,'YDir','reverse')
+figure; plot(pos_R); set(gca,'YDir','reverse')
 
 % note that the lines connecting the end of the right arm to the start of
 % the track are not actually present in the data...they are just artifacts
-% of plotting.
+% of plotting. Use plot(data,'.') to avoid these artifacts.
 
 %% Linearize the position data 
 
-% pass the coord in via the config
-cfg.Coord = coord.coordR_cm;
-
-% use LinearizePos()
-pos_R_lin = LinearizePos(cfg,pos_R);
-
-figure; plot(getd(pos_R_lin,'z'),getd(pos_R_lin,'z_dist')); xlabel('z'); ylabel('z dist');
+% use LinearizePos() (NOTE: both our position tsd and coords are in cm!)
+cfg = [];
+linpos = LinearizePos(cfg,pos_R,coord.coordR_cm);
+figure; plot(linpos,'.');
 
 % pos_R_lin.data(1), the z (or linearized position data), is the same
 % regardless of whether you load position data in centimeters or pixels.
 % pos_R_lin.data(2), the z dist (or the amount the real position was
 % displaced when it was pushed onto z) is different depending on the units
 % you choose when loading pos.
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%                                                                     %%%
+%%%                        Standardizing coords                         %%%
+%%%                                                                     %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% StandardizeCoord takes a raw coord file and returns a standardized coord. 
+% To do this we need the true path length of the used defined trajectory.
+% This value is usually measured by the experimented and stored in the 
+% ExpKeys.
+
+LoadExpKeys
+run_dist = ExpKeys.pathlength;
+
+% use StandardizeCoord()
+cfg = [];
+coord_std = StandardizeCoord(cfg,coord.coordR_cm,run_dist);
+
+% we can also specify arguments for how we want the coord to be standardized
+coord_std2 = StandardizeCoord(cfg,coord.coordR_cm,run_dist,'pointDist',3);
+
+
+%% make linearized position with standardized coords 
+cfg = [];
+linpos_std = LinearizePos(cfg,pos_R,coord_std2);
+figure; plot(linpos_std,'.')
+
+% compare with "raw" coords
+lp1 = restrict(linpos,trial_iv_R.tstart(3),trial_iv_R.tend(3));
+lp2 = restrict(linpos_std,trial_iv_R.tstart(3),trial_iv_R.tend(3));
+
+figure;
+hold on;
+subplot(121); plot(lp1,'.'); axis tight; title('Linearized with raw coord');
+xlabel('Time (sec)'); ylabel('Position (idx)');
+subplot(122); plot(lp2,'.'); axis tight; title('Linearized with standardized coord');
+xlabel('Time (sec)'); ylabel('Position (idx)');
+maximize
+
+% You can really tell that having less coord points "bins" the data. Depending on whether 
+%%
