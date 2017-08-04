@@ -10,7 +10,7 @@ function [iv_out,thr_out] = TSDtoIV(cfg_in,tsd_in)
 % CFG OPTIONS:
 % cfg.method = 'zscore';
 % cfg.threshold = 5;
-% cfg.dcn =  '>'; % '<', '>'
+% cfg.operation =  '>'; % '<', '>'
 % cfg.merge_thr = 0.05; % merge events closer than this
 % cfg.target = []; % which data (label) to use
 % cfg.minlen = 0.05; % minimum interval length
@@ -26,7 +26,7 @@ function [iv_out,thr_out] = TSDtoIV(cfg_in,tsd_in)
 
 cfg_def.method = 'zscore';
 cfg_def.threshold = 5;
-cfg_def.dcn = '>'; % return intervals where threshold is exceeded
+cfg_def.operation = '>'; % return intervals where threshold is exceeded
 cfg_def.merge_thr = 0.05; % merge events closer than this
 cfg_def.target = [];
 cfg_def.minlen = 0.05; % minimum interval length
@@ -70,7 +70,7 @@ switch cfg.method
 end
 
 % detect crossings
-switch cfg.dcn
+switch cfg.operation
     case '>'
         detec = temp_data > cfg.threshold;
     case '<'
