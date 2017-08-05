@@ -21,6 +21,7 @@ function tc_out = MakeTC(cfg_in,S,pos)
 %    cfg_def.verbose = 1; 1 display command window text, 0 don't
 %
 % youkitan 2014-12-28, MvdM edits
+% youkitan 2016-12-02 youkitan edit: tc size check
 
 %% Parse cfg parameters
 cfg_def.binSize = 1; % how many cm in a bin
@@ -74,9 +75,12 @@ end
 % get spiking counts and firing rates
 nCells = length(S.t);
 all_tc = nan(nCells,nBins);
+spk_hist_mat = nan(nCells,nBins);
+
 for iC = 1:nCells
     if isempty(S.t{iC}) % no spikes
        all_tc(iC,:) = 0;
+       spk_hist_mat(iC,:) = 0; %this ensures that both matrices are the same size!
        continue;
     end
     
@@ -120,6 +124,12 @@ for iP = 1:length(peak_loc)
 end
 [fpeak_val,sort_idx] = sort(fpeak_val,'ascend');
 fpeak_idx = fpeak_idx(sort_idx);
+
+%error check before finishing
+if any(size(tc_out.tc') ~= size(spk_hist_mat))
+    error('the output does not match!')
+end
+
 
 %store all data in a single struct
 tc_out.tc = tc_out.tc';

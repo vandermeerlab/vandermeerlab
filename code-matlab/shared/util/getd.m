@@ -1,5 +1,5 @@
-function out = getd(in_tsd,target_field)
-% function out = getd(in_tsd,target_field)
+function [out,idx] = getd(in_tsd,target_field)
+% function [out,idx] = getd(in_tsd,target_field)
 %
 % tsd/ts helper function to return data corresponding to label target_field
 %

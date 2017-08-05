@@ -11,18 +11,23 @@ function fd = getTmazeDataPath(cfg_in)
 % cfg_def.rats = {'R042','R044','R050','R064'};
 % cfg_def.requireMetadata = 1;
 % cfg_def.requireCandidates = 0;
+% cfg_def.requireEvents = 0;
+% cfg_def.verbose = 1;
+% cfg_def.userpath = ''; if specified, uses this path instead of default
 %
 % OUTPUT
 %
 % fd: cell array with found data folders
 %
 % MvdM 2015
+% youkitan 2016-11-22 edit: added user input for path
 
 cfg_def.rats = {'R042','R044','R050','R064'};
 cfg_def.requireMetadata = 1;
 cfg_def.requireCandidates = 0;
 cfg_def.requireEvents = 0;
 cfg_def.verbose = 1;
+cfg_def.userpath = '';
 
 mfun = mfilename;
 cfg = ProcessConfig(cfg_def,cfg_in,mfun);
@@ -30,9 +35,17 @@ cfg = ProcessConfig(cfg_def,cfg_in,mfun);
 if ispc
     machinename = getenv('COMPUTERNAME');
     filesep = '\';
+elseif ismac
+    machinename = getenv('USER');
+    filesep = '/';
 else
     machinename = getenv('HOSTNAME');
     filesep = '/';
+end
+
+% overide default if user specifies path for data folder
+if ~isempty(cfg.userpath)
+    machinename = 'USERDEFINED';
 end
 
 switch machinename
@@ -47,6 +60,8 @@ switch machinename
         base_fp = 'D:\data\promoted\';
     case 'CALLISTO'
         base_fp = 'E:\data\promoted\';
+    case 'USERDEFINED'
+        base_fp = cfg.userpath;
 end
 
 fd = {};

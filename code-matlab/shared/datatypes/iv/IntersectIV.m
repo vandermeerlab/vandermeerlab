@@ -18,8 +18,8 @@ function iv1 = IntersectIV(cfg_in,iv1,iv2)
 
 cfg_def = [];
 
-cfg = ProcessConfig2(cfg_def,cfg_in); % should take whatever is in cfg_in and put it into cfg!
 mfun = mfilename;
+cfg = ProcessConfig(cfg_def,cfg_in,mfun); % should take whatever is in cfg_in and put it into cfg!
 
 keep = zeros(length(iv1.tstart),1);
 for iI = 1:length(iv1.tstart)
@@ -28,14 +28,14 @@ for iI = 1:length(iv1.tstart)
     temp1 = find(iv2.tstart > iv1.tstart(iI) & iv2.tstart < iv1.tend(iI));
     temp2 = find(iv2.tend > iv1.tstart(iI) & iv2.tend < iv1.tend(iI));
     
-    if ~isempty(temp1) | ~isempty(temp2)
+    if ~isempty(temp1) || ~isempty(temp2)
        keep(iI) = 1;
        continue;
     end
     
     % check if interval is enveloped by anything
     for iJ = 1:length(iv2.tstart)
-        if iv2.tstart(iJ) < iv1.tstart(iI) & iv2.tend(iJ) > iv1.tend(iI)
+        if iv2.tstart(iJ) < iv1.tstart(iI) && iv2.tend(iJ) > iv1.tend(iI)
             keep(iI) = 1;
             break;
         end

@@ -79,6 +79,7 @@ function h = MultiRaster(cfg_in,S)
 % aacarey edit, 2015-01-20 (lfpHeight and lfpMax)
 % aacarey edit Sept 2015, +cfg.openNewFig, removed cfg.openInAxes, added
 %      cfg.axisflag option
+% youkitan 2016-08-18 multiple lfp fix and ts event fix
 
 %% HELP
 
@@ -114,6 +115,10 @@ cfg_def.verbose = 0;
 mfun = mfilename;
 cfg = ProcessConfig(cfg_def,cfg_in,mfun);
 
+if ~CheckTS(S)
+    error('Input spiketrain is not a correctly formed ts.')
+end
+
 %% Setup navigate
 
 global evtTimes windowSize time usrfield
@@ -124,24 +129,20 @@ binSize = 0.01;
 if ~isfield(cfg,'lfp')
     %create internal tvec that runs from the first spike time from any cell
     %to the last spike time
-    S.t = S.t(~cellfun(@isempty, S.t)); % remove empty cells
-    firstSpike = size(S.t);
-    lastSpike = size(S.t);
-    for iC = 1:length(S.t)
-       firstSpike(iC) = S.t{iC}(1);
-       lastSpike(iC) = S.t{iC}(end);
-    end
-    
-    tstart = min(firstSpike);
-    tend = max(lastSpike);    
+    tstart = firstSpike(S);
+    tend = lastSpike(S);    
     time = tstart:binSize:tend;
 else
-    time = cfg.lfp.tvec(1):binSize:cfg.lfp.tvec(end);
+    for iLFP = 1:length(cfg.lfp)
+       if ~CheckTSD(cfg.lfp(iLFP))
+           error('Input tsd is not correctly formed.')
+       end
+    end
+    time = cfg.lfp(1).tvec(1):binSize:cfg.lfp(1).tvec(end);
 end
 
 % Initialize events
 if isfield(cfg,'evt')
-    evtTimes = cfg.evt;
     % Initialize usr input text
     if isfield(cfg.evt,'usr')
         usrfield = cfg.evt.usr;
@@ -171,40 +172,56 @@ iv_only = @(x) isfield(x,'tstart') && ~isfield(x,'t');
 if isfield(cfg,'lfp') %lfp
     hS = PlotSpikeRaster2(cfg,S);
     ylims = get(gca,'YLim');
-
+    
     spikelims = get(gca,'Xlim');
     for iLFP = 1:length(cfg.lfp)
-      cfg.lfp(iLFP) = lfp_check(cfg,cfg.lfp(iLFP),spikelims);
+        cfg.lfp(iLFP) = lfp_check(cfg,cfg.lfp(iLFP),spikelims);
     end
-
+    
     if ~isfield(cfg,'evt')
         plotMode = 5;
-
+        
     elseif ts_only(cfg.evt) %lfp + ts
         plotMode = 6;
-
+        
+        if ~CheckTS(cfg.evt)
+            error('cfg.evt is not a correctly formed ts.')
+        end
+        
     elseif iv_only(cfg.evt) %lfp + iv
         plotMode = 7;
-
+        
+        if ~CheckIV(cfg.evt)
+            error('cfg.evt is not a correctly formed iv.')
+        end
+        
     else %lfp + ts + iv
         plotMode = 8;
     end
-
+    
 elseif isfield(cfg,'evt')
     if ts_only(cfg.evt) %ts
         plotMode = 2;
-
+        
+        if ~CheckTS(cfg.evt)
+            error('cfg.evt is not a correctly formed ts.')
+        end
+        
     elseif iv_only(cfg.evt) %iv
         plotMode = 3;
-
+        
+        if ~CheckIV(cfg.evt)
+            error('cfg.evt is not a correctly formed iv.')
+        end
+        
     else %ts + iv
         plotMode = 4;
-
+        
     end
-
+    
 else %default (spikes only)
     plotMode = 1;
-
+    
 end
 
 %% Choose Plotting mode
@@ -214,6 +231,7 @@ switch plotMode
         ylims = get(gca,'YLim');
         
     case 2 % ts data only
+        evtTimes = (cfg.evt.t{:});
         h.S = PlotSpikeRaster2(cfg,S);
         PlotTSEvt(cfg,cfg.evt)
         ylims = get(gca,'YLim');
@@ -264,27 +282,81 @@ switch plotMode
         ylims = get(gca,'YLim'); ylims(1) = lower_val;
 
     case 6 % lfp + ts data
-        abslfp = abs(cfg.lfp.data);
-        nans_here = abslfp > cfg.lfpMax*mean(abslfp);
-        cfg.lfp.data(nans_here) = NaN;
+        evtTimes = (cfg.evt.t{:});
+
+        numLFP = length(cfg.lfp);  
         
-        cfg.lfp.data = rescale(cfg.lfp.data,-cfg.lfpHeight,0);
-        h.LFP = plot(cfg.lfp.tvec,cfg.lfp.data,'Color',cfg.lfpColor,'LineWidth',cfg.lfpWidth);
-        ylims = get(gca,'YLim'); ylims(1) = -cfg.lfpHeight;
+        if numLFP > 1
+            cmap = linspecer(numLFP);
+            
+            for iLFP = 1:numLFP
+                lfp = cfg.lfp(iLFP);
+                
+                abslfp = abs(lfp.data);
+                nans_here = abslfp > cfg.lfpMax*mean(abslfp);
+                lfp.data(nans_here) = NaN;
+                
+                lower_val = -iLFP*cfg.lfpHeight;
+                upper_val = lower_val+cfg.lfpHeight;
+                
+                lfp.data = rescale(lfp.data,lower_val,upper_val);
+                h.LFP(iLFP) = plot(lfp.tvec,lfp.data,'Color',cmap(iLFP,:),'LineWidth',cfg.lfpWidth);
+            end
+        else
+            lfp = cfg.lfp;
+            
+            abslfp = abs(lfp.data);
+            nans_here = abslfp > cfg.lfpMax*mean(abslfp);
+            lfp.data(nans_here) = NaN;
+            
+            lower_val = -iLFP*cfg.lfpHeight;
+            upper_val = lower_val+cfg.lfpHeight;
+            
+            lfp.data = rescale(lfp.data,lower_val,upper_val);
+            h.LFP = plot(lfp.tvec,lfp.data,'Color',cfg.lfpColor,'LineWidth',cfg.lfpWidth);
+        end
+        ylims = get(gca,'YLim'); ylims(1) = lower_val;
         PlotTSEvt([],cfg.evt)
 
     case 7 % lfp + iv data
         evtTimes = (cfg.evt.tstart + cfg.evt.tend)./2;
-        abslfp = abs(cfg.lfp.data);
-        nans_here = abslfp > cfg.lfpMax*mean(abslfp);
-        cfg.lfp.data(nans_here) = NaN;
-        cfg.lfp.data = rescale(cfg.lfp.data,-cfg.lfpHeight,0);
+
         cfg_temp.display = 'tsd';
         cfg_temp.bgcol = cfg.lfpColor;
         cfg_temp.fgcol = cfg.ivColor;
         
-        h = PlotTSDfromIV(cfg_temp,cfg.evt,cfg.lfp); % h.LFP and h.LFP_iv handles
-        ylims = get(gca,'YLim'); ylims(1) = -cfg.lfpHeight - 1;
+        numLFP = length(cfg.lfp);  
+        
+        if numLFP > 1
+            cmap = linspecer(numLFP);
+            
+            for iLFP = 1:numLFP
+                lfp = cfg.lfp(iLFP);
+                
+                abslfp = abs(lfp.data);
+                nans_here = abslfp > cfg.lfpMax*mean(abslfp);
+                lfp.data(nans_here) = NaN;
+                
+                lower_val = -iLFP*cfg.lfpHeight;
+                upper_val = lower_val+cfg.lfpHeight;
+                
+                lfp.data = rescale(lfp.data,lower_val,upper_val);
+                h.LFP(iLFP) = PlotTSDfromIV(cfg_temp,cfg.evt,lfp);
+            end
+        else
+            lfp = cfg.lfp;
+            
+            abslfp = abs(lfp.data);
+            nans_here = abslfp > cfg.lfpMax*mean(abslfp);
+            lfp.data(nans_here) = NaN;
+            
+            lower_val = -iLFP*cfg.lfpHeight;
+            upper_val = lower_val+cfg.lfpHeight;
+            
+            lfp.data = rescale(lfp.data,lower_val,upper_val);
+            h = PlotTSDfromIV(cfg_temp,cfg.evt,lfp);
+        end
+        ylims = get(gca,'YLim'); ylims(1) = lower_val;
     
     case 8 % lfp + iv + ts data
         error('ts + iv event data NOT WORKING YET')
@@ -320,8 +392,12 @@ switch cfg.axisflag
         ylim([ylims(1)-1 ylims(2)+1])
     case 'spandex' % because sometimes tight just isn't tight enough (aacarey sept 2015)
         xlim([time(1) time(end)])
-        if isfield(cfg,'lfp');           
-            ylim([max(-cfg.lfpHeight) ylims(2)])
+        if isfield(cfg,'lfp');     
+            if length(cfg.lfp) > 1
+                ylim([-cfg.lfpHeight*length(cfg.lfp) ylims(2)])
+            else
+                ylim([max(-cfg.lfpHeight) ylims(2)])
+            end
         else
             ylim([ylims(1)-1 ylims(2)+1])
         end

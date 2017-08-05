@@ -42,9 +42,9 @@ iv_out.usr = [];
 
 if nargin == 1
     
-    if numel(varargin{1}) == 2
-       iv_out.tstart = varargin{1}(1);
-       iv_out.tend = varargin{1}(2);
+    if size(varargin{1},2) == 2
+       iv_out.tstart = varargin{1}(:,1);
+       iv_out.tend = varargin{1}(:,2);
     else
        error('Single input argument must have length 2 (tstart, tend)');  
     end
