@@ -13,10 +13,9 @@ if length(t_in) ~= 1
    error('t_in must be length 1 (is %d)',length(t_in)); 
 end
 
-
 cfg = [];
 cfg.mode = 'next'; % 'prev'
-ProcessConfig;
+cfg = ProcessConfig(cfg,cfg_in);
 
 if ~isfield(cfg,'fields')
     cfg.fields = fieldnames(t_struct);
