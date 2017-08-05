@@ -43,7 +43,16 @@ elseif size(tuning_var.data,1) > 2
 end
 
 cfg_def.nBins = 100; %default number of bins unless either specified or using predefined bins
-cfg_def.binEdges = [];
+
+cfg_def.nDim = size(tuning_var.data,1); % set up default bins
+for iDim = 1:cfg_def.nDim
+
+        mn = min(tuning_var.data(iDim,:));
+        mx = max(tuning_var.data(iDim,:));
+        
+        cfg_def.binEdges{iDim} = linspace(mn,mx,cfg_def.nBins+1);
+end
+
 cfg_def.smoothingKernel = []; % example for 1-D: gausskernel(11,2);
 cfg_def.occ_dt = 1/30; % time corresponding to each occupancy sample
 cfg_def.minOcc = 1; % minimum occupancy (in samples)
@@ -53,19 +62,6 @@ cfg_def.bootFrac = 0.9; % fraction of tuning variable data to use for each boots
 
 mfun = mfilename;
 cfg = ProcessConfig(cfg_def,cfg_in,mfun);
-
-% process bin edges
-if isempty(cfg.binEdges)
-    nDim = size(tuning_var.data,1); % set up default bins
-    for iDim = 1:nDim
-
-            mn = min(tuning_var.data(iDim,:));
-            mx = max(tuning_var.data(iDim,:));
-
-            cfg.binEdges{iDim} = linspace(mn,mx,cfg.nBins+1);
-    end
-end
-
 
 %% main body
 switch cfg.nDim
@@ -164,6 +160,7 @@ switch cfg.nDim
         end
         
         binEdges = cfg.binEdges{1};
+        nBins = length(binEdges)-1;
         binCenters = cfg.binEdges{1}(1:end-1)+median(diff(cfg.binEdges{1}))/2;
         
     case 2
@@ -208,9 +205,10 @@ switch cfg.nDim
 
         end
 
-        binEdges = cfg.binEdges;
-        for iDim = 1:nDim
+        binEdges = cfg.binEdges(1:2);
+        for iDim = 1:cfg.nDim
             binCenters{iDim} = cfg.binEdges{iDim}(1:end-1)+median(diff(cfg.binEdges{iDim}))/2;
+            nBins{iDim} = length(binEdges{iDim})-1;
         end
 
     otherwise
@@ -233,6 +231,7 @@ tc_out.usr.no_occ_idx = no_occ_idx;
 tc_out.usr.pos_idx = pos_idx;
 tc_out.usr.binEdges = binEdges;
 tc_out.usr.binCenters = binCenters;
+tc_out.usr.nBins = nBins;
 
 % History
 tc_out = History(tc_out,mfun,cfg);
