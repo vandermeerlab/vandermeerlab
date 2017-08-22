@@ -114,7 +114,7 @@ expCond(2).decS = S; % this only gets selections by nSpikes, etc.
 
 %% set up output paths
 this_fd = pwd;
-output_fd = cat(2,pwd,'\',cfg.output_dir);
+output_fd = cat(2,pwd,filesep,cfg.output_dir);
 base_fn = cat(2,cfg.output_file_prefix,S.cfg.SessionID);
 
 %% linearize paths (snap x,y position samples to nearest point on experimenter-drawn idealized track)
