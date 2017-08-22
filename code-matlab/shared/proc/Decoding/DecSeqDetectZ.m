@@ -70,7 +70,7 @@ for iT = 1:length(decoded_z.data)
             prev_val = NaN;
         end
            
-    end
+    end % could be else?
     
     this_jump = abs(decoded_z.data(iT)-prev_val);
         
@@ -91,10 +91,16 @@ for iT = 1:length(decoded_z.data)
        sequence_broken = 1; 
     end
         
-    if sequence_broken | (iT == length(decoded_z.data)) % sequence broken, or end of data
+    end_of_data = (iT == length(decoded_z.data));
+    if sequence_broken | end_of_data % sequence broken, or end of data
     
         % check if long enough
         this_length = iT - this_start_idx - current_skip; % subtract trailing NaNs from length
+        
+        if end_of_data & ~sequence_broken
+           this_length = this_length + 1; 
+        end
+        
         if this_length >= cfg.minLength % length criterion met
             sequence_pass = 1;
             
@@ -114,11 +120,12 @@ for iT = 1:length(decoded_z.data)
                 nDetected = nDetected + 1;
                 tstart(nDetected) = decoded_z.tvec(this_start_idx);
                 
-                if current_skip > 0
-                    nBack = current_skip - 1; % sequence can't end in NaN
-                else
-                    nBack = 0;
-                end
+                %if current_skip > 0
+                %    nBack = current_skip - 1; % sequence can't end in NaN
+                %else
+                %    nBack = 0;
+                %end
+                if isnan(decoded_z.data(iT)), current_skip = current_skip - 1; end 
                 
                 % annoying edge case if last sample was part of a sequence
                 if (iT == length(decoded_z.data)) & ~sequence_broken
@@ -127,7 +134,8 @@ for iT = 1:length(decoded_z.data)
                     lastSampleAdjustment = 0;
                 end
                 
-                tend(nDetected) = decoded_z.tvec(iT-1-nBack+lastSampleAdjustment);
+                %tend(nDetected) = decoded_z.tvec(iT-1-nBack+lastSampleAdjustment); % fails with 1 trailing NaN --> isn't removed
+                tend(nDetected) = decoded_z.tvec(iT-1-current_skip+lastSampleAdjustment); % fails with 2 trailing NaNs --> cuts off last correct point
             end
         end % of sufficient length
         this_start_idx = [];
