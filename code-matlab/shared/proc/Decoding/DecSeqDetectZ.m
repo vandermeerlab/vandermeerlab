@@ -18,13 +18,18 @@ function [seq_iv,decoded_z] = DecSeqDetectZ(cfg_in,P)
 % cfg_def.maxJump = 20; % number of space bins decoded Z can jump without breaking sequence
 % cfg_def.minLength = 3; % number of time bins without break for sequence
 %  to be included
+% cfg_def.nMaxNanSkipSequential = 1; % number of consecutive NaN bins that can be skipped 
+%   before sequence is terminated
+% cfg_def.nMaxNanSkipTotal = Inf; % if non-integer, maximum fraction of sequence length 
+%  that is NaN acceptable for sequence to be included; if integer, maximum NaN count
 %
 % MvdM 2016-05-17 initial version
+% MvdM 2017-08-21 update to allow skips
 
 cfg_def = [];
 cfg_def.maxJump = 20; % number of bins decoded Z can jump without breaking sequence
 cfg_def.minLength = 3; % number of time bins without break for sequence
-cfg_def.nMaxNanSkipSequential = 1; % number of consecutive NaN bins that can be skipped 
+cfg_def.nMaxNanSkipSequential = 0; % number of consecutive NaN bins that can be skipped 
 % before sequence is terminated
 cfg_def.nMaxNanSkipTotal = Inf; % if non-integer, maximum fraction of sequence length 
 % that is NaN acceptable for sequence to be included; if integer, maximum NaN count
@@ -44,7 +49,7 @@ nT = length(decoded_z.data);
 nDetected = 0;
 
 this_start_idx = [];
-prev_val = -100;
+prev_val = -Inf;
 
 tstart = []; tend = [];
 current_skip = 0; total_skip = 0;
@@ -59,8 +64,10 @@ for iT = 1:length(decoded_z.data)
             current_skip = current_skip + 1;
             total_skip = total_skip + 1;
             if current_skip > cfg.nMaxNanSkipSequential
-                sequence_broken = 1;
+                sequence_broken = 1; prev_val = NaN;
             end
+        else
+            prev_val = NaN;
         end
            
     end
@@ -87,7 +94,7 @@ for iT = 1:length(decoded_z.data)
     if sequence_broken | (iT == length(decoded_z.data)) % sequence broken, or end of data
     
         % check if long enough
-        this_length = iT - this_start_idx;
+        this_length = iT - this_start_idx - current_skip; % subtract trailing NaNs from length
         if this_length >= cfg.minLength % length criterion met
             sequence_pass = 1;
             
