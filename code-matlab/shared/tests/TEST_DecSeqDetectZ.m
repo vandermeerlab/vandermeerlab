@@ -74,10 +74,10 @@ P.data(:,nanIdx) = NaN;
 seq_iv_gap1nan = DecSeqDetectZ(cfg,P); nSeq_gap1nan = length(seq_iv_gap1nan.tstart);
 
 % check if any starts or ends are NaN
-seq_start = P.data(1,seq_iv_gap1nan.tend);
-verifyFalse(testCase,any(isnan(seq_start)),'At least one 1-skip sequence starts with NaN');
+seq_start = P.data(1,seq_iv_gap1nan.tstart);
+verifyFalse(testCase,any(isnan(seq_start))),'At least one 1-skip sequence starts with NaN');
 seq_end = P.data(1,seq_iv_gap1nan.tend);
-verifyFalse(testCase,any(isnan(seq_end)),'At least one 1-skip sequence ends with NaN');
+verifyFalse(testCase,any(isnan(seq_end))),'At least one 1-skip sequence ends with NaN');
 
 % run no gaps allowed on NaN data
 cfg.nMaxNanSkipSequential = 0;
