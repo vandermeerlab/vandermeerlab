@@ -32,6 +32,60 @@ seq_iv = DecSeqDetectZ(cfg,P);
 
 verifyEqual(testCase,seq_iv.tstart,expected_iv.tstart,'Single sequence start time incorrect');
 verifyEqual(testCase,seq_iv.tend,expected_iv.tend,'Single sequence end time incorrect');
+
+% single NaN case - no skip
+P.data(:,6) = NaN;
+expected_iv.tstart = [1; 7]; expected_iv.tend = [5; 11];
+
+cfg = []; seq_iv = DecSeqDetectZ(cfg,P);
+
+verifyEqual(testCase,seq_iv.tstart,expected_iv.tstart,'Single noskip NaN sequence start times incorrect');
+verifyEqual(testCase,seq_iv.tend,expected_iv.tend,'Single noskip NaN sequence end times incorrect');
+
+% skip
+expected_iv.tstart = 1; expected_iv.tend = 11;
+
+cfg = []; cfg.nMaxNanSkipSequential = 1; seq_iv = DecSeqDetectZ(cfg,P);
+
+verifyEqual(testCase,seq_iv.tstart,expected_iv.tstart,'Single skip NaN sequence start time incorrect');
+verifyEqual(testCase,seq_iv.tend,expected_iv.tend,'Single skip NaN sequence end time incorrect');
+
+% single NaN case followed by too big jump
+P.data(:,7) = 0; P.data(50,7) = 1; 
+
+expected_iv.tstart = [1; 8]; expected_iv.tend = [5; 11];
+
+cfg = []; cfg.nMaxNanSkipSequential = 1;  seq_iv = DecSeqDetectZ(cfg,P);
+
+verifyEqual(testCase,seq_iv.tstart,expected_iv.tstart,'Single skipjump NaN sequence start times incorrect');
+verifyEqual(testCase,seq_iv.tend,expected_iv.tend,'Single skipjump NaN sequence end times incorrect');
+
+% double NaN case
+P.data(:,7) = NaN;
+expected_iv.tstart = [1; 8]; expected_iv.tend = [5; 11];
+
+cfg = []; cfg.nMaxNanSkipSequential = 1;  seq_iv = DecSeqDetectZ(cfg,P);
+
+verifyEqual(testCase,seq_iv.tstart,expected_iv.tstart,'Double skip NaN sequence start times incorrect');
+verifyEqual(testCase,seq_iv.tend,expected_iv.tend,'Double skip NaN sequence end times incorrect');
+
+% check that double skip works
+expected_iv.tstart = 1; expected_iv.tend = 11;
+
+cfg = []; cfg.nMaxNanSkipSequential = 2;  seq_iv = DecSeqDetectZ(cfg,P);
+
+verifyEqual(testCase,seq_iv.tstart,expected_iv.tstart,'Double 2skip NaN sequence start times incorrect');
+verifyEqual(testCase,seq_iv.tend,expected_iv.tend,'Double 2skip NaN sequence end times incorrect');
+
+% double skip followed by jump
+P.data(:,8) = 0; P.data(50,8) = 1; 
+expected_iv.tstart = [1; 9]; expected_iv.tend = [5; 11];
+
+cfg = []; cfg.nMaxNanSkipSequential = 2;  seq_iv = DecSeqDetectZ(cfg,P);
+
+verifyEqual(testCase,seq_iv.tstart,expected_iv.tstart,'Double 2skipjump NaN sequence start times incorrect');
+verifyEqual(testCase,seq_iv.tend,expected_iv.tend,'Double 2skipjump NaN sequence end times incorrect');
+
 end
 
 
@@ -75,9 +129,9 @@ seq_iv_gap1nan = DecSeqDetectZ(cfg,P); nSeq_gap1nan = length(seq_iv_gap1nan.tsta
 
 % check if any starts or ends are NaN
 seq_start = P.data(1,seq_iv_gap1nan.tstart);
-verifyFalse(testCase,any(isnan(seq_start))),'At least one 1-skip sequence starts with NaN');
+verifyFalse(testCase,any(isnan(seq_start)),'At least one 1-skip sequence starts with NaN');
 seq_end = P.data(1,seq_iv_gap1nan.tend);
-verifyFalse(testCase,any(isnan(seq_end))),'At least one 1-skip sequence ends with NaN');
+verifyFalse(testCase,any(isnan(seq_end)),'At least one 1-skip sequence ends with NaN');
 
 % run no gaps allowed on NaN data
 cfg.nMaxNanSkipSequential = 0;
@@ -111,6 +165,7 @@ fprintf('\nStarting tests...\n');
 %runtests()
 
 end
+
 
 function teardownOnce(testCase)
 
