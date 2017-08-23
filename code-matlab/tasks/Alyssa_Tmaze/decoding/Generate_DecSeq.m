@@ -10,7 +10,7 @@ function out = Generate_DecSeq(cfg_in)
 % cfg_def = [];
 % cfg_def.output_dir = 'files';
 % cfg_def.output_file_prefix = []; % when writing files, prefix this
-% cfg_def.dt = 0.025; % either vary this (keeping others constant), or
+% cfg_def.dt = 0.025; % this is used for a firing rate threshold on Q matrix -- is that important?
 % cfg_def.TCsmooth = 1; % bins SD; vary this and the next
 % cfg_def.QsmoothSD = 0.002; % time SD; vary this with previous
 % cfg_def.minSpikes = 25; % remove cells with less than this number of spikes during run
@@ -22,14 +22,14 @@ function out = Generate_DecSeq(cfg_in)
 % cfg_def.trackExcludeStart = 20; % exclude this amount (in cm) from start and end of track
 % cfg_def.trackExcludeEnd = 15;
 % cfg_def.nSpikesHist = -0.5:105;
-% cfg_def.nMinNeurons = 4;
+% cfg_def.nMinNeurons = 4; % minimum number of neurons that needs to be active
 % cfg_def.maxJump_cm = 40;
 % cfg_def.minSeqLength = 10; % note, this is in bins
 % cfg_def.plotOutput = 0;
-% cfg_def.Qdt = 0.005;
-% cfg_def.Qboxcar = 5;
+% cfg_def.Qdt = 0.005; % this is the binsize used for decoding
+% cfg_def.Qboxcar = 5; % boxcar smoothing of spike counts (in bins). So Qdt = 0.005 and Qboxcar = 5 give a true bin size of 25ms, moved in 5ms steps.
 % cfg_def.writeFiles = 1;
-% cfg_def.removeInterneurons = 1;
+% cfg_def.removeInterneurons = 0;
 %
 % MvdM 2015
 
@@ -56,7 +56,7 @@ cfg_def.plotOutput = 0;
 cfg_def.Qdt = 0.005;
 cfg_def.Qboxcar = 5;
 cfg_def.writeFiles = 1;
-cfg_def.removeInterneurons = 1;
+cfg_def.removeInterneurons = 0;
 
 nMaxLaps = 20;
 %cfg_def.encdecmat = 1-eye(20);
@@ -114,12 +114,11 @@ expCond(2).decS = S; % this only gets selections by nSpikes, etc.
 
 %% set up output paths
 this_fd = pwd;
-output_fd = cat(2,pwd,'\',cfg.output_dir);
+output_fd = cat(2,pwd,filesep,cfg.output_dir);
 base_fn = cat(2,cfg.output_file_prefix,S.cfg.SessionID);
 
 %% linearize paths (snap x,y position samples to nearest point on experimenter-drawn idealized track)
 fprintf('Linearizing...');
-
 
 chp = tsd(0,metadata.coord.chp_cm,{'x','y'}); % make choice point useable by cobebase functions
 
@@ -135,7 +134,7 @@ for iCond = 1:nCond
     % get cp in linpos coordinates
     expCond(iCond).cp = LinearizePos(cfg_linpos,chp);
     expCond(iCond).cp.data = (expCond(iCond).cp.data ./ length(cfg_linpos.Coord)).*ExpKeys.pathlength;
-        
+    
 end
     
 %% find intervals where rat is running
@@ -146,7 +145,7 @@ run_iv = TSDtoIV(cfg_spd,spd); % intervals with speed above 5 pix/s
 
 %% exclude positions at beginning and end of track
 cfg_track1 = []; cfg_track1.method = 'raw'; cfg_track1.threshold = cfg.trackExcludeStart;
-cfg_track2 = []; cfg_track2.method = 'raw'; cfg_track2.dcn = '<'; cfg_track2.threshold = ExpKeys.pathlength - cfg.trackExcludeEnd;
+cfg_track2 = []; cfg_track2.method = 'raw'; cfg_track2.operation = '<'; cfg_track2.threshold = ExpKeys.pathlength - cfg.trackExcludeEnd;
 
 for iCond = 1:nCond
     track_iv1 = TSDtoIV(cfg_track1,expCond(iCond).linpos);
@@ -180,7 +179,7 @@ switch fn(1:4)
         Q = MakeQfromS(cfg_Q,S);
         spk_count = tsd(Q.tvec,sum(Q.data));
         
-        cfg_det = []; cfg_det.threshold = 0.5; cfg_det.dcn = '>'; cfg_det.method = 'raw';
+        cfg_det = []; cfg_det.threshold = 0.5; cfg_det.operation = '>'; cfg_det.method = 'raw';
         chew_iv = TSDtoIV(cfg_det,spk_count);
         
     otherwise
@@ -276,13 +275,13 @@ for iCond = 1:nCond
     cfg_decode = [];
     cfg_decode.nMinSpikes = cfg.dt;
     cfg_decode.excludeMethod = 'frate';
-    expCond(iCond).P = DecodeZ(cfg_decode,expCond(iCond).Q,expCond(iCond).tc.tc);
+    expCond(iCond).P = DecodeZ(cfg_decode,expCond(iCond).Q,expCond(iCond).tc.tc); % full decoded probability distribution
     
     %% quantify decoding accuracy on RUN
-    this_trueZ = tsd(expCond(iCond).linpos.tvec,expCond(iCond).tc.pos_idx);
+    this_trueZ = tsd(expCond(iCond).linpos.tvec,expCond(iCond).tc.pos_idx); % true position in units of bins (as established by tuning curves)
     cfg_err = []; cfg_err.mode = 'max';
     
-    keep_idx = unique(nearest_idx3(this_trueZ.tvec,expCond(iCond).P.tvec));
+    keep_idx = unique(nearest_idx3(this_trueZ.tvec,expCond(iCond).P.tvec)); % match up decoding with true positions
     this_Pscore = expCond(iCond).P;
     this_Pscore.tvec = this_Pscore.tvec(keep_idx);
     this_Pscore.data = this_Pscore.data(:,keep_idx);

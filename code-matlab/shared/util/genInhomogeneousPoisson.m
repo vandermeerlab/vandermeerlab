@@ -36,6 +36,7 @@ for k = 1:cfg.nTrials
     Homogeneous_Spike_Times = rand(Homogeneous_Spikes(k),1) * total_time; %convert to spiketimes
     spikes = sort(Homogeneous_Spike_Times);
     spikes = renewal(cfg.refractoryPeriod,spikes); % enforced absolute refractory period of 1ms
+
     thinning_prob = rand(length(spikes),1); %pick unif random threshold
     relative_intensity = (1/max_rate) * ratefunc(spikes); %normalized spike prob
     deleted_spikes = thinning_prob > relative_intensity; %equal to keep = probspike > threshold
@@ -50,7 +51,9 @@ end
 end
 
 function spikes_out = renewal(ref,spikes_in)
+
     del_idx = find(diff(spikes_in) < ref); %1ms refractory
+
     if ~isempty(del_idx)
         del_idx = del_idx + 1; %this is actual index of successive spike time
         spikes_in(del_idx) = [];
