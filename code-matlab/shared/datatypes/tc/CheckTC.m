@@ -38,8 +38,21 @@ else
         if ~isequal(tc_in.type,'tc')
             fprintf('FAIL%s by CheckTC: input must be a tc type.\n',in_mfun);
             pass_flag = 0;
+
+        % ~~~~~~~~~~~~~~~~~~~~ checks for all required fields ~~~~~~~~~~~~~~~~~~~~
+        elseif ~isfield(tc_in,'occ_hist')
+            fprintf('FAIL%s by CheckTC: input must have a occupancy field.\n',in_mfun);
+            pass_flag = 0;
             
-        % checks for 1D case
+        elseif ~isfield(tc_in,'spk_hist')
+            fprintf('FAIL%s by CheckTC: input must have a spike count field.\n',in_mfun);
+            pass_flag = 0;
+            
+        elseif ~isfield(tc_in,'binEdges')
+            fprintf('FAIL%s by CheckTC: input must have bin edge field.\n',in_mfun);
+            pass_flag = 0;
+            
+        % ~~~~~~~~~~~~~~~~~~~~ checks for 1D case ~~~~~~~~~~~~~~~~~~~~
         elseif isfield(tc_in,'tc')
             if length(size(tc_in.tc)) ~= 2
                 fprintf('FAIL%s by CheckTC: tc variable should be an nCells x nBins matrix.\n',in_mfun);
@@ -50,18 +63,21 @@ else
                 fprintf('FAIL%s by CheckTC: number of bins differ between tc and occ_hist.\n',in_mfun);
             end
 
-        % checks for 2D case    
+        % ~~~~~~~~~~~~~~~~~~~~ checks for 2D case ~~~~~~~~~~~~~~~~~~~~    
         elseif isfield(tc_in,'tc2D')
             if length(size(tc_in.tc2D)) ~= 3
                 fprintf('FAIL%s by CheckTC: tc variable should be an nCells x nXBins x nYBins matrix.\n',in_mfun);
                 pass_flag = 0;
             end
             fprintf('WARNING by CheckTC: Checks for 2D tuning curves not implemented yet!!!')
-
-        else %no tuning variable
+        
+        % ~~~~~~~~~~~~~~~~~~~~ no tuning variable ~~~~~~~~~~~~~~~~~~~~
+        else 
             pass_flag = 0;
             fprintf('FAIL%s by CheckTC: input tc must contain a tc field.\n',in_mfun);
         end
+        
+    % ~~~~~~~~~~~~~~~~~~~~ no type parameter ~~~~~~~~~~~~~~~~~~~~
     else
        fprintf('FAIL%s by CheckTC: input has no type parameter.\n',in_mfun)
        pass_flag = 0;

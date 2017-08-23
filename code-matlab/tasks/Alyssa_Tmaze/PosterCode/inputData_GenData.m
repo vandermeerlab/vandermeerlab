@@ -94,7 +94,7 @@ for iRat = 1:length(rats)
             please.binSize = 3;
             please.run_dist = ExpKeys.pathlength;
             % my coord is already in cm, but this will put it into new bin sizes
-            sessionData.(arms{iArm}).coord = StandardizeCoord(please,sessionData.(arms{iArm}).coord);
+            sessionData.(arms{iArm}).coord = StandardizeCoord_old(please,sessionData.(arms{iArm}).coord);
         end
         
         chp = tsd(0,metadata.coord.chp_cm,{'x','y'}); % make choice point useable by cobebase functions

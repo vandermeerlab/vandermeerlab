@@ -32,7 +32,7 @@ cfg.binEdges{1} = SET_xmin:SET_xBinSz:SET_xmax;
 cfg.binEdges{2} = SET_ymin:SET_yBinSz:SET_ymax;
 cfg.smoothingKernel = gausskernel([4 4],2);
 
-tc = TuningCurves(cfg,ENC_S,ENC_pos); 
+tc = TuningCurves_old(cfg,ENC_S,ENC_pos); 
 %% plot example tc
 iC = 7;
 imagescnan(sq(tc.tc2D(iC,:,:))); axis off; colorbar;

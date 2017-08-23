@@ -11,7 +11,8 @@ function pass_flag = CheckTSD(tsd_in,varargin)
 %       pass_flag: 1 if all checks pass, 0 if otherwise
 %
 %   Checks performed:
-%       -  .data field must be a cell (FAIL)
+%       -  .units field exists (WARNING)
+%       -  .data field cannot be a cell (FAIL)
 %       -  is the number of signals greater than the number of samples? (WARNING)
 %       -  number of samples in .data and .tvec must be equal (FAIL)
 %
@@ -19,6 +20,7 @@ function pass_flag = CheckTSD(tsd_in,varargin)
 %
 % MvdM 2014-06-24
 % youkitan edit Dec 2016, reformat help, add function name to output
+% youkitan edit Feb 2017, included check for units
 
 pass_flag = 1;
 
@@ -31,6 +33,10 @@ if ~isstruct(tsd_in)
    pass_flag = 0;
    fprintf('FAIL%s by CheckTSD: data is not a struct.\n',in_mfun);
    return;
+end
+
+if ~isfield(tsd_in,'units')
+    fprintf('WARNING%s by CheckTSD: Missing units. TSD was generated with an outdated version of the constructor.\n',in_mfun);
 end
 
 if iscell(tsd_in.data)

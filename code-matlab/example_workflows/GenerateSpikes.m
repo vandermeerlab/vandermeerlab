@@ -13,7 +13,7 @@
 
 % specify your rate function. For example, a sine wave:
 tvec = 0:.01:2; %some time vector
-ratefunc = @(t) 5*sin(10*t); %arbitrary function
+ratefunc = @(t) 5*sin(10*t)+5; %arbitrary function
 
 % check that the function works
 time_rate = ratefunc(tvec);
@@ -25,7 +25,7 @@ max_rate = max(time_rate); %get it from the rate function;
 total_time = tvec(end)-tvec(1); %just get it from your tvec
 
 % generate spikes
-spiketimes = genInhomogeneousPoisson(max_rate,total_time,ratefunc);
+spiketimes = genInhomogeneousPoisson([],max_rate,total_time,ratefunc);
 S = ts; S.t = spiketimes; %convert to ts struct for easy plotting
 
 % check that it make sense
@@ -72,7 +72,7 @@ subplot(3,1,2); plot(tvec,time_rate);
 
 % this means that you can actually use empirical place field distributions and convert them into a
 % time-based rate function. Now you can use the spike generator with this time-rate function
-spiketimes = genInhomogeneousPoisson(max_rate,total_time,ratefunc2);
+spiketimes = genInhomogeneousPoisson([],max_rate,total_time,ratefunc2);
 S = ts; S.t = spiketimes; %convert to ts struct for easy plotting
 
 % viola!

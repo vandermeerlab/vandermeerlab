@@ -20,6 +20,8 @@ function tc_out = MakeTC(cfg_in,S,pos)
 %    cfg_def.max_meanfr = 5; % mean fr to rule out interneurons
 %    cfg_def.verbose = 1; 1 display command window text, 0 don't
 %
+%   see also TuningCurves, tc
+%
 % youkitan 2014-12-28, MvdM edits
 % youkitan 2016-12-02 youkitan edit: tc size check
 
