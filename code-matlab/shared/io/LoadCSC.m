@@ -8,9 +8,8 @@ function csc_tsd = LoadCSC(cfg_in)
 % cfg.fc: cell array containing filenames to load
 %   if no file_list field is specified, loads all *.Ncs files in current dir
 % cfg.TimeConvFactor = 10^-6; % from nlx units to seconds
-% cfg.VoltageConvFactor = 1; % factor of 1 means output will be in volts
-% cfg.resample = []; % In Hz, the sample rate you want to use. If the
-%   original sampling rate is lower than cfg.resample, the data is left as-is
+% cfg.VoltageConvFactor = 1; % if 0, return raw AD bits. If 1, data returned is in V
+% cfg.decimateByFactor = []; % if non-empty, decimate data by specified factor
 % cfg.verbose = 1; Allow or suppress displaying of command window text
 %
 % OUTPUTS:
@@ -23,7 +22,7 @@ function csc_tsd = LoadCSC(cfg_in)
 cfg_def.fc = {};
 cfg_def.TimeConvFactor = 10^-6; % 10^-6 means convert nlx units to seconds
 cfg_def.VoltageConvFactor = 1; % 1 means output in volts, 1000 in mV, 10^6 in uV
-cfg_def.resample = [];
+cfg_def.decimateByFactor = [];
 cfg_def.verbose = 1;
 
 mfun = mfilename;
@@ -60,6 +59,8 @@ elseif cfg.VoltageConvFactor == 1000
     csc_tsd.units = 'mV';
 elseif cfg.VoltageConvFactor == 10^6
     csc_tsd.units = 'uV';
+elseif cfg.VoltageConvFactor == 0
+    csc_tsd.units = 'ADbits';
 else
     error('Input voltage conversion factor is not a valid value.')
 end
@@ -103,7 +104,9 @@ for iF = 1:nFiles
     
     % convert units
     Timestamps = Timestamps .* cfg.TimeConvFactor;
-    Samples = Samples .* cfg.VoltageConvFactor .* hdr.ADBitVolts;
+    if cfg.VoltageConvFactor ~= 0
+        Samples = Samples .* cfg.VoltageConvFactor .* hdr.ADBitVolts;
+    end
     
     % construct within-block tvec
     nSamplesPerBlock = size(Samples,1);
@@ -153,14 +156,13 @@ for iF = 1:nFiles
         error(message);
     end
     
-    % resample data at a lower frequency
-    if ~isempty(cfg.resample) && hdr.SamplingFrequency > cfg.resample
+    % decimate data if specified
+    if ~isempty(cfg.decimateByFactor)
         
-        fprintf('%s: Resampling from %d Hz to %d Hz...\n',mfun,hdr.SamplingFrequency,cfg.resample)
-        decimationFactor = hdr.SamplingFrequency / cfg.resample;
-        data = decimate(data,decimationFactor);
-        tvec = decimate(tvec,decimationFactor);
-        hdr.SamplingFrequency = cfg.resample;
+        fprintf('%s: Decimating by factor %d...\n',mfun,cfg.decimateByFactor)
+        data = decimate(data,cfg.decimateByFactor);
+        tvec = tvec(1:cfg.decimateByFactor:end);
+        hdr.SamplingFrequency = hdr.SamplingFrequency./cfg.resample;
         
     end
     
@@ -219,7 +221,7 @@ for hline = 1:length(Header)
     
     % deal with characters not allowed by MATLAB struct
     
-    if strcmp(a.key,'DspFilterDelay_µs')
+    if strcmp(a.key,'DspFilterDelay_ï¿½s')
         a.key = 'DspFilterDelay_us';
     end
     
