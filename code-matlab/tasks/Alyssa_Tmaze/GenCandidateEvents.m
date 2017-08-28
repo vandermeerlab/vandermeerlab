@@ -186,7 +186,7 @@ if ~isempty(cfg.SpeedLimit)
     cfg_temp = []; cfg_temp.verbose = cfg.verbose;
     spd = getLinSpd(cfg_temp,pos);
     
-    cfg_temp.threshold = cfg.SpeedLimit; cfg_temp.direction = '<'; cfg_temp.method = 'raw'; cfg_temp.verbose = cfg.verbose;
+    cfg_temp.threshold = cfg.SpeedLimit; cfg_temp.operation = '<'; cfg_temp.method = 'raw'; cfg_temp.verbose = cfg.verbose;
     %cfg_temp.minlen = 0;
     low_spd_iv = TSDtoIV(cfg_temp,spd);
     
@@ -212,7 +212,7 @@ if ~isempty(cfg.ThetaThreshold)
     tpow = LFPpower(cfg_temp,lfp_theta_filtered);
     
     % detect intervals with "low theta" (z-score below 2)
-    cfg_temp = []; cfg_temp.method = 'zscore'; cfg_temp.threshold = cfg.ThetaThreshold; cfg_temp.dcn =  '<'; cfg_temp.verbose = cfg.verbose;
+    cfg_temp = []; cfg_temp.method = 'zscore'; cfg_temp.threshold = cfg.ThetaThreshold; cfg_temp.operation = '<'; cfg_temp.verbose = cfg.verbose;
     low_theta_iv = TSDtoIV(cfg_temp,tpow);
     
     % restrict candidate events to only those inside low theta intervals
