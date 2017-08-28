@@ -186,7 +186,7 @@ if ~isempty(cfg.SpeedLimit)
     cfg_temp = []; cfg_temp.verbose = cfg.verbose;
     spd = getLinSpd(cfg_temp,pos);
     
-    cfg_temp.threshold = cfg.SpeedLimit; cfg_temp.dcn = '<'; cfg_temp.method = 'raw'; cfg_temp.verbose = cfg.verbose;
+    cfg_temp.threshold = cfg.SpeedLimit; cfg_temp.direction = '<'; cfg_temp.method = 'raw'; cfg_temp.verbose = cfg.verbose;
     %cfg_temp.minlen = 0;
     low_spd_iv = TSDtoIV(cfg_temp,spd);
     
