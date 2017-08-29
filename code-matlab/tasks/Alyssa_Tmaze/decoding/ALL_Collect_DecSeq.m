@@ -2,16 +2,16 @@
 clear all;
 
 cfg = [];
-cfg.prefix = 'R2_'; % which files to load
-cfg.whichEvents = 'postrecord'; % {'prerecord','taskrest','taskrun','postrecord'}; % which events to process?
-cfg.whichSeq = 'either'; % {'all','fwd','bwd','either'}; % which sequences to process?
+cfg.prefix = 'R3'; % which files to load
+cfg.whichEvents = 'postrecord'; %{'prerecord','taskrest','taskrun','postrecord'}; % which events to process? can only select one
+cfg.whichSeq = 'all'; % {'all','fwd','bwd','either'}; % which sequences to process?
 cfg.sessions = {'food','water'};
 cfg.arms = {'left','right'};
 cfg.writeDiary = 1; % keep a text file record of command window history
-cfg.output_fd = 'C:\projects\AlyssaTmaze\resultsFiles'; % where to place output files
+cfg.output_fd = 'D:\projects\AlyssaTmaze\resultsFiles'; % where to place output files
 cfg.saveData = 1;
 cfg.rats = {'R042','R044','R050','R064'};
-cfg.cpbin = 10; % if non-empty, restrict to sequences with start or end beyond this (relative to CP)
+cfg.cpbin = []; % if non-empty, restrict to sequences with start or end beyond this (relative to CP)
 cfg.minActiveCells = 5;
 cfg.minlen = 0.05; % otherwise, minimum length in s
 cfg.output_prefix = cat(2,cfg.prefix,'DecSeq_',cfg.whichEvents,'_',cfg.whichSeq,'_');
@@ -58,6 +58,10 @@ ALL_sig_seq.type = []; % restriction type (food/water)
 ALL_sig_seq.sess = []; % session ID in case we want to restrict later
 ALL_sig_seq.decErr = []; % track decoding error during RUN
 ALL_sig_seq.firstChoice = []; % left (1), right (2)
+ALL_sig_seq.choice = []; % number of trials free choice
+ALL_sig_seq.choiceN = []; % proportions of trials
+ALL_sig_seq.allTrials = []; % number of trials (all, so including blocked)
+ALL_sig_seq.allTrialsN = []; % proportion of trials (all, so including blocked)
 
 ALL_sig_seq.rsq = [];
 ALL_sig_seq.pval = [];
@@ -194,7 +198,6 @@ for iFD = 1:length(fd)
         % count events
         nEvents = length(this_seqR.tstart);
         
-        
         % track decoding error
         this_decErr = nanmean(out.expCond(iCond).Perr.data);
         
@@ -206,6 +209,17 @@ for iFD = 1:length(fd)
         ALL_sig_seq.sess = cat(1,ALL_sig_seq.sess,iFD);
         ALL_sig_seq.firstChoice = cat(1,ALL_sig_seq.firstChoice,firstChoice);
         
+        this_trials = length(strmatch(upper(cfg.arms{iCond}(1)),metadata.taskvars.sequence));
+        ALL_sig_seq.allTrials = cat(1,ALL_sig_seq.allTrials,this_trials);
+        ALL_sig_seq.allTrialsN = cat(1,ALL_sig_seq.allTrialsN,this_trials);
+        
+        choice_trial_idx = setdiff(1:length(metadata.taskvars.sequence),ExpKeys.forcedTrials);
+        choice_trials = metadata.taskvars.sequence(choice_trial_idx);
+        this_choice = length(strmatch(upper(cfg.arms{iCond}(1)),choice_trials));
+        ALL_sig_seq.choice = cat(1,ALL_sig_seq.choice,this_choice);
+        ALL_sig_seq.choiceN = cat(1,ALL_sig_seq.choiceN,this_choice);
+        
+        
         % track event durations, R^2, beta, pval -- NOTE will be different
         % variable lengths than above
         if ~isempty(this_seqR.tstart)
@@ -215,10 +229,12 @@ for iFD = 1:length(fd)
             ALL_sig_seq.len = cat(1,ALL_sig_seq.len,this_seqR.tend-this_seqR.tstart);
         end
         
-    end
+    end % of loop over arms
     
-    % convert raw count to proportions (left/right)
+    % convert raw count to proportions (left/right): NOTE that this will fail if variables are initialized to final size!
     ALL_sig_seq.countN(end-1:end) = ALL_sig_seq.countN(end-1:end)./sum(ALL_sig_seq.countN(end-1:end));
+    ALL_sig_seq.choiceN(end-1:end) = ALL_sig_seq.choiceN(end-1:end)./sum(ALL_sig_seq.choiceN(end-1:end));
+    ALL_sig_seq.allTrialsN(end-1:end) = ALL_sig_seq.allTrialsN(end-1:end)./sum(ALL_sig_seq.allTrialsN(end-1:end));
     
     % process candidates & save
     %evt = MergeIV([],seq_tosave);
