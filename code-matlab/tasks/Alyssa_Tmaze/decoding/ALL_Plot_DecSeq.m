@@ -5,11 +5,11 @@
 % some appearance things
 cfg.colormode = 'inventory3';
 FontSize = 8;
-cfg.input_fd = 'D:\projects\AlyssaTmaze\resultsFiles\';
-cfg.output_fd = 'D:\projects\AlyssaTmaze\resultsFiles\viz';
+cfg.input_fd = 'C:\temp';
+cfg.output_fd = 'C:\temp\viz';
 cfg.showAllRatsText = 1; % do you want to show the text "all rats" on the combined data figures?
 cfg.writeOutput = 1;
-cfg.outbasefn = 'DecSeqMulti'; % base filename for figure output
+cfg.outbasefn = 'R2'; % base filename for figure output
 colors = TmazeColors(cfg.colormode);
 
 originalFolder = pwd;
@@ -22,9 +22,9 @@ cfg.ylim = [300 150]; cfg.ylimtick = [75 37.5]; % ALL - overall and single lims
 cd(cfg.input_fd)
 cfg.output_fn = cat(2,cfg.outbasefn,'_counts');
 
-pre = load('DecSeq_prerecord_all_out');
-task = load('DecSeq_taskrest_all_out');
-post = load('DecSeq_postrecord_all_out');
+pre = load('R2_DecSeq_prerecord_all_out');
+task = load('R2_DecSeq_taskrest_all_out');
+post = load('R2_DecSeq_postrecord_all_out');
 
 ylab = {'Number of significant'; 'sequences'};
 ylimsall = [0 cfg.ylim(1)];
@@ -551,7 +551,7 @@ originalFolder = pwd;
 cd(cfg.input_fd)
 cfg.output_fn = cat(2,cfg.outbasefn,'_decAcc');
 
-pre = load('DecSeq_prerecord_all_out');
+pre = load('R2_DecSeq_prerecord_all_out');
 
 ylab = {'decoding error'};
 
