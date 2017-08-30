@@ -43,10 +43,10 @@ clear
 %% WHAT DO YOU WANT THIS SCRIPT TO DO
 
 cfg = [];
-cfg.output_fd = 'E:\Documents\TmazePaper\data';  % file directory for saving data files
+cfg.output_fd = 'C:\temp';  % file directory for saving data files
 cfg.writeDiary = 0; % keep a text file record of command window history
 cfg.writeFiles = 1; % save data
-cfg. output_fn = 'behavior'; % what to call the output
+cfg.output_fn = 'behavior'; % what to call the output
 
 %% check that required things exist before continuing 
 

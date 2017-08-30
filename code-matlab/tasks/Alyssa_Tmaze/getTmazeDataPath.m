@@ -50,7 +50,7 @@ end
 
 switch machinename
     
-    case {'ISIDRO','PERSEUS'}
+    case {'ISIDRO','MVDMLAB-PERSEUS'}
         base_fp = 'C:\data\';
     case {'EQUINOX','BERGKAMP'}
         base_fp = 'D:\data\';
