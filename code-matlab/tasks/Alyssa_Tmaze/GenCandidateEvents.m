@@ -55,9 +55,10 @@ cfg_def.MUAmethod = 'AM'; % 'AM' for amMUA, or 'none' for skip MUA detection
 cfg_def.weightby = 'amplitude'; % this applies to 'AM' amSWR and 'TR' photonic, but not 'HT' OldWizard
 cfg_def.stepSize = 1;
 cfg_def.ThreshMethod = 'zscore';
-cfg_def.DetectorThreshold = 3; % the threshold you want for generating IV data
+cfg_def.DetectorThreshold = 1; % the threshold you want for generating IV data edges
+cfg_def.DetectorThreshold2 = 3; % threshold you want for IV data inclusion (detected intervals must exceed this)
 %if strcmp(sessionID,'R042-2013-08-17') || strcmp(sessionID,'R044-2013-12-23')
-    %cfg_def.DetectorThreshold = 2.5;
+    %cfg_def.DetectorThreshold2 = 2.5;
 %end
 cfg_def.mindur = 0.02; % in seconds, the minumum duration for detected events to be kept
 cfg_def.SpeedLimit = 10; % pixels per second
@@ -107,7 +108,7 @@ switch cfg.SWRmethod
     case 'HT'
         cfg.stepSize = [];
         cfg.weightby = [];
-        cfg_temp = []; cfg_temp.verbose = cfg.verbose; cfg_temp.rippleband = [140 250]; cfg_temp.smooth = 1; cfg_temp.kernel = [];
+        cfg_temp = []; cfg_temp.verbose = cfg.verbose; cfg_temp.rippleband = [140 250]; cfg_temp.smooth = 1;
         SWR = OldWizard(cfg_temp,CSC);
         
     case 'TR'
@@ -161,7 +162,8 @@ score = rescmean(score,0.5); % this was a step in precand(), doing same to prese
 
 % threshold
 cfg_temp = [];
-cfg_temp.threshold = cfg.DetectorThreshold; cfg_temp.verbose = cfg.verbose; cfg_temp.method = cfg.ThreshMethod;
+cfg_temp.threshold = cfg.DetectorThreshold; cfg_temp.threshold2 = cfg.DetectorThreshold2; 
+cfg_temp.verbose = cfg.verbose; cfg_temp.method = cfg.ThreshMethod;
 cfg_temp.operation = '>';
 evt = TSDtoIV2(cfg_temp,score);
 
@@ -237,6 +239,7 @@ end
 % 2. restrict based on metadata.detachIV
 if isfield(metadata,'detachIV')
     disp('***Restricting evt to metadata.detachIV')
+    metadata.detachIV.type = 'iv';
     evt = restrict(evt,metadata.detachIV);
 end
 
