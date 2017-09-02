@@ -1,11 +1,11 @@
 %%
 clear all;
-todo = {'prerecord','taskrest','taskrun','postrecord'};
+todo = {'all','prerecord','taskrest','postrecord'};
 
-for iDo = 2:length(todo)
+for iDo = 1:length(todo)
     
 cfg = [];
-cfg.prefix = 'R2_'; % prefix determining which decoding output files to load
+cfg.prefix = 'R0_'; % prefix determining which decoding output files to load
 cfg.whichEvents = todo{iDo}; %{'prerecord','taskrest','taskrun','postrecord'}; % which events to process? can only select one
 cfg.whichSeq = 'all'; % {'all','fwd','bwd','either'}; % which sequences to process?
 cfg.sessions = {'food','water'};
@@ -145,6 +145,12 @@ for iFD = 1:length(fd)
                 this_seqR = restrict(this_seqR,metadata.taskvars.rest_iv);
             case 'taskrun'
                 this_seqR = restrict(this_seqR,metadata.taskvars.trial_iv);
+            case 'all'
+                % do nothing
+            case 'all-pedestal'
+                % to be done
+            otherwise
+                error('Unknown events %s!',cfg.whichEvents);
         end
         
         % add fwd/bwd information
