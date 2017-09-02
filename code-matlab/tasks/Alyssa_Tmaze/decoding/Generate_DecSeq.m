@@ -57,6 +57,7 @@ cfg_def.Qdt = 0.005;
 cfg_def.Qboxcar = 5;
 cfg_def.writeFiles = 1;
 cfg_def.removeInterneurons = 0;
+cfg_def.keepPosterior = 0;
 
 nMaxLaps = 20;
 %cfg_def.encdecmat = 1-eye(20);
@@ -321,8 +322,11 @@ for iCond = 1:nCond
     %% remove source matrices (too memory-intensive)
     % NOTE: could keep Q and decoded bits for detected sequences
     % (helpful for shuffle checks later)?
-    expCond(iCond).Q = []; expCond(iCond).Qraw = []; expCond(iCond).P = []; expCond(iCond).P2 = [];
-    
+    if cfg.keepPosterior
+        expCond(iCond).Q = []; expCond(iCond).Qraw = [];
+    else
+        expCond(iCond).Q = []; expCond(iCond).Qraw = []; expCond(iCond).P = []; expCond(iCond).P2 = [];
+    end
 end % of iCond loop
 
 out.expCond = expCond;
