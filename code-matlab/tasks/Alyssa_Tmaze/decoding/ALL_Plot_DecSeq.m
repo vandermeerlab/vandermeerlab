@@ -5,26 +5,190 @@
 % some appearance things
 cfg.colormode = 'inventory3';
 FontSize = 8;
-cfg.input_fd = 'C:\temp';
-cfg.output_fd = 'C:\temp\viz';
+cfg.input_fd = 'C:\temp'; %'D:\projects\AlyssaTmaze\resultsFiles';
+cfg.output_fd = 'C:\temp\viz'; %'D:\projects\AlyssaTmaze\resultsFiles\viz';
 cfg.showAllRatsText = 1; % do you want to show the text "all rats" on the combined data figures?
-cfg.writeOutput = 1;
-cfg.outbasefn = 'R2'; % base filename for figure output
+cfg.writeOutput = 0;
+cfg.input_prefix = 'R0_'; % which files to load? assumes filenames are *DecSeq_$task-phase_all_out.mat
+cfg.outbasefn = 'R0_'; % base filename for figure output
 colors = TmazeColors(cfg.colormode);
 
 originalFolder = pwd;
 
-
-%% F1: raw sequence counts
-%cfg.ylim = [600 300]; cfg.ylimtick = [150 75]; % ALL - overall and single lims
-cfg.ylim = [300 150]; cfg.ylimtick = [75 37.5]; % ALL - overall and single lims
-
+%% load the data
 cd(cfg.input_fd)
-cfg.output_fn = cat(2,cfg.outbasefn,'_counts');
 
-pre = load('R2_DecSeq_prerecord_all_out');
-task = load('R2_DecSeq_taskrest_all_out');
-post = load('R2_DecSeq_postrecord_all_out');
+all = load(cat(2,cfg.input_prefix,'DecSeq_all_all_out'));
+pre = load(cat(2,cfg.input_prefix,'DecSeq_prerecord_all_out'));
+task = load(cat(2,cfg.input_prefix,'DecSeq_taskrest_all_out'));
+post = load(cat(2,cfg.input_prefix,'DecSeq_postrecord_all_out'));
+
+%% F0a: session-by-session averaged for all rats and task phases
+cfg.output_fn = cat(2,cfg.outbasefn,'sessionProps_overall');
+fs = 12;
+offs = 0.03;
+
+figure;
+subplot(4,3,1);
+
+% before anything else, draw background
+for iC = 1:6
+    
+    h(iC) = rectangle('Position',[iC-0.5 0 1 1]);
+    if mod(iC,2) % odd
+        set(h(iC),'FaceColor',[0.7 0.7 1],'EdgeColor',[0.7 0.7 1]);
+    else % even
+        set(h(iC),'FaceColor',[1 0.7 0.7],'EdgeColor',[1 0.7 0.7]);
+    end
+    
+end
+hold on;
+plot([0.5 6.5],[0.5 0.5],'LineStyle','--','LineWidth',1,'Color',[1 1 1]);
+
+% now collect data
+this_data = all.data.all.ALL_sig_seq;
+
+sess_label = repmat(1:6,[1 4]);
+rat_label = cat(2,ones(1,6),2*ones(1,6),3*ones(1,6),4*ones(1,6));
+
+sess_idx = sess_label(this_data.sess); % gives within-animal day idxs (1-6)
+rat_idx = rat_label(this_data.sess);
+
+% need to swap water and food sessions for rats 3 and 4, which started with food not water
+swp = [2 1 4 3 6 5];
+for iRat = 3:4
+   this_rat_idx = find(rat_idx == iRat);
+   sess_idx(this_rat_idx) = swp(sess_idx(this_rat_idx));
+end
+
+% normalized (N) input data is redundant for left and right, so remove
+sess_idx = sess_idx(1:2:end); rat_idx = rat_idx(1:2:end);
+seq = this_data.countN(1:2:end);
+behav = this_data.allTrialsN(1:2:end);
+choice = this_data.choiceN(1:2:end);
+type = this_data.type(1:2:end);
+
+% get averages for each session, and plot each data point individually
+for iSess = 1:6
+   sess_out(iSess) = iSess;
+   seq_out(iSess) = nanmean(seq(sess_idx == iSess));
+   behav_out(iSess) = nanmean(behav(sess_idx == iSess));
+   
+   plot(iSess-offs,seq(sess_idx == iSess),'.','MarkerSize',5,'Color',[0 0.7 0]);
+   plot(iSess+offs,behav(sess_idx == iSess),'.','MarkerSize',5,'Color',[0 0 0]);
+end
+
+plot([0.5 6.5],[0.5 0.5],'LineStyle','--','LineWidth',1,'Color',[1 1 1]);
+hold on;
+set(gca,'XTick',1:6,'LineWidth',1,'TickDir','out','FontSize',fs,'YTick',0:0.25:1,'YTickLabel',{'0','','0.5','','1'},'XLim',[0.5 6.5],'YLim',[0 1]);
+box off;
+
+yyaxis right; set(gca,'YColor',[0 0.7 0],'LineWidth',1,'FontSize',fs,'YTick',0:0.25:1,'YTickLabel',{'0','','0.5','','1'},'YLim',[0 1]);
+ylabel('SWR sequence p(food)');
+
+
+plot(sess_out+offs,behav_out,'k','LineStyle','-');
+plot(sess_out+offs,behav_out,'.k','MarkerSize',20);
+
+plot(sess_out-offs,seq_out,'Color',[0 0.7 0],'LineStyle','-');
+plot(sess_out-offs,seq_out,'.','MarkerSize',20,'Color',[0 0.7 0]);
+
+% make nice
+set(gca,'XTick',1:6,'LineWidth',1,'TickDir','out','FontSize',fs,'YTick',0:0.25:1,'YTickLabel',{'0','','0.5','','1'},'XLim',[0.5 6.5],'YLim',[0 1]);
+box off;
+
+yyaxis left;
+ylabel('choice p(food)');
+
+if cfg.writeOutput
+    maximize; drawnow;
+    cd(cfg.output_fd);
+    print(gcf,'-painters','-dpng','-r300',[cfg.output_fn,'.png']);
+    print(gcf,'-painters','-dpdf',[cfg.output_fn,'.pdf']);
+    print(gcf,'-painters','-depsc',[cfg.output_fn,'.eps']);
+    cd(originalFolder)
+end
+
+% print some stats to go with this figure
+tbl = table(categorical(rat_idx)',categorical(sess_idx)',behav,categorical(type),seq,choice,'VariableNames',{'Subject','Session','Behav','MotType','SeqContent','Choice'});
+lme = fitglme(tbl,'SeqContent ~ MotType + (1|Subject) + (1|Session)','Link','logit');
+lme2 = fitglme(tbl,'SeqContent ~ Subject','Link','logit');
+
+lme = fitglme(tbl,'Choice ~ MotType + (1|Subject) + (1|Session)','Link','logit');
+
+%% F0b: session-by-session data for individual rats and task phases
+cfg.output_fn = cat(2,cfg.outbasefn,'sessionProps_byPhase');
+
+figure;
+
+rats = {'R042','R044','R050','R064'};
+what = {'pre','task','post'};
+
+for iRat = 1:length(rats)
+    for iW = 1:length(what)
+        
+        this_data = eval(cat(2,what{iW},'.data.',rats{iRat},'.ALL_sig_seq'));
+
+        subplot(4,3,(iRat-1)*3+iW);
+        set(gca,'XTick',1:6,'LineWidth',1,'TickDir','out','FontSize',fs,'YTick',0:0.25:1,'YTickLabel',{'0','','0.5','','1'},'XLim',[0.5 6.5],'YLim',[0 1]);
+        box off;
+        
+        yyaxis right; set(gca,'YColor',[0 0.7 0],'LineWidth',1,'FontSize',fs,'YTick',0:0.25:1,'YTickLabel',{'0','','0.5','','1'},'YLim',[0 1]);
+      
+        for iC = 1:6
+            
+            h(iC) = rectangle('Position',[iC-0.5 0 1 1]);
+            if mod(iC,2) % odd
+                if iRat >= 3
+                    set(h(iC),'FaceColor',[1 0.7 0.7],'EdgeColor',[1 0.7 0.7]);
+                else
+                    set(h(iC),'FaceColor',[0.7 0.7 1],'EdgeColor',[0.7 0.7 1]);
+                end
+            else % even
+                if iRat >= 3
+                    set(h(iC),'FaceColor',[0.7 0.7 1],'EdgeColor',[0.7 0.7 1]);
+                else
+                    set(h(iC),'FaceColor',[1 0.7 0.7],'EdgeColor',[1 0.7 0.7]);
+                end
+            end
+            
+        end
+        hold on;
+        plot([0.5 6.5],[0.5 0.5],'LineStyle','--','LineWidth',1,'Color',[1 1 1]);
+        set(gca,'XTick',1:6,'LineWidth',1,'TickDir','out','FontSize',fs,'YTick',0:0.25:1,'YTickLabel',{'0','','0.5','','1'},'XLim',[0.5 6.5],'YLim',[0 1]);
+        
+        plot(this_data.sess(1:2:end),this_data.allTrialsN(1:2:end),'k','LineStyle','-');
+        plot(this_data.sess(1:2:end),this_data.allTrialsN(1:2:end),'.k','MarkerSize',20);
+        
+        plot(this_data.sess(1:2:end),this_data.countN(1:2:end),'Color',[0 0.7 0],'LineStyle','-');
+        hold on;
+        plot(this_data.sess(1:2:end),this_data.countN(1:2:end),'.','MarkerSize',20,'Color',[0 0.7 0]);
+               
+        % make nice
+        set(gca,'XTick',1:6,'LineWidth',1,'TickDir','out','FontSize',fs,'YTick',0:0.25:1,'YTickLabel',{'0','','0.5','','1'},'XLim',[0.5 6.5],'YLim',[0 1]);
+        box off;
+          
+        if iRat == 1
+            title(what{iW});
+        end
+        
+    end
+end
+
+% save thing
+if cfg.writeOutput
+    maximize; set(gcf,'PaperPositionMode','auto'); drawnow;
+    cd(cfg.output_fd);
+    print(gcf,'-painters','-dpng','-r300',[cfg.output_fn,'.png']);
+    print(gcf,'-painters','-dpdf','-r300',[cfg.output_fn,'.pdf']);
+    print(gcf,'-painters','-depsc','-r300',[cfg.output_fn,'.eps']);
+    cd(originalFolder)
+end
+%% F1: raw sequence counts
+cfg.output_fn = cat(2,cfg.outbasefn,'counts');
+
+cfg.ylim = [600 300]; cfg.ylimtick = [150 75]; % ALL - overall and single lims
+%cfg.ylim = [300 150]; cfg.ylimtick = [75 37.5]; % ALL - overall and single lims
 
 ylab = {'Number of significant'; 'sequences'};
 ylimsall = [0 cfg.ylim(1)];
@@ -185,9 +349,9 @@ end
 if cfg.writeOutput
     maximize; set(gcf,'PaperPositionMode','auto'); drawnow;
     cd(cfg.output_fd);
-    print(gcf,'-dpng','-r300',[cfg.output_fn,'.png']);
-    print(gcf,'-dpdf','-r300',cfg.output_fn);
-    print(gcf,'-depsc','-r300',cfg.output_fn);
+    print(gcf,'-painters','-dpng','-r300',[cfg.output_fn,'.png']);
+    print(gcf,'-painters','-dpdf','-r300',[cfg.output_fn,'.pdf']);
+    print(gcf,'-painters','-depsc','-r300',[cfg.output_fn,'.eps']);
     cd(originalFolder)
 end
 
@@ -358,11 +522,11 @@ end
 
 % save thing
 if cfg.writeOutput
-    maximize; set(gcf,'PaperPositionMode','auto');  drawnow;
+    maximize; set(gcf,'PaperPositionMode','auto'); drawnow;
     cd(cfg.output_fd);
-    print(gcf,'-dpng','-r300',[cfg.output_fn,'.png']);
-    print(gcf,'-dpdf','-r300',cfg.output_fn);
-    print(gcf,'-depsc','-r300',cfg.output_fn);
+    print(gcf,'-painters','-dpng','-r300',[cfg.output_fn,'.png']);
+    print(gcf,'-painters','-dpdf','-r300',[cfg.output_fn,'.pdf']);
+    print(gcf,'-painters','-depsc','-r300',[cfg.output_fn,'.eps']);
     cd(originalFolder)
 end
 
@@ -532,11 +696,11 @@ end
 
 % save thing
 if cfg.writeOutput
+    maximize; set(gcf,'PaperPositionMode','auto'); drawnow;
     cd(cfg.output_fd);
-    maximize; set(gcf,'PaperPositionMode','auto');  drawnow;
-    print(gcf,'-dpng','-r300',[cfg.output_fn,'.png']);
-    print(gcf,'-dpdf','-r300',cfg.output_fn);
-    print(gcf,'-depsc','-r300',cfg.output_fn);
+    print(gcf,'-painters','-dpng','-r300',[cfg.output_fn,'.png']);
+    print(gcf,'-painters','-dpdf','-r300',[cfg.output_fn,'.pdf']);
+    print(gcf,'-painters','-depsc','-r300',[cfg.output_fn,'.eps']);
     cd(originalFolder)
 end
 
@@ -551,7 +715,7 @@ originalFolder = pwd;
 cd(cfg.input_fd)
 cfg.output_fn = cat(2,cfg.outbasefn,'_decAcc');
 
-pre = load('R2_DecSeq_prerecord_all_out');
+pre = load(cat(2,cfg.input_prefix,'DecSeq_prerecord_all_out')); % why reload?
 
 ylab = {'decoding error'};
 
@@ -647,11 +811,11 @@ end
 
 % save thing
 if cfg.writeOutput
+    maximize; set(gcf,'PaperPositionMode','auto'); drawnow;
     cd(cfg.output_fd);
-    maximize; set(gcf,'PaperPositionMode','auto');  drawnow;
-    print(gcf,'-dpng','-r300',[cfg.output_fn,'.png']);
-    print(gcf,'-dpdf','-r300',cfg.output_fn);
-    print(gcf,'-depsc','-r300',cfg.output_fn);
+    print(gcf,'-painters','-dpng','-r300',[cfg.output_fn,'.png']);
+    print(gcf,'-painters','-dpdf','-r300',[cfg.output_fn,'.pdf']);
+    print(gcf,'-painters','-depsc','-r300',[cfg.output_fn,'.eps']);
     cd(originalFolder)
 end
 
@@ -767,10 +931,10 @@ end
 
 % save thing
 if cfg.writeOutput
+    maximize; set(gcf,'PaperPositionMode','auto'); drawnow;
     cd(cfg.output_fd);
-    maximize; set(gcf,'PaperPositionMode','auto');  drawnow;
-    print(gcf,'-dpng','-r300',[cfg.output_fn,'.png']);
-    print(gcf,'-dpdf','-r300',cfg.output_fn);
-    print(gcf,'-depsc','-r300',cfg.output_fn);
+    print(gcf,'-painters','-dpng','-r300',[cfg.output_fn,'.png']);
+    print(gcf,'-painters','-dpdf','-r300',[cfg.output_fn,'.pdf']);
+    print(gcf,'-painters','-depsc','-r300',[cfg.output_fn,'.eps']);
     cd(originalFolder)
 end
