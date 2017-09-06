@@ -184,15 +184,15 @@ if proceed
         % collect data into a struct
         
         % food restr data
-        behav.(cfg.rats{iRat}).food.Lprob = food_chooseFoodR;
-        behav.(cfg.rats{iRat}).food.Rprob = food_chooseWaterR;
+        behav.(cfg.rats{iRat}).food.Lprob = food_chooseFoodR; behav.(cfg.rats{iRat}).food.nL = nfood_chooseFood;
+        behav.(cfg.rats{iRat}).food.Rprob = food_chooseWaterR; behav.(cfg.rats{iRat}).food.nR = nfood_chooseWater;
         behav.(cfg.rats{iRat}).pLtrl = nanmean(sessionChoice(sessionType == 1,:));
         behav.(cfg.rats{iRat}).nLTrials = nFoodTrials;
         behav.all.nLTrials = behav.all.nLTrials + nFoodTrials;
         
         % water restr data
-        behav.(cfg.rats{iRat}).water.Lprob = water_chooseFoodR;
-        behav.(cfg.rats{iRat}).water.Rprob = water_chooseWaterR;
+        behav.(cfg.rats{iRat}).water.Lprob = water_chooseFoodR; behav.(cfg.rats{iRat}).water.nL = nwater_chooseFood;
+        behav.(cfg.rats{iRat}).water.Rprob = water_chooseWaterR; behav.(cfg.rats{iRat}).water.nR = nwater_chooseWater;
         behav.(cfg.rats{iRat}).pRtrl = nanmean(sessionChoice(sessionType == 2,:)); 
         behav.(cfg.rats{iRat}).nRTrials = nWaterTrials;
         behav.all.nRTrials = behav.all.nRTrials + nWaterTrials;
@@ -206,10 +206,10 @@ if proceed
     
     % aggregate data across rats and place in behav struct
     behav.all.nSessions = all.nSessions;
-    behav.all.food.Lprob = all.nfood_chooseFood/behav.all.nLTrials;
-    behav.all.food.Rprob = all.nfood_chooseWater/behav.all.nLTrials;
-    behav.all.water.Lprob = all.nwater_chooseFood/behav.all.nRTrials;
-    behav.all.water.Rprob = all.nwater_chooseWater/behav.all.nRTrials;    
+    behav.all.food.Lprob = all.nfood_chooseFood/behav.all.nLTrials; behav.all.food.nL = all.nfood_chooseFood;
+    behav.all.food.Rprob = all.nfood_chooseWater/behav.all.nLTrials; behav.all.food.nR = all.nfood_chooseWater;
+    behav.all.water.Lprob = all.nwater_chooseFood/behav.all.nRTrials; behav.all.water.nL = all.nwater_chooseFood;
+    behav.all.water.Rprob = all.nwater_chooseWater/behav.all.nRTrials; behav.all.water.nR = all.nwater_chooseWater;   
     behav.all.pLtrl = nanmean(all.sessionChoice(all.sessionType == 1,:));
     behav.all.pRtrl = nanmean(all.sessionChoice(all.sessionType == 2,:)); 
 end
