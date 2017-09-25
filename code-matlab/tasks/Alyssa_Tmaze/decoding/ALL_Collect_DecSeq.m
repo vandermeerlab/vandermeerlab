@@ -7,7 +7,7 @@ for iDo = 1:length(todo)
 cfg = [];
 cfg.prefix = 'R0_'; % prefix determining which decoding output files to load
 cfg.whichEvents = todo{iDo}; %{'prerecord','taskrest','taskrun','postrecord'}; % which events to process? can only select one
-cfg.whichSeq = 'all'; % {'all','fwd','bwd','either'}; % which sequences to process?
+cfg.whichSeq = 'either'; % {'all','fwd','bwd','either'}; % which sequences to process?
 cfg.sessions = {'food','water'};
 cfg.arms = {'left','right'};
 cfg.writeDiary = 1; % keep a text file record of command window history
@@ -17,10 +17,10 @@ cfg.saveData = 1;
 cfg.rats = {'R042','R044','R050','R064'};
 cfg.cpbin = []; % if non-empty, restrict to sequences with start or end beyond this (relative to CP)
 cfg.minActiveCells = 5;
-cfg.minlen = 0.05; % otherwise, minimum length in s
+cfg.minlen = 0.08; % otherwise, minimum length in s
 cfg.SWRoverlap = 1; % if 1, only keep events detected as SWR candidates
 cfg.SWRsuffix = ''; % filename suffix determining which SWR candidates to load
-cfg.output_prefix = cat(2,cfg.prefix,cfg.SWRsuffix,'DecSeq_',cfg.whichEvents,'_',cfg.whichSeq,'_');
+cfg.output_prefix = cat(2,cfg.prefix,cfg.SWRsuffix,'DecSeq_',cfg.whichEvents,'_',cfg.whichSeq,'_80ms_');
 
 %%
 fd = getTmazeDataPath(cfg);
