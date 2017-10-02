@@ -162,7 +162,7 @@ for iF = 1:nFiles
         fprintf('%s: Decimating by factor %d...\n',mfun,cfg.decimateByFactor)
         data = decimate(data,cfg.decimateByFactor);
         tvec = tvec(1:cfg.decimateByFactor:end);
-        hdr.SamplingFrequency = hdr.SamplingFrequency./cfg.resample;
+        hdr.SamplingFrequency = hdr.SamplingFrequency./cfg.decimateByFactor;
         
     end
     
@@ -221,7 +221,7 @@ for hline = 1:length(Header)
     
     % deal with characters not allowed by MATLAB struct
     
-    if strcmp(a.key,'DspFilterDelay_ï¿½s')
+    if strcmp(a.key,'DspFilterDelay_ï¿½s') | strcmp(a.key,'DspFilterDelay_µs')
         a.key = 'DspFilterDelay_us';
     end
     
