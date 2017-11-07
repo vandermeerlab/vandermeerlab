@@ -49,9 +49,9 @@ for iT = 1:length(metadata.taskvars.sequence) % loop over trials
       
     % find pedestal end time immediately preceding this trial start
     idx = nearest_idx3(metadata.taskvars.trial_iv.tstart(iT),start_values,-1); % -1: look backwards
-    this_start = start_values(idx);
+    this_start = start_values(idx) + cfg.startbuffer;
     
-    if this_start + cfg.startbuffer > metadata.taskvars.trial_iv.tstart(iT)
+    if this_start > metadata.taskvars.trial_iv.tstart(iT)
         % if somehow the trial starts before the end of the preceding pedestal epoch plus buffer,
         % then the time identified as trial start in metadata takes precedence. This can happen
         % if the experimenter and rat were faster to start the next trial than the time in 
