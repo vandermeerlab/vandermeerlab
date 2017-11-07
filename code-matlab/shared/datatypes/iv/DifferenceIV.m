@@ -55,7 +55,7 @@ iv_out = iv1;
 iv_out.tstart = iv_out.tstart(logical(keep));
 iv_out.tend = iv_out.tend(logical(keep));
 
-if cfg.verbose; fprintf('%s: %d intervals in, %d intervals out\n',mfun,length(iv1.tstart) + length(iv2.tstart),length(iv_out.tstart)); end
+if cfg.verbose; fprintf('%s: %d intervals in, %d intervals out\n',mfun,length(iv1.tstart),length(iv_out.tstart)); end
 
 % housekeeping
 iv1.cfg.history.mfun = cat(1,iv1.cfg.history.mfun,mfun);
