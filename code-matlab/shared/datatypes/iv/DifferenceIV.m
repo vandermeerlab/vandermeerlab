@@ -55,6 +55,14 @@ iv_out = iv1;
 iv_out.tstart = iv_out.tstart(logical(keep));
 iv_out.tend = iv_out.tend(logical(keep));
 
+% also select data from other same-length usr fields
+if isfield(iv_out,'usr') && ~isempty(iv_out.usr)
+    ivfields = fieldnames(iv_out.usr);
+    for iField = 1:length(ivfields)
+        iv_out.usr.(ivfields{iField}) = iv_out.usr.(ivfields{iField})(logical(keep));
+    end
+end
+
 if cfg.verbose; fprintf('%s: %d intervals in, %d intervals out\n',mfun,length(iv1.tstart),length(iv_out.tstart)); end
 
 % housekeeping
