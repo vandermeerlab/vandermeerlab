@@ -15,6 +15,7 @@ colors = TmazeColors(cfg.colormode);
 
 originalFolder = pwd;
 
+biasfun = @(d) (d(1)-d(2))-(d(3)-d(4)); % computes bias measure as (food_left-food_right)-(water_left-water_right) sequence content proportions
 %% load the data
 cd(cfg.input_fd)
 
@@ -111,10 +112,18 @@ end
 
 % print some stats to go with this figure
 tbl = table(categorical(rat_idx)',categorical(sess_idx)',behav,categorical(type),seq,choice,'VariableNames',{'Subject','Session','Behav','MotType','SeqContent','Choice'});
-lme = fitglme(tbl,'SeqContent ~ MotType + (1|Subject) + (1|Session)','Link','logit');
-lme2 = fitglme(tbl,'SeqContent ~ Subject','Link','logit');
+lme = fitglme(tbl,'SeqContent ~ 1 + MotType + (1|Subject)','Link','logit');
+lme2 = fitglme(tbl,'SeqContent ~ 1 + (1|Subject)','Link','logit');
+r = compare(lme2,lme)
 
-lme = fitglme(tbl,'Choice ~ MotType + (1|Subject) + (1|Session)','Link','logit');
+food_mean = nanmean(tbl.SeqContent(find(double(tbl.MotType) == 1)));
+water_mean = nanmean(tbl.SeqContent(find(double(tbl.MotType) == 2)));
+fprintf('Mean left sequences for food restr. %.2f, water restr. %.2f\n',food_mean,water_mean);
+
+nall = all.data.all.food_left+all.data.all.food_right+all.data.all.water_left+all.data.all.water_right;
+nleft = all.data.all.food_left+all.data.all.water_left;
+nright = all.data.all.food_right+all.data.all.water_right;
+fprintf('Total sequences %d (%d left, %d right)\n',nall,nleft,nright);
 
 %% F0b: session-by-session data for individual rats and task phases
 cfg.output_fn = cat(2,cfg.outbasefn,'sessionProps_byPhase');
@@ -393,7 +402,7 @@ set(gca,'XTick',location,'XTickLabel',{'L' 'R' 'L' 'R'},'FontSize',FontSize,'Lin
 set(gca,'YLim',ylimsall,'YTick',yticksall)
 xlabel('  food                  water','FontSize',FontSize)
 ylabel([ylab{1},' ',ylab{2}],'FontSize',FontSize)
-title('PRERECORD')
+title(sprintf('PRERECORD %.2f',biasfun(d)));
 box off
 set(gca,'Layer','top')
 if cfg.showAllRatsText
@@ -413,7 +422,7 @@ end
 set(gca,'XTick',location,'XTickLabel',{'L' 'R' 'L' 'R'},'FontSize',FontSize,'LineWidth',1,'XLim',xlims);
 set(gca,'YLim',ylimsall,'YTick',[])
 xlabel('  food                  water','FontSize',FontSize)
-title('TASK')
+title(sprintf('TASK %.2f',biasfun(d)));
 box off
 set(gca,'Layer','top')
 if cfg.showAllRatsText
@@ -434,7 +443,7 @@ end
 set(gca,'XTick',location,'XTickLabel',{'L' 'R' 'L' 'R'},'FontSize',FontSize,'LineWidth',1,'XLim',xlims);
 set(gca,'YLim',ylimsall,'YTick',[])
 xlabel('  food                  water','FontSize',FontSize)
-title('POSTRECORD')
+title(sprintf('PRERECORD %.2f',biasfun(d)));
 box off
 set(gca,'Layer','top')
 if cfg.showAllRatsText
@@ -477,7 +486,7 @@ for iRat = 1:length(rats)
     xlabel('  food   water','FontSize',FontSize)
     box off
     set(gca,'Layer','top')
-    txt = rats{iRat};
+    txt = sprintf('%s %.2f',rats{iRat},biasfun(d));
     text(xName,yName,txt,'Units','normalized',...
         'VerticalAlignment','bottom',...
         'HorizontalAlignment','right',...
@@ -495,7 +504,7 @@ for iRat = 1:length(rats)
     xlabel('  food   water','FontSize',FontSize)
     box off
     set(gca,'Layer','top')
-    txt = rats{iRat};
+    txt = sprintf('%s %.2f',rats{iRat},biasfun(d));
     text(xName,yName,txt,'Units','normalized',...
         'VerticalAlignment','bottom',...
         'HorizontalAlignment','right',...
@@ -512,7 +521,7 @@ for iRat = 1:length(rats)
     xlabel('  food   water','FontSize',FontSize)
     box off
     set(gca,'Layer','top')
-    txt = rats{iRat};
+    txt = sprintf('%s %.2f',rats{iRat},biasfun(d));
     text(xName,yName,txt,'Units','normalized',...
         'VerticalAlignment','bottom',...
         'HorizontalAlignment','right',...
@@ -524,9 +533,9 @@ end
 if cfg.writeOutput
     maximize; set(gcf,'PaperPositionMode','auto'); drawnow;
     cd(cfg.output_fd);
-    print(gcf,'-painters','-dpng','-r300',[cfg.output_fn,'.png']);
-    print(gcf,'-painters','-dpdf','-r300',[cfg.output_fn,'.pdf']);
-    print(gcf,'-painters','-depsc','-r300',[cfg.output_fn,'.eps']);
+    print(gcf,'-painters','-dpng','-r300',[cfg.output_fn,'_either_80ms.png']);
+    print(gcf,'-painters','-dpdf','-r300',[cfg.output_fn,'_either_80ms.pdf']);
+    print(gcf,'-painters','-depsc','-r300',[cfg.output_fn,'_either_80ms.eps']);
     cd(originalFolder)
 end
 

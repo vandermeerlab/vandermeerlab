@@ -1,5 +1,5 @@
-function in = restrict(in,varargin)
-% function out = restrict(in,varargin)
+function [in,keep] = restrict(in,varargin)
+% function [out,keep] = restrict(in,varargin)
 %
 % restricts times in data object to specific intervals
 %
