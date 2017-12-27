@@ -5,6 +5,10 @@ function iv_out = RestrictIV(cfg_in,iv_in,varargin)
 %   iv_out = RESTRICTIV(cfg,iv_in,iv_t)
 %   iv_out = RESTRICTIV(cfg,iv_in,tstart,tend)
 %
+%   CONFIG OPTIONS
+%     cfg.straddle = 1; If 1, keep intervals that overlap/straddle the
+%     restriction boundaires; if 0, don't.
+%
 %
 % aacarey Nov 2015
 % -- uses code from MvdM restrict
@@ -20,7 +24,7 @@ cfg_def.verbose = 1;
 cfg = ProcessConfig(cfg_def,cfg_in,mfun);
 
 % check that it's an iv
-if ~CheckIV(iv_in);
+if ~CheckIV(iv_in,'mfun',mfun,'verbose',cfg.verbose)
     error('iv_in must be an iv data type.')
 end
 

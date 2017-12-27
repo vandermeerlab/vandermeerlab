@@ -30,6 +30,8 @@ if isfield(var_out,'cfg') && isfield(var_out.cfg,'history')
 else
     var_out.cfg.history.mfun{1} = mfilename;
     var_out.cfg.history.cfg{1} = [];
+    var_out.cfg.history.mfun = cat(1,var_out.cfg.history.mfun,mfun);
+    var_out.cfg.history.cfg = cat(1,var_out.cfg.history.cfg,{cfg});
 end
 end
 

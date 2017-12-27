@@ -1,4 +1,4 @@
-function iv_out = MergeIV2(cfg_in,iv_in)
+2function iv_out = MergeIV2(cfg_in,iv_in)
 %MERGEIV Merge touching, overlapping, or nearby intervals within an iv struct
 %   iv_out = MERGEIV(cfg,iv_in)
 % 
@@ -34,27 +34,26 @@ function iv_out = MergeIV2(cfg_in,iv_in)
 %                        went out.
 % 
 % aacarey oct 2015
+% cfdu@uwaterloo.ca Nov 2017 fixed bug in end times
 %
-%   see also UnionIV, IntersectIV, ResizeIV
-
 %%
 % set cfg defaults
 cfg_def.gap = 0;
 cfg_def.verbose = 1;
 
-if ~CheckIV(iv_in);
-    error('iv_in must be an iv data type.')
-end
-
-% make sure the intervals are ordered
-if ~issorted(iv_in.tstart);
-    error('Intervals must be in ascending order.')
-end
-
 mfun = mfilename;
 
 % parse cfg parameters
 cfg = ProcessConfig(cfg_def,cfg_in,mfun);
+
+if ~CheckIV(iv_in,'mfun',mfun,'verbose',cfg.verbose)
+    error('iv_in must be an iv data type.')
+end
+
+% make sure the intervals are ordered
+if ~issorted(iv_in.tstart)
+    error('Intervals must be in ascending order.')
+end
 
 % add 1/2 cfg.gap to the intervals
 cfg_temp.d = [-cfg.gap/2 cfg.gap/2];
@@ -63,14 +62,15 @@ iv_temp = ResizeIV(cfg_temp,iv_in);
 
 % merge the resulting iv
 remove = zeros(size(iv_temp.tstart));
-for iInterval = 1:length(iv_temp.tstart)-1;
+for iInterval = 1:length(iv_temp.tstart)-1
     if iv_temp.tstart(iInterval+1) <= iv_temp.tend(iInterval)
-        remove(iInterval) = iInterval;
+        remove(iInterval) = 1;
         iv_temp.tstart(iInterval+1) = iv_temp.tstart(iInterval);
+        iv_temp.tend(iInterval+1) = max(iv_temp.tend(iInterval), iv_temp.tend(iInterval+1));
     end
 end
 
-remove = remove > 0; % kill will be 1 for intervals to remove, and zero for the ones to be kept
+remove = logical(remove); % kill will be 1 for intervals to remove, and zero for the ones to be kept
 iv_temp.tstart(remove) = [];
 iv_temp.tend(remove) = [];
 

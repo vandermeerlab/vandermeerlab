@@ -27,13 +27,17 @@ function iv_out = TSDtoIV2(cfg_in,tsd_in)
 %        ex: '>=' - data >= threshold
 %           '><=' - data >= threshold(1) & data <= threshold(2)
 %
-%     cfg.ResizeAtMean = 0; If 1, redraw the intervals so that the
-%                   boundaries sit at the mean of tsd_in.data (often results
-%                   in merging of nearby events); If 0, don't
+%     cfg.ResizeAt = []; Redraw the boundaries of the detected intervals 
+%                    Note: May result in merging of nearby events
+%                    Note: think about whether this makes sense with respect
+%                    to your other config options.
+%          'mean' - Redraw the boundaries at the mean
 %                   (this is done for ripple detection in some papers such
 %                   as Hippocampal replay of extended experience)
-%                   Note: think about whether this makes sense with respect
-%                   to your other config options.
+%       [numeric] - Single value specifying the resize threshold. The
+%                   method used for redrawing the boundaries is the same as
+%                   cfg.method.
+%                   
 %     
 %     cfg.target = []; Which data (label) to use
 %     cfg.verbose = 1; 1 - tell me how many intervals you found, 0 - don't
@@ -50,7 +54,7 @@ function iv_out = TSDtoIV2(cfg_in,tsd_in)
 cfg_def.method = 'zscore';
 cfg_def.threshold = 0;
 cfg_def.operation =  '>'; % return intervals where threshold is exceeded
-cfg_def.ResizeAtMean = 0;
+cfg_def.ResizeAt = [];
 cfg_def.target = [];
 cfg_def.verbose = 1;
 
@@ -121,17 +125,24 @@ down_t = tsd_in.tvec(down_keep);
 
 iv_out = iv(up_t,down_t);
 
-if cfg.ResizeAtMean
+if ~isempty(cfg.ResizeAt) 
+    cfg_temp = []; cfg_temp.verbose = 0; cfg_temp.operation = '>=';
+    if ischar(cfg.ResizeAt) && strcmp(cfg.ResizeAt,'mean')
+        % assign cfg for the mean
+        cfg_temp.method = 'zscore'; cfg_temp.threshold = 0; 
+    elseif isnumeric(cfg.ResizeAt) && length(cfg.ResizeAt) == 1
+        cfg_temp.method = cfg.method; cfg_temp.threshold = cfg.ResizeAt;
+    else
+        error('Unrecognized option specified in cfg.method')
+    end
+        
     % this implementation is probably slow, because the logical operations
-    % in OverlapIV are slow.
-    
-    % threshold at the mean
-    cfg_temp = []; cfg_temp.verbose = 0; cfg_temp.method = 'zscore'; cfg_temp.threshold = 0; cfg_temp.operation = '>=';
-    iv_mean = TSDtoIV2(cfg_temp,tsd_in); % so meta
+    % in OverlapIV are slow.    
+    iv_resize = TSDtoIV2(cfg_temp,tsd_in); % so meta
     
     % Keep intervals in iv_mean that overlap with intervals in iv_out
     cfg_temp = []; cfg_temp.verbose = 0;
-    iv_out = OverlapIV(cfg_temp,iv_mean,iv_out);
+    iv_out = OverlapIV2(cfg_temp,iv_resize,iv_out);
    
 end
 

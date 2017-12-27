@@ -6,6 +6,7 @@ function pass_flag = CheckIV(iv_in,varargin)
 %       iv_in: iv to be checked
 %       varargins:
 %           callername: name of invoking function (for more informative warning messages)
+%       
 %
 %	OUTPUTS:
 %       pass_flag: 1 if all checks pass, 0 if otherwise
@@ -22,29 +23,36 @@ function pass_flag = CheckIV(iv_in,varargin)
 % aacarey edit Sept 2015, additional checks
 % youkitan edit Sept 2016, additional checks
 % youkitan edit Dec 2016, reformat help, add function name to output
+% aacarey edit Dec 2017, changed input to name-value pairs
 
 pass_flag = 1;
 
+% parse varargins
+p = inputParser;
+addParameter(p,'mfun','')
+addParameter(p,'verbose',1)
+parse(p,varargin{:})
+
 in_mfun = '';
-if ~isempty(varargin) && ischar(varargin{1})
-    in_mfun = [' in ',varargin{1}];
+if ~isempty(p.Results.mfun) && ischar(p.Results.mfun)
+    in_mfun = [' in ',p.Results.mfun];
 end
 
 if isstruct(iv_in)
     if ~isfield(iv_in,'tstart') || ~isfield(iv_in,'tend')
         pass_flag = 0;
-        fprintf('FAIL%s by CheckIV: input iv must contain tstart and tend fields.\n',in_mfun);
+        if p.Results.verbose; fprintf('FAIL%s by CheckIV: input iv must contain tstart and tend fields.\n',in_mfun); end
     elseif isempty(iv_in.tstart) || isempty(iv_in.tend)
-        fprintf('WARNING%s by CheckIV: input iv is empty.\n',in_mfun);
+        if p.Results.verbose; fprintf('WARNING%s by CheckIV: input iv is empty.\n',in_mfun); end
     elseif ~iscolumn(iv_in.tstart) || ~iscolumn(iv_in.tend)
         pass_flag = 0;
-        fprintf('FAIL%s by CheckIV: tstart and tend must be column vectors.\n',in_mfun);
+        if p.Results.verbose; fprintf('FAIL%s by CheckIV: tstart and tend must be column vectors.\n',in_mfun); end
     elseif any(iv_in.tstart > iv_in.tend)
-        fprintf('WARNING%s by CheckIV: start-end pairs not unidirectional.\n',in_mfun);
+        if p.Results.verbose; fprintf('WARNING%s by CheckIV: start-end pairs not unidirectional.\n',in_mfun); end
     end
 else
     pass_flag = 0;
-    fprintf('FAIL%s by CheckIV: input must be an iv data type.\n',in_mfun);
+    if p.Results.verbose; fprintf('FAIL%s by CheckIV: input must be an iv data type.\n',in_mfun); end
 end
    
 

@@ -1,4 +1,4 @@
-function ncfs = SWRfreak(cfg_in,SWRtimes,csc)
+function ncfs = SWRfreak(cfg_in,IV,CSC)
 %SWRFREAK get frequency spectrum for manually identified sharp wave-ripples
 %
 %   ncfs = SWRfreak(SWRtimes,csc,)
@@ -91,32 +91,32 @@ if isfield(cfg_in,'fig')
 end
 %% check if csc is the same as the one used in ducktrap
 
-if ~strcmp(SWRtimes.label{1}(1:15),csc.label{1}(1:15))
-    error('CSC must be from the same day as the one used for manual identification')
-end
-
-if ~strcmp(SWRtimes.label,csc.label)
-    warning('CSC is different from the one used for manual SWR identification')
-end
+% if ~strcmp(IV.label{1}(1:15),CSC.label{1}(1:15))
+%     error('CSC must be from the same day as the one used for manual identification')
+% end
+% 
+% if ~strcmp(IV.label,CSC.label)
+%     warning('CSC is different from the one used for manual SWR identification')
+% end
 
 %% internal function to do the thing
 
-    function freqs = freakHelper(SWRtimes,csc,timewin)
+    function freqs = freakHelper(IV,CSC,timewin)
         sampwin = timewin*cfg.fs; % the window size in nSamples = timewindow * sampling frequency 
         %tstart = tcent - timewin/2;
         %tend = tcent + timewin/2;
-        tcent = IVcenters(SWRtimes);
-        midIndices = nearest_idx3(tcent,csc.tvec);
+        tcent = IVcenters(IV);
+        midIndices = nearest_idx3(tcent,CSC.tvec);
         SWRsum = 0;
         for iSWR = 1:length(tcent) 
-            nextFFT = windowedFFT(cfg,csc.data,sampwin,midIndices(iSWR));
+            nextFFT = windowedFFT(cfg,CSC.data,sampwin,midIndices(iSWR));
             SWRsum = SWRsum + nextFFT;
         end
 
-        midIndices = nearest_idx3(tcent+2,csc.tvec); % Add 2 seconds to each clicked time -> random time (this could error if a clicked time was closer than 2 s away from the end of recording?)
+        midIndices = nearest_idx3(tcent+2,CSC.tvec); % Add 2 seconds to each clicked time -> random time (this could error if a clicked time was closer than 2 s away from the end of recording?)
         SWRsumNoise = 0;
         for iSWR = 1:length(tcent)
-            nextFFT = windowedFFT(cfg,csc.data,sampwin,midIndices(iSWR));
+            nextFFT = windowedFFT(cfg,CSC.data,sampwin,midIndices(iSWR));
             SWRsumNoise = SWRsumNoise + nextFFT;
         end
 
@@ -183,20 +183,20 @@ end
 %% generate the output
 
 if ~isempty(cfg.win2)
-    freqs1 = freakHelper(SWRtimes,csc,cfg.win1);
-    freqs2 = freakHelper(SWRtimes,csc,cfg.win2);
+    freqs1 = freakHelper(IV,CSC,cfg.win1);
+    freqs2 = freakHelper(IV,CSC,cfg.win2);
 else 
-    freqs1 = freakHelper(SWRtimes,csc,cfg.win1);
+    freqs1 = freakHelper(IV,CSC,cfg.win1);
     freqs2 = [];
 end
 
 %% return the output
-parameters = struct('weightby',cfg.weightby,'win1',cfg.win1,'win2',cfg.win2','fs',cfg.fs,'hiPassCutoff',cfg.hiPassCutoff,'csc',csc.label);
+parameters = struct('weightby',cfg.weightby,'win1',cfg.win1,'win2',cfg.win2','fs',cfg.fs,'hiPassCutoff',cfg.hiPassCutoff,'csc',CSC.label);
 
 ncfs = struct('freqs1',freqs1,'freqs2',freqs2);
 
 ncfs.parameters = parameters;
-ncfs.label = csc.label;
+ncfs.label = CSC.label;
 
 % keep a record
 cfg = rmfield(cfg,'fig'); % because who cares what the figure settings were?

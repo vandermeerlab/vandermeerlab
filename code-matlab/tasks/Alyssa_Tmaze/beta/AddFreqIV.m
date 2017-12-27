@@ -39,7 +39,7 @@ mfun = mfilename;
 
 cfg = ProcessConfig(cfg_def,cfg,mfun);
 
-if ~CheckIV(IV,mfun)
+if ~CheckIV(IV,'mfun',mfun,'verbose',cfg.verbose)
    error('IV is poorly formed. See the iv data type constructor iv()') 
 end
 
@@ -51,6 +51,10 @@ if cfg.verbose; fprintf('%s: Adding frequency data to IV.usr...\n',mfun); end
 
 % If user does not specify an alternative label, call it the same as cfg.output
 if isempty(cfg.label); cfg.label = cfg.output; end
+
+if isfield(IV.usr,cfg.label)
+    fprintf('WARNING in %s: usr field ''%s'' already exists, overwriting data\n',mfun,cfg.label);
+end
 
 for iInterval = length(IV.tstart):-1:1
     % restrict LFP to the current interval
@@ -77,6 +81,8 @@ for iInterval = length(IV.tstart):-1:1
    end
    
 end
+
+IV.usr.(cfg.label) = IV.usr.(cfg.label)';
 
 % write config history
 IV = History(IV,mfun,cfg);

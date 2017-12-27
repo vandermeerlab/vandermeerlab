@@ -46,18 +46,20 @@ cfg = ProcessConfig(cfg_def,cfg_in,mfun);
 
 idxa = [nan(size(ivA.tstart)); nan(size(ivB.tstart))]; % allocate space
 current_idx = 1;
+% tic
 for iB = 1:length(ivB.tstart)
     for iA = 1:length(ivA.tstart)
         if (ivB.tstart(iB) >= ivA.tstart(iA) && ivB.tstart(iB) <= ivA.tend(iA))...
                 || (ivB.tend(iB) >= ivA.tstart(iA) && ivB.tend(iB) <= ivA.tend(iA))...
                 || (ivA.tstart(iA) >= ivB.tstart(iB) && ivA.tstart(iA) <= ivB.tend(iB))...
                 || (ivA.tend(iA) >= ivB.tstart(iB) && ivA.tend(iA) <= ivB.tend(iB))
-            
-            idxa(current_idx) = iA;
-            current_idx = current_idx +1;
+                
+                idxa(current_idx) = iA;
+                current_idx = current_idx +1;            
         end
     end
 end
+% toc
 idxa = idxa(~isnan(idxa));
 
 % select intervals to keep

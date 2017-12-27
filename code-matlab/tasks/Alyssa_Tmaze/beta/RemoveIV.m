@@ -31,12 +31,12 @@ cfg_def.rmdoubles = 0;
 cfg_def.verbose = 1;
 mfun = mfilename;
 
-if ~CheckIV(iv_in,mfun)
-    error('iv_in must be an iv datatype.')
-end
-
 % parse cfg parameters
 cfg = ProcessConfig(cfg_def,cfg_in,mfun);
+
+if ~CheckIV(iv_in,'mfun',mfun,'verbose',cfg.verbose)
+    error('iv_in must be an iv datatype.')
+end
 
 iv_temp = iv_in;
 cfg_temp.verbose = 0; % prevent SelectIV from talking inside of RemoveIV
@@ -73,11 +73,13 @@ else
     keep = dur > cfg.mindur & dur < cfg.maxdur;
 end
 
-% notify if intervals end before they begin (or begin and end at same time)
+% notify if intervals end before they begin
 if cfg.verbose
-   oops = dur(dur <= 0); 
+   oops = dur(dur <0); 
    if ~isempty(oops)
-      disp(['OOPS in ',mfun,': the physics police have found and removed ',num2str(length(oops)),' intervals that end before or when they begin.']) 
+       % Intervals that end before they begin are a serious offense. You
+       % have made a mistake somewhere.
+      error(['OOPS the physics police have found  ',num2str(length(oops)),' intervals that end before they begin.'])
    end
 end
 
