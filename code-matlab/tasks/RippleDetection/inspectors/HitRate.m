@@ -72,7 +72,7 @@ end
 % False positives are any intervals in the detected set that do not overlap
 % with any of the intervals in the manually-identified set
 cfg_temp = []; cfg_temp.verbose = 0;
-iv_flsps = DifferenceIV2(cfg_temp,IVdet,IVann);
+iv_flsps = DifferenceIV(cfg_temp,IVdet,IVann);
 
 hitrate(6) = length(iv_flsps.tstart)/length(IVdet.tstart);
 nEvt(6) = length(iv_flsps.tstart);
