@@ -1,4 +1,4 @@
-function [iva,idxa] = OverlapIV(cfg_in,ivA,ivB)
+function [iva,idxa] = OverlapIV(cfg,ivA,ivB)
 %OVERLAPIV Return the intervals and indices of ivA that span the same 
 % regions as the intervals in ivB.
 %
@@ -35,6 +35,7 @@ function [iva,idxa] = OverlapIV(cfg_in,ivA,ivB)
 %            many went out; if 0, don't
 %
 % aacarey Nov 2015
+% Elyot and cfdu@uwaterloo.ca Nov 2017 for a 126x improvement in speed :O
 
 %%
 
@@ -42,25 +43,19 @@ mfun = mfilename;
 
 % initialize default parameters
 cfg_def.verbose = 1;
-cfg = ProcessConfig(cfg_def,cfg_in,mfun);
+cfg = ProcessConfig(cfg_def,cfg,mfun);
 
-idxa = [nan(size(ivA.tstart)); nan(size(ivB.tstart))]; % allocate space
+% Find intervals in A that overlap intervals in B
+intersection_count = sum(ivA.tstart' <= ivB.tend & ivA.tend' >= ivB.tstart);
+idxa = zeros(1, sum(intersection_count));
 current_idx = 1;
-% tic
-for iB = 1:length(ivB.tstart)
-    for iA = 1:length(ivA.tstart)
-        if (ivB.tstart(iB) >= ivA.tstart(iA) && ivB.tstart(iB) <= ivA.tend(iA))...
-                || (ivB.tend(iB) >= ivA.tstart(iA) && ivB.tend(iB) <= ivA.tend(iA))...
-                || (ivA.tstart(iA) >= ivB.tstart(iB) && ivA.tstart(iA) <= ivB.tend(iB))...
-                || (ivA.tend(iA) >= ivB.tstart(iB) && ivA.tend(iA) <= ivB.tend(iB))
-                
-                idxa(current_idx) = iA;
-                current_idx = current_idx +1;            
-        end
-    end
+current_interval = 1;
+for count = intersection_count
+%    disp(current_idx + intersection_count(index) - 1)
+   idxa(current_idx:current_idx + count - 1) = current_interval;
+   current_idx = current_idx + count;
+   current_interval = current_interval + 1;
 end
-% toc
-idxa = idxa(~isnan(idxa));
 
 % select intervals to keep
 cfg_temp = []; cfg_temp.verbose = 0;
