@@ -75,7 +75,7 @@ function AnnotateIV(cfg_in,iv_in,varargin)
 % change your mind about deleting an interval at any time as long as the
 % figure window remains open. 
 %
-% aacarey Oct 2015, edit Dec 2015
+% aacarey Oct 2015, edit Dec 2008
 
 cfg_def.mode = 'random'; % 'chrono','random'
 cfg_def.EnableRobot = 1;
@@ -169,7 +169,7 @@ windowSize = 1;
 
 ax_main = gca;
 
-uipressed = 0; % this helps track whether a UI button has been pressed when handling RoboDuck and human clicks in clickstuff function
+uipressed = 0; % this helps track whether a UI button has been pressed when handling RoboClick and human clicks in clickstuff function
 inRedraw = 0; % whether we are currently redrawing an interval
 
 % this keeps track of clicks for redrawing intervals (see clickstuff)
@@ -330,13 +330,13 @@ PlotCurrentIV
         updateButtons
     end
 
-% ~~~~~~ ROBODUCK ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    function RoboDuck(obj_handle)
+% ~~~~~~ RoboClick ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    function RoboClick(obj_handle)
         % use java robot to help return focus to the axes after interacting with a uicontrol
-        % RoboDuck and uipressed work together to produce the desired behaviour
-        % RoboDuck also performs some clicking actions such as moving the
+        % RoboClick and uipressed work together to produce the desired behaviour
+        % RoboClick also performs some clicking actions such as moving the
         % cursor to the edit and check boxes.
-        % obj_handle is the handle of the object you want RoboDuck to click
+        % obj_handle is the handle of the object you want RoboClick to click
         % for you
         
         if cfg.EnableRobot && ~inRedraw
@@ -380,7 +380,7 @@ PlotCurrentIV
             set(0,'PointerLocation',ml_orig)
             
         end
-    end % of RoboDuck
+    end % of RoboClick
 
 % ~~~~~~ HIDE SPECTRAXIS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -414,7 +414,7 @@ PlotCurrentIV
         end  
         set(hprev,'Enable','on')
         
-        RoboDuck(hfig)
+        RoboClick(hfig)
     end
 
 % ~~~~~~ PREVIOUS INTERVAL ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -432,7 +432,7 @@ PlotCurrentIV
         end
         set(hnext,'Enable','on')
         
-        RoboDuck(hfig)
+        RoboClick(hfig)
     end
 
 % ~~~~~~ CHANGE LIST ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -458,7 +458,7 @@ PlotCurrentIV
                 idx_list = idx_list_all;
                 ii = find(idx_list == current_iv);
         end
-        RoboDuck(hfig)
+        RoboClick(hfig)
     end % of changelist
 
 % ~~~~~~ KEY STUFF ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -468,9 +468,9 @@ PlotCurrentIV
         elseif strcmp(event.Key,'p')
             prevIV(source,event)
         elseif strcmp(event.Key,'t')
-            RoboDuck(hnote)
+            RoboClick(hnote)
         elseif strcmp(event.Key,'r')
-            RoboDuck(hdel)
+            RoboClick(hdel)
         elseif strcmp(event.Key,'s')
             spectraxis(source,event)
         else
@@ -485,7 +485,7 @@ PlotCurrentIV
         % intended just to detect when Enter is pressed for the annotation
         % and delete box so that focus can be returned to the figure window
         if strcmp(event.Key,'return')
-            RoboDuck(hfig)
+            RoboClick(hfig)
         end
     end
 
@@ -543,7 +543,7 @@ PlotCurrentIV
         set(hRedraw,'Enable','on') % allow user to click button for next time
         set(hCancelRedraw,'Enable','off')
         PlotCurrentIV
-        RoboDuck(hfig)
+        RoboClick(hfig)
     end % of DisableRedraw
 
 % ~~~~~~ REDRAW ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -615,7 +615,7 @@ PlotCurrentIV
         del(current_iv) = get(source, 'Value');
         
         updateProgress 
-        RoboDuck(hfig)        
+        RoboClick(hfig)        
     end
 
 % ~~~~~~ LEAVE ME ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -632,7 +632,7 @@ PlotCurrentIV
             choice = questdlg(['You are missing ',num2str(nEmpties),' annotations. Are you sure you want to close the figure? Any unsaved data will be lost.'],'Quit Requested','Quit anyway','Cancel','Cancel');
             switch choice
                 case 'Cancel'
-                    RoboDuck(hfig)
+                    RoboClick(hfig)
                     return
                 case 'Quit anyway'
                     delete(gcf)
@@ -643,7 +643,7 @@ PlotCurrentIV
                 case 'Yes'
                     delete(gcf)
                 case 'No'
-                    RoboDuck(hfig)
+                    RoboClick(hfig)
                     return
             end
         end
@@ -679,10 +679,10 @@ PlotCurrentIV
                 [~,name,~] = fileparts(pwd);
                 uisave('evt',[name,'-manualIV']) % opens window for saving stuff
                 
-                RoboDuck(hfig)
+                RoboClick(hfig)
                 
             case 'No'
-                RoboDuck(hfig)
+                RoboClick(hfig)
                 return
         end
     end % of saveme
@@ -753,7 +753,7 @@ function spectraxis(~,~)
         % return to main axes (for navigation and stuff)
         set(hfig,'CurrentAxes',ax_main) 
         
-        RoboDuck(hfig)
+        RoboClick(hfig)
         
     end % of spectraxis
 

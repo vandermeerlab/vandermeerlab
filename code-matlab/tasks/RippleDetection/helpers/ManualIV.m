@@ -1,14 +1,14 @@
-function ducktrap(cfg_in,varargin)
-% DUCKTRAP Manually identify intervals in LFP and/or spike train data.
+function ManualIV(cfg_in,varargin)
+% MANUALIV Manually identify intervals in LFP and/or spike train data.
 %
-% DUCKTRAP(cfg,varargin) plots S (spiketrain) and/or CSC (LFP)and allows 
+% MANUALIV(cfg,varargin) plots S (spiketrain) and/or CSC (LFP)and allows 
 % the user to manually identify intervals by clicking on the figure to produce a 
 % containment window. The order that S and CSC are passed in does not
 % matter. * Do not use more than one S or more than one CSC.
 %
-% DUCKTRAP(cfg,S) 
-% DUCKTRAP(cfg,CSC) 
-% DUCKTRAP(cfg,S,CSC) or DUCKTRAP(cfg,CSC,S) 
+% MANUALIV(cfg,S) 
+% MANUALIV(cfg,CSC) 
+% MANUALIV(cfg,S,CSC) or MANUALIV(cfg,CSC,S) 
 %
 % Use keyboard input to navigate to different areas of the plot (type "doc
 % navigate" in the command window, or the letter h on your keyboard). 
@@ -22,8 +22,8 @@ function ducktrap(cfg_in,varargin)
 % 
 % Use the Spectrogram button to plot a spectrogram under the current
 % viewing window. Change the frequency range and z axis using the
-% uicontrols below the Spectrogram button. Note that ducktrap will refuse 
-% to do spectrograms for window sizes that are large (because ducktrap's 
+% uicontrols below the Spectrogram button. Note that ManualIV will refuse 
+% to do spectrograms for window sizes that are large (because ManualIV's 
 % author had a bad experience one time), and will warn you for intermediate 
 % window sizes that the spectrogram burden is unfavorable.
 %
@@ -87,63 +87,11 @@ function ducktrap(cfg_in,varargin)
 % (proposed mundane name for ducktrap: ManualIV)
 % aacarey, Oct 2015 (complete rewrite from original ducktrap, Jan 2015)
 % -- Dec 2015
-
-%% DUCKTRAP: THE STORY
-%
-% ~~~ Chapter 1 ~~~
-%
-%   There once was a lowly biologist who liked to stalk ducks. She recorded 
-% the sounds of the ducks, which were neighbours to the geese and the noisy
-% waterfall. Later, she wanted to count how many times the ducks quacked, 
-% but more often than not her detection would only find the loudest ducks, 
-% and sometimes it would also detect the pesky geese (that incidentally also 
-% liked to shit everywhere with no regard for public decency). So, the lowly 
-% biologist complained to the arrogant mathematician in passing. Actually
-% it was more like he overheard her unintelligibly cursing at her computer
-% screen, which had done nothing wrong and was otherwise minding its
-% business properly.
-%
-% Mildy interested in the reason for her outburst, the arrogant mathematician 
-% inquired, "What the hell was that all about?"
-%
-% "[Censored]" she explained.
-% 
-% And he told her, “You biologists are so dumb, you’re probably doing 
-% something like filtering the signal and looking for high power in a single 
-% ripple band. If you’re just thresholding over a single frequency band you’ll 
-% miss all the quiet ducks and detect all the loud geese as false positives.”
-% 
-% And her response was something along the lines of, “I know: I’m a lowly 
-% biologist. I’m worse than lowly. In fact, I’m a plebian—no, a platyhelminth! 
-% An intestinal parasite!”
-% 
-% Somehow this activated the arrogant mathematician’s math superiority complex, 
-% “Look, if you want to find the quiet ducks, too, here’s how you should do it. 
-% First, find me at least 100 real quacks.”
-% 
-% Supremely grateful (but also a smidgen annoyed by the arrogant mathematician’s 
-% arrogance), the lowly [intestinal] biologist set out to snare some ducks.
-%
-% ~~~ Chapter 2 ~~~
-%
-%   There twice was a lowly biologist who liked to stalk ducks. Having built
-% a paltry ducktrap in the first place, she had to remake it. This, of
-% course, led to much frustration because of the unfortunate constraint
-% that she could not built the trap out of actual things. Noticing that LB
-% was redder than a MATLAB error, AM asked her what's wrong.
-%
-% "Well my original ducktrap is so poultry I have to remake it...(-_-)...and 
-% it keeps breaking and I've appealed to the internet gods but they haven't
-% answered."
-%
-% After taking a quick look at it, the arrogant mathematician began his 
-% arrogant lecture, spewing nonsense like "state machine" and "automata" 
-% and "listeners" etc... By the time he was finished, the partially-conscious 
-% LB knew what a state machine was, but she mostly just wanted a donut. 
+% aacarey Dec 2017 renamed to ManualIV
 
 %% Set cfg parameters and check inputs
 
-% ducktrap-specific cfg options
+% ManualIV-specific cfg options
 cfg_def.mode = 'fixed'; % 'fixed' or 'unfixed'
 cfg_def.segments = [];
 cfg_def.trapwin = 0.06; % window size in x axis units
@@ -277,7 +225,7 @@ updateCount % displays how many intervals have been identified
 
 uipressed = 0; % this keeps track of when the focus is removed from the 
 % figure axes; if you add new callbacks that use uicontrols, make sure you 
-% keep track of uipressed and call RoboDuck at the end of the function to
+% keep track of uipressed and call RoboClick at the end of the function to
 % return focus to the axes so the user doesn't have to do this with their
 % own clicks
 
@@ -351,9 +299,9 @@ end
             'FontSize',20,'BackgroundColor','w');       
     end % of updateCount
 
-    function RoboDuck
+    function RoboClick
         % use java robot to help return focus to the axes after interacting with a uicontrol
-        % RoboDuck and uipressed work together to produce the desired behaviour
+        % RoboClick and uipressed work together to produce the desired behaviour
         
         if cfg.EnableRobot
             % get original location of mouse cursor
@@ -378,7 +326,7 @@ end
             set(0,'PointerLocation',ml_orig)
             
         end
-    end % of RoboDuck
+    end % of RoboClick
 
 % ~~~~~~ HIDE SPECTRAXIS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -510,7 +458,7 @@ end
             case 'Yes'
                 delete(gcf)
             case 'No'
-                RoboDuck
+                RoboClick
                 return
         end
     end % of leaveme
@@ -570,10 +518,10 @@ end
                 [~,name,~] = fileparts(pwd);
                 uisave('evt',[name,'-manualIV']) % opens window for saving stuff
                 
-                RoboDuck
+                RoboClick
                 
             case 'No'
-                RoboDuck
+                RoboClick
                 return
         end
     end % of saveme
@@ -583,7 +531,7 @@ end
         % jump to another segment of interest
         
         uipressed = 1; % focus has been taken off of axes because of ui button press
-        RoboDuck
+        RoboClick
         
         if exist('LFP','var')            
             HideSpectraxis
@@ -637,7 +585,7 @@ end
         if length(CSCr.tvec) > 50000
             % outright refuse
             msgbox('I refuse to spectrogram this much data...it''s for your own good.','Bad things can happen','error')
-            RoboDuck
+            RoboClick
             return
         end
         
@@ -647,7 +595,7 @@ end
             switch choice
                 case 'I like fire'
                 case 'Oops!'
-                    RoboDuck
+                    RoboClick
                     return  
             end
         end
@@ -708,7 +656,7 @@ end
         % return to main axes (for navigation and stuff)
         set(hfig,'CurrentAxes',ax_main) 
         
-        RoboDuck
+        RoboClick
         
     end % of spectraxis
 
