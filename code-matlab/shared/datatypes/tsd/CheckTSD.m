@@ -16,7 +16,7 @@ function pass_flag = CheckTSD(tsd_in,varargin)
 %       -  is the number of signals greater than the number of samples? (WARNING)
 %       -  number of samples in .data and .tvec must be equal (FAIL)
 %
-%   see also tsd, CheckTS, CheckIV, CheckTC
+%   see also tsd, CheckTS, isIV, CheckTC
 %
 % MvdM 2014-06-24
 % youkitan edit Dec 2016, reformat help, add function name to output

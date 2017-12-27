@@ -94,7 +94,7 @@ cfg_def.axislabel = 'on';
 cfg_def.windowSize = 1;
 cfg = ProcessConfig2(cfg_def,cfg_in);
 
-is_iv = CheckIV(iv_in);
+is_iv = isIV(iv_in);
 if ~is_iv
     error('iv_in must be an iv data type.')
 end

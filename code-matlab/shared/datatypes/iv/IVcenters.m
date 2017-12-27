@@ -1,7 +1,7 @@
 function c = IVcenters(iv_in)
 % returns nIV x 1 vector with center times of iv_in
 
-if ~CheckIV(iv_in)
+if ~isIV(iv_in)
     return;
 end
 

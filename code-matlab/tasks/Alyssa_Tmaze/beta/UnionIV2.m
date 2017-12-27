@@ -58,7 +58,7 @@ if ~isempty(varargin)
 end
 
 % check that the IVs are well formed
-if any(cellfun(@(x) ~CheckIV(x), allIVs))
+if any(cellfun(@(x) ~isIV(x), allIVs))
     error('At least one iv input is poorly formed')
 end
 

@@ -24,13 +24,13 @@ cfg_def.verbose = 1;
 cfg = ProcessConfig(cfg_def,cfg_in,mfun);
 
 % check that it's an iv
-if ~CheckIV(iv_in,'mfun',mfun,'verbose',cfg.verbose)
+if ~isIV(iv_in,'mfun',mfun,'verbose',cfg.verbose)
     error('iv_in must be an iv data type.')
 end
 
 % convert input arguments to iv if not already done
 if nargin == 3
-    if ~CheckIV(varargin{1})
+    if ~isIV(varargin{1})
         error('Single input argument must be iv datatype.');
     end  
     iv_r = varargin{1}; 

@@ -62,7 +62,7 @@ else
     switch t_in.type
         case 'iv'
             
-            if ~CheckIV(t_in) % this should check that there are no t_end before t_start, etc...
+            if ~isIV(t_in) % this should check that there are no t_end before t_start, etc...
                 error('Incorrectly formed iv input.');
             end
             

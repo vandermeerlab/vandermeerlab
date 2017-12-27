@@ -34,7 +34,7 @@ mfun = mfilename;
 % parse cfg parameters
 cfg = ProcessConfig(cfg_def,cfg_in,mfun);
 
-if ~CheckIV(iv_in,'mfun',mfun,'verbose',cfg.verbose)
+if ~isIV(iv_in,'mfun',mfun,'verbose',cfg.verbose)
     error('iv_in must be an iv datatype.')
 end
 

@@ -20,7 +20,7 @@ if isempty(iv2)
     iv2 = iv([],[]);
 end
 
-if ~CheckIV(iv1) | ~CheckIV(iv2)
+if ~isIV(iv1) | ~isIV(iv2)
    error('Malformed IV.'); 
 end
 

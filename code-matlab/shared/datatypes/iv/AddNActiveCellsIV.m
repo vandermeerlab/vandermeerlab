@@ -29,7 +29,7 @@ cfg = ProcessConfig(cfg_def,cfg_in,mfun);
 
 
 % check inputs
-if ~CheckIV(iv_in)
+if ~isIV(iv_in)
     error('Interval data must have been made with the iv constructor')
 end
 

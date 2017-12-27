@@ -18,7 +18,7 @@ function pass_flag = CheckTS(ts_in,varargin)
 %       -  is there a .type field? (WARNING)
 %       -  does the .type field correctly identify as ts? (WARNING)
 %
-%   see also ts, CheckTSD, CheckIV, CheckTC
+%   see also ts, CheckTSD, isIV, CheckTC
 %
 % aacarey Nov 2015
 % youkitan edit Dec 2016, reformat help, add function name to output

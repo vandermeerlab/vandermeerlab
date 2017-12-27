@@ -22,19 +22,19 @@ cfg_def = [];
 cfg = ProcessConfig2(cfg_def,cfg_in);
 
 % make sure the input was created using the iv constructor
-is_iv = CheckIV(iv_in);
+is_iv = isIV(iv_in);
 
 if is_iv % proceed
     mfun = mfilename;
     
     % make sure the intervals are ordered 
-    if ~issorted(iv_in.tstart);
+    if ~issorted(iv_in.tstart)
         error('Intervals must be in ascending order')
     end
     
     % do the merging
     kill = zeros(size(iv_in.tstart)); 
-    for iInterval = 1:length(iv_in.tstart)-1;
+    for iInterval = 1:length(iv_in.tstart)-1
         if iv_in.tstart(iInterval+1) <= iv_in.tend(iInterval)
             kill(iInterval) = iInterval;
             iv_in.tstart(iInterval+1) = iv_in.tstart(iInterval);

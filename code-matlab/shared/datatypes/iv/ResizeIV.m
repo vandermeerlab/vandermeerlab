@@ -35,7 +35,7 @@ function iv = ResizeIV(cfg_in,iv)
 % aacarey edit Sept 2015, renamed addIV to ResizeIV and removed merge option
 
 % make sure the input was created using the iv constructor
-is_iv = CheckIV(iv);
+is_iv = isIV(iv);
 
 if is_iv % proceed
     

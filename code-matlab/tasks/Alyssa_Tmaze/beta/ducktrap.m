@@ -203,9 +203,9 @@ if ~isempty(cfg.sidekick)
 end
 
 % ~~~~~~ SEGMENTS; plot boundaries for regions of interest ~~~~~~~~~~~~~~~~~
-if ~isempty(cfg.segments) && ~CheckIV(cfg.segments)
+if ~isempty(cfg.segments) && ~isIV(cfg.segments)
     error('cfg.segments muct be an iv datatype')
-elseif ~isempty(cfg.segments) && CheckIV(cfg.segments)
+elseif ~isempty(cfg.segments) && isIV(cfg.segments)
     % then plot interval boundaries as vertical lines
     cfg_temp.showLegend = 0;
     cfg_temp.Color = [0 0 0; 1 1 1]; % black first, then white
@@ -293,7 +293,7 @@ uicontrol('Style', 'pushbutton', 'String', 'Quit',...
     'Units','normalized','Position', [0.93 0.125 0.05 0.05],...
     'FontUnits','normalized','Callback', @leaveme);
 
-if ~isempty(cfg.segments) && CheckIV(cfg.segments)
+if ~isempty(cfg.segments) && isIV(cfg.segments)
     
     % next button for segment navigation
     uicontrol('Style', 'pushbutton', 'String', 'Teleport',...

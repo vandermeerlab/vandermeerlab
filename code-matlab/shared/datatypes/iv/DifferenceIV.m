@@ -28,7 +28,7 @@ mfun = mfilename;
 
 cfg = ProcessConfig(cfg_def,cfg_in,mfun); % should take whatever is in cfg_in and put it into cfg!
 
-if ~CheckIV(iv1) || ~CheckIV(iv2); error('Inputs must be iv data type'); end
+if ~isIV(iv1) || ~isIV(iv2); error('Inputs must be iv data type'); end
 
 intersection_count = sum(iv1.tstart' <= iv2.tend & iv1.tend' >= iv2.tstart);
 keep_idx = intersection_count == 0;

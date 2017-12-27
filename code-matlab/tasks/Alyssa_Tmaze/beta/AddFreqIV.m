@@ -39,7 +39,7 @@ mfun = mfilename;
 
 cfg = ProcessConfig(cfg_def,cfg,mfun);
 
-if ~CheckIV(IV,'mfun',mfun,'verbose',cfg.verbose)
+if ~isIV(IV,'mfun',mfun,'verbose',cfg.verbose)
    error('IV is poorly formed. See the iv data type constructor iv()') 
 end
 

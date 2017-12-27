@@ -191,7 +191,7 @@ if isfield(cfg,'lfp') %lfp
     elseif iv_only(cfg.evt) %lfp + iv
         plotMode = 7;
         
-        if ~CheckIV(cfg.evt)
+        if ~isIV(cfg.evt)
             error('cfg.evt is not a correctly formed iv.')
         end
         
@@ -210,7 +210,7 @@ elseif isfield(cfg,'evt')
     elseif iv_only(cfg.evt) %iv
         plotMode = 3;
         
-        if ~CheckIV(cfg.evt)
+        if ~isIV(cfg.evt)
             error('cfg.evt is not a correctly formed iv.')
         end
         

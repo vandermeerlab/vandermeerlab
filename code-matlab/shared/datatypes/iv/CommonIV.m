@@ -59,7 +59,7 @@ if cfg.verbose; tic; fprintf('%s: looking for time intersections in iv data...\n
 args = {ivA, ivB, varargin{:}};
 nArgs = length(args);
 
-% we could do a CheckIV here, but it's redundant since MergeIV below also
+% we could do an isIV here, but it's redundant since MergeIV below also
 % does it, though the user won't know specifically which iv is bad...
 
 %~~~ don't allow overlap within individual input intervals ~~~

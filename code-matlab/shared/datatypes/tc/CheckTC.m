@@ -17,7 +17,7 @@ function pass_flag = CheckTC(tc_in,varargin)
 %       -  nBins must agree across variables (FAIL)
 %       -  number of cells must agree across variables (FAIL)
 %
-%	see also: tc, TuningCurves, CheckTSD, CheckTS, CheckIV
+%	see also: tc, TuningCurves, CheckTSD, CheckTS, isIV
 %
 % youkitan 2016-11-29 initial
 % youkitan edit Dec 2016, added some tc2D functionality, reformat help
