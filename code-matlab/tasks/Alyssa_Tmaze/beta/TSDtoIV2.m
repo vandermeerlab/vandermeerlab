@@ -135,14 +135,12 @@ if ~isempty(cfg.ResizeAt)
     else
         error('Unrecognized option specified in cfg.method')
     end
-        
-    % this implementation is probably slow, because the logical operations
-    % in OverlapIV are slow.    
+            
     iv_resize = TSDtoIV2(cfg_temp,tsd_in); % so meta
     
     % Keep intervals in iv_mean that overlap with intervals in iv_out
     cfg_temp = []; cfg_temp.verbose = 0;
-    iv_out = OverlapIV2(cfg_temp,iv_resize,iv_out);
+    iv_out = OverlapIV(cfg_temp,iv_resize,iv_out);
    
 end
 
