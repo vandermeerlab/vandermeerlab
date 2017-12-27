@@ -19,6 +19,9 @@ function tsd_out = photonic(cfg_in,tsd_in)
 %       cfg.weightby = 'power'; How to obtain the signal envelope
 %          'amplitude'    - amplitude envelope (absolute value of the signal)
 %          'power'        - power envelope (square the signal)
+%
+%       cfg.useHilbert = 1; If 1, uses Hilbert transform on input, if 0
+%                     doesn't
 % 
 %       cfg.kernel = 'wizard'; Which smoothing kernel to use. See 
 %                     cfg.kernel in ConvTSD.
@@ -34,8 +37,10 @@ function tsd_out = photonic(cfg_in,tsd_in)
 mfun = mfilename;
 
 % set cfg defaults
-cfg_def.weightby = 'power';
+cfg_def.weightby = 'amplitude';
+cfg_def.useHilbert = 0;
 cfg_def.kernel = 'wizard';
+cfg_def.smooth = 1;
 cfg_def.verbose = 1;
 
 % parse cfg parameters
@@ -53,17 +58,27 @@ end
 % obtain the signal's envelope
 switch cfg.weightby
     case 'amplitude' % amplitude envelope
-        envelope = abs(tsd_in.data);
+        if cfg.useHilbert
+            envelope = abs(hilbert(tsd_in.data));
+        else
+            envelope = abs(tsd_in.data);
+        end
     case 'power' % power envelope
-        envelope = tsd_in.data.^2;
+        if cfg.useHilbert
+            envelope = abs(hilbert(tsd_in.data)).^2;
+        else
+            envelope = tsd_in.data.^2;
+        end
     otherwise
         error('Unrecognized config option specified in cfg.weightby')
 end
 
 tsd_out = tsd(tsd_in.tvec,envelope);
 
-cfg_temp = []; cfg_temp.verbose = 0; cfg_temp.where = 'all'; cfg_temp.kernel = cfg.kernel;
-tsd_out = ConvTSD(cfg_temp,tsd_out);
+if cfg.smooth
+    cfg_temp = []; cfg_temp.verbose = 0; cfg_temp.where = 'all'; cfg_temp.kernel = cfg.kernel;
+    tsd_out = ConvTSD(cfg_temp,tsd_out);
+end
 
 % write config history
 tsd_out = History(tsd_out,mfun,cfg);

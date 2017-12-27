@@ -39,12 +39,15 @@ function [SWR,swr1,swr2] = amSWR(cfg_in,ncfs,CSC)
 %% declare global variables
 
 global cfg parameters
-parameters = ncfs.parameters; %because fast hack
+cfg_temp = []; cfg_temp.target = 'SWRfreak'; cfg_temp.parameter = 'weightby'; cfg_temp.verbose = 0;
+parameters.weightby = GetHistory(cfg_temp,ncfs); %because fast hack
 
 %% Parse cfg parameters
 
 cfg_def.verbose = 1;
-cfg_def.weightby = ncfs.parameters.weightby;
+cfg_def.weightby = parameters.weightby;
+cfg_def.method = 'sum'; % 'sum' 'sumsq'
+cfg_def.test = 'orig';
 cfg_def.stepSize = 4; % indirectly controls speed
 cfg_def.InterpMethod = 'pchip';
 if isfield(cfg_in,'stepSize') && ~isnumeric(cfg_in.stepSize)
@@ -72,12 +75,20 @@ cfg = ProcessConfig(cfg_def,cfg_in,mfun);
 cfg.hiPassCutoff = ncfs.parameters.hiPassCutoff; % frequency in Hz; delete all freqs below
 cfg.fs = ncfs.parameters.fs;
 
+switch cfg.method
+    case 'sum'
+        pwr = 1;
+    case 'sumsq'
+        pwr = 2;
+    otherwise 
+        error('Unrecognized cfg.method specified')
+end
+
 %% Tell the user you're doing something
 
 if cfg.verbose
     tic
     disp([mfun,': Identifying potential sharp wave-ripple events...']);
-    disp(' ');
 end
 
  %% Set up 
@@ -112,13 +123,29 @@ end
             next(1:fourierCoeffCutoff) = 0; % delete all frequencies below 100 Hz (this is only for norming)
             %nextNormed = next / sum(next);
 
-            score = sum(next.*freqs);
+            switch cfg.test
+                case 'root'
+                    score = sqrt(sum((next.*freqs).^pwr));
+                case 'orig'
+                    score = sum((next.*freqs).^pwr);
+                case 'RMS'
+                    score = sqrt(mean((next.*freqs).^pwr));
+                case 'MSE'
+                    %score = immse(next,freqs); % fk this is for later version
+                    score = mean(abs(next-freqs).^2);
+                case 'RMSE'
+                    score = sqrt(mean(abs(next-freqs).^pwr));
+                otherwise
+                    error('Unrecognized option specified')
+            end
+            
+            
             %score2 = sum(nextNormed.*freqs);
             swrscore(iSWR) = score;
 
         end
         if cfg.stepSize > 1 % then interpolate the intermediate values
-            swrscore(1) = 0; swrscore(end) = 0; % because hack or interp can mess up the flanks
+            swrscore(1) = min(swrscore); swrscore(end) = min(swrscore); % because hack or interp can mess up the flanks
             NonNaNs = ~isnan(swrscore); % these are indices of the values returned by windowedFFT
             
             % now interpolate the missing sample points
@@ -126,6 +153,10 @@ end
         end
         % get rid of imaginary numbers (very rare, but happens)
         swrscore = max(0,swrscore)'; 
+        
+        if any(strcmp(cfg.test,['MSE','RMSE']))
+            swrscore = rescale(swrscore,max(swrscore),min(swrscore));
+        end
     end
 
 %% get score vectors
@@ -147,6 +178,7 @@ if ~isempty(ncfs.freqs2)
     geometricmean = sqrt(swrscore1.*swrscore2);
     
      SWR = tsd(CSC.tvec,geometricmean);
+     
 else
     swrscore1 = SWRhelper(ncfs.freqs1,ncfs.parameters.win1,CSC);
     % rescale because values are insanely low
