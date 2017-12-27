@@ -21,6 +21,7 @@ function iv_out = DifferenceIV(cfg_in,iv1,iv2)
 % iv_out: output interval data
 %
 % MvdM 2014-06-28
+% cfdu@uwaterloo.ca Nov 2017 speed improvement
 
 cfg_def.verbose = 1;
 mfun = mfilename;
@@ -29,31 +30,37 @@ cfg = ProcessConfig(cfg_def,cfg_in,mfun); % should take whatever is in cfg_in an
 
 if ~CheckIV(iv1) || ~CheckIV(iv2); error('Inputs must be iv data type'); end
 
-keep = ones(length(iv1.tstart),1);
-for iI = 1:length(iv1.tstart)
-    
-    % first, check if any start or end is within this interval
-    temp1 = find(iv2.tstart >= iv1.tstart(iI) & iv2.tstart <= iv1.tend(iI));
-    temp2 = find(iv2.tend >= iv1.tstart(iI) & iv2.tend <= iv1.tend(iI));
-    
-    if ~isempty(temp1) | ~isempty(temp2)
-       keep(iI) = 0;
-       continue;
-    end
-    
-    % check if interval is enveloped by anything
-    for iJ = 1:length(iv2.tstart)
-        if iv2.tstart(iJ) < iv1.tstart(iI) & iv2.tend(iJ) > iv1.tend(iI)
-            keep(iI) = 0;
-            break;
-        end
-    end
-    
-end
+intersection_count = sum(iv1.tstart' <= iv2.tend & iv1.tend' >= iv2.tstart);
+keep_idx = intersection_count == 0;
 
-iv_out = iv1;
-iv_out.tstart = iv_out.tstart(logical(keep));
-iv_out.tend = iv_out.tend(logical(keep));
+cfg_temp = []; cfg_temp.verbose = 0;
+iv_out = SelectIV(cfg_temp,iv1,keep_idx);
+
+% keep = ones(length(iv1.tstart),1);
+% for iI = 1:length(iv1.tstart)
+%     
+%     % first, check if any start or end is within this interval
+%     temp1 = find(iv2.tstart >= iv1.tstart(iI) & iv2.tstart <= iv1.tend(iI));
+%     temp2 = find(iv2.tend >= iv1.tstart(iI) & iv2.tend <= iv1.tend(iI));
+%     
+%     if ~isempty(temp1) | ~isempty(temp2)
+%        keep(iI) = 0;
+%        continue;
+%     end
+%     
+%     % check if interval is enveloped by anything
+%     for iJ = 1:length(iv2.tstart)
+%         if iv2.tstart(iJ) < iv1.tstart(iI) & iv2.tend(iJ) > iv1.tend(iI)
+%             keep(iI) = 0;
+%             break;
+%         end
+%     end
+%     
+% end
+
+%iv_out = iv1;
+%iv_out.tstart = iv_out.tstart(logical(keep));
+%iv_out.tend = iv_out.tend(logical(keep));
 
 if cfg.verbose; fprintf('%s: %d intervals in, %d intervals out\n',mfun,length(iv1.tstart) + length(iv2.tstart),length(iv_out.tstart)); end
 
