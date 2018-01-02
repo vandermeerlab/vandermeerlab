@@ -87,13 +87,7 @@ clear
 
 %% WHAT DO YOU WANT THIS SCRIPT TO DO?
 
-% Set your current directory to the Tmaze session you want to work with
-
-% T-maze specific recording segments to restrict data to
-cfg.whichEpochs = {'prerecord','task','postrecord'}; %  {'prerecord','task','postrecord'} 
-
-% How many seconds of data do you want to peruse? (this gets evenly divded between the chosen epochs)
-cfg.nSeconds = 720; % 720 seconds = 12 minutes
+% Set your current directory to the session you want to work with
 
 % Select t files or tt files
 cfg.whichSFiles = 'tt'; % 't' for MClust t files (isolated units), or 'tt' for MakeTTFiles tt files (all spikes from tetrode)
@@ -102,12 +96,7 @@ cfg.whichSFiles = 'tt'; % 't' for MClust t files (isolated units), or 'tt' for M
 % Do you want the LFP filtered?
 cfg.FilterLFP = 0; % If 1, filters LFP between 40-450 Hz before plotting; if 0, doesn't
 
-% Do you want to restrict the data?
-cfg.Restrict = 0; % If 1, restricts data to regions of interest, if 0 doesn't
-
-% *** Would you like to resume from a previous session?
-cfg.resumeSession = 0; % 1 if you want to resume, 0 if you're starting fresh
-cfg.fn = 'manualIV'; % unique string identifier for the file you saved from a previous session
+cfg.Restrict = 0;
 
 % If this section describes what you want, hit "Run" or press F5
 
@@ -119,62 +108,64 @@ cfg.fn = 'manualIV'; % unique string identifier for the file you saved from a pr
 
 % Load some things, check some things
 
-if ~any(strcmp(cfg.whichEpochs,{'prerecord','task','postrecord'}))
-    error('cfg.whichEpochs contains unrecognized recording segment')
-end
+[~,sessionID,~] = fileparts(pwd);
 
-% get CSC
+% Identify rat
+ratID = SWRratID(sessionID);
+
+% get LFP
 LoadExpKeys
-please = [];
-please.fc = ExpKeys.goodSWR(1);
-please.resample = 2000;
-CSC = LoadCSC(please);
+if isFrankRat(ratID)
+    LFP = LoadFrankEEG([],ExpKeys.goodSWR{1});
+    
+elseif isvanderMeerRat(ratID) 
+    please = [];
+    please.fc = ExpKeys.goodSWR(1);
+    LFP = LoadCSC(please);
+    
+else
+    error('LFP loading procedure has not yet been implemented for this rat')
+end
 
 % Load Spikes
 switch cfg.whichSFiles
     case 'tt'
         % Load all tetrode spikes
-        please = [];
-        please.fc = FindFiles('*.tt');
-        S = LoadSpikes(please);
+        if isvanderMeerRat(ratID)
+            please = [];
+            please.fc = FindFiles('*.tt');
+            S = LoadSpikes(please);
+        else
+            error('Loading procedure for all recorded spikes has not yet been implemented for this rat')
+        end
     case 't'
-       % Load isolated units
-       please = []; % load 
-       please.load_questionable_cells = 1;
-       S = LoadSpikes(please);
+        % Load isolated units
+        if isvanderMeerRat(ratID)
+            please = []; % load
+            please.load_questionable_cells = 1;
+            S = LoadSpikes(please);
+        elseif isFrankRat(ratID)
+            please = [];
+            S = LoadFrankSpikes(please,ExpKeys.epoch);
+        else
+            error('Loading procedure for isolated spikes has not yet been implemented for this rat')
+       end
     case 'none'
         S = ts;
-        S.t{1}(1,1) = CSC.tvec(1); % make a fake S because MultiRaster requires this as an input in order to work
-        S.t{1}(2,1) = CSC.tvec(end);
+        S.t{1}(1,1) = LFP.tvec(1); % make a fake S because MultiRaster requires this as an input in order to work
+        S.t{1}(2,1) = LFP.tvec(end);
     otherwise
         error('Unrecognized cfg.whichSFiles. Better check that spelling.')
 end
 
 % get restriction times
-nSecondsPerEpoch = cfg.nSeconds/(length(cfg.whichEpochs));
+cfg.nSeconds = 720; % 12 minutes of data
+tend = LFP.tvec(end);
+tstart = tend - cfg.nSeconds;
 
-tstart = nan(size(cfg.whichEpochs));
-tend = nan(size(cfg.whichEpochs));
-
-for iEpoch = 1:length(cfg.whichEpochs)
-    tstart(iEpoch) = ExpKeys.(cfg.whichEpochs{iEpoch})(2) - nSecondsPerEpoch;
-    tend(iEpoch) = ExpKeys.(cfg.whichEpochs{iEpoch})(2);
+if tstart < LFP.tvec(1)
+    tstart = LFP.tvec(1);
 end
-
-
-%% Get intervals where envelope is above the mean
-
-% Ripple detection
-please = []; please.weightby = 'amplitude'; % return envelope
-envelope = OldWizard(please,CSC);
-
-% Threshold to produce intervals
-please = []; please.method = 'zscore'; please.threshold = 0;
-envelopeIV = TSDtoIV2(please,envelope);
-
-% Remove events that are too short
-please = []; please.mindur = 0.015;
-envelopeIV = RemoveIV(please,envelopeIV);
 
 %% Filter LFP
 
@@ -182,14 +173,14 @@ if cfg.FilterLFP
     please = [];
     please.f = [40 450]; % in Hz
     please.type = 'fdesign'; % doit4me
-    CSC = FilterLFP(please,CSC);
+    LFP = FilterLFP(please,LFP);
 end
 
 %% Restrict S and LFP
 
 if cfg.Restrict
     S = restrict(S,tstart,tend);
-    CSC = restrict(CSC,tstart,tend);
+    LFP = restrict(LFP,tstart,tend);
 end
 
 %% Generate header to store info
@@ -197,55 +188,28 @@ end
 hdr.host = getenv('COMPUTERNAME'); % the computer's name that ran the script
 hdr.MATLAB_version = version; % because just in case
 hdr.date = datestr(now);
-[~,sessionID,~] = fileparts(pwd);
 hdr.sessionID = sessionID; % we actually care about this one
-hdr.CSC = CSC.label; % we actually care about this one
+hdr.LFP = LFP.label; % we actually care about this one
 hdr.segments = iv(tstart,tend);
 hdr.cfg = cfg;
 
-%% CALL DUCKTRAP
+%% CALL MANUALIV
 
 please = [];
-
-if cfg.resumeSession % load evt and check that settings agree
-    
-    fn = FindFiles(['*',cfg.fn,'.mat']);
-    if length(fn) > 1
-        error('More than one file matching *%s.mat was found.',cfg.fn)
-    elseif isempty(fn)
-        error('Zero files matching *%s.mat were found.',cfg.fn)
-    else
-        evt = loadpop(fn{1});
-    end
-    
-%     hdr.verbose = 1;
-%     ProcessConfig(evt.hdr.cfg,cfg); % hack to compare field names :P
-%     hdr = rmfield(hdr,'verbose');
-    
-    % make sure session is the same, and tell user if not
-    if ~isequal(evt.hdr.sessionID,sessionID)
-        error('Reloaded events came from a different session: %s',sessionID)
-    end
-    
-    % make sure CSC is the same, and tell user if not
-    if ~isequal(evt.hdr.CSC,CSC.label)
-        error('CSC from previous run and current run must be the same')
-    end
-    
-    % bulk compare the whole hdr, if it's not the same tell the user, and
-    % make them figure it out on their own
-    temp_prevCFG = rmfield(evt.hdr.cfg,{'resumeSession','fn'});
-    temp_currCFG = rmfield(hdr.cfg,{'resumeSession','fn'});
-    
-    if ~isequal(temp_prevCFG,temp_currCFG)
-        error('headers for current run and previous run do not agree. see evt.hdr and compare cfg options')
-    end
-    
-    please.resume = evt;
+  
+% Decide whether user is resuming from a previous session
+fn = FindFiles(['*manualIV.mat']);
+if length(fn) > 1
+    error('More than one file matching *%s.mat was found.',cfg.fn)
+elseif isempty(fn)
+    % do nothing
+else
+    IVann = loadpop(fn{1});
+    please.resume = IVann;
+    assert(isequal(IVann.hdr.segments,hdr.segments))
 end
-
+    
 please.hdr = hdr;
 please.mode = 'unfixed';
 please.segments = hdr.segments;
-please.evt = envelopeIV;
-ducktrap(please,S,CSC)
+ManualIV(please,S,LFP)
