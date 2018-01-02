@@ -49,6 +49,13 @@ cfg_def.uint = '32';
 mfun = mfilename;
 cfg = ProcessConfig(cfg_def,cfg_in,mfun); % this takes fields from cfg_in and puts them into cfg
 
+% this makes sure that if you specify a min cluster quality it will select appropriate clusters
+% otherwise you can have specified a min cluster quality without using the getRatings flag
+% and not have LoadSpikes restrict the cluster quality
+if cfg.min_cluster_quality < 5 && cfg.getRatings == 0
+    cfg.getRatings = 1;
+end
+
 if ~isempty(cfg.fc)
     % can't get ratings for .tt files, also can't load questionable cells
     ext_tt = false(size(cfg.fc));
@@ -136,14 +143,7 @@ for iF = 1:nFiles
         
     end 		% if tfn valid
 end		% for all files
-
-% this makes sure that if you specify a min cluster quality it will select appropriate clusters
-% otherwise you can have specified a min cluster quality without using the getRatings flag
-% and not have LoadSpikes restrict the cluster quality
-if cfg.min_cluster_quality < 5 && cfg.getRatings == 0
-    cfg.getRatings = 1;
-end
-    
+  
 if cfg.getRatings
         
         warning('off','MATLAB:unknownElementsNowStruc');
