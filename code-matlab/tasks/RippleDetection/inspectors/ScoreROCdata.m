@@ -1,4 +1,4 @@
-function [bestF1Score,bestJScore] = ScoreROCdata(cfg,ROCdata)
+function scores = ScoreROCdata(cfg,ROCdata)
 %SCOREROCDATA Compute F1-score and Youden J-score of the ROCs.
 %
 %   [bestF1Score,bestJScore] = ScoreROCdata(cfg,ROCdata)
@@ -37,6 +37,7 @@ function [bestF1Score,bestJScore] = ScoreROCdata(cfg,ROCdata)
 %
 % Elyot Grant Dec 2017 initial version
 % aacarey Dec 2017
+% edit Dec 2017 elyot, aacarey added balance point and restructured output
 
 % Parse cfg parameters
     cfg_def.verbose = 1;
@@ -64,10 +65,15 @@ function [bestF1Score,bestJScore] = ScoreROCdata(cfg,ROCdata)
     bestF1Score = -1;
     bestF2Score = -1;
     bestF05Score = -1;
+    bestBalancePointScore = -1; %intersection of the 45-degree line (y=1-x) with the ROC curve.
+    % 1 = ROC curve hits top left corner (best)
+    % -1 = ROC curve hits bottom right corner (worst)
+    minDistTo45DegreeLine = Inf;
     bestJThr = NaN;
     bestF1Thr = NaN;
     bestF2Thr = NaN;
     bestF05Thr = NaN;
+    bestBalancePointThr = NaN;
     
     for iThr = 1:numThresholds
         totalTruePositives = cfg.use1s * ROCdata.nEvt1(iThr)+...
@@ -97,6 +103,13 @@ function [bestF1Score,bestJScore] = ScoreROCdata(cfg,ROCdata)
         specificity = 1 - ROCdata.falseposrates(iThr);
         jScore = sensitivity + specificity - 1;
         
+        distTo45DegreeLine = abs(sensitivity-specificity);
+        if (distTo45DegreeLine < minDistTo45DegreeLine)
+            minDistTo45DegreeLine = distTo45DegreeLine;
+            bestBalancePointScore = jScore;
+            bestBalancePointThr = iThr;
+        end
+        
         if (f1Score > bestF1Score)
             bestF1Score = f1Score;
             bestF1Thr = iThr;
@@ -122,15 +135,24 @@ function [bestF1Score,bestJScore] = ScoreROCdata(cfg,ROCdata)
     cfg_temp = []; cfg_temp.verbose = 0; cfg_temp.target = 'GetROCdata'; cfg_temp.parameter = 'thresholds';
     thresholds = GetHistory(cfg_temp,ROCdata);
     
-    bestF1Thr = thresholds{1,1}(bestF1Thr);
-    bestF2Thr = thresholds{1,1}(bestF2Thr);
-    bestF05Thr = thresholds{1,1}(bestF05Thr);
-    bestJThr = thresholds{1,1}(bestJThr);
+    % Make output struct
+    scores.bestF1Score = bestF1Score;
+    scores.bestF1Thr = thresholds{1,1}(bestF1Thr);
+    scores.bestF2Score = bestF2Score;
+    scores.bestF2Thr = thresholds{1,1}(bestF2Thr);
+    scores.bestF05Score = bestF05Score;
+    scores.bestF05Thr = thresholds{1,1}(bestF05Thr);
+    scores.bestJScore = bestJScore;
+    scores.bestJThr = thresholds{1,1}(bestJThr);
+    scores.bestBalancePointScore = bestBalancePointScore;
+    scores.bestBalancePointThr = thresholds{1,1}(bestBalancePointThr);
     
     % talk to me or not
     if cfg.verbose
-        fprintf('%s: best F1 score is %0.4f with a threshold of %0.2f; best J score is %0.4f with a threshold of %0.2f\n',mfun,bestF1Score,bestF1Thr,bestJScore,bestJThr)
-        fprintf('%s: best F2 score is %0.4f with a threshold of %0.2f; best F0.5 score is %0.4f with a threshold of %0.2f\n',mfun,bestF2Score,bestF2Thr,bestF05Score,bestF05Thr)
+        fprintf('%s: displaying best scores and thresholds...\n',mfun)
+%         fprintf('%s: best F1 score is %0.4f with a threshold of %0.2f; best J score is %0.4f with a threshold of %0.2f\n',mfun,bestF1Score,bestF1Thr,bestJScore,bestJThr)
+%         fprintf('%s: best F2 score is %0.4f with a threshold of %0.2f; best F0.5 score is %0.4f with a threshold of %0.2f\n',mfun,bestF2Score,bestF2Thr,bestF05Score,bestF05Thr)
+        disp(struct2table(scores))
     end
 end
 
