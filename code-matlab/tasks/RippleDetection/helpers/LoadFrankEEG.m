@@ -60,7 +60,7 @@ tvec = eegStruct.starttime:stepSize:((length(data)-1)/eegStruct.samprate + eegSt
 LFP = tsd(tvec',data',name);
 
 % Add header info and cfg history
-LFP.cfg.hdr.SamplingFrequency = eegStruct.samprate;
+LFP.cfg.hdr{1,1}.SamplingFrequency = eegStruct.samprate;
 LFP = History(LFP,mfun,cfg);
 
 % Make sure TSD is well formed
