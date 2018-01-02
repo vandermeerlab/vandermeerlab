@@ -34,8 +34,8 @@ function ManualIV(cfg_in,varargin)
 %
 %   OUTPUT
 %       Output is saved directly to a directory specified by the user.
-%       The variable name is "evt"
-%       evt: iv struct with fields:
+%       The variable name is "IVann"
+%       IVann: iv struct with fields:
 %           .tstart  - [num x 1 double] start times
 %           .tend    - [num x 1 double] end times
 %           .label   - the CSC used (if applicable) 
@@ -77,7 +77,7 @@ function ManualIV(cfg_in,varargin)
 %                         If there is something strange in the neighborhood, 
 %                         disable robot by setting cfg.EnableRobot = 0.
 %       cfg.hdr - default []; Input struct containing information you want
-%                       to keep with the output. It becomes evt.hdr.
+%                       to keep with the output. It becomes IVann.hdr.
 %
 % For plot appearance options, see the config specification for MultiRaster
 %
@@ -113,6 +113,7 @@ cfg_def.lfpHeight = 15;
 cfg_def.lfpMax = 15;
 cfg_def.axislabel = 'on';
 cfg_def.windowSize = 1;
+cfg_def.openNewFig = 0;
 
 mfun = mfilename;
 cfg = ProcessConfig2(cfg_def,cfg_in); % use ProcessConfig2 because there's complications with the MR fields on cfg_in
@@ -123,7 +124,7 @@ for iVarg = 1:length(varargin)
     if isfield(varargin{iVarg},'data') && isfield(varargin{iVarg},'label') % then it's a CSC
         cfg.lfp = varargin{iVarg}; % pass it into MultiRaster
         %cfg.lfp.data(1:cfg.nansub:end) = nan;
-        
+                
     elseif isfield(varargin{iVarg},'t')
         S = varargin{iVarg};
     end
@@ -143,40 +144,24 @@ end
 %% initialize some things, set global variables (any variables that are 
 % here and inside of the nested functions are automatically global)
 
+figure; subplot_nRows = 20; subplot_nCols = 1;
+
 %~~~~~~~ MULTIRASTER; main figure plotted here ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+subplot(subplot_nRows,subplot_nCols,2:subplot_nRows)
 hMR = MultiRaster(cfg,S); box on; hold on;
 ax_main = gca; 
 if ~isempty(cfg.sidekick)
    sidekick(cfg.sidekick{:});
 end
 
+LFP = cfg.lfp; cfg = rmfield(cfg,'lfp'); % lfp is huge. don't let it be saved in config history
+
 % ~~~~~~ SEGMENTS; plot boundaries for regions of interest ~~~~~~~~~~~~~~~~~
 if ~isempty(cfg.segments) && ~isIV(cfg.segments)
     error('cfg.segments muct be an iv datatype')
 elseif ~isempty(cfg.segments) && isIV(cfg.segments)
     % then plot interval boundaries as vertical lines
-    cfg_temp.showLegend = 0;
-    cfg_temp.Color = [0 0 0; 1 1 1]; % black first, then white
-    cfg_temp.patch = 0;
-    hSK = sidekick(cfg_temp,cfg.segments,cfg.segments);
-    set(hSK(1),'LineWidth',3.5) % make the black line thicker than the white line
-    
-    % make transparent patch objects to place over the regions we are not
-    % interested in
-    ylims = get(gca,'YLim');
-    alph = 0.4;
-    patchCol = [155/255 48/255 255/255];
-    patchX = [cfg.lfp.tvec(1); cfg.lfp.tvec(1); cfg.segments.tstart(1); cfg.segments.tstart(1)];
-    patchY = [ylims(1); ylims(2); ylims(2); ylims(1)];
-    patch(patchX,patchY,patchCol,'EdgeColor','none','FaceAlpha',alph)
-    
-    for ii = 1:length(cfg.segments.tstart)-1
-       patchX = [cfg.segments.tend(ii); cfg.segments.tend(ii); cfg.segments.tstart(ii+1); cfg.segments.tstart(ii+1)];
-       patch(patchX,patchY,patchCol,'EdgeColor','none','FaceAlpha',alph)
-    end
-    
-    patchX = [cfg.segments.tend(end); cfg.segments.tend(end); cfg.lfp.tvec(end); cfg.lfp.tvec(end)];
-    patch(patchX,patchY,patchCol,'EdgeColor','none','FaceAlpha',alph)   
+    PlotPatchObjects  
 end
 
 set(ax_main,'layer','top')
@@ -184,7 +169,6 @@ hfig = gcf;
 set(hfig,'Name',mfilename,'KeyPressFcn',@keystuff,'WindowButtonDownFcn',@clickstuff,'CloseRequestFcn',@leaveme);
 
 % I'm pulling some things out of cfg so I can "trace" them easier if I want to
-LFP = cfg.lfp; cfg = rmfield(cfg,'lfp'); % lfp is huge. don't let it be saved in config history
 mode = cfg.mode;
 trapwin = cfg.trapwin;
 clickColor = cfg.clickColor;
@@ -205,8 +189,28 @@ state = 'start'; % 'start','once','twice': state changes while function is runni
 
 x1 = []; x2 = []; y1 = []; y2 = []; H = []; % click spots and plot handle
 
-xLoc = 1.1; yLoc = 1.08; % the horizontal and vertical location of the count text
-hTxt = ''; % count text handle is global
+quitRequested = 0;
+%~~~~~~~~~~~~~~~~~~~~~~~ PLOT PROGRESS BAR ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+subplot(subplot_nRows,subplot_nCols,1); box on
+
+% Get axes limits for MultiRaster
+startTime = ax_main.XLim(1);
+endTime = ax_main.XLim(2);
+
+% Some settings for progress bar plot
+ax_progressBar = gca;
+set(ax_progressBar,'XTick',[]); set(ax_progressBar,'YTick',[])
+set(ax_progressBar,'XLim',[startTime endTime])
+
+% Add patch obj to bar, if exist
+if ~isempty(cfg.segments)
+    PlotPatchObjects
+end
+
+UpdateProgressBar
+
+set(hfig,'CurrentAxes',ax_main) % change current axes back to MultiRaster
 
 %~~~~~~~~~~~ RESUME from previous session, if wanted ~~~~~~~~~~~~~~~~~~~~~~
 if ~isempty(cfg.resume)
@@ -215,7 +219,7 @@ if ~isempty(cfg.resume)
     plot([cfg.resume.tstart cfg.resume.tend],[0 0],'o','MarkerFaceColor',resCol,'Color',resCol,'MarkerSize',8)
     % go to the last interval (assume they went start -> end)
     lastTime = mean([cfg.resume.tstart(end) cfg.resume.tend(end)]);
-    set(gca,'XLim',[lastTime-0.5 lastTime+0.5])   
+    set(ax_main,'XLim',[lastTime-0.5 lastTime+0.5])   
     numPrev = length(cfg.resume.tstart); % count the number of events from before
 end
 
@@ -244,7 +248,7 @@ uicontrol('Style', 'pushbutton', 'String', 'Quit',...
 if ~isempty(cfg.segments) && isIV(cfg.segments)
     
     % next button for segment navigation
-    uicontrol('Style', 'pushbutton', 'String', 'Teleport',...
+    uicontrol('Style', 'pushbutton', 'String', 'Go to',...
         'TooltipString','Jump to another segment',...
         'Units','normalized','Position', [0.92 0.88 0.078 0.05],...
         'FontUnits','normalized','Callback', @teleport);
@@ -269,6 +273,12 @@ if exist('LFP','var')
         'Units','normalized','Position', [0.01 0.88 0.1 0.05],...
         'FontUnits','normalized','Callback', @spectraxis);
     
+    % barcode button
+    uicontrol('Style', 'pushbutton', 'String', 'Barcode',...
+        'TooltipString','Show LFP as pattern of stripes',...
+        'Units','normalized','Position', [0.01 0.71 0.1 0.05],...
+        'FontUnits','normalized','Callback', @barcode);
+    
     % spectrogram z scale drop down option
     zPop = uicontrol('Style','popupmenu','String',{'root','decibel-watt','raw'},...
         'TooltipString','Choose colour axis scaling',...
@@ -282,7 +292,7 @@ if exist('LFP','var')
         'TooltipString','Pass band higher frequency',...
         'Units','normalized','Position',[0.07 0.82 0.04 0.04]);
     
-    % create exes for a spectrogram. These do not move with navigate, unlike the main
+    % create axes for a spectrogram. These do not move with navigate, unlike the main
     % axes, and instead are set to invisible unless a spectrogram is plotted
     ax_spec = axes('Position', get(gca, 'Position'),'Visible','off');
     set(hfig,'CurrentAxes',ax_main)
@@ -293,10 +303,9 @@ end
     function updateCount
         % how many intervals have been indentified. Displays text.
         txt = ['Count: ',num2str(numKept + numPrev)];
-        hTxt = text(xLoc,yLoc,txt,'Units','normalized',...
-            'VerticalAlignment','top',...
-            'HorizontalAlignment','right',...
-            'FontSize',20,'BackgroundColor','w');       
+        
+        set(ax_progressBar.Title,'String',txt,'FontSize',18)
+             
     end % of updateCount
 
     function RoboClick
@@ -339,7 +348,48 @@ end
         %if isfield(hMR,'S'); set(hMR.S(:),'Color',cfg.spkColor); end
         if isfield(hMR,'LFP'); set(hMR.LFP,'Color',cfg.lfpColor); end
         if isfield(hMR,'LFP_iv'); set(hMR.LFP_iv,'Color',cfg.ivColor); end
-    end
+    end % of HideSpectraxis
+
+% ~~~~~~ PLOT PATCH OBJECT ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    function PlotPatchObjects
+        cfg_temp.showLegend = 0;
+        cfg_temp.Color = [0 0 0; 1 1 1]; % black first, then white
+        cfg_temp.patch = 0;
+        hSK = sidekick(cfg_temp,cfg.segments,cfg.segments);
+        set(hSK(1),'LineWidth',3.5) % make the black line thicker than the white line
+        
+        % make transparent patch objects to place over the regions we are not
+        % interested in
+        ylims = get(gca,'YLim');
+        alph = 0.4;
+        patchCol = [155/255 48/255 255/255];
+        patchX = [LFP.tvec(1); LFP.tvec(1); cfg.segments.tstart(1); cfg.segments.tstart(1)];
+        patchY = [ylims(1); ylims(2); ylims(2); ylims(1)];
+        patch(patchX,patchY,patchCol,'EdgeColor','none','FaceAlpha',alph)
+        
+        for ii = 1:length(cfg.segments.tstart)-1
+            patchX = [cfg.segments.tend(ii); cfg.segments.tend(ii); cfg.segments.tstart(ii+1); cfg.segments.tstart(ii+1)];
+            patch(patchX,patchY,patchCol,'EdgeColor','none','FaceAlpha',alph)
+        end
+        
+        patchX = [cfg.segments.tend(end); cfg.segments.tend(end); LFP.tvec(end); LFP.tvec(end)];
+        patch(patchX,patchY,patchCol,'EdgeColor','none','FaceAlpha',alph)
+    end % of PlotPatchObjects
+
+% ~~~~~~ UPDATE PROGRESS BAR ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    function UpdateProgressBar
+        global hProg
+        set(hfig,'CurrentAxes',ax_progressBar)
+        % Make patch object reflecting current window width
+        if exist('hProg','var')
+            delete(hProg)
+        end
+        patchX = [ax_main.XLim(1); ax_main.XLim(1); ax_main.XLim(2); ax_main.XLim(2)];
+        patchY = [ax_progressBar.YLim(1); ax_progressBar.YLim(2); ax_progressBar.YLim(2); ax_progressBar.YLim(1)];
+        hProg = patch(patchX,patchY,'k','FaceAlpha',0.4);
+        set(hfig,'CurrentAxes',ax_main)
+    end % of UpdateProgressBar
 
 %% callback functions
 
@@ -407,11 +457,7 @@ end
                             set(H(1),'Color',keepColor,'Marker','o','MarkerFaceColor',keepColor); set(H(2),'Color',keepColor)
                             numKept = numKept + 1;
                             clicktimes(numKept) = x1;
-                            
-                            if ishandle(hTxt)
-                                delete(hTxt)
-                            end
-                            
+                                                                                
                             % update count display
                             updateCount
                             
@@ -428,11 +474,7 @@ end
                                 clicktimes.tstart(numKept) = x2;
                                 clicktimes.tend(numKept) = x1;
                             end
-                            
-                            if ishandle(hTxt)
-                                delete(hTxt)
-                            end
-                            
+                                                       
                             % update count display
                             updateCount
                             
@@ -442,22 +484,27 @@ end
             end
             H = [];
         else
-            if exist('LFP','var');               
+            if exist('LFP','var')              
                 HideSpectraxis
             end
             navigate(source,event)
+            title(' ')
         end
+        UpdateProgressBar
     end % of keystuff
 
 % ~~~~~~ LEAVE ME ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     function leaveme(~,~)
         % quit request function
         uipressed = 1;
-        choice = questdlg('Are you sure you want to close the figure? Any unsaved data will be lost.','Quit Requested','Yes','No','No');
+        choice = questdlg('Are you sure you want to close the figure? Any unsaved data will be lost.','Quit Requested','Save and Quit','Quit','Cancel','Cancel');
         switch choice
-            case 'Yes'
+            case 'Quit'
                 delete(gcf)
-            case 'No'
+            case 'Save and Quit'
+                quitRequested = 1;
+                saveme
+            case 'Cancel'
                 RoboClick
                 return
         end
@@ -479,9 +526,9 @@ end
                             centers = clicktimes;
                         end
                         centers = sort(centers);
-                        evt = iv(centers - trapwin/2,centers + trapwin/2);
+                        IVann = iv(centers - trapwin/2,centers + trapwin/2);
                         if exist('LFP','var')
-                            evt.label = LFP.label;
+                            IVann.label = LFP.label;
                         end
                         
                     case 'unfixed'
@@ -493,36 +540,44 @@ end
                         end
                         [intervals.tstart,idx] = sort(intervals.tstart);
                         intervals.tend = intervals.tend(idx);
-                        evt = iv(intervals.tstart,intervals.tend);  
+                        IVann = iv(intervals.tstart,intervals.tend);  
                         if exist('LFP','var')
-                            evt.label = LFP.label;
+                            IVann.label = LFP.label;
                         end
                 end
                 
                 % check that there aren't any doubles
-                discard = find(diff(evt.tstart)== 0);
-                discard2 = find(diff(evt.tend) == 0);
-                if any(discard2 ~= discard)
+                discardTstart = find(diff(IVann.tstart)== 0);
+                discardTend = find(diff(IVann.tend) == 0);
+                if any(discardTend ~= discardTstart)
                     warning('Some intervals have the same start or end times.')
-                elseif ~isempty(discard)
+                elseif ~isempty(discardTstart)
                     disp([mfilename,': doubles found, removing.'])
-                    evt.tstart(discard) = [];
-                    evt.tend(discard) = [];
+                    IVann.tstart(discardTstart) = [];
+                    IVann.tend(discardTstart) = [];
                 end
                 
-                evt.hdr = cfg.hdr;
+                IVann.hdr = cfg.hdr;
                 
                 % housekeeping
-                evt = History(evt,mfun,cfg);
+                IVann = History(IVann,mfun,cfg);
                 
                 [~,name,~] = fileparts(pwd);
-                uisave('evt',[name,'-manualIV']) % opens window for saving stuff
-                
-                RoboClick
+                uisave('IVann',[name,'-manualIV']) % opens window for saving stuff
+               
+                if quitRequested
+                    delete(hfig)
+                else
+                    RoboClick
+                end
                 
             case 'No'
-                RoboClick
-                return
+                if quitRequested
+                    delete(hfig)
+                else
+                    RoboClick
+                    return
+                end
         end
     end % of saveme
 
@@ -584,17 +639,17 @@ end
         
         if length(CSCr.tvec) > 50000
             % outright refuse
-            msgbox('I refuse to spectrogram this much data...it''s for your own good.','Bad things can happen','error')
+            msgbox('Unsupported window size for spectrogram.','Bad things can happen','error')
             RoboClick
             return
         end
         
         if length(CSCr.tvec) > 18000
-            choice = questdlg('Oh wow! Your computer figuratively almost caught fire because you wanted to spectrogram a lot of data.','This might take a long time...','I like fire','Oops!','Oops!');
+            choice = questdlg('Creating a spectrogram for this amount of data may take a long time. Are you sure you want to continue?','This might take a long time...','I like waiting','Cancel','Cancel');
           
             switch choice
-                case 'I like fire'
-                case 'Oops!'
+                case 'I like waiting'
+                case 'Cancel'
                     RoboClick
                     return  
             end
@@ -614,14 +669,16 @@ end
         foi = str2double(get(frange(1),'String')):str2double(get(frange(2),'String')); % don't be evil..numbers only
         
         [~,F,T,P] = spectrogram(CSCr.data,hanning(nSamples),100,foi,fs);
-        fuck = size(P,1); fuck2 = repmat(CSCr.data,fuck,1);
+       
         % get z scale option (see uicontrol zPop)
         string = get(zPop,'String'); choice = get(zPop,'Value');
         zscale = string{choice};
         switch zscale
             case 'root'
                 P = sqrt(P); % rescale power
-                col = [0.09*10^-6 18*10^-6]; % some arbitrary range for the color scaling
+                %col = [0.09*10^-6 18*10^-6]; % some arbitrary range for the color scaling
+                maxP = max(max(P)); minP = min(min(P));
+                col = [minP maxP];
                 
                 % change colors of LFP/spikes/intervals for contrast with spectrogram
                 %if isfield(hMR,'S'); set(hMR.S,'Color',[1 1 1 0.5]); end
@@ -630,7 +687,9 @@ end
                 
             case 'decibel-watt'
                 P = 10*log10(P); % rescale power
-                col = [-170 -80]; % some arbitrary range for the color scaling
+                %col = [-170 -80]; % some arbitrary range for the color scaling
+                maxP = max(max(P)); minP = min(min(P));
+                col = [minP+0.6*(maxP-minP) maxP-0.01*(maxP-minP)]; 
                 
                 % change colors of LFP/spikes/intervals for contrast with spectrogram
                 %if isfield(hMR,'S'); set(hMR.S(:),'Color','k'); end
@@ -638,19 +697,57 @@ end
                 if isfield(hMR,'LFP_iv'); set(hMR.LFP_iv,'Color','b'); end
                 
             case 'raw'
-                col = [0.09*10^-10 3*10^-10]; % some arbitrary range for the color scaling
+                %col = [0.09*10^-10 3*10^-10]; % some arbitrary range for the color scaling
+                
+                maxP = max(max(P)); minP = min(min(P));
+                col = [minP maxP];
                 
                 % change colors of LFP/spikes/intervals for contrast with spectrogram
                 %if isfield(hMR,'S'); set(hMR.S(:),'Color','k'); end
                 if isfield(hMR,'LFP'); set(hMR.LFP,'Color','w'); end
                 if isfield(hMR,'LFP_iv'); set(hMR.LFP_iv,'Color','r'); end
         end
+        %P = P./max(max(P)); %Scale so max is 1, avoids some bug with spectrogram updating... >_<
         
-        imagesc(fuck2); colormap('gray')
+        imagesc(T,F,P,col); colormap('jet');
         set(ax_spec,'YAxisLocation','right','XTick',xticks,'XTickLabel',[],'YDir','normal')
         
         ylabel(ax_spec,'Frequency (Hz)')
         grid on
+        uistack(ax_spec,'bottom') % send it to the very back; other axes in front
+        
+        % return to main axes (for navigation and stuff)
+        set(hfig,'CurrentAxes',ax_main) 
+        
+        RoboClick
+        
+    end % of spectraxis
+
+% ~~~~~~ BARCODE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    function barcode(~,~)
+        % create a new set of axes and plot a barcode behind the raster plot
+        uipressed = 1;
+        
+        xlims = get(gca,'XLim');
+        xticks = get(gca,'XTick');
+%         for iCell = 1:length(hMR.S)
+%             set(hMR.S{iCell},'Color','g')
+%         end
+        
+        CSCr = restrict(LFP,xlims(1),xlims(2)); % restrict to count the numbers of samples in viewing window
+        % filter CSC in the ripple band
+        cfg_filter.f = [140 250];
+        cfg_filter.type = 'fdesign';
+        cfg_filter.verbose = 0;
+        CSCr = FilterLFP(cfg_filter,CSCr);
+               
+        set(gca,'color','none')
+        set(hfig,'CurrentAxes',ax_spec) % now change current axes
+                       
+        imagesc(CSCr.data); colormap('gray');
+        set(ax_spec,'YAxisLocation','right','XTick',xticks,'XTickLabel',[],'YDir','normal')
+        
         uistack(ax_spec,'bottom') % send it to the very back; other axes in front
         
         % return to main axes (for navigation and stuff)
