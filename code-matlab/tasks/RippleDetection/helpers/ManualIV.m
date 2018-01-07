@@ -64,9 +64,9 @@ function ManualIV(cfg_in,varargin)
 %                     inputting the intervals here). Note: does not verify
 %                     previous configs or whether the resume intervals are
 %                     from the correct session.
-%       cfg.sidekick - []; send inputs to sidekick() in a [1 x nArg] array.
-%                      ex: [cfg_sidekick,tsd1,tsd2,iv1,tsd3]. See sidekick
-%                      for more information about sidekick's plotting.
+%       cfg.overplot - {}; send inputs to overplot() in a {1 x nArg} array.
+%                      ex: {cfg_overplot,tsd1,tsd2,iv1,tsd3}. See overplot
+%                      for more information about overplot's plotting.
 %
 %       cfg.clickColor - plot color for undecided intervals; [r g b] values 
 %                        or short string like 'r' or 'b' (default orange-ish)
@@ -98,7 +98,7 @@ cfg_def.trapwin = 0.06; % window size in x axis units
 cfg_def.clickColor = [255/255 99/255 71/255]; % color of intervals when initially plotted
 cfg_def.keepColor = [113/255 198/255 113/255]; % color of intervals that have been kept
 cfg_def.resume = []; % iv struct containing previously identified intervals
-cfg_def.sidekick = [];
+cfg_def.overplot = [];
 cfg_def.EnableRobot = 1;
 cfg_def.hdr = [];
 %cfg_def.nansub = 4; % Every nth tsd sample is replaced by nan to speed navigation. But looks bad.
@@ -150,8 +150,8 @@ figure; subplot_nRows = 20; subplot_nCols = 1;
 subplot(subplot_nRows,subplot_nCols,2:subplot_nRows)
 hMR = MultiRaster(cfg,S); box on; hold on;
 ax_main = gca; 
-if ~isempty(cfg.sidekick)
-   sidekick(cfg.sidekick{:});
+if ~isempty(cfg.overplot)
+   overplot(cfg.overplot{:});
 end
 
 LFP = cfg.lfp; cfg = rmfield(cfg,'lfp'); % lfp is huge. don't let it be saved in config history
@@ -355,7 +355,7 @@ end
         cfg_temp.showLegend = 0;
         cfg_temp.Color = [0 0 0; 1 1 1]; % black first, then white
         cfg_temp.patch = 0;
-        hSK = sidekick(cfg_temp,cfg.segments,cfg.segments);
+        hSK = overplot(cfg_temp,cfg.segments,cfg.segments);
         set(hSK(1),'LineWidth',3.5) % make the black line thicker than the white line
         
         % make transparent patch objects to place over the regions we are not
