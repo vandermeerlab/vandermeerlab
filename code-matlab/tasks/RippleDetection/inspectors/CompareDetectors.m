@@ -32,7 +32,7 @@ cfg_temp.verbose = cfg.verbose;
 
 for iContestant = 1:nContestants
     ROCdata(iContestant) = GetROCdata(cfg_temp,IVann,detectorTSDs{iContestant});
-    [bestF1Score(iContestant), bestJScore(iContestant)] = ScoreROCdata([],ROCdata(iContestant));
+    bestScores(iContestant) = ScoreROCdata([],ROCdata(iContestant));
     varname{iContestant} = inputname(2 + iContestant); % because we don't care about cfg and IVann
     if isempty(varname{iContestant})
         varname{iConestant} = ['detector #',num2str(iContestant)];
