@@ -1,4 +1,4 @@
-function [hitrate,nEvt,score] = HitRate(cfg,IVann,IVdet)
+function [hitrate,nEvt] = HitRate(cfg,IVann,IVdet)
 %HITRATE Measure detection success in terms of hit rate
 %    hitrate = HITRATE(cfg,iv_ann,iv_det) calculates the proportion of
 %    manually-identified intervals that were detected automatically. The
@@ -79,7 +79,7 @@ nEvt(6) = length(iv_flsps.tstart);
 % hitrate(6) = length(iv_flsps.tstart)/length(IVann.tstart);
 
 %% Assign score
-score = hitrate(1)*5 + hitrate(2)*4 + hitrate(3)*3 + hitrate(4)*2 + hitrate(5)*1 - hitrate(6)*6;
+% score = hitrate(1)*5 + hitrate(2)*4 + hitrate(3)*3 + hitrate(4)*2 + hitrate(5)*1 - hitrate(6)*6;
 
 %% Plot stuff
 if cfg.showFig
@@ -93,7 +93,7 @@ if cfg.showFig
         hold on
     end
     
-    title(['Score: ', num2str(score)])
+%     title(['Score: ', num2str(score)])
     ylabel('Success rate','FontSize',FontSize') 
     xlabel('Rating','FontSize',FontSize)
     set(gca,'YLim',[0 1.01],'XTick',location,'XTickLabel',{'1' '2' '3' '4' '5' 'flsps'},'FontSize',FontSize,'LineWidth',1,'YTick',0:0.1:1);
@@ -109,7 +109,7 @@ if cfg.verbose
    fprintf('4           %.2f%%\n',hitrate(4)*100)
    fprintf('5           %.4f%%\n',hitrate(5)*100)
    fprintf('False pos:  %.4f%%\n',hitrate(6)*100)
-   fprintf('score:      %.2f\n',score)
+%    fprintf('score:      %.2f\n',score)
    
 end
 

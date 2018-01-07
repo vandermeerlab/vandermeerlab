@@ -44,7 +44,7 @@ for iThr = length(cfg.thresholds):-1:1
     IVatThreshold(iThr) = RestrictIV(cfg_temp,IVatThreshold(iThr),IVann.hdr.segments.tstart,IVann.hdr.segments.tend);
     
     cfg_temp = []; cfg_temp.showFig = 0; cfg_temp.verbose = 0;
-    [hitrate,nEvt,~] = HitRate(cfg_temp,IVann,IVatThreshold(iThr));
+    [hitrate,nEvt] = HitRate(cfg_temp,IVann,IVatThreshold(iThr));
     
     % Collect HitRate data
     if length(hitrate)>6; error('Currently cannot handle more than 6 HitRate categories'); end
