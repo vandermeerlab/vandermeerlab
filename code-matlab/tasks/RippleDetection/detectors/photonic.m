@@ -16,7 +16,7 @@ function tsd_out = photonic(cfg_in,tsd_in)
 %      TSD_out: tsd struct with .data field containing detection results
 %
 %    CONFIG OPTIONS 
-%       cfg.weightby = 'power'; How to obtain the signal envelope
+%       cfg.weightby = 'amplitude'; How to obtain the signal envelope
 %          'amplitude'    - amplitude envelope (absolute value of the signal)
 %          'power'        - power envelope (square the signal)
 %
