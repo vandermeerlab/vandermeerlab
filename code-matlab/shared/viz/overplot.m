@@ -78,7 +78,7 @@ h = zeros(1,length(varargin)+1);
 for iArg = 1:length(varargin)
     temp = varargin{iArg};
     if cfg.showLegend
-        name = inputname(iArg+1); if isempty(name); name = ['Input ',num2str(iArg)]; end; lgnd{iArg} = name;
+        name = inputname(iArg+1); if isempty(name); name = ['Input ',num2str(iArg)]; end; name = strrep(name,'_',' '); lgnd{iArg} = name;
     end
     
     % check if Y is an iv data type
