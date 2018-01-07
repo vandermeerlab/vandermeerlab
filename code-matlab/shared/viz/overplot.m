@@ -15,8 +15,8 @@ function h = overplot(cfg_in,varargin)
 %   h = OVERPLOT(cfg,IV1,TSD1,IV2,IV3,IV4,TSD2,TSD3);
 %
 %   INPUTS
-%       TSD [1x1 struct] TSD datatype
-%        iv [1x1 struct] IV datatype
+%       [1x1 struct] TSD datatype
+%       [1x1 struct] IV datatype
 %      Note: more data takes longer to plot, and also slows down navigation.
 %
 %   OUTPUTS
