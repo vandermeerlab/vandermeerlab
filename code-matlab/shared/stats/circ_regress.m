@@ -59,7 +59,7 @@ for iP = nPoints:-1:1
         
         yval = modpi(this_data + fv(iF));
         
-        [coeff,s] = polyfit(xval,yval,1); % obtain linear fit
+        [coeff,s] = fast_polyfit(xval,yval,1); % obtain linear fit
         
         this_fit_slope(iF) = coeff(1); this_fit_int(iF) = coeff(2);
         this_fit_r(iF) = s.normr;
