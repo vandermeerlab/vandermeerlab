@@ -83,6 +83,17 @@ switch type
         in.tstart = in.tstart(keep);
         in.tend = in.tend(keep);
         
+        if isfield(in,'usr')
+            if ~isempty(in.usr)
+               fn = fieldnames(in.usr);
+               for iFN = 1:length(fn)
+                   temp = in.usr.(fn{iFN});
+                   temp = temp(keep);
+                   in.usr.(fn{iFN}) = temp;
+               end
+            end
+        end
+        
 end
 
 % housekeeping
