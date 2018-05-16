@@ -28,6 +28,7 @@ cfg_def.requireCandidates = 0;
 cfg_def.requireEvents = 0;
 cfg_def.verbose = 1;
 cfg_def.userpath = '';
+cfg_def.paperSessions = 0; % if 1, preselect sessions used in van der Meer et al. (2017)
 
 mfun = mfilename;
 cfg = ProcessConfig(cfg_def,cfg_in,mfun);
@@ -112,6 +113,10 @@ for iRat = 1:length(cfg.rats)
         
     end % of session folders
     
+end
+
+if cfg.paperSessions
+    fd = fd([2:6 10:11 13:24]);
 end
 
 cd(curr_pwd) % return to starting folder
