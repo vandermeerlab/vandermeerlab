@@ -15,7 +15,8 @@ if isstruct(varargin{1})
                    error('plotting for tsds with more than two dimensions not implemented yet.') 
                 end
             case 'ts'
-                h = MultiRaster([],varargin{1});
+                cfg = []; cfg.openNewFig = 0;
+                h = MultiRaster(cfg,varargin{1});
             otherwise
                  error('%s plot not implemented yet.',varargin{1}.type);   
         end
