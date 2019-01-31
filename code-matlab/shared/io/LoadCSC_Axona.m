@@ -63,14 +63,17 @@ for iF = 1:nFiles
     if iF > 1 && length(data) ~= length(csc_tsd.data(iF-1,:))
         error('Data lengths differ across channels.');
     end
-        
+
+    % update cfg info
+    csc_tsd.cfg.hdr{iF}.Fs = Fs;
+    
     % done, add to tsd
     csc_tsd.tvec = tvec;
     csc_tsd.data(iF,:) = data;
     
     [~,fn,fe] = fileparts(fname);
     csc_tsd.label{iF} = cat(2,fn,fe);
-    
+
 end
 
 % add sessionID
