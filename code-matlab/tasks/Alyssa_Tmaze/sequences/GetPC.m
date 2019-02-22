@@ -40,7 +40,7 @@ S_left = restrict(S_orig,L_trl); posL = restrict(pos,L_trl);
 S_right = restrict(S_orig,R_trl); posR = restrict(pos,R_trl);
 
 % linearize runs and bin positions
-CoordL = metadata.coord.coordL; CoordR = metadata.coord.coordR;
+CoordL = metadata.coord.coordL.coord; CoordR = metadata.coord.coordR.coord;
 
 % standardize Coord to have specific bin size
 run_dist = ExpKeys.pathlength; % distance travelled on a single run of the track in cm (T-maze)
@@ -52,18 +52,18 @@ CoordRrs(1,:) = interp1(1:size(CoordR,2),CoordR(1,:),linspace(1,size(CoordR,2),n
 CoordRrs(2,:) = interp1(1:size(CoordR,2),CoordR(2,:),linspace(1,size(CoordR,2),nBins),'linear');
 
 cfg_c = []; cfg_c.Coord = CoordLrs;
-posL_binned = LinearizePos(cfg_c,posL);
+posL_binned = LinearizePos_old(cfg_c,posL);
 
 % cp
 cpL = tsd(0,metadata.coord.chp,{'x','y'});
-cpL = LinearizePos(cfg_c,cpL); cpL = cpL.data(1);
+cpL = LinearizePos_old(cfg_c,cpL); cpL = cpL.data(1);
 
 cfg_c = []; cfg_c.Coord = CoordRrs;
-posR_binned = LinearizePos(cfg_c,posR);
+posR_binned = LinearizePos_old(cfg_c,posR);
 
 % cp
 cpR = tsd(0,metadata.coord.chp,{'x','y'});
-cpR = LinearizePos(cfg_c,cpR); cpR = cpR.data(1);
+cpR = LinearizePos_old(cfg_c,cpR); cpR = cpR.data(1);
 
 % store left/right linearized data in a single struct (cleaner workspace!)
 ENC_data(1).trial_type = 'left';

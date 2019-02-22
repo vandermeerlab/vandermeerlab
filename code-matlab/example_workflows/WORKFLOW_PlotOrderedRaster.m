@@ -30,8 +30,8 @@ expCond(2).label = 'right'; % these are just labels we can make up here to keep 
 expCond(1).t = metadata.taskvars.trial_iv_L; % previously stored trial start and end times for left trials
 expCond(2).t = metadata.taskvars.trial_iv_R; 
 
-expCond(1).coord = metadata.coord.coordL; % previously user input idealized linear track
-expCond(2).coord = metadata.coord.coordR; % note, this is in units of "camera pixels", not cm
+expCond(1).coord = metadata.coord.coordL.coord; % previously user input idealized linear track
+expCond(2).coord = metadata.coord.coordR.coord; % note, this is in units of "camera pixels", not cm
 
 expCond(1).S = S;
 expCond(2).S = S;

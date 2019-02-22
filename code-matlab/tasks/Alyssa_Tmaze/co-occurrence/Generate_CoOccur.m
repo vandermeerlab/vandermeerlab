@@ -78,7 +78,7 @@ S_left = restrict(S_orig,L_trl); posL = restrict(pos,L_trl);
 S_right = restrict(S_orig,R_trl); posR = restrict(pos,R_trl);
 
 % linearize runs and bin positions
-CoordL = metadata.coord.coordL; CoordR = metadata.coord.coordR;
+CoordL = metadata.coord.coordL.coord; CoordR = metadata.coord.coordR.coord;
 
 % check if coord actually overlaps with real position data
 if cfg.plotOutput
@@ -101,18 +101,18 @@ CoordRrs(1,:) = interp1(1:size(CoordR,2),CoordR(1,:),linspace(1,size(CoordR,2),n
 CoordRrs(2,:) = interp1(1:size(CoordR,2),CoordR(2,:),linspace(1,size(CoordR,2),nBins),'linear');
 
 cfg_c = []; cfg_c.Coord = CoordLrs;
-posL_binned = LinearizePos(cfg_c,posL);
+posL_binned = LinearizePos_old(cfg_c,posL);
 
 % cp
 cpL = tsd(0,metadata.coord.chp,{'x','y'});
-cpL = LinearizePos(cfg_c,cpL); cpL = cpL.data(1);
+cpL = LinearizePos_old(cfg_c,cpL); cpL = cpL.data(1);
 
 cfg_c = []; cfg_c.Coord = CoordRrs;
-posR_binned = LinearizePos(cfg_c,posR);
+posR_binned = LinearizePos_old(cfg_c,posR);
 
 % cp
 cpR = tsd(0,metadata.coord.chp,{'x','y'});
-cpR = LinearizePos(cfg_c,cpR); cpR = cpR.data(1);
+cpR = LinearizePos_old(cfg_c,cpR); cpR = cpR.data(1);
 
 % store left/right linearized data in a single struct (cleaner workspace!)
 
@@ -349,7 +349,7 @@ if ~cfg.outputPConly
         
         tpow = LFPpower([],lfp_theta);
         
-        cfg_theta = []; cfg_theta.method = 'zscore'; cfg_theta.threshold = 2; cfg_theta.dcn =  '<';
+        cfg_theta = []; cfg_theta.method = 'zscore'; cfg_theta.threshold = 2; cfg_theta.operation =  '<';
         low_theta_iv = TSDtoIV(cfg_theta,tpow);
         
         evt = restrict(evt,low_theta_iv);
@@ -360,7 +360,7 @@ if ~cfg.outputPConly
     if cfg.removeRunning
         fprintf('current nEvents: %d\n',length(evt.tstart));
         
-        cfg_run = []; cfg_run.method = 'raw'; cfg_run.threshold = 10; cfg_run.dcn = '<';
+        cfg_run = []; cfg_run.method = 'raw'; cfg_run.threshold = 10; cfg_run.operation = '<';
         run_iv = TSDtoIV(cfg_run,spd);
         
         evt = restrict(evt,run_iv);
