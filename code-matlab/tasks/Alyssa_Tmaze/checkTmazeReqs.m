@@ -47,7 +47,7 @@ cfg_def.requirePrecandidates = 0;
 cfg_def.requireTimes = 0;
 cfg_def.requireHSdetach = 0;
 cfg_def.requireFiles = 0;
-cfg_def.ratsToProcess = {'R042','R044','R050','R064'};
+cfg_def.ratsToProcess = TmazeRats;
 cfg_def.verbose = 1;
 cfg_def.unzip = 1;
 
@@ -72,28 +72,8 @@ end
 disp([mfun,': searching for required data in session folders...'])
 filesep = '\';
 
-if ispc
-    machinename = getenv('COMPUTERNAME');
-elseif ismac
-    machinename = getenv('USER');
-    filesep = '/';
-else
-    machinename = getenv('HOSTNAME');
-end
-
-switch machinename
-    
-    case {'ISIDRO','ODYSSEUS'}
-        base_fp = 'C:\data\';
-    case {'EQUINOX','BERGKAMP'}
-        base_fp = 'D:\data\';
-    case 'MVDMLAB-ATHENA'
-        base_fp = 'D:\vandermeerlab\';
-    case {'MVDMLAB-EUROPA','DIONYSUS'}
-        base_fp = 'D:\data\promoted\';
-    case 'CALLISTO'
-        base_fp = 'E:\data\promoted\';
-end
+%get data path
+base_fp = getBaseFP;
 
 %%
 
@@ -106,23 +86,17 @@ original_folder = pwd; % pwd is your current directory ("print working directory
 cd(base_fp);
 
 % Work though each rat's folder
-rat_list = dir(pwd); % dir() lists folder contents
-
-% keep only entries that are actually folders
-rat_list = rat_list([rat_list.isdir]);
-
-% It seems that MATLAB pulls up some crap "folders" that are called "." or ".." ... ignore them  
-rat_list = rat_list(arrayfun(@(x) x.name(1), rat_list) ~= '.');
+rat_list = TmazeRats;
 
 % keep only requested rats
-[~,ix,~] = intersect({rat_list.name},cfg.ratsToProcess);
+[~,ix,~] = intersect(rat_list,cfg.ratsToProcess);
 rat_list = rat_list(ix);
 
 for iRat = 1:length(rat_list)
     
     % go to the rat's folder
-    ratfolder = [base_fp,rat_list(iRat).name]; % when strcat is applied to this array, it will create the folder path
-    cd(strcat(ratfolder));
+    ratfolder = [base_fp,rat_list{iRat}];
+    cd(ratfolder);
     
     % Get all the sessions
     session_list = dir(pwd);

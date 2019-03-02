@@ -48,21 +48,8 @@ if ~isempty(cfg.userpath)
     machinename = 'USERDEFINED';
 end
 
-switch machinename
-    
-    case {'ISIDRO','PERSEUS','ODYSSEUS'}
-        base_fp = 'C:\data\';
-    case {'EQUINOX','BERGKAMP'}
-        base_fp = 'D:\data\';
-    case 'MVDMLAB-ATHENA'
-        base_fp = 'D:\vandermeerlab\';
-    case {'MVDMLAB-EUROPA','DIONYSUS'}
-        base_fp = 'D:\data\promoted\';
-    case 'CALLISTO'
-        base_fp = 'E:\data\promoted\';
-    case 'USERDEFINED'
-        base_fp = cfg.userpath;
-end
+% get data path
+base_fp = getBaseFP;
 
 fd = {};
 
