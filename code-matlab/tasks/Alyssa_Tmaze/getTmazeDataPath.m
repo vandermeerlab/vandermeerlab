@@ -28,7 +28,6 @@ cfg_def.requireCandidates = 0;
 cfg_def.requireEvents = 0;
 cfg_def.verbose = 1;
 cfg_def.userpath = '';
-cfg_def.paperSessions = 0; % if 1, preselect sessions used in van der Meer et al. (2017)
 
 mfun = mfilename;
 cfg = ProcessConfig(cfg_def,cfg_in,mfun);
@@ -49,21 +48,8 @@ if ~isempty(cfg.userpath)
     machinename = 'USERDEFINED';
 end
 
-switch machinename
-    
-    case {'ISIDRO','MVDMLAB-PERSEUS','ODYSSEUS'}
-        base_fp = 'C:\data\';
-    case {'EQUINOX','BERGKAMP'}
-        base_fp = 'D:\data\';
-    case 'MVDMLAB-ATHENA'
-        base_fp = 'D:\vandermeerlab\';
-    case {'MVDMLAB-EUROPA','DIONYSUS'}
-        base_fp = 'D:\data\promoted\';
-    case 'CALLISTO'
-        base_fp = 'E:\data\promoted\';
-    case 'USERDEFINED'
-        base_fp = cfg.userpath;
-end
+% get data path
+base_fp = getBaseFP;
 
 fd = {};
 
@@ -115,9 +101,4 @@ for iRat = 1:length(cfg.rats)
     
 end
 
-if cfg.paperSessions
-    fd = fd([2:6 10:11 13:24]);
-end
-
 cd(curr_pwd) % return to starting folder
-
