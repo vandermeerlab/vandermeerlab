@@ -216,10 +216,10 @@ switch cfg.nDim
 end
 
 %% housekeeping
-tc_out = tc;
+%tc_out = tc;
 
 % main data
-% tc_out.tc = tc;
+tc_out.tc = tc;
 if cfg.bootstrap; tc_out.tcboot = tcboot; end
 if exist('tc2D','var'); tc_out.tc2D = tc2D; end
 tc_out.occ_hist = occ_hist;
