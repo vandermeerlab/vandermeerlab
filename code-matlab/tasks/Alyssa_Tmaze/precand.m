@@ -86,7 +86,7 @@ end
 evt.cfg.history.mfun = cat(1,evt.cfg.history.mfun,mfilename);
 evt.cfg.history.cfg = cat(1,evt.cfg.history.cfg,{cfg});
 
-evt.parameters = struct('threshold',cfg.threshold,'mindur',cfg.mindur,'minCells',cfg.minCells,'amSWR',SWR.parameters,'amMUA',MUA.parameters);
+%evt.parameters = struct('threshold',cfg.threshold,'mindur',cfg.mindur,'minCells',cfg.minCells,'amSWR',SWR.parameters,'amMUA',MUA.parameters);
 
 if cfg.verbose
 toc

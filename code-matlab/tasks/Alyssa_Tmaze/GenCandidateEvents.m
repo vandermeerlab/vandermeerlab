@@ -143,7 +143,7 @@ disp(' ')
 disp('***Compiling and thresholding detection scores....')
 
 if ~isempty(SWR)
-    SWR = rescmean(SWR,1); % this was a step in precand()
+    SWR = rescmean(SWR,1);
 elseif isempty(SWR) && ~isempty(MUA)
     SWR = MUA; % for getting geometric mean...if SWR == MUA , then gm(SWR,MUA) = MUA
 end
@@ -172,12 +172,6 @@ cfg_temp = []; cfg_temp.verbose = cfg.verbose; cfg_temp.mindur = cfg.mindur;
 evt = RemoveIV(cfg_temp,evt);
 
 evt.data = score.data; evt.tvec = score.tvec;
-% cfg_temp =[];
-% cfg_temp.threshold = cfg.DetectorThreshold;
-% cfg_temp.verbose = cfg.verbose; cfg_temp.mindur = cfg.mindur;
-% evt = precand(cfg_temp,CSC.tvec,SWR,MUA,S);
-
-
 
 %% Speed thresholding
 
