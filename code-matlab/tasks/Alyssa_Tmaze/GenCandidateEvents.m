@@ -55,8 +55,8 @@ cfg_def.MUAmethod = 'AM'; % 'AM' for amMUA, or 'none' for skip MUA detection
 cfg_def.weightby = 'amplitude'; % this applies to 'AM' amSWR and 'TR' photonic, but not 'HT' OldWizard
 cfg_def.stepSize = 1;
 cfg_def.ThreshMethod = 'zscore';
-cfg_def.DetectorThreshold = 1; % the threshold you want for generating IV data edges
-cfg_def.DetectorThreshold2 = 3; % threshold you want for IV data inclusion (detected intervals must exceed this)
+cfg_def.DetectorThreshold = 4; % the threshold you want for generating IV data edges
+cfg_def.DetectorThreshold2 = []; % threshold you want for IV data inclusion (detected intervals must exceed this)
 %if strcmp(sessionID,'R042-2013-08-17') || strcmp(sessionID,'R044-2013-12-23')
     %cfg_def.DetectorThreshold2 = 2.5;
 %end

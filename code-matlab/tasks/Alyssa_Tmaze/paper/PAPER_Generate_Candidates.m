@@ -28,7 +28,7 @@ cfg.writeDiary = 1; % 1 - yes, 0 - no
 cfg.prefix = ''; % ex: 'test_'
 
 % Append to filename
-cfg.suffix = '_trymatch_orig'; % [date,''];
+cfg.suffix = '_trymatch'; % [date,''];
 
 % Do you want to see what the internal functions have to say?
 cfg.verbose = 1; %1 - yes, 0 - no (if 0, GenCandidateEvents still talks, but no one else)
@@ -130,6 +130,8 @@ for iFD = 1:length(fd)
     please.weightby = cfg.weightby;
     please.stepSize = cfg.stepSize;
     please.DetectorThreshold = cfg.DetectorThreshold;
+    please.DetectorThreshold2 = [];
+    please.ThreshMethod = cfg.ThreshMethod;
     please.mindur = cfg.mindur;
     please.SpeedLimit = cfg.SpeedLimit;
     please.ThetaThreshold = cfg.ThetaThreshold;
@@ -137,7 +139,7 @@ for iFD = 1:length(fd)
     please.expandIV = cfg.expandIV;
     please.allowOverlap = cfg.allowOverlap;
     
-    evt = GenCandidateEvents_orig(please);
+    evt = GenCandidateEvents(please);
     
     if cfg.writeDiary, diary off, end
     
