@@ -34,7 +34,7 @@ switch cfg.mode
         
     case 2 % shuffle ISIs
         
-        ts_in = restrict2(ts_in,cfg.t0,cfg.t1);
+        ts_in = restrict(ts_in,cfg.t0,cfg.t1);
         
         for iC = 1:length(ts_in.t)
             
@@ -46,7 +46,7 @@ switch cfg.mode
         
     case 3 % random uniform
         
-        ts_in = restrict2(ts_in,cfg.t0,cfg.t1);
+        ts_in = restrict(ts_in,cfg.t0,cfg.t1);
         
         for iC = 1:length(ts_in.t)
            

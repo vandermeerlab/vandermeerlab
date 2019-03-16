@@ -12,6 +12,7 @@ function pass_flag = CheckIV(iv_in,varargin)
 %
 %	Checks performed:
 %       -  .tstart and .tend fields must exist (FAIL)
+%       -  the number of start and end times must be the same (FAIL)
 %       -  are either .tstart or .tend empty? (WARNING)
 %       -  both .tstart and .tend must be column vectors (FAIL)
 %       -  are start-end pairs unidirectional? (WARNING)
@@ -34,6 +35,9 @@ if isstruct(iv_in)
     if ~isfield(iv_in,'tstart') || ~isfield(iv_in,'tend')
         pass_flag = 0;
         fprintf('FAIL%s by CheckIV: input iv must contain tstart and tend fields.\n',in_mfun);
+    elseif ~all(size(iv_in.tstart) == size(iv_in.tstart))
+        pass_flag = 0;
+        fprintf('FAIL%s by CheckIV: input iv must contain equal number of tstart and tend fields.\n',in_mfun);
     elseif isempty(iv_in.tstart) || isempty(iv_in.tend)
         fprintf('WARNING%s by CheckIV: input iv is empty.\n',in_mfun);
     elseif ~iscolumn(iv_in.tstart) || ~iscolumn(iv_in.tend)
