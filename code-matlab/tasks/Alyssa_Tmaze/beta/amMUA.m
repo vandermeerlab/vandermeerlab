@@ -22,7 +22,7 @@ function [MUA,raw,noise] = amMUA(cfg_in,S,tvec)
 %                   number increases the allowed "loudness" of a cell. 
 %                   If spkcap is 0, the curve is flat.
 %
-%   cfg.noisefloor = 4; Magic constant for how much noise we try to remove.
+%   cfg.noisefloor = length(S.t)*0.05; Magic constant for how much noise we try to remove.
 %                    Measured in # of cells. How many noisy cells will we
 %                    tolerate? Increasing this number narrows the detection
 %                    width for individual events.
@@ -48,7 +48,7 @@ function [MUA,raw,noise] = amMUA(cfg_in,S,tvec)
 %% Parse cfg parameters
 
 cfg_def.spkcap = 2;
-cfg_def.noisefloor = 4; 
+gfg_def.noisefloor = length(S.t)*0.05;
 cfg_def.kernelstd = 40; 
 cfg_def.verbose = 1;
 mfun = mfilename;
@@ -75,6 +75,8 @@ end
                     %spikes.
  kernelstd = cfg.kernelstd;                   
 cellactivitycap = cfg.spkcap./kernelstd./sqrt(2*pi);
+% We are dividing by std * sqrt(2*pi) because this is the "height" of the
+% bell curve that we're convolving with.
 
 muascore = zeros(size(tvec));
 %muascoreneg = zeros(size(tvec));
@@ -106,9 +108,8 @@ themean = mean(muascore);
 %cfg.noisefloor = 4; %Magic constant for how much noise we try to remove.
                 %measured in # of cells.
 weightednoisefloor = cellactivitycap.*cfg.noisefloor;
-detectionthreshold = 1; %How many cells needed for detection (above noise floor)
-% ^^^ this is stupid, should not be hardcoded...not to mention there's a
-% variable name assigned to the number 1.
+%detectionthreshold = 1; %How many cells needed for detection (above noise floor)
+detectionthreshold = cfg.noisefloor/4;
 
 muacapped = min(weightednoisefloor,muascore);
 kernel3 = -gausskernel(3000,250);
