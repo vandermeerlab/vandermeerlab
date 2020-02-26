@@ -26,7 +26,7 @@ writeDiary = 1; % if 1, save command window text to session 'files' folders;
 gen = [];
 gen.load_questionable_cells = 0;
 gen.SWRmethod = 'HT'; 
-gen.MUAmethod = 'none';
+gen.MUAmethod = 'AM';
 gen.ThetaThreshold = [];
 
 %% verify requisites: detection is a long process, don't want it erroring partway through 
