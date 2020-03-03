@@ -117,7 +117,10 @@ end
         SWRsumNoise = 0;
         for iSWR = 1:length(tcent)
             nextFFT = windowedFFT(cfg,csc.data,sampwin,midIndices(iSWR));
-            SWRsumNoise = SWRsumNoise + nextFFT;
+            
+            if ~isempty(nextFFT)
+                SWRsumNoise = SWRsumNoise + nextFFT;
+            end
         end
 
         SWRsum = conv(SWRsum,[0.1,0.2,0.4,0.2,0.1]); % narrow smoothing kernel
