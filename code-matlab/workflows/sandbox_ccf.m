@@ -3,8 +3,8 @@
 %
 % The analysis proceeds as follows:
 % - load data
-% - remove spikes arouhnd +/-5 sec window around reward times and retain
-% neurons with at least 100 spikes after the removal
+% - restrict spikes to around +/-5 sec window around reward times and retain
+%   neurons with at least 100 spikes remaining
 % - separate type 1 (MSNs) and type 2 (FSI) neurons
 % - generate cross correlation MSN pairs (cx1), FSI pairs (cx2), and
 %    MSN-FSI pairs (cx3)
@@ -19,7 +19,7 @@
 clear;
 cd('/Users/manishm/Work/vanDerMeerLab/ADRLabData/');
 please = [];
-please.rats = {'R117'};%,'R119','R131','R132'}; % vStr-only rats
+please.rats = {'R119','R131','R132'}; % vStr-only rats
 [cfg_in.fd,cfg_in.fd_extra] = getDataPath(please);
 cfg_in.write_output = 1;
 cfg_in.output_dir = '/Users/manishm/Work/vanDerMeerLab/Common/temp';
@@ -27,7 +27,7 @@ cfg_in.cx_binsize = 0.01;
 
 %%
 % Top level loop which calls the main function for all the sessions
-for iS = 1:2%length(cfg_in.fd) % for each session...
+for iS = 1:length(cfg_in.fd) % for each session...
     
     cfg_in.iS = iS;
     pushdir(cfg_in.fd{iS});
@@ -55,7 +55,11 @@ function od = generateCCF(cfg_in)
     cfg_master.write_output = 0;
     cfg_master.output_prefix = 'ccf_';
     cfg_master.output_dir = 'C:\temp';
-    cfg_master.cx_binsize = 0.01;
+    cfg_master.exc_types = 0; %cell types to be excluded
+    cfg_master.cx_msn = 0.01;  % bin size for cross-correlation between pairs of Medium Spiny Neurons (MSNs) in seconds
+    cfg_master.cx_fsi = 0.01;  % bin size for cross-correlations between pairs of Fast Spiking Interneurons (FSIs) in seconds
+    cfg_master.cx_mix = 0.01;  % bin size for cross-correlations between pairs of 1 FSI abd 1 MSN in seconds
+    cfg_master.max_t = 0.5; % half window length for the cross correlations in seconds in seconds
 
     cfg_master = ProcessConfig(cfg_master,cfg_in);
     
@@ -117,27 +121,27 @@ function od = generateCCF(cfg_in)
         end
     end % of previous day available checks
 
-    %restrict spikes to times that animal was on the track
-    sd.S = restrict(sd.S, ExpKeys.TimeOnTrack, ExpKeys.TimeOffTrack);
-
-    % reward deliveries
-    evt = LoadEvents([]);
-    reward_t = evt.t{1}; % should generalize this with known labels etc.. and remove double labels
-
-    % Remove spikes 5 sec from around the reward times
-    for i = 1:length(sd.S.t)
-        sd.S.t{i} = RemoveSpikes(sd.S.t{i}, reward_t, 5);
-    end
+    % restrict spikes to a timeWindow of +/-5 seconds around the reward
+    % times
+    rt = getRewardTimes();
+    w_start = rt - 5;
+    w_end = rt + 5;
+    rt_iv = iv(w_start, w_end);
+    rt_iv = MergeIV([],rt_iv);
+    sd.S = restrict(sd.S, rt_iv);
 
     sd.S.cell_type = sd.S.usr.cell_type;
+    sd.S.tt_id = sd.S.usr.tt_num;
 
     exc_types = 0;
-    %Keep cells greater with greater than 100 spikes and of the allowed types
+    % Keep cells greater with greater than nMinSpike spikes and of the allowed types
     sd.S = KeepCells(sd.S,cfg_master.nMinSpikes,exc_types);
-
-    %Crosscorrelation for MSNs
+    
+    % Setting up parameters for cross_correlations
     c1 = sd.S.t(sd.S.cell_type == 1);
     c2 = sd.S.t(sd.S.cell_type == 2);
+    od.tt1 = sd.S.tt_id(sd.S.cell_type == 1);
+    od.tt2 = sd.S.tt_id(sd.S.cell_type == 2);
     n1 = length(c1);
     t1 = (n1*(n1-1))/2;
     n2 = length(c2);
@@ -148,30 +152,49 @@ function od = generateCCF(cfg_in)
     od.cx3 = cell(n3,1);
     od.l1 = sd.S.label(sd.S.cell_type == 1);
     od.l2 = sd.S.label(sd.S.cell_type == 2);
-
-    % 10 millsecond bins for ccf
-    cfg_cx.binsize = cfg_master.cx_binsize;
-
+    od.tvec1 = (-cfg_master.max_t:cfg_master.cx_msn:cfg_master.max_t);
+    od.tvec2 = (-cfg_master.max_t:cfg_master.cx_fsi:cfg_master.max_t);
+    od.tvec3 = (-cfg_master.max_t:cfg_master.cx_mix:cfg_master.max_t);
+    
+    cfg_cx.max_t = cfg_master.max_t;
+    % Cross correlations for MSNs
+    cfg_cx.binsize =  cfg_master.cx_msn;
     k = 1;
     for i = 1:(n1-1)
         for j = (i+1):n1
-            [od.cx1{k},~] = ccf(cfg_cx,c1{i},c1{j});
+            if od.tt1(i) == od.tt1(j) %same tetrode
+                od.cx1{k} = nan(length(od.tvec1),1);
+            else
+                [od.cx1{k},~] = ccf(cfg_cx,c1{i},c1{j});
+            end
             k = k+1;
         end
     end
-
+    
+    % Cross correlations for FSIs
+    cfg_cx.binsize =  cfg_master.cx_fsi;
     k = 1;
     for i = 1:(n2-1)
         for j = (i+1):n2
+            if od.tt2(i) == od.tt2(j) %same tetrode
+                od.cx2{k} = nan(length(od.tvec2),1);
+            else
             [od.cx2{k},~] = ccf(cfg_cx,c2{i},c2{j});
+            end
             k = k+1;
         end
     end
 
+    % Cross correlations for MSN-FSI pairs
+    cfg_cx.binsize =  cfg_master.cx_mix;
     k = 1;
     for i = 1:n1
         for j = 1:n2
+            if od.tt1(i) == od.tt2(j) %same tetrode
+                od.cx3{k} = nan(length(od.tvec3),1);
+            else
             [od.cx3{k},~] = ccf(cfg_cx,c1{i},c2{j});
+            end
             k = k+1;
         end
     end
@@ -205,6 +228,7 @@ function S = KeepCells(S,minSpikes,cTypes)
     S.label = S.label(keep);
     S.t = S.t(keep);
     S.cell_type = S.cell_type(keep);
+    S.tt_id = S.tt_id(keep);
 end
 
 
@@ -233,24 +257,4 @@ function S = LoadSpikesTarget(cfg_in)
         keep = ismember(S.usr.tt_num, tt_num_keep);
         S = SelectTS([], S, keep);
     end
-end
-
-%%
-% function to remove spikes from ost that are in a window of length w_length
-% around timpepoints in r_time
-% very inefficient implementation
-function rst = RemoveSpikes(ost, r_time, w_length) 
-    keep = true(length(ost), 1);
-    for iS = 1:length(ost)
-            cur_spk = ost(iS);
-            for iT = 1:length(r_time)
-                low = r_time(iT) - w_length;
-                high = r_time(iT) + w_length;
-                if cur_spk >= low && cur_spk <= high
-                    keep(iS)= false;
-                    break
-                end
-            end        
-    end
-    rst = ost(keep);
 end

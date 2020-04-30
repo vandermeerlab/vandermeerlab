@@ -26,7 +26,7 @@
 % end
 
 
-load('/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp/ccf_R132-2007-10-10_od.mat');
+load('/Users/manishm/Work/vanDerMeerLab/Common/temp/ccf_R117-2007-06-01_od.mat');
 d1 = od.cx1;
 nc1 = length(od.l1);
 squareFrame(d1,nc1, 'test1');
@@ -39,7 +39,7 @@ rectFrame(d3,nc1, nc2, 'test3');
 function sq = squareFrame(data, ncount, o_fname)
     n = ncount-1;
     m = 1;
-    figure;
+    fig = figure;
     for i=1:n
             subplot(n,n,((i-1)*n+i:n:(n*n)));
             t = zeros(n+1-i,101);
@@ -69,14 +69,14 @@ function sq = squareFrame(data, ncount, o_fname)
             s.set('Title',top_label);
             s.set('Fontsize',11);
     end
-    WriteFig(o_fname);
-    close;
+    WriteFig(fig,o_fname,1);
+    close all;
 end
 
 function rt = rectFrame(data, ncount1, ncount2, o_fname)
     n1 = ncount1;
     n2 = ncount2;
-    figure;
+    fig = figure;
     for i=1:n2
             subplot(n1,n2,(i:n2:(n1*n2)));
             t = zeros(n1,101);
@@ -99,7 +99,7 @@ function rt = rectFrame(data, ncount1, ncount2, o_fname)
             s.set('Title',top_label);
             s.set('Fontsize',11);
     end
-    WriteFig(o_fname);
-    close;
+    WriteFig(fig,o_fname,1);
+    close all;
 end
         

@@ -58,6 +58,8 @@ for iEvent = 1:length(cfg.eventList)
     ev_id = strncmp(ev_string,EventStrings,length(ev_string));
     ev_t = EVTimeStamps(ev_id)*10^-6;
     
+    if ~iscolumn(ev_t), ev_t = ev_t'; end
+    
     % check if this eventLabel already exists, if so append (not create new)
     label_idx = strmatch(cfg.eventLabel{iEvent},events_ts.label,'exact');
     
