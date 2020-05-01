@@ -19,15 +19,15 @@
 clear;
 cd('/Users/manishm/Work/vanDerMeerLab/ADRLabData/');
 please = [];
-please.rats = {'R119','R131','R132'}; % vStr-only rats
+please.rats = {'R117'}%,'R119','R131','R132'}; % vStr-only rats
 [cfg_in.fd,cfg_in.fd_extra] = getDataPath(please);
 cfg_in.write_output = 1;
-cfg_in.output_dir = '/Users/manishm/Work/vanDerMeerLab/Common/temp';
+cfg_in.output_dir = '/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp';
 cfg_in.cx_binsize = 0.01; 
 
 %%
 % Top level loop which calls the main function for all the sessions
-for iS = 1:length(cfg_in.fd) % for each session...
+for iS = 1:2%length(cfg_in.fd) % for each session...
     
     cfg_in.iS = iS;
     pushdir(cfg_in.fd{iS});
@@ -57,8 +57,8 @@ function od = generateCCF(cfg_in)
     cfg_master.output_dir = 'C:\temp';
     cfg_master.exc_types = 0; %cell types to be excluded
     cfg_master.cx_msn = 0.01;  % bin size for cross-correlation between pairs of Medium Spiny Neurons (MSNs) in seconds
-    cfg_master.cx_fsi = 0.01;  % bin size for cross-correlations between pairs of Fast Spiking Interneurons (FSIs) in seconds
-    cfg_master.cx_mix = 0.01;  % bin size for cross-correlations between pairs of 1 FSI abd 1 MSN in seconds
+    cfg_master.cx_fsi = 0.005;  % bin size for cross-correlations between pairs of Fast Spiking Interneurons (FSIs) in seconds
+    cfg_master.cx_mix = 0.005;  % bin size for cross-correlations between pairs of 1 FSI abd 1 MSN in seconds
     cfg_master.max_t = 0.5; % half window length for the cross correlations in seconds in seconds
 
     cfg_master = ProcessConfig(cfg_master,cfg_in);
@@ -157,15 +157,18 @@ function od = generateCCF(cfg_in)
     od.tvec3 = (-cfg_master.max_t:cfg_master.cx_mix:cfg_master.max_t);
     
     cfg_cx.max_t = cfg_master.max_t;
+    cfg_cx.smooth = 1;
     % Cross correlations for MSNs
     cfg_cx.binsize =  cfg_master.cx_msn;
+    cfg_cx.gauss_w = 7*cfg_cx.binsize;
+    cfg_cx.gauss_sd = cfg_cx.binsize;
     k = 1;
     for i = 1:(n1-1)
         for j = (i+1):n1
             if od.tt1(i) == od.tt1(j) %same tetrode
                 od.cx1{k} = nan(length(od.tvec1),1);
             else
-                [od.cx1{k},~] = ccf(cfg_cx,c1{i},c1{j});
+                [od.cx1{k},~] = ccf2(cfg_cx,c1{i},c1{j});
             end
             k = k+1;
         end
@@ -173,13 +176,15 @@ function od = generateCCF(cfg_in)
     
     % Cross correlations for FSIs
     cfg_cx.binsize =  cfg_master.cx_fsi;
+    cfg_cx.gauss_w = 15*cfg_cx.binsize;
+    cfg_cx.gauss_sd = cfg_cx.binsize;
     k = 1;
     for i = 1:(n2-1)
         for j = (i+1):n2
             if od.tt2(i) == od.tt2(j) %same tetrode
                 od.cx2{k} = nan(length(od.tvec2),1);
             else
-            [od.cx2{k},~] = ccf(cfg_cx,c2{i},c2{j});
+            [od.cx2{k},~] = ccf2(cfg_cx,c2{i},c2{j});
             end
             k = k+1;
         end
@@ -187,13 +192,15 @@ function od = generateCCF(cfg_in)
 
     % Cross correlations for MSN-FSI pairs
     cfg_cx.binsize =  cfg_master.cx_mix;
+    cfg_cx.gauss_w = 15*cfg_cx.binsize;
+    cfg_cx.gauss_sd = cfg_cx.binsize;
     k = 1;
     for i = 1:n1
         for j = 1:n2
             if od.tt1(i) == od.tt2(j) %same tetrode
                 od.cx3{k} = nan(length(od.tvec3),1);
             else
-            [od.cx3{k},~] = ccf(cfg_cx,c1{i},c2{j});
+            [od.cx3{k},~] = ccf2(cfg_cx,c1{i},c2{j});
             end
             k = k+1;
         end

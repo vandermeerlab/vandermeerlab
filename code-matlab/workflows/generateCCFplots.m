@@ -26,28 +26,28 @@
 % end
 
 
-load('/Users/manishm/Work/vanDerMeerLab/Common/temp/ccf_R117-2007-06-01_od.mat');
+load('/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp/ccf_R117-2007-06-01_od.mat');
 d1 = od.cx1;
 nc1 = length(od.l1);
-squareFrame(d1,nc1, 'test1');
+squareFrame(d1,nc1, 'test1', od.tvec1);
 d2 = od.cx2;
 nc2 = length(od.l2);
-squareFrame(d2,nc2, 'test2');
+squareFrame(d2,nc2, 'test2', od.tvec2);
 d3 = od.cx3;
-rectFrame(d3,nc1, nc2, 'test3');
+rectFrame(d3,nc1, nc2, 'test3', od.tvec3);
 
-function sq = squareFrame(data, ncount, o_fname)
+function sq = squareFrame(data, ncount, o_fname, xVal)
     n = ncount-1;
     m = 1;
     fig = figure;
     for i=1:n
             subplot(n,n,((i-1)*n+i:n:(n*n)));
-            t = zeros(n+1-i,101);
+            t = zeros(n+1-i,length(xVal));
             for j = m:m+n-i
                 t(j+1-m,:) = data{j};
             end
             m = j+1;
-            s = stackedplot((-.5:0.01:0.5),t');
+            s = stackedplot(xVal,t');
             top_label = num2str(i);
             %hack for n=1
             if (n==1)
@@ -73,17 +73,17 @@ function sq = squareFrame(data, ncount, o_fname)
     close all;
 end
 
-function rt = rectFrame(data, ncount1, ncount2, o_fname)
+function rt = rectFrame(data, ncount1, ncount2, o_fname, xVal)
     n1 = ncount1;
     n2 = ncount2;
     fig = figure;
     for i=1:n2
             subplot(n1,n2,(i:n2:(n1*n2)));
-            t = zeros(n1,101);
+            t = zeros(n1,length(xVal));
             for j = i:n2:(n1*n2)
                 t(((j-i)/n2)+1,:) = data{j};
             end
-            s = stackedplot((-.5:0.01:0.5),t');
+            s = stackedplot(xVal,t');
             top_label = num2str(i);
             side_label = cell(n1,1);
             if (i==1)
