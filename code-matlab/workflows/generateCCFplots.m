@@ -1,40 +1,48 @@
-%%Script to generate plots%%
-
-% cd('/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp');
-% % rats = {'R117','R119','R131','R132'};
-% rats = {'R119','R131','R132'};
-% for idx = 1:length(rats)
-%     curRat = rats{idx};
-%     searchString = strcat('*',curRat,'*od.mat');
-%     ofiles = dir(searchString);
-%     for jdx = 1:length(ofiles)
-%         figure;
-%         f_prefix = strcat(curRat,'-Day-',num2str(jdx));
-%         f_1 = strcat(f_prefix,'-MSN');
-%         f_2 = strcat(f_prefix,'-FSI');
-%         f_3 = strcat(f_prefix,'-mixed');
-%         load(ofiles(jdx).name);
-%         d1 = od.cx1;
-%         nc1 = length(od.l1);
-%         squareFrame(d1,nc1, f_1);
-%         d2 = od.cx2;
-%         nc2 = length(od.l2);
-%         squareFrame(d2,nc2, f_2);
-%         d3 = od.cx3;
-%         rectFrame(d3,nc1, nc2, f_3);
-%     end
-% end
+%% Script to generate plots
+% TODO: Use some other plotting method other than stackedplots
+% Figure out a better way to representC
 
 
-load('/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp/ccf_R117-2007-06-01_od.mat');
-d1 = od.cx1;
-nc1 = length(od.l1);
-squareFrame(d1,nc1, 'test1', od.tvec1);
-d2 = od.cx2;
-nc2 = length(od.l2);
-squareFrame(d2,nc2, 'test2', od.tvec2);
-d3 = od.cx3;
-rectFrame(d3,nc1, nc2, 'test3', od.tvec3);
+cd('/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp');
+rats = {'R117','R119','R131','R132'};
+for idx = 1:length(rats)
+    curRat = rats{idx};
+    searchString = strcat('*',curRat,'*od.mat');
+    ofiles = dir(searchString);
+    for jdx = 1:length(ofiles)
+        figure;
+        f_prefix = strcat(curRat,'-Day-',num2str(jdx));
+        f_1 = strcat(f_prefix,'-MSN');
+        f_2 = strcat(f_prefix,'-FSI');
+        f_3 = strcat(f_prefix,'-mixed');
+        load(ofiles(jdx).name);
+        d1 = od.cx1;
+        nc1 = length(od.l1);
+        if nc1 > 1  
+          squareFrame(d1,nc1, f_1, od.tvec1);
+        end
+        d2 = od.cx2;
+        nc2 = length(od.l2);
+        if nc2 > 1
+          squareFrame(d2,nc2, f_2, od.tvec2);
+        end
+        d3 = od.cx3;
+        if nc1 > 0 && nc2 > 0
+            rectFrame(d3,nc1, nc2, f_3, od.tvec3);
+        end
+    end
+end
+
+
+% load('/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp/ccf_R131-2007-09-06_od.mat');
+% d1 = od.cx1;
+% nc1 = length(od.l1);
+% squareFrame(d1,nc1, 'test1', od.tvec1);
+% d2 = od.cx2;
+% nc2 = length(od.l2);
+% squareFrame(d2,nc2, 'test2', od.tvec2);
+% d3 = od.cx3;
+% rectFrame(d3,nc1, nc2, 'test3', od.tvec3);
 
 function sq = squareFrame(data, ncount, o_fname, xVal)
     n = ncount-1;

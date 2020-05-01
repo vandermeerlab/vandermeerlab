@@ -11,15 +11,12 @@
 %
 % output variables are stored in the od variable, which can be saved and
 % later used to plot the figures
-% 
-% TODO: Use restict() and invertIV() to remove spikes around the reward
-% times
 
 %% setup
 clear;
 cd('/Users/manishm/Work/vanDerMeerLab/ADRLabData/');
 please = [];
-please.rats = {'R117'}%,'R119','R131','R132'}; % vStr-only rats
+please.rats = {'R117','R119','R131','R132'}; % vStr-only rats
 [cfg_in.fd,cfg_in.fd_extra] = getDataPath(please);
 cfg_in.write_output = 1;
 cfg_in.output_dir = '/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp';
@@ -27,7 +24,7 @@ cfg_in.cx_binsize = 0.01;
 
 %%
 % Top level loop which calls the main function for all the sessions
-for iS = 1:2%length(cfg_in.fd) % for each session...
+for iS = 1:length(cfg_in.fd) % for each session...
     
     cfg_in.iS = iS;
     pushdir(cfg_in.fd{iS});
