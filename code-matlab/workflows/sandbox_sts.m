@@ -1,4 +1,4 @@
-%% sandbox to generate cross correlations
+%% sandbox to generate trial-by-trial spike triggered spectrum of neurons
 %
 %
 % The analysis proceeds as follows:
@@ -6,8 +6,7 @@
 % - restrict spikes to around +/-5 sec window around reward times and retain
 %   neurons with at least 100 spikes remaining
 % - separate type 1 (MSNs) and type 2 (FSI) neurons
-% - generate cross correlation MSN pairs (cx1), FSI pairs (cx2), and
-%    MSN-FSI pairs (cx3)
+% - generate trial-by-trial STS
 %
 % output variables are stored in the od variable, which can be saved and
 % later used to plot the figures
@@ -16,7 +15,7 @@
 clear;
 cd('/Users/manishm/Work/vanDerMeerLab/ADRLabData/');
 please = [];
-please.rats = {'R117','R119','R131','R132'}; % vStr-only rats
+please.rats = {'R117'}%,'R119','R131','R132'}; % vStr-only rats
 [cfg_in.fd,cfg_in.fd_extra] = getDataPath(please);
 cfg_in.write_output = 1;
 cfg_in.output_dir = '/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp';
@@ -24,20 +23,34 @@ cfg_in.cx_binsize = 0.01;
 
 %%
 % Top level loop which calls the main function for all the sessions
-for iS = 1:length(cfg_in.fd) % for each session...
+for iS = 1%:length(cfg_in.fd) % for each session...
     
     cfg_in.iS = iS;
     pushdir(cfg_in.fd{iS});
-    generateCCF(cfg_in); % do the business
+    generateSTS(cfg_in); % do the business
     popdir;
     
 end % of sessions
 
 %%
-% Main function to generate cross-correlations
-function od = generateCCF(cfg_in)
+% Main function to generate spike_triggered_spectra
+function od = generateSTS(cfg_in)
 
     LoadExpKeys;
+    
+    if isfield(ExpKeys,'goodGamma_vStr')
+        cfg = []; cfg.fc = ExpKeys.goodGamma_vStr;
+    elseif isfield(ExpKeys, 'goodGamma')
+        cfg = []; cfg.fc = ExpKeys.goodGamma;
+    else
+        error('Couldn''t find LFP field name.');
+    end
+
+    csc = LoadCSC(cfg); csc.data = csc.data-nanmean(csc.data); % could locdetrend to improve STA estimate
+    
+    lfp_tt = regexp(cfg.fc, 'CSC\d+', 'match');
+    lfp_tt = str2double(lfp_tt{1}{1}(4:end)); % need this to skip cells from same tt (could make into function)
+    fprintf('LFP ttno is %d\n', lfp_tt);
     
     % params
     cfg_master = []; % overall params
@@ -57,6 +70,8 @@ function od = generateCCF(cfg_in)
     cfg_master.cx_fsi = 0.005;  % bin size for cross-correlations between pairs of Fast Spiking Interneurons (FSIs) in seconds
     cfg_master.cx_mix = 0.005;  % bin size for cross-correlations between pairs of 1 FSI abd 1 MSN in seconds
     cfg_master.max_t = 0.5; % half window length for the cross correlations in seconds in seconds
+    cfg_master.plotfft = 1;
+    cfg_master.plot = 1;
 
     cfg_master = ProcessConfig(cfg_master,cfg_in);
     
@@ -121,98 +136,62 @@ function od = generateCCF(cfg_in)
     % restrict spikes to a timeWindow of +/-5 seconds around the reward
     % times
     rt = getRewardTimes();
-    w_start = rt - 5;
-    w_end = rt + 5;
-    rt_iv = iv(w_start, w_end);
+    trial_starts = rt - 5;
+    trial_ends = rt + 5;
+    rt_iv = iv(trial_starts, trial_ends);
     rt_iv = MergeIV([],rt_iv);
-    sd.S = restrict(sd.S, rt_iv);
-
-    sd.S.cell_type = sd.S.usr.cell_type;
-    sd.S.tt_id = sd.S.usr.tt_num;
+    od.S = restrict(sd.S, rt_iv);
+    
+    od.S.cell_type = sd.S.usr.cell_type;
+    od.S.tt_id = sd.S.usr.tt_num;
 
     % Keep cells greater with greater than nMinSpike spikes and of the allowed types
-    sd.S = KeepCells(sd.S,cfg_master.nMinSpikes,cfg_master.exc_types);
+    od.S = KeepCells(od.S,cfg_master.nMinSpikes,cfg_master.exc_types,lfp_tt);
     
-    % Setting up parameters for cross_correlations
-    c1 = sd.S.t(sd.S.cell_type == 1);
-    c2 = sd.S.t(sd.S.cell_type == 2);
-    od.tt1 = sd.S.tt_id(sd.S.cell_type == 1);
-    od.tt2 = sd.S.tt_id(sd.S.cell_type == 2);
-    n1 = length(c1);
-    t1 = (n1*(n1-1))/2;
-    n2 = length(c2);
-    t2 = (n2*(n2-1))/2;
-    n3 = n1*n2;
-    od.cx1 = cell(t1,1);
-    od.cx2 = cell(t2,1);
-    od.cx3 = cell(n3,1);
-    od.l1 = sd.S.label(sd.S.cell_type == 1);
-    od.l2 = sd.S.label(sd.S.cell_type == 2);
-    od.tvec1 = (-cfg_master.max_t:cfg_master.cx_msn:cfg_master.max_t);
-    od.tvec2 = (-cfg_master.max_t:cfg_master.cx_fsi:cfg_master.max_t);
-    od.tvec3 = (-cfg_master.max_t:cfg_master.cx_mix:cfg_master.max_t);
+    % parameters for STS
+    cfg_s = []; cfg_s.binsize = 0.001; cfg_s.Fs = 1 ./ cfg_s.binsize;
+%     cfg_s.nShuf = cfg_master.nShuf; 
+    cfg_s.trial_len = 10;
     
-    cfg_cx.max_t = cfg_master.max_t;
-    cfg_cx.smooth = 1;
-    % Cross correlations for MSNs
-    cfg_cx.binsize =  cfg_master.cx_msn;
-    cfg_cx.gauss_w = 7*cfg_cx.binsize;
-    cfg_cx.gauss_sd = cfg_cx.binsize;
-    k = 1;
-    for i = 1:(n1-1)
-        for j = (i+1):n1
-            if od.tt1(i) == od.tt1(j) %same tetrode
-                od.cx1{k} = nan(length(od.tvec1),1);
-            else
-                [od.cx1{k},~] = ccf2(cfg_cx,c1{i},c1{j});
-            end
-            k = k+1;
-        end
-    end
+    cfg.params = []; cfg.params.Fs = 200; cfg.params.tapers = [3 5];
     
-    % Cross correlations for FSIs
-    cfg_cx.binsize =  cfg_master.cx_fsi;
-    cfg_cx.gauss_w = 15*cfg_cx.binsize;
-    cfg_cx.gauss_sd = cfg_cx.binsize;
-    k = 1;
-    for i = 1:(n2-1)
-        for j = (i+1):n2
-            if od.tt2(i) == od.tt2(j) %same tetrode
-                od.cx2{k} = nan(length(od.tvec2),1);
-            else
-            [od.cx2{k},~] = ccf2(cfg_cx,c2{i},c2{j});
-            end
-            k = k+1;
-        end
-    end
 
-    % Cross correlations for MSN-FSI pairs
-    cfg_cx.binsize =  cfg_master.cx_mix;
-    cfg_cx.gauss_w = 15*cfg_cx.binsize;
-    cfg_cx.gauss_sd = cfg_cx.binsize;
-    k = 1;
-    for i = 1:n1
-        for j = 1:n2
-            if od.tt1(i) == od.tt2(j) %same tetrode
-                od.cx3{k} = nan(length(od.tvec3),1);
-            else
-            [od.cx3{k},~] = ccf2(cfg_cx,c1{i},c2{j});
+    for iC = length(od.S.t):-1:1
+         S = SelectTS([],od.S,iC);
+        %calculating trial-trial STA
+        for iT = 1:length(trial_starts)
+            triaL_iv = iv(trial_starts(iT),trial_ends(iT));
+            trial_S = restrict(S, triaL_iv);
+            spk_t = trial_S.t{1};
+            % Bin spikes on CSC timebase
+            this_spk_binned = zeros(size(csc.tvec));
+            idx = nearest_idx3(spk_t, csc.tvec);
+            this_spk_binned(idx) = 1;
+            [xc, tvec] = xcorr(csc.data, this_spk_binned, 5000);
+            tvec = tvec .* median(diff(csc.tvec));
+
+            if cfg_master.plotfft
+                subplot(211);
+                plot(tvec, xc);
+                title('raw STA');
             end
-            k = k+1;
+% 
+            % STA spectrum
+            this_Fs = 1 ./ median(diff(csc.tvec));
+            [P,F] = pwelch(xc,length(xc), [], [], this_Fs);
+
+            if cfg_master.plot
+                subplot(212);
+                plot(F, 10*log10(P)); xlim([0 100]);
+                title('STA spectrum');
+            end
         end
-    end
-    if cfg_master.write_output
-         [~, fp, ~] = fileparts(pwd);
-         pushdir(cfg_master.output_dir);
-         fn_out = cat(2,cfg_master.output_prefix, fp, '_od.mat');
-         save(fn_out,'od'); % should add option to save in specified output dir
-         popdir;
     end
 end
 
 % Other functions
 %%
-function S = KeepCells(S,minSpikes,cTypes)
+function S = KeepCells(S,minSpikes,cTypes,tt_num)
     thr = minSpikes;
 
     nCells = length(S.t);
@@ -228,6 +207,8 @@ function S = KeepCells(S,minSpikes,cTypes)
             end
         end
     end
+    keep2 = (S.tt_id ~= tt_num);
+    keep = keep & keep2;
     S.label = S.label(keep);
     S.t = S.t(keep);
     S.cell_type = S.cell_type(keep);

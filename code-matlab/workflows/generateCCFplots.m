@@ -18,9 +18,9 @@ for idx = 1:length(rats)
         load(ofiles(jdx).name);
         d1 = od.cx1;
         nc1 = length(od.l1);
-        if nc1 > 1  
-          squareFrame(d1,nc1, f_1, od.tvec1);
-        end
+%         if nc1 > 1  
+%           squareFrame(d1,nc1, f_1, od.tvec1);
+%         end
         d2 = od.cx2;
         nc2 = length(od.l2);
         if nc2 > 1

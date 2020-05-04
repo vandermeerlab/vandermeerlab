@@ -72,7 +72,7 @@ else % raw spike count version
     tvec = xbin_centers(2:end-1); % remove unwanted bins
     ccf = ccf(2:end-1);
     
-    ccf = ccf./(length(ts1)); % normalize by number of spikes of first input
+%     ccf = ccf./(length(ts1)); % normalize by number of spikes of first input
     
     ccf = ccf(end:-1:1); % reverse to make consistent with MATLAB xcorr()
     
