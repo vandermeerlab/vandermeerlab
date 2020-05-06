@@ -1,11 +1,10 @@
-%% sandbox to generate trial-by-trial spike triggered spectrum of neurons
+%% sandbox to generate trial-by-trial average spike triggered spectrum of neurons
 %
 %
 % The analysis proceeds as follows:
 % - load data
-% - restrict spikes to around +/-5 sec window around reward times and retain
-%   neurons with at least 100 spikes remaining
 % - separate type 1 (MSNs) and type 2 (FSI) neurons
+% - spearate spikes into two epochs: near reward times and away from it
 % - generate trial-by-trial STS
 %
 % output variables are stored in the od variable, which can be saved and
@@ -15,15 +14,16 @@
 clear;
 cd('/Users/manishm/Work/vanDerMeerLab/ADRLabData/');
 please = [];
-please.rats = {'R117'}%,'R119','R131','R132'}; % vStr-only rats
+please.rats = {'R117','R119','R131','R132'}; % vStr-only rats
 [cfg_in.fd,cfg_in.fd_extra] = getDataPath(please);
 cfg_in.write_output = 1;
 cfg_in.output_dir = '/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp';
-cfg_in.cx_binsize = 0.01; 
+cfg_in.exc_types = 0;
+
 
 %%
 % Top level loop which calls the main function for all the sessions
-for iS = 1%:length(cfg_in.fd) % for each session...
+for iS = 1:length(cfg_in.fd) % for each session...
     
     cfg_in.iS = iS;
     pushdir(cfg_in.fd{iS});
@@ -63,15 +63,9 @@ function od = generateSTS(cfg_in)
     cfg_master.fd = []; % full list of session fd's, get this from input cfg
     cfg_master.fd_extra = []; % get this from input cfg
     cfg_master.write_output = 0;
-    cfg_master.output_prefix = 'ccf_';
+    cfg_master.output_prefix = 'sts_';
     cfg_master.output_dir = 'C:\temp';
     cfg_master.exc_types = 0; %cell types to be excluded
-    cfg_master.cx_msn = 0.01;  % bin size for cross-correlation between pairs of Medium Spiny Neurons (MSNs) in seconds
-    cfg_master.cx_fsi = 0.005;  % bin size for cross-correlations between pairs of Fast Spiking Interneurons (FSIs) in seconds
-    cfg_master.cx_mix = 0.005;  % bin size for cross-correlations between pairs of 1 FSI abd 1 MSN in seconds
-    cfg_master.max_t = 0.5; % half window length for the cross correlations in seconds in seconds
-    cfg_master.plotfft = 1;
-    cfg_master.plot = 1;
 
     cfg_master = ProcessConfig(cfg_master,cfg_in);
     
@@ -133,64 +127,119 @@ function od = generateSTS(cfg_in)
         end
     end % of previous day available checks
 
-    % restrict spikes to a timeWindow of +/-5 seconds around the reward
-    % times
+    % Divide Spikes into two kinds of epochs: Around +/-5 s of the reward 
+    % times (near trials) and the others (away trials).
     rt = getRewardTimes();
-    trial_starts = rt - 5;
-    trial_ends = rt + 5;
-    rt_iv = iv(trial_starts, trial_ends);
+    near_trial_starts = rt - 5;
+    near_trial_ends = rt + 5;
+    rt_iv = iv(near_trial_starts, near_trial_ends);
     rt_iv = MergeIV([],rt_iv);
-    od.S = restrict(sd.S, rt_iv);
+    od.S1 = restrict(sd.S, rt_iv);
     
-    od.S.cell_type = sd.S.usr.cell_type;
-    od.S.tt_id = sd.S.usr.tt_num;
+    rt = getRewardTimes();
+    away_trial_starts = [ExpKeys.TimeOnTrack;rt(1:end-1)+5];
+    away_trial_ends = (rt-5);
+    % Get rid of extra long-trials (greater than mean + 1*SD)
+    trial_length = away_trial_ends - away_trial_starts;
+    mtl = mean(trial_length); stl = std(trial_length);
+    valid_trials = (trial_length <= mtl + stl); 
+    away_trial_starts = away_trial_starts(valid_trials);
+    away_trial_ends = away_trial_ends(valid_trials);
+    rt_iv = iv(away_trial_starts, away_trial_ends);
+    rt_iv = MergeIV([],rt_iv);
+    od.S2 = restrict(sd.S, rt_iv);
+    
+    % Saving other specific fields
+    od.S1.cell_type = sd.S.usr.cell_type;
+    od.S1.tt_id = sd.S.usr.tt_num;
+    od.S1.trial_starts = near_trial_starts;
+    od.S1.trial_ends = near_trial_ends;
+    od.S2.cell_type = sd.S.usr.cell_type;
+    od.S2.tt_id = sd.S.usr.tt_num;
+    od.S2.trial_starts = away_trial_starts;
+    od.S2.trial_ends = away_trial_ends;
 
     % Keep cells greater with greater than nMinSpike spikes and of the allowed types
-    od.S = KeepCells(od.S,cfg_master.nMinSpikes,cfg_master.exc_types,lfp_tt);
+    od.S1 = KeepCells(od.S1,cfg_master.nMinSpikes,cfg_master.exc_types,lfp_tt);
+    od.S2 = KeepCells(od.S2,cfg_master.nMinSpikes,cfg_master.exc_types,lfp_tt);
     
-    % parameters for STS
-    cfg_s = []; cfg_s.binsize = 0.001; cfg_s.Fs = 1 ./ cfg_s.binsize;
-%     cfg_s.nShuf = cfg_master.nShuf; 
-    cfg_s.trial_len = 10;
+    % Parameters for STS
+    % Use dummy data to get Frequency values of pwelch
+    cfg_s.Fs = 1/median(diff(csc.tvec));
+    cfg_s.sts_wl = round(cfg_s.Fs);
+    dd = zeros(1,cfg_s.sts_wl);
+    [~,F] = pwelch(dd,length(dd),[],[],cfg_s.Fs);
+    cfg_s.foi = (F >= 0 & F <= 100);
+    cfg_s.f_len = sum(cfg_s.foi);
+    cfg_s.lfp_data = csc.data;
+    cfg_s.lfp_ts = csc.tvec;
     
-    cfg.params = []; cfg.params.Fs = 200; cfg.params.tapers = [3 5];
+    od.S1.sts_p = cell(length(od.S1.t),1);
+    od.S1.mfr = cell(length(od.S1.t),1);
+    od.S2.sts_p = cell(length(od.S2.t),1);
+    od.S2.mfr = cell(length(od.S2.t),1);
     
+    % For near trials
+    for iC = length(od.S1.t):-1:1 
+        S1 = SelectTS([],od.S1,iC);
+        [od.S1.sts{iC}, od.S1.mfr{iC}] = calculateSTS(cfg_s, S1, od.S1.trial_starts, od.S1.trial_ends);
+    end
+    
+    % For away trials
+    for iC = length(od.S2.t):-1:1 
+        S2 = SelectTS([],od.S2,iC);
+        [od.S2.sts{iC}, od.S2.mfr{iC}] = calculateSTS(cfg_s, S2, od.S2.trial_starts, od.S2.trial_ends);
+    end
+    
+    if cfg_master.write_output
+         [~, fp, ~] = fileparts(pwd);
+         pushdir(cfg_master.output_dir);
+         fn_out = cat(2,cfg_master.output_prefix, fp, '_sts.mat');
+         save(fn_out,'od'); % should add option to save in specified output dir
+         popdir;
+    end
+    
+end
 
-    for iC = length(od.S.t):-1:1
-         S = SelectTS([],od.S,iC);
-        %calculating trial-trial STA
-        for iT = 1:length(trial_starts)
-            triaL_iv = iv(trial_starts(iT),trial_ends(iT));
-            trial_S = restrict(S, triaL_iv);
-            spk_t = trial_S.t{1};
-            % Bin spikes on CSC timebase
-            this_spk_binned = zeros(size(csc.tvec));
-            idx = nearest_idx3(spk_t, csc.tvec);
-            this_spk_binned(idx) = 1;
-            [xc, tvec] = xcorr(csc.data, this_spk_binned, 5000);
-            tvec = tvec .* median(diff(csc.tvec));
+%% Other functions
 
-            if cfg_master.plotfft
-                subplot(211);
-                plot(tvec, xc);
-                title('raw STA');
-            end
-% 
-            % STA spectrum
-            this_Fs = 1 ./ median(diff(csc.tvec));
-            [P,F] = pwelch(xc,length(xc), [], [], this_Fs);
-
-            if cfg_master.plot
-                subplot(212);
-                plot(F, 10*log10(P)); xlim([0 100]);
-                title('STA spectrum');
-            end
+%% function that calculates average STS for each trial
+function [this_sts, this_mfr] = calculateSTS(cfg_in, S, trial_starts, trial_ends)
+    this_Fs = cfg_in.Fs;
+    sts_wl = cfg_in.sts_wl;
+    f_len = cfg_in.f_len;
+    lfp_data = cfg_in.lfp_data;
+    lfp_ts = cfg_in.lfp_ts;
+    foi = cfg_in.foi;
+    % Calculating average spectra of individual STAs
+    this_sts = zeros(length(trial_starts),f_len);
+    this_mfr = zeros(length(trial_starts),1);
+%     close all;
+%     figure;
+    for iT = 1:length(trial_starts)
+        triaL_iv = iv(trial_starts(iT),trial_ends(iT));
+        trial_S = restrict(S, triaL_iv);
+        spk_t = trial_S.t{1};
+        this_mfr(iT) = length(spk_t)/(trial_ends(iT) - trial_starts(iT));
+        % Bin spikes on CSC timebase
+        idx = nearest_idx3(spk_t, lfp_ts);
+        this_p = zeros(length(idx),f_len);
+        % For each spike
+        for iS = 1:length(idx)
+            % Using the fact that these spikes are well into the middle of
+            % the session, ideally a function to pad with zeroes for the
+            % STA if need be
+            this_STA = lfp_data((idx(iS)-floor(sts_wl/2)):(idx(iS)+floor(sts_wl/2)));
+            [P,~] = pwelch(this_STA,length(this_STA), [], [], this_Fs);
+            this_p(iS,:) = P(foi);
         end
+        this_sts(iT,:) = mean(this_p,1);
+%         plot(10*log(this_sts(iT,:)), 'Color','blue');
+%         hold on;
     end
 end
 
-% Other functions
-%%
+%% function to remove cells based on spike threshold, cell type and tetrode
 function S = KeepCells(S,minSpikes,cTypes,tt_num)
     thr = minSpikes;
 
