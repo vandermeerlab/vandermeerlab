@@ -199,7 +199,7 @@ function od = generateSTS(cfg_in)
     if cfg_master.write_output
          [~, fp, ~] = fileparts(pwd);
          pushdir(cfg_master.output_dir);
-         fn_out = cat(2,cfg_master.output_prefix, fp, '_sts.mat');
+         fn_out = cat(2, fp, '_sts.mat');
          save(fn_out,'od'); % should add option to save in specified output dir
          popdir;
     end
