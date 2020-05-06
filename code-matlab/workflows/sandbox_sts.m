@@ -9,22 +9,22 @@
 %
 % output variables are stored in the od variable, which can be saved and
 % later used to plot the figures
+% 
 
 %% setup
 clear;
-cd('D:\ADRLabData');
+cd('/Users/manishm/Work/vanDerMeerLab/');
 please = [];
 please.rats = {'R117','R119','R131','R132'}; % vStr-only rats
 [cfg_in.fd,cfg_in.fd_extra] = getDataPath(please);
 cfg_in.write_output = 1;
-cfg_in.output_dir = 'D:\RandomVstrAnalysis\temp';
+cfg_in.output_dir = '/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp/STS_results';
 cfg_in.exc_types = 0;
 
 
 %%
 % Top level loop which calls the main function for all the sessions
 for iS = 1:length(cfg_in.fd) % for each session...
-    
     cfg_in.iS = iS;
     pushdir(cfg_in.fd{iS});
     generateSTS(cfg_in); % do the business
@@ -179,10 +179,12 @@ function od = generateSTS(cfg_in)
     cfg_s.lfp_data = csc.data;
     cfg_s.lfp_ts = csc.tvec;
     
-    od.S1.sts_p = cell(length(od.S1.t),1);
+    od.S1.sts = cell(length(od.S1.t),1);
     od.S1.mfr = cell(length(od.S1.t),1);
-    od.S2.sts_p = cell(length(od.S2.t),1);
+    od.S1.freqs = F(F >= 0 & F <= 100);
+    od.S2.sts = cell(length(od.S2.t),1);
     od.S2.mfr = cell(length(od.S2.t),1);
+    od.S2.freqs = F(F >= 0 & F <= 100);
     
     % For near trials
     for iC = length(od.S1.t):-1:1 
