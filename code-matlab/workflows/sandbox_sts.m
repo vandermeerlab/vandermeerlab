@@ -12,12 +12,12 @@
 
 %% setup
 clear;
-cd('/Users/manishm/Work/vanDerMeerLab/ADRLabData/');
+cd('D:\ADRLabData');
 please = [];
 please.rats = {'R117','R119','R131','R132'}; % vStr-only rats
 [cfg_in.fd,cfg_in.fd_extra] = getDataPath(please);
 cfg_in.write_output = 1;
-cfg_in.output_dir = '/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp';
+cfg_in.output_dir = 'D:\RandomVstrAnalysis\temp';
 cfg_in.exc_types = 0;
 
 
@@ -129,14 +129,19 @@ function od = generateSTS(cfg_in)
 
     % Divide Spikes into two kinds of epochs: Around +/-5 s of the reward 
     % times (near trials) and the others (away trials).
+    
     rt = getRewardTimes();
+    % Sometimes (in R117-2007-06-17) the reward detection is triggered
+    % before the trials start. For these cases, a sanity check is put in
+    % place to ensure that only the valid reward times are retained
+    rt = rt(rt > ExpKeys.TimeOnTrack);
+    
     near_trial_starts = rt - 5;
     near_trial_ends = rt + 5;
     rt_iv = iv(near_trial_starts, near_trial_ends);
     rt_iv = MergeIV([],rt_iv);
     od.S1 = restrict(sd.S, rt_iv);
-    
-    rt = getRewardTimes();
+   
     away_trial_starts = [ExpKeys.TimeOnTrack;rt(1:end-1)+5];
     away_trial_ends = (rt-5);
     % Get rid of extra long-trials (greater than mean + 1*SD)
