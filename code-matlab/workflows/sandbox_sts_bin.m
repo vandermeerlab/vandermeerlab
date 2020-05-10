@@ -1,12 +1,12 @@
 %% script to generate STA spectra and average STS on a trial-by trial basis as well as for binned trials
 %% setup
 clear;
-cd('D:\ADRLabData');
+cd('/Users/manishm/Work/vanDerMeerLab/ADRLabData');
 please = [];
 please.rats = {'R117','R119','R131','R132'}; % vStr-only rats
 [cfg_in.fd,cfg_in.fd_extra] = getDataPath(please);
 cfg_in.write_output = 1;
-cfg_in.output_dir = 'D:\RandomVstrAnalysis\temp';
+cfg_in.output_dir = '/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp';
 cfg_in.exc_types = 0;
 
 
