@@ -1,12 +1,12 @@
 %% script to generate STA spectra and average STS on a trial-by trial basis as well as for binned trials
 %% setup
 clear;
-cd('/Users/manishm/Work/vanDerMeerLab/');
+cd('D:\ADRLabData');
 please = [];
-please.rats = {{'R117','R119','R131','R132'}; % vStr-only rats
+please.rats = {'R117','R119','R131','R132'}; % vStr-only rats
 [cfg_in.fd,cfg_in.fd_extra] = getDataPath(please);
 cfg_in.write_output = 1;
-cfg_in.output_dir = '/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp/';
+cfg_in.output_dir = 'D:\RandomVstrAnalysis\temp';
 cfg_in.exc_types = 0;
 
 
@@ -178,8 +178,9 @@ function od = generateSTS(cfg_in)
                     'uw_sta_spec_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
                     'sts_full', zeros(tcount, cfg_s.f_len), ...
                     'sts_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
+                    'scount_ptile',zeros(cfg_s.pbins, 1), ...
                     'mfr', zeros(1, tcount), ...
-                    'ptile_freqs', zeros(cfg_s.pbins,2)), length(od.S1.t), 1);
+                    'ptile_mfrs', zeros(cfg_s.pbins,2)), length(od.S1.t), 1);
     tcount = length(od.S2.trial_starts);           
     od.S2.freqs = F(F >= 0 & F <= 100);
     od.S2.spec_res = repmat(struct('sta_spec_full', zeros(tcount,cfg_s.f_len), ...
@@ -188,8 +189,9 @@ function od = generateSTS(cfg_in)
                     'uw_sta_spec_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
                     'sts_full', zeros(tcount, cfg_s.f_len), ...
                     'sts_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
+                    'scount_ptile',zeros(cfg_s.pbins, 1), ...
                     'mfr', zeros(1, tcount), ...
-                    'ptile_freqs', zeros(cfg_s.pbins,2)), length(od.S2.t), 1);
+                    'ptile_mfrs', zeros(cfg_s.pbins,2)), length(od.S2.t), 1);
                 
     % For near trials
     for iC = length(od.S1.t):-1:1
@@ -265,20 +267,21 @@ function res = calculateSTS(cfg_in, S)
         end
         
         % Bin based on percentile and calculate results for the bins
-        res.ptile_freqs = zeros(cfg_in.pbins,2);
+        res.ptile_mfrs = zeros(cfg_in.pbins,2);
         res.w_sta_spec_ptile = zeros(cfg_in.pbins, cfg_in.f_len);
         res.uw_sta_spec_ptile = zeros(cfg_in.pbins, cfg_in.f_len);
         res.sta_spec_ptile = zeros(cfg_in.pbins, cfg_in.f_len);
         res.sts_ptile = zeros(cfg_in.pbins, cfg_in.f_len);
+        res.scount_ptile = zeros(cfg_in.pbins, 1);
         for iP = 1:cfg_in.pbins
             lpt = round(100*(iP-1)*(1/cfg_in.pbins));
             upt = round(100*(iP)*(1/cfg_in.pbins));
-            res.ptile_freqs(iP,1) = prctile(nz_mfr, lpt);
-            res.ptile_freqs(iP,2) = prctile(nz_mfr, upt);
+            res.ptile_mfrs(iP,1) = prctile(nz_mfr, lpt);
+            res.ptile_mfrs(iP,2) = prctile(nz_mfr, upt);
             if (iP == cfg_in.pbins)
-                ptrials = find(nz_mfr >= res.ptile_freqs(iP,1) & nz_mfr <= res.ptile_freqs(iP,2));
+                ptrials = find(nz_mfr >= res.ptile_mfrs(iP,1) & nz_mfr <= res.ptile_mfrs(iP,2));
             else
-                ptrials = find(nz_mfr >= res.ptile_freqs(iP,1) & nz_mfr < res.ptile_freqs(iP,2));
+                ptrials = find(nz_mfr >= res.ptile_mfrs(iP,1) & nz_mfr < res.ptile_mfrs(iP,2));
             end
             p_spikes = cell(length(ptrials),1);
             if ~isempty(ptrials)
@@ -295,7 +298,7 @@ function res = calculateSTS(cfg_in, S)
                 % calculate unweighted mean of STA spectra
                 res.uw_sta_spec_ptile(iP,:) = res.uw_sta_spec_ptile(iP,:)/length(ptrials);
             end
-%             disp(length(p_spikes));
+            res.scount_ptile(iP) = length(p_spikes);
             % Calculate average STS of the mfr percentile based binned spikes
             % Bin spikes on CSC timebase
             idx = nearest_idx3(p_spikes, cfg_in.lfp_ts);
@@ -311,9 +314,8 @@ function res = calculateSTS(cfg_in, S)
             this_spk_binned = zeros(size(cfg_in.lfp_ts));
             this_spk_binned(idx) = 1;
             [this_sta, ~] = xcorr(cfg_in.lfp_data, this_spk_binned, floor(cfg_in.sts_wl/2));
-            [P,F] = pwelch(this_sta, cfg_in.seg_len, [], [], cfg_in.Fs);
+            [P,~] = pwelch(this_sta, cfg_in.seg_len, [], [], cfg_in.Fs);
             res.sta_spec_ptile(iP,:) = P(cfg_in.foi);
-            F = F(cfg_in.foi);
         end 
 %         % Sanity check  that no spikes have been lost in winning
 %         % TODO: Convert intp a proper error message
