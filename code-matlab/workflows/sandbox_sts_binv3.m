@@ -5,7 +5,7 @@
 clear;
 cd('/Users/manishm/Work/vanDerMeerLab/ADRLabData');
 please = [];
-please.rats = {'R117'}%,'R119','R131','R132'}; % vStr-only rats
+please.rats = {'R117','R119','R131','R132'}; % vStr-only rats
 [cfg_in.fd,cfg_in.fd_extra] = getDataPath(please);
 cfg_in.write_output = 1;
 cfg_in.output_dir = '/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp';
@@ -14,7 +14,7 @@ cfg_in.exc_types = 0;
 
 %%
 % Top level loop which calls the main function for all the sessions
-for iS = 1%:length(cfg_in.fd) % for each session...
+for iS = 1:length(cfg_in.fd) % for each session...
     cfg_in.iS = iS;
     pushdir(cfg_in.fd{iS});
     generateSTS(cfg_in); % do the business
@@ -225,16 +225,17 @@ function od = generateSTS(cfg_in)
     keep = (msn_lfr_dist >= 200) & (msn_hfr_dist >= 200);
     msn_lfr_dist = msn_lfr_dist(keep);
     msn_hfr_dist = msn_hfr_dist(keep);
-    fsi = find(od.S1.cell_type == 2);
-    for iC = 1:length(fsi)
-        S1 = SelectTS([],od.S1,fsi(iC));
-        cfg_s.trial_starts = od.S1.trial_starts;
-        cfg_s.trial_ends = od.S1.trial_ends;
-        cfg_s.ldist = msn_lfr_dist;
-        cfg_s.hdist = msn_hfr_dist;
-        od.S1.fsi_res(iC) = calculateFSIspec(cfg_s, S1);
+    if numel(msn_lfr_dist) > 0
+        fsi = find(od.S1.cell_type == 2);
+        for iC = 1:length(fsi)
+            S1 = SelectTS([],od.S1,fsi(iC));
+            cfg_s.trial_starts = od.S1.trial_starts;
+            cfg_s.trial_ends = od.S1.trial_ends;
+            cfg_s.ldist = msn_lfr_dist;
+            cfg_s.hdist = msn_hfr_dist;
+            od.S1.fsi_res(iC) = calculateFSIspec(cfg_s, S1);
+        end
     end
-
     % For away trials
     msn = find(od.S2.cell_type == 1);
     msn_lfr_dist = zeros(length(msn),1);
@@ -250,14 +251,16 @@ function od = generateSTS(cfg_in)
     keep = (msn_lfr_dist >= 200) & (msn_hfr_dist >= 200);
     msn_lfr_dist = msn_lfr_dist(keep);
     msn_hfr_dist = msn_hfr_dist(keep);
+    if numel(msn_lfr_dist) > 0
     fsi = find(od.S2.cell_type == 2);
-    for iC = 1:length(fsi)
-        S2 = SelectTS([],od.S2,fsi(iC));
-        cfg_s.trial_starts = od.S2.trial_starts;
-        cfg_s.trial_ends = od.S2.trial_ends;
-        cfg_s.ldist = msn_lfr_dist;
-        cfg_s.hdist = msn_hfr_dist;
-        od.S2.fsi_res(iC) = calculateFSIspec(cfg_s, S2);
+        for iC = 1:length(fsi)
+            S2 = SelectTS([],od.S2,fsi(iC));
+            cfg_s.trial_starts = od.S2.trial_starts;
+            cfg_s.trial_ends = od.S2.trial_ends;
+            cfg_s.ldist = msn_lfr_dist;
+            cfg_s.hdist = msn_hfr_dist;
+            od.S2.fsi_res(iC) = calculateFSIspec(cfg_s, S2);
+        end
     end
     
     if cfg_master.write_output
@@ -425,6 +428,28 @@ function res = calculateFSIspec(cfg_in, S)
                 p_spikes = cell2mat(p_spikes);
             end
             res.scount_ptile(iP) = length(p_spikes);
+            
+            % When an FSI has fewer spikes than at least one MSN, do NOT
+            % subsample and include all the spikes
+            if length(p_spikes) < max(cfg_in.ldist) || length(p_spikes) < max(cfg_in.hdist)
+                idx = nearest_idx3(p_spikes, cfg_in.lfp_ts);
+                this_p2 = zeros(length(idx),cfg_in.f_len_mt);
+                % For each spike
+                for iS = 1:length(idx)
+                    this_seg = cfg_in.lfp_data((idx(iS)-floor(cfg_in.sts_wl/2)):(idx(iS)+floor(cfg_in.sts_wl/2)));
+                    [P2,~] = mtspectrumc(this_seg, cfg_in.cfg_mt);
+                    this_p2(iS,:) = P2(cfg_in.foi_mt);
+                end
+                res.mtsts_ptile(iP,:) = mean(this_p2,1);
+                % Calculate spectrum of STA for the mfr percentile based binned spikes
+                this_spk_binned = zeros(size(cfg_in.lfp_ts));
+                this_spk_binned(idx) = 1;
+                [this_sta, ~] = xcorr(cfg_in.lfp_data, this_spk_binned, floor(cfg_in.sts_wl/2));
+                [P2,~] = mtspectrumc(this_sta, cfg_in.cfg_mt);
+                res.sta_mtspec_ptile(iP,:) = P2(cfg_in.foi_mt);
+                res.sta_ptile(iP,:) = this_sta;
+                continue
+            end
             
             % Subsample spikes based on the MSN distribution and calculate
             % all the metrics for each sampling
