@@ -119,10 +119,21 @@ function od = generateSTS(cfg_in)
     % times (near trials) and the others (away trials).
     
     rt = getRewardTimes();
-    % Sometimes (in R117-2007-06-17) the reward detection is triggered
+    % Sometimes (in R117-2007-06-17, for instance) the reward detection is triggered
     % before the trials start. For these cases, a sanity check is put in
     % place to ensure that only the valid reward times are retained
     rt = rt(rt > ExpKeys.TimeOnTrack);
+    % Sometimes (in R117-2007-06-11, for instance) getRewardTimes() returns
+    % times that are spaced out less than 5 sec apart (possibly erroneus). 
+    % Getting rid of such reward times to maintain consistency
+    rt_dif = diff(rt);
+    rt_dif = find(rt_dif <= 5);
+    valid_rt = true(length(rt),1);
+    for i = 1:length(rt_dif)
+        valid_rt(rt_dif(i)) = false;
+        valid_rt(rt_dif(i)+1) = false;
+    end
+    rt = rt(valid_rt);
     
     near_trial_starts = rt - 5;
     near_trial_ends = rt + 5;
