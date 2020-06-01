@@ -187,11 +187,13 @@ function od = generateSTS(cfg_in)
     od.S1.freqs = F(F >= 0 & F <= 100);
     od.S1.spec_res = repmat(struct('psd', zeros(cfg_s.pbins,cfg_s.f_len_mt), ...
                     'mfr', zeros(1, tcount), ...
+                    'scount_ptile',zeros(cfg_s.pbins, 1), ...
                     'ptile_mfrs', zeros(cfg_s.pbins,2)), length(od.S1.t), 1);
     tcount = length(od.S2.trial_starts);           
     od.S2.freqs = F(F >= 0 & F <= 100);
     od.S2.spec_res = repmat(struct('psd', zeros(cfg_s.pbins,cfg_s.f_len_mt), ...
                     'mfr', zeros(1, tcount), ...
+                    'scount_ptile',zeros(cfg_s.pbins, 1), ...
                     'ptile_mfrs', zeros(cfg_s.pbins,2)), length(od.S2.t), 1);
                 
     % For near trials
@@ -270,6 +272,7 @@ function res = calculateSTS(cfg_in, S)
         % and calculate results for the bins
         res.ptile_mfrs = zeros(cfg_in.pbins,2);
         res.psd = zeros(cfg_in.pbins, cfg_in.f_len_mt);
+        res.scount_ptile = zeros(cfg_in.pbins, 1);
         for iP = 1:cfg_in.pbins
             if (iP == 1)
                 res.ptile_mfrs(iP,1) = min(nz_mfr);
@@ -303,11 +306,12 @@ function res = calculateSTS(cfg_in, S)
                     this_trial_iv = iv(p_trial_starts(iT),p_trial_ends(iT));
                     this_trial_lfp = restrict(cfg_in.lfp,this_trial_iv);
                     [this_psd, F] =  mtspectrumc(this_trial_lfp.data, cfg_in.cfg_mt);
-                    p_trial_psd(iT,:) = interp1(F,this_psd,cfg_in.foi_mt);        
+                    p_trial_psd(iT,:) = interp1(F,this_psd,cfg_in.foi_mt);
                 end
                 p_trial_psd = mean(p_trial_psd,1);
             end
             res.psd(iP,:) =  p_trial_psd;
+            res.scount_ptile(iP) = length(cell2mat(p_spikes));
         end
 end
 

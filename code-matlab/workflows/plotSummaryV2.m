@@ -1,4 +1,4 @@
-cd('/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp');
+cd('/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/sts_v5_1000samp/');
 rats = {'R117'};%,'R119','R131','R132'};
 for idx = 1:length(rats)
     curRat = rats{idx};
