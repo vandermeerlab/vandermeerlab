@@ -1,11 +1,13 @@
 %% script to generate STA spectra and average STS on a trial-by trial basis as well as for binned trials
 % trials are binned on the basis of mean firing rate in the trial such that
 % the number of spikes in each of the bins are as close as possible
+% The spectra for the FSIs are calculated after multiple rounds of
+% subsampling
 %% setup
 clear;
 cd('/Users/manishm/Work/vanDerMeerLab/ADRLabData');
 please = [];
-please.rats = {'R117','R119','R131','R132'}; % vStr-only rats
+please.rats = {'R117'};%,'R119','R131','R132'}; % vStr-only rats
 [cfg_in.fd,cfg_in.fd_extra] = getDataPath(please);
 cfg_in.write_output = 1;
 cfg_in.output_dir = '/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp';
@@ -14,7 +16,7 @@ cfg_in.exc_types = 0;
 
 %%
 % Top level loop which calls the main function for all the sessions
-for iS = 1:length(cfg_in.fd) % for each session...
+for iS = 3%1:length(cfg_in.fd) % for each session...
     cfg_in.iS = iS;
     pushdir(cfg_in.fd{iS});
     generateSTS(cfg_in); % do the business
@@ -185,7 +187,7 @@ function od = generateSTS(cfg_in)
     cfg_s.lfp_data = csc.data;
     cfg_s.lfp_ts = csc.tvec;
     cfg_s.pbins = 2;
-    cfg_s.num_samples = 10;
+    cfg_s.num_samples = 1;
     
     % determining spike triggered LFP segment length using dummy data
     [dum_seg,~]  = xcorr(csc.data, csc.data, floor(cfg_s.sts_wl/2));
@@ -263,7 +265,7 @@ function od = generateSTS(cfg_in)
     msn_lfr_dist = msn_lfr_dist(keep);
     msn_hfr_dist = msn_hfr_dist(keep);
     if numel(msn_lfr_dist) > 0
-    fsi = find(od.S2.cell_type == 2);
+        fsi = find(od.S2.cell_type == 2);
         for iC = 1:length(fsi)
             S2 = SelectTS([],od.S2,fsi(iC));
             cfg_s.trial_starts = od.S2.trial_starts;
