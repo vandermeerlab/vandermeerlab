@@ -21,7 +21,7 @@ cfg_def = [];
 cfg_def.mode = 'lower_threshold';
 cfg_def.threshold = [];
 
-cfg = ProcessConfig(cfg_def, cfg_in, mfun);
+cfg = ProcessConfig(cfg_def, cfg_in);
 
 if isempty(cfg.threshold)
     error('cfg.threshold input is REQUIRED.');
@@ -43,15 +43,16 @@ down_t = tsd_in.tvec(down_idx);
 % loop over ivs to find nearest up- and downcrossings
 for iI = length(iv_out.tstart):-1:1
     
-    up_idx = nearest_idx3(up_t, iv_out.tstart(iI), -1);
-    iv_out.tstart = up_t(up_idx);
+    this_center = (iv_out.tstart(iI) + iv_out.tend(iI)) / 2;
     
-    down_idx = nearest_idx3(up_t, iv_out.tend(iI), 1);
-    iv_out.tend = down_t(down_idx);
+    up_idx = nearest_idx3(this_center, up_t, -1);
+    iv_out.tstart(iI) = up_t(up_idx);
+    
+    down_idx = nearest_idx3(this_center, down_t, 1);
+    iv_out.tend(iI) = down_t(down_idx);
       
 end % of loop over ivs
 
 
 % housekeeping
-iv_out.cfg.history.mfun = cat(1, iv_out.cfg.history.mfun,mfun);
 iv_out.cfg.history.cfg = cat(1, iv_out.cfg.history.cfg,{cfg});
