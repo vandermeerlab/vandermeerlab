@@ -27,10 +27,7 @@
 *.mtc
 *.mtc0
 *.asv
+*.DS_Store
 code-matlab/shared/datatypes/tsd/UnionTSD.m
-code-matlab/shared/io/.DS_Store
-code-matlab/shared/.DS_Store
-code-matlab/.DS_Store
-.DS_Store
-.DS_Store
 code-matlab/shared/io/getDataPath.m
+
