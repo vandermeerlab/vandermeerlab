@@ -1,7 +1,7 @@
-function reward_t = getRewardTimes2()
+function reward_t = getRewardTimes()
 % function reward_t = getRewardTimes()
 %
-% load events file and extract times of first feeder fire
+% load events file and extract times of second feeder fire
 %
 % tested on Multiple-T and Multiple-T ARL data (Redish lab)
 %
