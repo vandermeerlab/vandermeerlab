@@ -119,42 +119,74 @@ function od = generateSTS(cfg_in)
         end
     end % of previous day available checks
 
-    % Divide Spikes into two kinds of epochs: Around +/-5 s of the reward 
-    % times (near trials) and the others (away trials).
+     % restrict spikes to a timeWindow of +/-5 seconds around the reward  
+    rt1 = getRewardTimes();
+    rt1 = rt1(rt1 > ExpKeys.TimeOnTrack);
+    rt2 = getRewardTimes2();
+    rt2 = rt2(rt2 > ExpKeys.TimeOnTrack);
     
-    rt = getRewardTimes();
-    % Sometimes (in R117-2007-06-17, for instance) the reward detection is triggered
-    % before the trials start. For these cases, a sanity check is put in
-    % place to ensure that only the valid reward times are retained
-    rt = rt(rt > ExpKeys.TimeOnTrack);
-    % Sometimes (in R117-2007-06-11, for instance) getRewardTimes() returns
+    % Sometimes (in R117-2007-06-12, for instance) getRewardTimes() returns
     % times that are spaced out less than 5 sec apart (possibly erroneus). 
     % Getting rid of such reward times to maintain consistency
-    rt_dif = diff(rt);
+    rt_dif = diff(rt1);
     rt_dif = find(rt_dif <= 5);
-    valid_rt = true(length(rt),1);
+    valid_rt1 = true(length(rt1),1);
+    valid_rt2 = true(length(rt2),1);
     for i = 1:length(rt_dif)
-        valid_rt(rt_dif(i)) = false;
-        valid_rt(rt_dif(i)+1) = false;
+        valid_rt1(rt_dif(i)) = false;
+        valid_rt1(rt_dif(i)+1) = false;
+        valid_rt2(rt2 >= rt1(rt_dif(i)) & rt2 <= rt1(rt_dif(i)+2)) = false;
     end
-    rt = rt(valid_rt);
+    % Sometimes (in R119-2007-07-05, for instance) getRewardTimes2() returns
+    % times that are spaced out less than 5 sec apart (possibly erroneus). 
+    % Getting rid of such reward times to maintain consistency
+    rt_dif = diff(rt2);
+    rt_dif = find(rt_dif <= 5);
+    for i = 1:length(rt_dif)
+        valid_rt2(rt_dif(i)) = false;
+        valid_rt2(rt_dif(i)+1) = false;
+        valid_rt1(rt1 >= rt2(rt_dif(i)-1) & rt1 <= rt2(rt_dif(i)+1)) = false;
+    end
     
-    near_trial_starts = rt - 5;
-    near_trial_ends = rt + 5;
-    rt_iv = iv(near_trial_starts, near_trial_ends);
-    rt_iv = MergeIV([],rt_iv);
+    rt1 = rt1(valid_rt1);
+    rt2 = rt2(valid_rt2);
+    
+    % Sometimes (in R117-2007-06-17, for instance) the second reward is
+    % triggered but not the first one in the last trial
+    if length(rt1) ~= length(rt2)
+        rt1 = rt1(1:end-1);
+    end
+    
+    % Sanity check to make sure that rt2 is always triggered after rt1
+    keep = (rt1 <= rt2);
+    rt1 = rt1(keep);
+    rt2 = rt2(keep);
+    
+    % For near reward_trials  
+    w_start1 = rt1 - 5;
+    w_end1 = rt1 + 5;
+    w_start2 = rt2 - 5;
+    w_end2 =  rt2 + 5;
+    % Last trial time shouldn't exceed Experiment end time
+    w_end2(end) = min(w_end2(end), ExpKeys.TimeOffTrack);
+    w_start = sort([w_start1; w_start2]);
+    w_end = sort([w_end1; w_end2]);
+    rt_iv = iv(w_start, w_end);
+    rt_iv = MergeIV([], rt_iv);
     od.S1 = restrict(sd.S, rt_iv);
-   
-    away_trial_starts = [ExpKeys.TimeOnTrack;rt(1:end-1)+5];
-    away_trial_ends = (rt-5);
+    
+    % For away_reward_trials
+    w_start = [ExpKeys.TimeOnTrack;rt2(1:end-1)+5];
+    w_end = (rt1-5);
+    
     % Get rid of extra long-trials (greater than mean + 1*SD)
-    trial_length = away_trial_ends - away_trial_starts;
+    trial_length = w_end - w_start;
     mtl = mean(trial_length); stl = std(trial_length);
     valid_trials = (trial_length <= mtl + stl); 
-    away_trial_starts = away_trial_starts(valid_trials);
-    away_trial_ends = away_trial_ends(valid_trials);
-    rt_iv = iv(away_trial_starts, away_trial_ends);
-    rt_iv = MergeIV([],rt_iv);
+    w_start = w_start(valid_trials);
+    w_end= w_end(valid_trials);
+    rt_iv = iv(w_start, w_end);
+    rt_iv = MergeIV([], rt_iv);
     od.S2 = restrict(sd.S, rt_iv);
     
     % Saving other specific fields
