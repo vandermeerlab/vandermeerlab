@@ -5,18 +5,18 @@
 % subsampling
 %% setup
 clear;
-cd('/Users/manishm/Work/vanDerMeerLab/ADRLabData');
+cd('D:\ADRLabData');
 please = [];
-please.rats = {'R117'};%,'R119','R131','R132'}; % vStr-only rats
+please.rats = {'R117','R119','R131','R132'}; % vStr-only rats
 [cfg_in.fd,cfg_in.fd_extra] = getDataPath(please);
 cfg_in.write_output = 1;
-cfg_in.output_dir = '/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp';
+cfg_in.output_dir = 'D:\RandomVstrAnalysis\temp';
 cfg_in.exc_types = 0;
 
 
 %%
 % Top level loop which calls the main function for all the sessions
-for iS = 3%1:length(cfg_in.fd) % for each session...
+for iS = 1:length(cfg_in.fd) % for each session...
     cfg_in.iS = iS;
     pushdir(cfg_in.fd{iS});
     generateSTS(cfg_in); % do the business
@@ -173,7 +173,12 @@ function od = generateSTS(cfg_in)
     w_end = sort([w_end1; w_end2]);
     rt_iv = iv(w_start, w_end);
     rt_iv = MergeIV([], rt_iv);
+    % Saving near trial fields
     od.S1 = restrict(sd.S, rt_iv);
+    od.S1.cell_type = sd.S.usr.cell_type;
+    od.S1.tt_id = sd.S.usr.tt_num;
+    od.S1.trial_starts = w_start;
+    od.S1.trial_ends = w_end;
     
     % For away_reward_trials
     w_start = [ExpKeys.TimeOnTrack;rt2(1:end-1)+5];
@@ -187,17 +192,12 @@ function od = generateSTS(cfg_in)
     w_end= w_end(valid_trials);
     rt_iv = iv(w_start, w_end);
     rt_iv = MergeIV([], rt_iv);
+    % Saving away trial fields
     od.S2 = restrict(sd.S, rt_iv);
-    
-    % Saving other specific fields
-    od.S1.cell_type = sd.S.usr.cell_type;
-    od.S1.tt_id = sd.S.usr.tt_num;
-    od.S1.trial_starts = near_trial_starts;
-    od.S1.trial_ends = near_trial_ends;
     od.S2.cell_type = sd.S.usr.cell_type;
     od.S2.tt_id = sd.S.usr.tt_num;
-    od.S2.trial_starts = away_trial_starts;
-    od.S2.trial_ends = away_trial_ends;
+    od.S2.trial_starts = w_start;
+    od.S2.trial_ends = w_end;
 
     % Keep cells greater with greater than nMinSpike spikes and of the allowed types
     od.S1 = KeepCells(od.S1,cfg_master.nMinSpikes,cfg_master.exc_types,lfp_tt);
@@ -219,7 +219,7 @@ function od = generateSTS(cfg_in)
     cfg_s.lfp_data = csc.data;
     cfg_s.lfp_ts = csc.tvec;
     cfg_s.pbins = 2;
-    cfg_s.num_samples = 1;
+    cfg_s.num_samples = 1000;
     
     % determining spike triggered LFP segment length using dummy data
     [dum_seg,~]  = xcorr(csc.data, csc.data, floor(cfg_s.sts_wl/2));
