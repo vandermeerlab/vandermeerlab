@@ -119,7 +119,7 @@ function od = generateSTS(cfg_in)
         end
     end % of previous day available checks
 
-     % restrict spikes to a timeWindow of +/-5 seconds around the reward  
+    % restrict spikes to a timeWindow of +/-5 seconds around the reward  
     rt1 = getRewardTimes();
     rt1 = rt1(rt1 > ExpKeys.TimeOnTrack);
     rt2 = getRewardTimes2();
