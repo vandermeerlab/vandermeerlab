@@ -13,6 +13,8 @@ function [ccf,tvec] = ccf(cfg_in,ts1,ts2)
 % cfg_def.gauss_w = 1; % width of Gaussian convolution window (in s)
 % cfg_def.gauss_sd = 0.02; % SD of Gaussian convolution window (in s)
 % cfg_def.xcorr = 'coeff'; % method to compute SDF xcorr
+% cfg_def.frate = 0; % convert output to firing rates (only availanle for
+%   cfg.smooth = 0)
 %
 % OUTPUTS:
 % ccf: autocorrelation estimate (distribution of ts1 relative to ts2)
@@ -29,6 +31,7 @@ cfg_def.smooth = 0; % set to 1 to compute ccf on SDF, 0 for raw spikes
 cfg_def.gauss_w = 1; % width of Gaussian convolution window (in s)
 cfg_def.gauss_sd = 0.02; % SD of Gaussian convolution window (in s)
 cfg_def.xcorr = 'coeff'; % method to compute SDF xcorr
+cfg_def.frate = 0;
 
 cfg = ProcessConfig2(cfg_def,cfg_in);
 
@@ -56,6 +59,10 @@ if cfg.smooth % SDF (spike density function) version
     [ccf,tvec] = xcorr(ts1_sdf,ts2_sdf,cfg.max_t./cfg.binsize,cfg.xcorr);
     tvec = tvec.*cfg.binsize;
     
+    if cfg.frate
+        error('I don''t know how to convert xcorr() output to firing rates. Try cfg.smooth = 0 instead.'); 
+    end
+    
 else % raw spike count version
     
     xbin_centers = -cfg.max_t-cfg.binsize:cfg.binsize:cfg.max_t+cfg.binsize; % first and last bins are to be deleted later
@@ -72,7 +79,12 @@ else % raw spike count version
     tvec = xbin_centers(2:end-1); % remove unwanted bins
     ccf = ccf(2:end-1);
     
-    ccf = ccf./(length(ts1)); % normalize by number of spikes of first input
+    if cfg.frate % convert to firing rate
+        ccf = ccf./length(ts2);
+        ccf = ccf./cfg.binsize;
+    else
+        ccf = ccf./(length(ts1)); % normalize by number of spikes of first input (match xcorr output)
+    end
     
     ccf = ccf(end:-1:1); % reverse to make consistent with MATLAB xcorr()
     

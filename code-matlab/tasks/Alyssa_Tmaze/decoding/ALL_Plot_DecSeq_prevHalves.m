@@ -15,7 +15,6 @@ colors = TmazeColors(cfg.colormode);
 
 originalFolder = pwd;
 
-biasfun = @(d) (d(1)-d(2))-(d(3)-d(4)); % computes bias measure as (food_left-food_right)-(water_left-water_right) sequence content proportions
 %% load the data
 cd(cfg.input_fd)
 
@@ -25,26 +24,7 @@ task = load(cat(2,cfg.input_prefix,'DecSeq_taskrest_all_out'));
 post = load(cat(2,cfg.input_prefix,'DecSeq_postrecord_all_out'));
 
 %% F0a: session-by-session averaged for all rats and task phases
-cfg.output_fn = cat(2,cfg.outbasefn,'sessionProps_overall');
-fs = 12;
-offs = 0.03;
-
-figure;
-subplot(4,3,1);
-
-% before anything else, draw background
-for iC = 1:6
-    
-    h(iC) = rectangle('Position',[iC-0.5 0 1 1]);
-    if mod(iC,2) % odd
-        set(h(iC),'FaceColor',[0.7 0.7 1],'EdgeColor',[0.7 0.7 1]);
-    else % even
-        set(h(iC),'FaceColor',[1 0.7 0.7],'EdgeColor',[1 0.7 0.7]);
-    end
-    
-end
-hold on;
-plot([0.5 6.5],[0.5 0.5],'LineStyle','--','LineWidth',1,'Color',[1 1 1]);
+%cfg.output_fn = cat(2,cfg.outbasefn,'sessionProps_overall');
 
 % now collect data
 this_data = all.data.all.ALL_sig_seq;
@@ -55,13 +35,6 @@ rat_label = cat(2,ones(1,6),2*ones(1,6),3*ones(1,6),4*ones(1,6));
 sess_idx = sess_label(this_data.sess); % gives within-animal day idxs (1-6)
 rat_idx = rat_label(this_data.sess);
 
-% need to swap water and food sessions for rats 3 and 4, which started with food not water
-swp = [2 1 4 3 6 5];
-for iRat = 3:4
-   this_rat_idx = find(rat_idx == iRat);
-   sess_idx(this_rat_idx) = swp(sess_idx(this_rat_idx));
-end
-
 % normalized (N) input data is redundant for left and right, so remove
 sess_idx = sess_idx(1:2:end); rat_idx = rat_idx(1:2:end);
 seq = this_data.countN(1:2:end);
@@ -69,7 +42,63 @@ behav = this_data.allTrialsN(1:2:end);
 choice = this_data.choiceN(1:2:end);
 type = this_data.type(1:2:end);
 
-% get averages for each session, and plot each data point individually
+% split sessions into 'biased' and 'unbiased' behavior
+behav_bias = max(cat(2,behav,1-behav),[],2); % invert normalized behavior below 0.5 to above 0.5
+[behav_biasS,behav_bias_idx] = sort(behav_bias);
+%behav_biasS(9:10); this suggests a threshold of 0.7 to divide
+%biased/unbiased sessions
+bias_thr = 0.7;
+biased_idx = behav_bias_idx(behav_biasS > 0.7);
+unbiased_idx = behav_bias_idx(behav_biasS <= 0.7);
+
+% now need to find what the next session idxs are for these (may not
+% exist)
+what = {'biased_idx','unbiased_idx'};
+for iW = 1:length(what)
+    eval(cat(2,'these_idxs = ',what{iW}));
+    temp_idx_out = {}; % this will hold idx into original data
+    for iI = 1:length(these_idxs)
+        this_idx = these_idxs(iI);
+        this_sess = sess_idx(this_idx);
+        this_rat = rat_idx(this_idx);
+        
+        %if this_sess == 6 | (this_rat == 2 & this_sess == 4) % last session for this rat, no next available
+        %    temp_idx_out(iI) = [];
+        %    continue;
+        %end
+        temp_idx_out{iI} = find(rat_idx == this_rat & sess_idx == this_sess + 1);
+        
+    end
+    
+    eval(cat(2,what{iW},'_out = cell2mat(temp_idx_out)'));
+end
+
+% assemble for plotting
+figure;
+what = {'biased_idx_out','unbiased_idx_out'};
+for iW = 1:length(what)
+    
+    eval(cat(2,'this_idx = ',what{iW}));
+    this_idx = intersect(this_idx,find(type == 1));
+    food_left = nanmean(seq(this_idx)); food_right = nanmean(1-seq(this_idx));
+    
+    eval(cat(2,'this_idx = ',what{iW}));
+    this_idx = intersect(this_idx,find(type == 2));
+    water_left = nanmean(seq(this_idx)); water_right = nanmean(1-seq(this_idx));
+    
+    bar_idx = [1 2 4 5];
+    subplot(2,3,iW);
+    bar(bar_idx,[food_left food_right water_left water_right]);
+    title(what{iW});
+end
+
+
+
+%% plot something
+
+
+
+%% get averages for each session, and plot each data point individually
 for iSess = 1:6
    sess_out(iSess) = iSess;
    seq_out(iSess) = nanmean(seq(sess_idx == iSess));
@@ -112,18 +141,11 @@ end
 
 % print some stats to go with this figure
 tbl = table(categorical(rat_idx)',categorical(sess_idx)',behav,categorical(type),seq,choice,'VariableNames',{'Subject','Session','Behav','MotType','SeqContent','Choice'});
-lme = fitglme(tbl,'SeqContent ~ 1 + MotType + (1|Subject)','Link','logit');
+lme = fitglme(tbl,'SeqContent ~ MotType + (1|Subject)','Link','logit'); % subject-specific intercepts don't actually help!
 lme2 = fitglme(tbl,'SeqContent ~ 1 + (1|Subject)','Link','logit');
-r = compare(lme2,lme)
+compare(lme2,lme)
 
-food_mean = nanmean(tbl.SeqContent(find(double(tbl.MotType) == 1)));
-water_mean = nanmean(tbl.SeqContent(find(double(tbl.MotType) == 2)));
-fprintf('Mean left sequences for food restr. %.2f, water restr. %.2f\n',food_mean,water_mean);
-
-nall = all.data.all.food_left+all.data.all.food_right+all.data.all.water_left+all.data.all.water_right;
-nleft = all.data.all.food_left+all.data.all.water_left;
-nright = all.data.all.food_right+all.data.all.water_right;
-fprintf('Total sequences %d (%d left, %d right)\n',nall,nleft,nright);
+[r,p] = corrcoef(tbl.Choice,tbl.SeqContent)
 
 %% F0b: session-by-session data for individual rats and task phases
 cfg.output_fn = cat(2,cfg.outbasefn,'sessionProps_byPhase');
@@ -196,7 +218,7 @@ end
 %% F1: raw sequence counts
 cfg.output_fn = cat(2,cfg.outbasefn,'counts');
 
-cfg.ylim = [600 300]; cfg.ylimtick = [150 75]; % ALL - overall and single lims
+cfg.ylim = [450 250]; cfg.ylimtick = [150 125]; % ALL - overall and single lims
 %cfg.ylim = [300 150]; cfg.ylimtick = [75 37.5]; % ALL - overall and single lims
 
 ylab = {'Number of significant'; 'sequences'};
@@ -402,7 +424,7 @@ set(gca,'XTick',location,'XTickLabel',{'L' 'R' 'L' 'R'},'FontSize',FontSize,'Lin
 set(gca,'YLim',ylimsall,'YTick',yticksall)
 xlabel('  food                  water','FontSize',FontSize)
 ylabel([ylab{1},' ',ylab{2}],'FontSize',FontSize)
-title(sprintf('PRERECORD %.2f',biasfun(d)));
+title('PRERECORD')
 box off
 set(gca,'Layer','top')
 if cfg.showAllRatsText
@@ -422,7 +444,7 @@ end
 set(gca,'XTick',location,'XTickLabel',{'L' 'R' 'L' 'R'},'FontSize',FontSize,'LineWidth',1,'XLim',xlims);
 set(gca,'YLim',ylimsall,'YTick',[])
 xlabel('  food                  water','FontSize',FontSize)
-title(sprintf('TASK %.2f',biasfun(d)));
+title('TASK')
 box off
 set(gca,'Layer','top')
 if cfg.showAllRatsText
@@ -443,7 +465,7 @@ end
 set(gca,'XTick',location,'XTickLabel',{'L' 'R' 'L' 'R'},'FontSize',FontSize,'LineWidth',1,'XLim',xlims);
 set(gca,'YLim',ylimsall,'YTick',[])
 xlabel('  food                  water','FontSize',FontSize)
-title(sprintf('PRERECORD %.2f',biasfun(d)));
+title('POSTRECORD')
 box off
 set(gca,'Layer','top')
 if cfg.showAllRatsText
@@ -486,7 +508,7 @@ for iRat = 1:length(rats)
     xlabel('  food   water','FontSize',FontSize)
     box off
     set(gca,'Layer','top')
-    txt = sprintf('%s %.2f',rats{iRat},biasfun(d));
+    txt = rats{iRat};
     text(xName,yName,txt,'Units','normalized',...
         'VerticalAlignment','bottom',...
         'HorizontalAlignment','right',...
@@ -504,7 +526,7 @@ for iRat = 1:length(rats)
     xlabel('  food   water','FontSize',FontSize)
     box off
     set(gca,'Layer','top')
-    txt = sprintf('%s %.2f',rats{iRat},biasfun(d));
+    txt = rats{iRat};
     text(xName,yName,txt,'Units','normalized',...
         'VerticalAlignment','bottom',...
         'HorizontalAlignment','right',...
@@ -521,7 +543,7 @@ for iRat = 1:length(rats)
     xlabel('  food   water','FontSize',FontSize)
     box off
     set(gca,'Layer','top')
-    txt = sprintf('%s %.2f',rats{iRat},biasfun(d));
+    txt = rats{iRat};
     text(xName,yName,txt,'Units','normalized',...
         'VerticalAlignment','bottom',...
         'HorizontalAlignment','right',...
@@ -533,9 +555,9 @@ end
 if cfg.writeOutput
     maximize; set(gcf,'PaperPositionMode','auto'); drawnow;
     cd(cfg.output_fd);
-    print(gcf,'-painters','-dpng','-r300',[cfg.output_fn,'_either_80ms.png']);
-    print(gcf,'-painters','-dpdf','-r300',[cfg.output_fn,'_either_80ms.pdf']);
-    print(gcf,'-painters','-depsc','-r300',[cfg.output_fn,'_either_80ms.eps']);
+    print(gcf,'-painters','-dpng','-r300',[cfg.output_fn,'.png']);
+    print(gcf,'-painters','-dpdf','-r300',[cfg.output_fn,'.pdf']);
+    print(gcf,'-painters','-depsc','-r300',[cfg.output_fn,'.eps']);
     cd(originalFolder)
 end
 
