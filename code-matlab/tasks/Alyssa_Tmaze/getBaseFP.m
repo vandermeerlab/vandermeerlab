@@ -27,6 +27,7 @@ switch machinename
     % below, or create a new case for your data path. The data path is
     % whichever folder you've saved vandermeerlab rat data (R042, R044,
     % R050 and R064 folders).
+
     case {'ISIDRO','ODYSSEUS'}
         base_fp = 'C:\data\';
     case {'EQUINOX','BERGKAMP','VYSERITHUS'}

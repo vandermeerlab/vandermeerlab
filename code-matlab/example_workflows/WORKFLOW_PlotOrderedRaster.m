@@ -40,8 +40,8 @@ expCond(2).S = S;
 nCond = length(expCond);
 for iCond = 1:nCond
    
-    cfg_linpos = []; cfg_linpos.Coord = expCond(iCond).coord;
-    expCond(iCond).linpos = LinearizePos(cfg_linpos,pos);
+    this_coord.coord = expCond(iCond).coord; this_coord.units = 'px'; this_coord.standardized = 0;
+    expCond(iCond).linpos = LinearizePos([],pos,this_coord);
    
 end
 
@@ -96,8 +96,7 @@ fh = figure('KeyPressFcn',@navigate);
 for iCond = 1:nCond
     ax(iCond) = subplot(2,1,iCond);
     
-    S_temp = S; S_temp.t = S_temp.t(expCond(iCond).fields.template_idx); % template_idx contains ordered place cells
-    S_temp.label = S_temp.label(expCond(iCond).fields.template_idx); 
+    S_temp = SelectTS([],S,expCond(iCond).fields.template_idx); % template_idx contains ordered place cells   
     
     cfg_mr = []; cfg_mr.openNewFig = 0; cfg_mr.lfp = csc;
     MultiRaster(cfg_mr,S_temp); % see http://ctnsrv.uwaterloo.ca/vandermeerlab/doku.php?id=analysis:nsb2015:week3short

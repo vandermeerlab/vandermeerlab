@@ -14,8 +14,15 @@ smoothingWin2 = ones(1,newSampwin);
 smoothingWin3 = 0.5 - 0.5*cos(pi/numSmoothingSamples*(numSmoothingSamples-1:-1:0));
 smoothingWin = [smoothingWin1 smoothingWin2 smoothingWin3];
 
-windowedData = data(idx-floor(newSampwin/2)-numSmoothingSamples:idx+ceil(newSampwin/2)+numSmoothingSamples-1);
+delta_idx_left = -floor(newSampwin/2)-numSmoothingSamples;
+delta_idx_right = ceil(newSampwin/2)+numSmoothingSamples-1;
 
+if (idx + delta_idx_left) < 1 | (idx + delta_idx_right) > length(data)
+   fftedData = [];
+   return;
+end
+
+windowedData = data(idx+delta_idx_left:idx+delta_idx_right);
 windowedData = windowedData .* smoothingWin; % Smooth the window.
 
 % Overlap the window with itself

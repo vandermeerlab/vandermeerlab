@@ -4,7 +4,7 @@
 
 This document describes how to construct **ExpKeys** and **Metadata**
 files, essential components of
-[good data and analysis project management](http://ctnsrv.uwaterloo.ca/vandermeerlab/doku.php?id=analysis:nsb2015:week0).
+[good data and analysis project management](https://rcweb.dartmouth.edu/~mvdm/wiki/doku.php?id=analysis:nsb2015:week0).
 
 ### Background
 
@@ -15,14 +15,15 @@ able to use your data.
 
 When preprocessing and annotation are complete for a given data set
 (typically a single recording session) that session can be
-**promoted**. [This](http://ctnsrv.uwaterloo.ca/vandermeerlab/doku.php?id=analysis:nsb2015:week2#data_files_overview)
+**promoted**. [This](https://rcweb.dartmouth.edu/~mvdm/wiki/doku.php?id=analysis:nsb2017:week2#data_files_overview)
 page describes the files that make up a promoted session. Two of these
 are **ExpKeys** and **Metadata**.
 
-Both files contain descriptive information about a single data set,
-including basic properties such as the experimenter, subject, and
-task (ExpKeys) as well as more session- and experiment-specific data
-such as trial intervals, event times, and linearized maze paths. 
+Both files contain descriptive information about a single data
+session, including basic properties such as the experimenter, subject,
+and task (ExpKeys) as well as more session- and experiment-specific
+data such as trial intervals, event times, and linearized maze paths
+(Metadata).
 
 The rationale for including this latter information as part of a
 promoted data set (rather than as, say, intermediate analysis files
@@ -42,7 +43,7 @@ that can be divided into _three_ sections:
    the field names are standardized)
 3. **Wildcard** fields (made up by the experimenter; if used, must be
    commented in-line, and explained in the
-   [experiment description](http://ctnsrv.uwaterloo.ca/vandermeerlab/doku.php?id=analysis:dataanalysis#task_descriptions_and_metadata))
+   [experiment description](https://rcweb.dartmouth.edu/~mvdm/wiki/doku.php?id=analysis:dataanalysis#task_descriptions_and_metadata)
 
 Because `*keys.m` files are
 [scripts](http://www.mathworks.com/help/matlab/learn_matlab/scripts.html)
@@ -70,7 +71,9 @@ simply convenient to use `LoadExpKeys`).
 * `.species`: [string] 'Rat', 'Mouse', 'Chinchilla', etc.
 * `.behavior`: [string] identifier for task used, e.g. 'LinearTrack'
   (each task is described
-  [here](http://ctnsrv.uwaterloo.ca/vandermeerlab/doku.php?id=analysis:dataanalysis#task_descriptions_and_metadata)
+  [here](https://rcweb.dartmouth.edu/~mvdm/wiki/doku.php?id=analysis:dataanalysis#task_descriptions_and_metadata);
+  note that we are in the process of migrating our task descriptions
+  and associated control scripts to our lab [GitHub](https://github.com/vandermeerlab/mvdmlab-tasks))
 * `.target`: [1 x nTargets cell array] recording targets, e.g. {'dCA1'}
 * `.experimenter`: [string] callsign of experimenter, e.g. 'MvdM'
 
@@ -145,6 +148,8 @@ below.
 * `.evt`: event times, loaded by [LoadEvents.m]().
 
 #### Wildcard metadata fields
+
+See the [MotivationalT data set](http://datasets.datalad.org/?dir=/workshops/mind-2017/MotivationalT) for examples. 
 
 ### ExpKeys vs. Metadata
 

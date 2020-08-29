@@ -63,13 +63,13 @@ dist_thres = 7;
 
 % Get linearized position and idx of points below distance threshold
 cfg.Coord = coord_shortcut;
-shortcut_lin = LinearizePos(cfg, pos_tsd); %get z_dist
+shortcut_lin = LinearizePos_old(cfg, pos_tsd); %get z_dist
 
 cfg.Coord = coord_u;
-u_lin = LinearizePos(cfg, pos_tsd);
+u_lin = LinearizePos_old(cfg, pos_tsd);
 
 cfg.Coord = coord_novel;
-novel_lin = LinearizePos(cfg, pos_tsd);
+novel_lin = LinearizePos_old(cfg, pos_tsd);
 
 cfg = [];
 cfg.method = 'raw';

@@ -308,7 +308,7 @@ for iRat = 1:length(rats)
         please.run_dist = ExpKeys.pathlength;
         for iArm = 1:nArms
             % my coord is already in cm, but this will put it into new bin sizes
-            sessionData.(arms{iArm}).coord = StandardizeCoord(please,sessionData.(arms{iArm}).coord);
+            sessionData.(arms{iArm}).coord = StandardizeCoord_old(please,sessionData.(arms{iArm}).coord);
         end
         
         % get location of choice point

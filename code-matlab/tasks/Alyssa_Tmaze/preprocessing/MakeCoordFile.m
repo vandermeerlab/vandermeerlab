@@ -65,8 +65,8 @@ end
 % figure will open that will prompt you to click/draw out a trajectory.
 % press enter to commit your trajectory.
 
-coordL = MakeCoord(getd(pos,'x'),getd(pos,'y'),'titl','Draw left trajectory','YDir','reverse','rot',rotation); % CoordL is in units of pixels
-coordR = MakeCoord(getd(pos,'x'),getd(pos,'y'),'titl','Draw right trajectory','YDir','reverse','rot',rotation); % CoordR is in units of pixels
+coordL = MakeCoord_old(getd(pos,'x'),getd(pos,'y'),'titl','Draw left trajectory','YDir','reverse','rot',rotation); % CoordL is in units of pixels
+coordR = MakeCoord_old(getd(pos,'x'),getd(pos,'y'),'titl','Draw right trajectory','YDir','reverse','rot',rotation); % CoordR is in units of pixels
 
 %% click on choice point
 

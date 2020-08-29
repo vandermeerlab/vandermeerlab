@@ -8,9 +8,8 @@ function csc_tsd = LoadCSC(cfg_in)
 % cfg.fc: cell array containing filenames to load
 %   if no file_list field is specified, loads all *.Ncs files in current dir
 % cfg.TimeConvFactor = 10^-6; % from nlx units to seconds
-% cfg.VoltageConvFactor = 1; % factor of 1 means output will be in volts
-% cfg.resample = []; % In Hz, the sample rate you want to use. If the
-%   original sampling rate is lower than cfg.resample, the data is left as-is
+% cfg.VoltageConvFactor = 1; % if 0, return raw AD bits. If 1, data returned is in V
+% cfg.decimateByFactor = []; % if non-empty, decimate data by specified factor
 % cfg.verbose = 1; Allow or suppress displaying of command window text
 %
 % OUTPUTS:
@@ -23,7 +22,7 @@ function csc_tsd = LoadCSC(cfg_in)
 cfg_def.fc = {};
 cfg_def.TimeConvFactor = 10^-6; % 10^-6 means convert nlx units to seconds
 cfg_def.VoltageConvFactor = 1; % 1 means output in volts, 1000 in mV, 10^6 in uV
-cfg_def.resample = [];
+cfg_def.decimateByFactor = [];
 cfg_def.verbose = 1;
 
 mfun = mfilename;
@@ -53,6 +52,18 @@ sample_count_tvec = nan(nFiles,1);
 sample_count_data = nan(nFiles,1);
 
 csc_tsd = tsd;
+
+if cfg.VoltageConvFactor == 1
+    csc_tsd.units = 'V';
+elseif cfg.VoltageConvFactor == 1000
+    csc_tsd.units = 'mV';
+elseif cfg.VoltageConvFactor == 10^6
+    csc_tsd.units = 'uV';
+elseif cfg.VoltageConvFactor == 0
+    csc_tsd.units = 'ADbits';
+else
+    error('Input voltage conversion factor is not a valid value.')
+end
 
 if cfg.verbose; fprintf('%s: Loading %d file(s)...\n',mfun,nFiles); end
 
@@ -93,7 +104,9 @@ for iF = 1:nFiles
     
     % convert units
     Timestamps = Timestamps .* cfg.TimeConvFactor;
-    Samples = Samples .* cfg.VoltageConvFactor .* hdr.ADBitVolts;
+    if cfg.VoltageConvFactor ~= 0
+        Samples = Samples .* cfg.VoltageConvFactor .* hdr.ADBitVolts;
+    end
     
     % construct within-block tvec
     nSamplesPerBlock = size(Samples,1);
@@ -143,14 +156,13 @@ for iF = 1:nFiles
         error(message);
     end
     
-    % resample data at a lower frequency
-    if ~isempty(cfg.resample) && hdr.SamplingFrequency > cfg.resample
+    % decimate data if specified
+    if ~isempty(cfg.decimateByFactor)
         
-        fprintf('%s: Resampling from %d Hz to %d Hz...\n',mfun,hdr.SamplingFrequency,cfg.resample)
-        decimationFactor = hdr.SamplingFrequency / cfg.resample;
-        data = decimate(data,decimationFactor);
-        tvec = decimate(tvec,decimationFactor);
-        hdr.SamplingFrequency = cfg.resample;
+        fprintf('%s: Decimating by factor %d...\n',mfun,cfg.decimateByFactor)
+        data = decimate(data,cfg.decimateByFactor);
+        tvec = tvec(1:cfg.decimateByFactor:end);
+        hdr.SamplingFrequency = hdr.SamplingFrequency./cfg.decimateByFactor;
         
     end
     
@@ -202,14 +214,19 @@ for hline = 1:length(Header)
         continue;
     end
     
+    % if we are reading an older version header with colons, remove them
+    colon_idx = strfind(line,':');
+    if ~isempty(colon_idx)
+       line(colon_idx) = []; 
+    end
+    
     % This expression captures the first chunk of alphanumeric characters and puts it into
     % <key> then puts whatever is to the right of it into <val>. If there is only one
     % character chunk (e.g., missing value) then it returns <val> as empty.
     a = regexp(line(2:end),'(?<key>^\S+)\s+(?<val>.*)|(?<key>\S+)','names');
-    
+
     % deal with characters not allowed by MATLAB struct
-    
-    if strcmp(a.key,'DspFilterDelay_µs')
+    if strcmp(a.key,'DspFilterDelay_ï¿½s') | strcmp(a.key,'DspFilterDelay_µs')
         a.key = 'DspFilterDelay_us';
     end
     
