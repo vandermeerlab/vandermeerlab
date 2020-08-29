@@ -5,13 +5,13 @@ end
 function TestDataTypeInitialization(testCase)
 
 test_iv = iv();
-verifyTrue(testCase,CheckIV(test_iv));
+verifyTrue(testCase, CheckIV(test_iv));
 
 test_ts = ts();
-verifyTrue(testCase,CheckTS(test_ts));
+verifyTrue(testCase, CheckTS(test_ts));
 
 test_tsd = tsd();
-verifyTrue(testCase,CheckTSD(test_tsd));
+verifyTrue(testCase, CheckTSD(test_tsd));
 
 end
 

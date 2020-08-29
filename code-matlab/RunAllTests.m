@@ -24,12 +24,12 @@ try
     cd(whereami);
     
     % set up path containing all folders to be tracked for code coverage
-    src = fullfile(ws, 'shared');
+    src = fullfile(pwd, 'shared');
     p = genpath(src);
     addpath(p); % this returns a single string with ; as separator between folders
     
     % path contining all tests to be run
-    tests = fullfile(ws, 'tests');
+    tests = fullfile(pwd, 'tests');
     suite = testsuite(tests, 'IncludeSubfolders', true);
     
     runner = TestRunner.withTextOutput();
