@@ -28,3 +28,5 @@
 *.mtc0
 *.asv
 code-matlab/shared/datatypes/tsd/UnionTSD.m
+code-matlab/shared/io/.DS_Store
+.DS_Store

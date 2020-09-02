@@ -104,7 +104,7 @@ if version('-release') >= 12
 else
 	lines = textread(fn,'%s','delimiter','\n','commentstyle','matlab');
 end%if
-blanklines(strcmp(lines, '')) = [];  % remove cells with empty strings
+% blanklines(strcmp(lines, '')) = [];  % remove cells with empty strings
 
 % we now have a list of keywords and the parameters following each keyword (if any)
 % convert into two parallel cell arrays KeyWord{
