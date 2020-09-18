@@ -1,18 +1,5 @@
-cd('/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/combined_results_final/');
+cd('D:\RandomVstrAnalysis\combined_results_final');
 rats = {'R117','R119','R131','R132'};
-msn_near_sta_difs = [];
-msn_away_sta_difs = [];
-msn_near_sts_difs = [];
-msn_away_sts_difs = [];
-fsi_near_sta_difs = [];
-fsi_away_sta_difs = [];
-fsi_near_sts_difs = [];
-fsi_away_sts_difs = [];
-msn_near_psd_difs = [];
-msn_away_psd_difs = [];
-fsi_near_psd_difs = [];
-fsi_away_psd_difs = [];
-
 for idx = 1:length(rats)
     curRat = rats{idx};
     searchString = strcat(curRat,'*sts.mat');
@@ -127,7 +114,7 @@ for idx = 1:length(rats)
             
             subplot(5,1,5);
             lfr_sc = num2str(od.S1.msn_res(iC).scount_ptile(1));
-            hfr_sc = num2str(od.S1.msn_res(iC).scount_ptile(1));
+            hfr_sc = num2str(od.S1.msn_res(iC).scount_ptile(2));
             lfr_fr = cat(2,num2str(od.S1.msn_res(iC).ptile_mfrs(1,1)), ...
                 ' Hz - ',num2str(od.S1.msn_res(iC).ptile_mfrs(1,2)), ' Hz');
             hfr_fr = cat(2,num2str(od.S1.msn_res(iC).ptile_mfrs(2,1)), ...
@@ -251,7 +238,7 @@ for idx = 1:length(rats)
             
             subplot(5,1,5);
             lfr_sc = num2str(od.S1.fsi_res(iC).scount_ptile(1));
-            hfr_sc = num2str(od.S1.fsi_res(iC).scount_ptile(1));
+            hfr_sc = num2str(od.S1.fsi_res(iC).scount_ptile(2));
             lfr_fr = cat(2,num2str(od.S1.fsi_res(iC).ptile_mfrs(1,1)), ...
                 ' Hz - ',num2str(od.S1.fsi_res(iC).ptile_mfrs(1,2)), ' Hz');
             hfr_fr = cat(2,num2str(od.S1.fsi_res(iC).ptile_mfrs(2,1)), ...
@@ -375,7 +362,7 @@ for idx = 1:length(rats)
             
             subplot(5,1,5);
             lfr_sc = num2str(od.S2.msn_res(iC).scount_ptile(1));
-            hfr_sc = num2str(od.S2.msn_res(iC).scount_ptile(1));
+            hfr_sc = num2str(od.S2.msn_res(iC).scount_ptile(2));
             lfr_fr = cat(2,num2str(od.S2.msn_res(iC).ptile_mfrs(1,1)), ...
                 ' Hz - ',num2str(od.S2.msn_res(iC).ptile_mfrs(1,2)), ' Hz');
             hfr_fr = cat(2,num2str(od.S2.msn_res(iC).ptile_mfrs(2,1)), ...
@@ -499,7 +486,7 @@ for idx = 1:length(rats)
             
             subplot(5,1,5);
             lfr_sc = num2str(od.S2.fsi_res(iC).scount_ptile(1));
-            hfr_sc = num2str(od.S2.fsi_res(iC).scount_ptile(1));
+            hfr_sc = num2str(od.S2.fsi_res(iC).scount_ptile(2));
             lfr_fr = cat(2,num2str(od.S2.fsi_res(iC).ptile_mfrs(1,1)), ...
                 ' Hz - ',num2str(od.S2.fsi_res(iC).ptile_mfrs(1,2)), ' Hz');
             hfr_fr = cat(2,num2str(od.S2.fsi_res(iC).ptile_mfrs(2,1)), ...
