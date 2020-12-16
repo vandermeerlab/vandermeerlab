@@ -155,6 +155,9 @@ for idx = 1:length(rats)
             %Calculate mean_lfr and mean_hfr
             lfr_mask = od.S1.msn_res(iC).mfr <= od.S1.msn_res(iC).ptile_mfrs(1,2);
             hfr_mask = ~(lfr_mask);
+            nzfr_mask = (od.S1.msn_res(iC).mfr ~= 0);
+            lfr_mask = lfr_mask & nzfr_mask;
+            hfr_mask = hfr_mask & nzfr_mask;
             trial_length = od.S1.trial_ends - od.S1.trial_starts;
             lfr_time = sum(trial_length(lfr_mask));
             hfr_time = sum(trial_length(hfr_mask));
@@ -341,6 +344,9 @@ for idx = 1:length(rats)
             %Calculate mean_lfr and mean_hfr
             lfr_mask = od.S1.fsi_res(iC).mfr <= od.S1.fsi_res(iC).ptile_mfrs(1,2);
             hfr_mask = ~(lfr_mask);
+            nzfr_mask = (od.S1.fsi_res(iC).mfr ~= 0);
+            lfr_mask = lfr_mask & nzfr_mask;
+            hfr_mask = hfr_mask & nzfr_mask;
             trial_length = od.S1.trial_ends - od.S1.trial_starts;
             lfr_time = sum(trial_length(lfr_mask));
             hfr_time = sum(trial_length(hfr_mask));
@@ -525,6 +531,9 @@ for idx = 1:length(rats)
             %Calculate mean_lfr and mean_hfr
             lfr_mask = od.S2.msn_res(iC).mfr <= od.S2.msn_res(iC).ptile_mfrs(1,2);
             hfr_mask = ~(lfr_mask);
+            nzfr_mask = (od.S2.msn_res(iC).mfr ~= 0);
+            lfr_mask = lfr_mask & nzfr_mask;
+            hfr_mask = hfr_mask & nzfr_mask;
             trial_length = od.S2.trial_ends - od.S2.trial_starts;
             lfr_time = sum(trial_length(lfr_mask));
             hfr_time = sum(trial_length(hfr_mask));
@@ -710,6 +719,9 @@ for idx = 1:length(rats)
             %Calculate mean_lfr and mean_hfr
             lfr_mask = od.S2.fsi_res(iC).mfr <= od.S2.fsi_res(iC).ptile_mfrs(1,2);
             hfr_mask = ~(lfr_mask);
+            nzfr_mask = (od.S2.fsi_res(iC).mfr ~= 0);
+            lfr_mask = lfr_mask & nzfr_mask;
+            hfr_mask = hfr_mask & nzfr_mask;
             trial_length = od.S2.trial_ends - od.S2.trial_starts;
             lfr_time = sum(trial_length(lfr_mask));
             hfr_time = sum(trial_length(hfr_mask));
