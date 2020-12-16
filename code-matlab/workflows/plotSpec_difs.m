@@ -1,8 +1,8 @@
 % Generate distribution of differences between frequency
 % (in the range lfq Hz - hfq Hz) with peak STA and peak STS values in low 
 % firing vs high firing trials
-lfq = 70;
-hfq = 95;
+lfq = 0;
+hfq = 100;
 cd('/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/Results/combined_results_optimal/');
 rats = {'R117','R119','R131','R132'};
 msn_near_sta_difs = [];

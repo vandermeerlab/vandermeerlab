@@ -1,7 +1,7 @@
 % Plot distribution of peak SFC frequency (in the range lfq Hz - hfq Hz) for
 % all cases: fsi-sampled, fsi-unsampled, msn
-lfq = 40;
-hfq = 95;
+lfq = 0;
+hfq = 100;
 cd('/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/Results/combined_results_optimal/');
 rats = {'R117','R119','R131','R132'};
     msn_near_sfc_lf = [];

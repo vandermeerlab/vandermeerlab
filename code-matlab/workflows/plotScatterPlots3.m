@@ -1,4 +1,4 @@
-% Generate scatter plots of  SFC values vs various quantities
+% Generate scatter plots of (MFR of High FR trials - MFR of Low FR Trials) vs various quantities
 
 lfq = 40;
 hfq = 95;
@@ -17,6 +17,7 @@ msn_away_lfr_sfc = [];
 msn_away_hfr_sfc = [];
 msn_near_psd_difs = [];
 msn_away_psd_difs = [];
+
 
 fsi_near_fr_difs = [];
 fsi_away_fr_difs = [];

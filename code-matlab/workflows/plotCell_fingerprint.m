@@ -31,15 +31,15 @@ for idx = 1:length(rats)
             hfr_max = od.S1.freqs(lf+p2-1);
             % Indicate category of cell in suffix
             if hfr_max - lfr_max > 20
-                o_prefix = cat(2, o_prefix{1}, '_g20');
+                o_prefix = cat(2, o_prefix{1}, '_sts_g20');
             elseif hfr_max - lfr_max < -20
-                o_prefix = cat(2, o_prefix{1}, '_gn20');
+                o_prefix = cat(2, o_prefix{1}, '_sts_gn20');
             elseif hfr_max - lfr_max > 10
-                o_prefix = cat(2, o_prefix{1}, '_g10');
+                o_prefix = cat(2, o_prefix{1}, '_sts_g10');
             elseif hfr_max - lfr_max < -10
-                o_prefix = cat(2, o_prefix{1}, '_gn10');
+                o_prefix = cat(2, o_prefix{1}, '_sts_gn10');
             else
-                o_prefix = cat(2, o_prefix{1}, '_l10');
+                o_prefix = cat(2, o_prefix{1}, '_sts_l10');
             end
                      
             plot(od.S1.freqs, 10*log(od.S1.msn_res(iC).mtsts_ptile(1,:)), 'blue');
@@ -121,6 +121,20 @@ for idx = 1:length(rats)
             [~,p2] = max(msn_sfc_hf(lf:rf));
             lfr_max = od.S1.freqs(lf+p1-1);
             hfr_max = od.S1.freqs(lf+p2-1);
+            
+            % Indicate category of cell in suffix
+            if hfr_max - lfr_max > 20
+                o_prefix = cat(2, o_prefix, '_sfc_g20');
+            elseif hfr_max - lfr_max < -20
+                o_prefix = cat(2, o_prefix, '_sfc_gn20');
+            elseif hfr_max - lfr_max > 10
+                o_prefix = cat(2, o_prefix, '_sfc_g10');
+            elseif hfr_max - lfr_max < -10
+                o_prefix = cat(2, o_prefix, '_sfc_gn10');
+            else
+                o_prefix = cat(2, o_prefix, '_sfc_l10');
+            end
+            
             plot(od.S1.freqs, msn_sfc_lf, 'blue')
             xline(lfr_max, 'blue')
             hold on;
@@ -137,6 +151,26 @@ for idx = 1:length(rats)
 %             text(80, m1 - 10, hfr_txt, 'Color', 'red', 'FontSize', 12);
 %             text(80, m1 - 20, dif_txt, 'Color', 'black', 'FontSize', 12);
             title('SFC');
+                 
+            %Calculate mean_lfr and mean_hfr
+            lfr_mask = od.S1.msn_res(iC).mfr <= od.S1.msn_res(iC).ptile_mfrs(1,2);
+            hfr_mask = ~(lfr_mask);
+            trial_length = od.S1.trial_ends - od.S1.trial_starts;
+            lfr_time = sum(trial_length(lfr_mask));
+            hfr_time = sum(trial_length(hfr_mask));
+            mean_lfr = od.S1.msn_res(iC).scount_ptile(1)/lfr_time;
+            mean_hfr = od.S1.msn_res(iC).scount_ptile(2)/hfr_time;
+            if mean_lfr > od.S1.msn_res(iC).ptile_mfrs(1,2) || mean_hfr <= od.S1.msn_res(iC).ptile_mfrs(1,2)
+                o_prefix = cat(2, o_prefix, '_fr_ERROR');
+            end
+             % Indicate category of cell in suffix
+            if mean_hfr - mean_lfr <= 3
+                o_prefix = cat(2, o_prefix, '_fr_l3');
+            elseif mean_hfr - mean_lfr <= 6
+                o_prefix = cat(2, o_prefix, '_fr_l6');
+            else
+                o_prefix = cat(2, o_prefix, '_fr_g6');
+            end
             
             subplot(6,1,6);
             lfr_sc = num2str(od.S1.msn_res(iC).scount_ptile(1));
@@ -183,15 +217,15 @@ for idx = 1:length(rats)
             hfr_max = od.S1.freqs(lf+p2-1);
             % Indicate category of cell in suffix
             if hfr_max - lfr_max > 20
-                o_prefix = cat(2, o_prefix{1}, '_g20');
+                o_prefix = cat(2, o_prefix{1}, '_sts_g20');
             elseif hfr_max - lfr_max < -20
-                o_prefix = cat(2, o_prefix{1}, '_gn20');
+                o_prefix = cat(2, o_prefix{1}, '_sts_gn20');
             elseif hfr_max - lfr_max > 10
-                o_prefix = cat(2, o_prefix{1}, '_g10');
+                o_prefix = cat(2, o_prefix{1}, '_sts_g10');
             elseif hfr_max - lfr_max < -10
-                o_prefix = cat(2, o_prefix{1}, '_gn10');
+                o_prefix = cat(2, o_prefix{1}, '_sts_gn10');
             else
-                o_prefix = cat(2, o_prefix{1}, '_l10');
+                o_prefix = cat(2, o_prefix{1}, '_sts_l10');
             end
                      
             plot(od.S1.freqs, 10*log(od.S1.fsi_res(iC).mtsts_ptile(1,:)), 'blue');
@@ -273,6 +307,20 @@ for idx = 1:length(rats)
             [~,p2] = max(fsi_sfc_hf(lf:rf));
             lfr_max = od.S1.freqs(lf+p1-1);
             hfr_max = od.S1.freqs(lf+p2-1);
+            
+            % Indicate category of cell in suffix
+            if hfr_max - lfr_max > 20
+                o_prefix = cat(2, o_prefix, '_sfc_g20');
+            elseif hfr_max - lfr_max < -20
+                o_prefix = cat(2, o_prefix, '_sfc_gn20');
+            elseif hfr_max - lfr_max > 10
+                o_prefix = cat(2, o_prefix, '_sfc_g10');
+            elseif hfr_max - lfr_max < -10
+                o_prefix = cat(2, o_prefix, '_sfc_gn10');
+            else
+                o_prefix = cat(2, o_prefix, '_sfc_l10');
+            end
+            
             plot(od.S1.freqs, fsi_sfc_lf, 'blue')
             xline(lfr_max, 'blue')
             hold on;
@@ -290,6 +338,25 @@ for idx = 1:length(rats)
 %             text(80, m1 - 20, dif_txt, 'Color', 'black', 'FontSize', 12);
             title('SFC');
             
+            %Calculate mean_lfr and mean_hfr
+            lfr_mask = od.S1.fsi_res(iC).mfr <= od.S1.fsi_res(iC).ptile_mfrs(1,2);
+            hfr_mask = ~(lfr_mask);
+            trial_length = od.S1.trial_ends - od.S1.trial_starts;
+            lfr_time = sum(trial_length(lfr_mask));
+            hfr_time = sum(trial_length(hfr_mask));
+            mean_lfr = od.S1.fsi_res(iC).scount_ptile(1)/lfr_time;
+            mean_hfr = od.S1.fsi_res(iC).scount_ptile(2)/hfr_time;
+            if mean_lfr > od.S1.fsi_res(iC).ptile_mfrs(1,2) || mean_hfr <= od.S1.fsi_res(iC).ptile_mfrs(1,2)
+                o_prefix = cat(2, o_prefix, '_fr_ERROR');
+            end
+             % Indicate category of cell in suffix
+            if mean_hfr - mean_lfr <= 3
+                o_prefix = cat(2, o_prefix, '_fr_l3');
+            elseif mean_hfr - mean_lfr <= 6
+                o_prefix = cat(2, o_prefix, '_fr_l6');
+            else
+                o_prefix = cat(2, o_prefix, '_fr_g6');
+            end
             
             subplot(6,1,6);
             text(0.05, 1.1, lfr_txt, 'Color', 'blue', 'FontSize', 12);
@@ -335,15 +402,15 @@ for idx = 1:length(rats)
             hfr_max = od.S2.freqs(lf+p2-1);
             % Indicate category of cell in suffix
             if hfr_max - lfr_max > 20
-                o_prefix = cat(2, o_prefix{1}, '_g20');
+                o_prefix = cat(2, o_prefix{1}, '_sts_g20');
             elseif hfr_max - lfr_max < -20
-                o_prefix = cat(2, o_prefix{1}, '_gn20');
+                o_prefix = cat(2, o_prefix{1}, '_sts_gn20');
             elseif hfr_max - lfr_max > 10
-                o_prefix = cat(2, o_prefix{1}, '_g10');
+                o_prefix = cat(2, o_prefix{1}, '_sts_g10');
             elseif hfr_max - lfr_max < -10
-                o_prefix = cat(2, o_prefix{1}, '_gn10');
+                o_prefix = cat(2, o_prefix{1}, '_sts_gn10');
             else
-                o_prefix = cat(2, o_prefix{1}, '_l10');
+                o_prefix = cat(2, o_prefix{1}, '_sts_l10');
             end
                      
             plot(od.S2.freqs, 10*log(od.S2.msn_res(iC).mtsts_ptile(1,:)), 'blue');
@@ -425,6 +492,19 @@ for idx = 1:length(rats)
             [~,p2] = max(msn_sfc_hf(lf:rf));
             lfr_max = od.S2.freqs(lf+p1-1);
             hfr_max = od.S2.freqs(lf+p2-1);
+            % Indicate category of cell in suffix
+            if hfr_max - lfr_max > 20
+                o_prefix = cat(2, o_prefix, '_sfc_g20');
+            elseif hfr_max - lfr_max < -20
+                o_prefix = cat(2, o_prefix, '_sfc_gn20');
+            elseif hfr_max - lfr_max > 10
+                o_prefix = cat(2, o_prefix, '_sfc_g10');
+            elseif hfr_max - lfr_max < -10
+                o_prefix = cat(2, o_prefix, '_sfc_gn10');
+            else
+                o_prefix = cat(2, o_prefix, '_sfc_l10');
+            end
+            
             plot(od.S2.freqs, msn_sfc_lf, 'blue')
             xline(lfr_max, 'blue')
             hold on;
@@ -441,6 +521,26 @@ for idx = 1:length(rats)
 %             text(80, m1 - 10, hfr_txt, 'Color', 'red', 'FontSize', 12);
 %             text(80, m1 - 20, dif_txt, 'Color', 'black', 'FontSize', 12);
             title('SFC');
+            
+            %Calculate mean_lfr and mean_hfr
+            lfr_mask = od.S2.msn_res(iC).mfr <= od.S2.msn_res(iC).ptile_mfrs(1,2);
+            hfr_mask = ~(lfr_mask);
+            trial_length = od.S2.trial_ends - od.S2.trial_starts;
+            lfr_time = sum(trial_length(lfr_mask));
+            hfr_time = sum(trial_length(hfr_mask));
+            mean_lfr = od.S2.msn_res(iC).scount_ptile(1)/lfr_time;
+            mean_hfr = od.S2.msn_res(iC).scount_ptile(2)/hfr_time;
+            if mean_lfr > od.S2.msn_res(iC).ptile_mfrs(1,2) || mean_hfr <= od.S2.msn_res(iC).ptile_mfrs(1,2)
+                o_prefix = cat(2, o_prefix, '_fr_ERROR');
+            end
+             % Indicate category of cell in suffix
+            if mean_hfr - mean_lfr <= 3
+                o_prefix = cat(2, o_prefix, '_fr_l3');
+            elseif mean_hfr - mean_lfr <= 6
+                o_prefix = cat(2, o_prefix, '_fr_l6');
+            else
+                o_prefix = cat(2, o_prefix, '_fr_g6');
+            end
             
             subplot(6,1,6);
             text(0.05, 1.1, lfr_txt, 'Color', 'blue', 'FontSize', 12);
@@ -486,15 +586,15 @@ for idx = 1:length(rats)
             hfr_max = od.S2.freqs(lf+p2-1);
             % Indicate category of cell in suffix
             if hfr_max - lfr_max > 20
-                o_prefix = cat(2, o_prefix{1}, '_g20');
+                o_prefix = cat(2, o_prefix{1}, '_sts_g20');
             elseif hfr_max - lfr_max < -20
-                o_prefix = cat(2, o_prefix{1}, '_gn20');
+                o_prefix = cat(2, o_prefix{1}, '_sts_gn20');
             elseif hfr_max - lfr_max > 10
-                o_prefix = cat(2, o_prefix{1}, '_g10');
+                o_prefix = cat(2, o_prefix{1}, '_sts_g10');
             elseif hfr_max - lfr_max < -10
-                o_prefix = cat(2, o_prefix{1}, '_gn10');
+                o_prefix = cat(2, o_prefix{1}, '_sts_gn10');
             else
-                o_prefix = cat(2, o_prefix{1}, '_l10');
+                o_prefix = cat(2, o_prefix{1}, '_sts_l10');
             end
                      
             plot(od.S2.freqs, 10*log(od.S2.fsi_res(iC).mtsts_ptile(1,:)), 'blue');
@@ -576,6 +676,20 @@ for idx = 1:length(rats)
             [~,p2] = max(fsi_sfc_hf(lf:rf));
             lfr_max = od.S2.freqs(lf+p1-1);
             hfr_max = od.S2.freqs(lf+p2-1);
+            
+            % Indicate category of cell in suffix
+            if hfr_max - lfr_max > 20
+                o_prefix = cat(2, o_prefix, '_sfc_g20');
+            elseif hfr_max - lfr_max < -20
+                o_prefix = cat(2, o_prefix, '_sfc_gn20');
+            elseif hfr_max - lfr_max > 10
+                o_prefix = cat(2, o_prefix, '_sfc_g10');
+            elseif hfr_max - lfr_max < -10
+                o_prefix = cat(2, o_prefix, '_sfc_gn10');
+            else
+                o_prefix = cat(2, o_prefix, '_sfc_l10');
+            end
+            
             plot(od.S2.freqs, fsi_sfc_lf, 'blue')
             xline(lfr_max, 'blue')
             hold on;
@@ -592,6 +706,26 @@ for idx = 1:length(rats)
 %             text(80, m1 - 10, hfr_txt, 'Color', 'red', 'FontSize', 12);
 %             text(80, m1 - 20, dif_txt, 'Color', 'black', 'FontSize', 12);
             title('SFC');
+            
+            %Calculate mean_lfr and mean_hfr
+            lfr_mask = od.S2.fsi_res(iC).mfr <= od.S2.fsi_res(iC).ptile_mfrs(1,2);
+            hfr_mask = ~(lfr_mask);
+            trial_length = od.S2.trial_ends - od.S2.trial_starts;
+            lfr_time = sum(trial_length(lfr_mask));
+            hfr_time = sum(trial_length(hfr_mask));
+            mean_lfr = od.S2.fsi_res(iC).scount_ptile(1)/lfr_time;
+            mean_hfr = od.S2.fsi_res(iC).scount_ptile(2)/hfr_time;
+            if mean_lfr > od.S2.fsi_res(iC).ptile_mfrs(1,2) || mean_hfr <= od.S2.fsi_res(iC).ptile_mfrs(1,2)
+                o_prefix = cat(2, o_prefix, '_fr_ERROR');
+            end
+             % Indicate category of cell in suffix
+            if mean_hfr - mean_lfr <= 3
+                o_prefix = cat(2, o_prefix, '_fr_l3');
+            elseif mean_hfr - mean_lfr <= 6
+                o_prefix = cat(2, o_prefix, '_fr_l6');
+            else
+                o_prefix = cat(2, o_prefix, '_fr_g6');
+            end
             
             subplot(6,1,6);
             text(0.05, 1.1, lfr_txt, 'Color', 'blue', 'FontSize', 12);

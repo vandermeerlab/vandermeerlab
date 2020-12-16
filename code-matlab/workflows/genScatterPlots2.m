@@ -1,7 +1,7 @@
-% Generate scatter plots of  SFC values vs various quantities
+% Generate scatter plots of various quantities vs SFC
 
-lfq = 40;
-hfq = 95;
+lfq = 0;
+hfq = 100;
 cd('/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/Results/combined_results_optimal/');
 rats = {'R117','R119','R131','R132'};
 
