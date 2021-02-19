@@ -1,4 +1,4 @@
-function Create_CQ_File(fc,recalc,fd_TT)
+function Create_CQ_File(varargin)
 
 % Create_CQ_file(fc,recalc,fd_TT);
 % 
@@ -26,20 +26,22 @@ function Create_CQ_File(fc,recalc,fd_TT)
 % modified ADR Feb 2008
 
 % replace with formats you use. _ID_ will be replaced with the tetrode number
-FileFormats = {'R*TT_ID_.ntt','R*TT_ID_r.ntt'};
-%FileFormats = {'R*TT_ID_.ntt', 'TT_ID_.ntt', 'R*TT_ID_.dat*','R*Sc_ID_.ntt*', 'TT_ID_.dat*' 'Sc_ID_.ntt*', 'TT_ID_.tt*', 'TT0_ID_.tt*'};
+FileFormats = {'R*TT_ID_.ntt','R*TT_ID_r.ntt','M*TT_ID_.ntt','M*TT_ID_r.ntt'};
+% FileFormats = {'R*TT_ID_.ntt', 'TT_ID_.ntt', 'R*TT_ID_.dat*','R*Sc_ID_.ntt*', 'TT_ID_.dat*' 'Sc_ID_.ntt*', 'TT_ID_.tt*', 'TT0_ID_.tt*'};
 
+extract_varargin;
 
 % initialize variables which were not passed in.
-if ~exist('fc','var'); fc = FindFiles('*.t'); fc = cat(1,fc,FindFiles('*._t')); end;
-if ~exist('recalc','var'); recalc = 0; end;
-if ~exist('fd_TT','var'); fd_TT = ' '; end;
+if ~exist('fc','var'); fc = FindFiles('*.t'); fc = cat(1,fc,FindFiles('*._t')); end
+if ~exist('recalc','var'); recalc = 0; end
+if ~exist('fd_TT','var'); fd_TT = ' '; end
+
 
 % Assume this is hard coded (the feature space to use is always the same)
 FeaturesToUse = {'energy','wavePC1'};
 nRecords_SNR = 20000; % maximum number of records to load when calculating the signal-to-noise ratio
 				
-if isempty(fc); fc = FindFiles('*.t'); end;
+if isempty(fc); fc = FindFiles('*.t'); end
 
 fc_remove = {}; % any tetrode files that are copied from CD and need to be erased.
 fd_Curr = ' '; % current directory (of last tetrode loaded)
@@ -49,11 +51,21 @@ nAttempted = 0; % number of .t files attempted
 nGood = 0;     % number of .t files successfully processed
 
 nFeatures = length(FeaturesToUse);
-S = LoadSpikes(fc,'tsflag','ts'); % load the spikes for each .t file
+
+% load the spikes for each .t file
+if exist('encoding','var')
+    S = LoadSpikes(fc,'tsflag','ts','encoding',encoding);
+else
+    S = LoadSpikes(fc,'tsflag','ts');
+end
 
 for iFC = 1:length(fc)
 	recalcYN = recalc;  % start out with whatever our passed in value was.
-    Name = FindNameInfo(fc{iFC});
+    if exist('species', 'var')
+        Name = FindNameInfo(fc{iFC}, species);
+    else
+        Name = FindNameInfo(fc{iFC}, 'R'); % default is R
+    end 
 	
 	fc_CQ = [Name.CellID '-ClusterQual.mat'];  % file to be created
 
@@ -95,14 +107,14 @@ for iFC = 1:length(fc)
 		% Look for the tetrode using known tetrode naming formats
 		fc_TT = {};
 		for iFT = 1:length(FileFormats)
-			fc_TT = cat(1, FindFiles(strrep(FileFormats{iFT}, '_ID_', Tetrode)));
+			fc_TT = cat(1, fc_TT,FindFiles(strrep(FileFormats{iFT}, '_ID_', Tetrode)));
 		end
 		
 		% if we did not find a TT file
 		if isempty(fc_TT) && isempty(strmatch(fd_TT,' ')) % if a directory was supplied to check for the tetrode file (like from a CD) move to that dir
 			pushdir(fd_TT);
 			for iFT = 1:length(FileFormats)
-				fc_TT = cat(1, FindFiles(strrep(FileFormats{iFT}, '_ID_', Tetrode)));
+				fc_TT = cat(1, fc_TT, FindFiles(strrep(FileFormats{iFT}, '_ID_', Tetrode)));
 			end
 			popdir;
 	
