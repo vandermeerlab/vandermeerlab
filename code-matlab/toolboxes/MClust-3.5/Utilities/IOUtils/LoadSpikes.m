@@ -47,8 +47,19 @@ for iF = 1:nFiles
 			warning([ 'Could not open tfile ' tfn]);
 		end
 		
-		ReadHeader(tfp);    
-		S{iF} = fread(tfp,inf,'uint32');	%read as 32 bit ints
+		ReadHeader(tfp);
+        if exist('encoding','var')
+            switch (encoding)
+                case '32'
+                    S{iF} = fread(tfp,inf,'uint32');    % read as 32 bits
+                case '64'
+                    S{iF} = fread(tfp,inf,'uint64');    % read as 64 bits
+            end 
+        else
+            S{iF} = fread(tfp,inf,'uint32');	% default is 32 bits
+        end
+
+		
 		
 		% Set appropriate time units.
 		switch (tsflag)
