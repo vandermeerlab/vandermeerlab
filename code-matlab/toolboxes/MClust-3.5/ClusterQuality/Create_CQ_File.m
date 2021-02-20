@@ -213,8 +213,21 @@ for iFC = 1:length(fc)
 						xrange(:,it) = (((nWVSamples + 2) * (it-1)) + (1:nWVSamples))';
 					end
 					save(fc_WV,'mWV','sWV','xrange','-mat');
-				end
+                end
 				
+                %-------------------------------------------------------------
+				% Save all waveforms if required
+                if exist('allwaveforms', 'var')
+                    switch allwaveforms
+                        case 1
+                        fc_aWV = [Name.Location Name.SessionID '-TT' Name.Tetrode '-' Name.Cluster '-awv.mat'];
+                        if ~exist(fc_aWV,'file')
+                            disp(' Saving all waveforms')
+                            save(fc_aWV,'WV','-mat');
+                        end
+                    end
+                end
+                
 				%-------------------------------------------------------------
 				% Signal to noise ratio calculation
 				disp('  Calculating signal-to-noise ratio')
