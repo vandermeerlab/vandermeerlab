@@ -223,7 +223,8 @@ for iFC = 1:length(fc)
                         fc_aWV = [Name.Location Name.SessionID '-TT' Name.Tetrode '-' Name.Cluster '-awv.mat'];
                         if ~exist(fc_aWV,'file')
                             disp(' Saving all waveforms')
-                            save(fc_aWV,'WV','-mat');
+                            save(fc_aWV,'WV','T','-mat');
+                        [t,~] = MClust_LoadNeuralData(fc_TT{1},f,2);
                         end
                     end
                 end
