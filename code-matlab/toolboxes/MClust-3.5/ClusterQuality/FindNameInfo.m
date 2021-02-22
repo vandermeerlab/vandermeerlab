@@ -1,4 +1,4 @@
-function NameInfo = FindNameInfo(filename)
+function NameInfo = FindNameInfo(filename, species)
 
 % NameInfo = FindNameInfo(filename);
 %
@@ -7,7 +7,8 @@ function NameInfo = FindNameInfo(filename)
 % the tetrode and cluster number if available.
 %
 % INPUTS: filename: expects a name including a path, unless the name is in the format RXXX-YYYY-MM-DD-TTtt-cc.*
-%                   expects rat ID in RXXX, session date in YYYY-MM-DD
+%                   expects rat ID in RXXX, session date in YYYY-MM-DD or a
+%                   mouse ID in MXXX, session date in YYYY-MM-DD
 %
 % OUTPUTS: NameInfo.RatID = rat's identification number
 %          NameInfo.FileName = original filename passed in
@@ -30,6 +31,7 @@ Tetrode = [];
 Cluster = [];
 Location = [];
 TetrodePrefix = [];
+Species = species;
 
 % Initialize output variable 
 NameInfo.FileName = filename;
@@ -68,15 +70,15 @@ end
 
 Location = p;
 
-Rs = findstr(p,'R');
+Rs = findstr(n,Species);
 if ~isempty(Rs)
-    RatID = p(Rs(end):Rs(end) + 3);
-    SessionID = p(Rs(end):Rs(end) + 14);
+    RatID = n(Rs(end):Rs(end) + 3);
+    SessionID = n(Rs(end):Rs(end) + 14);
 else
-    Rs = findstr(n,'R');
+    Rs = findstr(p,Species);
     if ~isempty(Rs)
-        RatID = n(Rs(end):Rs(end) + 3);
-        SessionID = n(Rs(end):Rs(end) + 14);
+        RatID = p(Rs(end):Rs(end) + 3);
+        SessionID = p(Rs(end):Rs(end) + 14);
     end
 end
 
