@@ -1,5 +1,5 @@
 function tc_out = DetectPlaceCells1D(cfg_in,tc_in)
-% function [idx,peak_idx,peak_loc] = DetectPlaceCells1D(cfg,tc)
+% function tc_out = DetectPlaceCells1D(cfg,tc)
 %
 % inputs:
 %
@@ -102,7 +102,7 @@ for iC = 1:nCells
            % get field entries and exits as an iv
            cfg_infield = [];
            cfg_infield.method = 'raw'; cfg_infield.threshold = [field_start field_end]; 
-           cfg_infield.dcn = 'range'; cfg_infield.target = 'z'; cfg_infield.verbose = 0;
+           cfg_infield.operation = 'range'; cfg_infield.target = 'z'; cfg_infield.verbose = 0;
            infield_iv = TSDtoIV(cfg_infield,cfg.pos);
            
            % now get number of spikes

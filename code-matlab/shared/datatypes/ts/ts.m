@@ -43,6 +43,9 @@ if nargin == 2
         error('Input .label data are not in cell format.')
     end
     
+    ts_out.t = timestamps;
+    ts_out.label = labels;
+    
 % initialization of an empty ts struct with prespecified number of data bins
 elseif nargin == 1 
     if isnumeric(varargin{1}) && size(varargin{1},1) == 1 && size(varargin{1},2) == 1

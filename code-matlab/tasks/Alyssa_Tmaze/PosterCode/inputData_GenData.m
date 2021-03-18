@@ -84,8 +84,8 @@ for iRat = 1:length(rats)
         sessionData.R.iv = iv_R;
         
         % put coords into the data collector
-        sessionData.L.coord = metadata.coord.coordL_cm;
-        sessionData.R.coord = metadata.coord.coordR_cm;
+        sessionData.L.coord = metadata.coord.coordL_cm.coord;
+        sessionData.R.coord = metadata.coord.coordR_cm.coord;
         please = [];
         please.binSize = 3;
         please.run_dist = ExpKeys.pathlength;
@@ -129,8 +129,8 @@ for iRat = 1:length(rats)
         % linearize position data and choice point
         for iArm = 1:length(arms)
             please = []; please.Coord = sessionData.(arms{iArm}).coord;
-            sessionData.(arms{iArm}).linpos = LinearizePos(please,sessionData.(arms{iArm}).pos);
-            sessionData.(arms{iArm}).chp = LinearizePos(please,chp); % the exact chp for L or R differs depending on the coord
+            sessionData.(arms{iArm}).linpos = LinearizePos_old(please,sessionData.(arms{iArm}).pos);
+            sessionData.(arms{iArm}).chp = LinearizePos_old(please,chp); % the exact chp for L or R differs depending on the coord
             
         end
         

@@ -30,7 +30,7 @@
 
 %% Set your current directory to the session you want to work with
 
-clearvars -except fd originalFolder iFD
+clear
 
 % load position data with units in pixels:
 cfg = [];
@@ -51,12 +51,8 @@ if isequal(rat,'R042'); rotation = 270; end % rotate the view for R042's data so
 
 % plot x pixels vs y pixels, reverse Y axis and/or change view to see proper maze orientation
 
-figure; plot(pos); 
-title('Default, as exists in data'); 
-xlabel('x data'); ylabel('y data');
-view(rotation,90); 
-set(gca,'YDir','reverse'); 
-xlabel('x data'); ylabel('y data');
+figure; plot(getd(pos,'x'),getd(pos,'y')); title('Default, as exists in data'); xlabel('x data'); ylabel('y data');
+view(rotation,90); set(gca,'YDir','reverse'); xlabel('x data'); ylabel('y data');
 
 if isequal(rat,'R042')
     title('Figure rotated and flipped, preserving original axes values');
@@ -69,8 +65,8 @@ end
 % figure will open that will prompt you to click/draw out a trajectory.
 % press enter to commit your trajectory.
 
-coordL = MakeCoord(pos,'titl','Draw left trajectory','YDir','reverse','rot',rotation); % CoordL is in units of pixels
-coordR = MakeCoord(pos,'titl','Draw right trajectory','YDir','reverse','rot',rotation); % CoordR is in units of pixels
+coordL = MakeCoord_old(getd(pos,'x'),getd(pos,'y'),'titl','Draw left trajectory','YDir','reverse','rot',rotation); % CoordL is in units of pixels
+coordR = MakeCoord_old(getd(pos,'x'),getd(pos,'y'),'titl','Draw right trajectory','YDir','reverse','rot',rotation); % CoordR is in units of pixels
 
 %% click on choice point
 
@@ -78,11 +74,9 @@ coordR = MakeCoord(pos,'titl','Draw right trajectory','YDir','reverse','rot',rot
 
 figure; set(gca,'YDir','reverse'); view(rotation,90); hold on;
 
-plot(pos,'.','Color',[0.7 0.7 0.7],'MarkerSize',4);
-plot(coordL.coord(1,:),coordL.coord(2,:),'ob'); 
-plot(coordR.coord(1,:),coordR.coord(2,:),'og'); 
-title('Click choice point; press enter');
-%maximize
+plot(getd(pos,'x'),getd(pos,'y'),'.','Color',[0.7 0.7 0.7],'MarkerSize',4);
+plot(coordL(1,:),coordL(2,:),'ob'); plot(coordR(1,:),coordR(2,:),'og'); title('Click choice point; press enter');
+maximize
 
 % get data values where user clicks
 [x,y] = ginput; 
@@ -138,12 +132,12 @@ end
 %%
 
 coordL_cm = coordL; % copy coordL under a new variable name, and apply some changes:
-coordL_cm.coord(1,:) = coordL_cm.coord(1,:)./convFact(1); % apply x conversion
-coordL_cm.coord(2,:) = coordL_cm.coord(2,:)./convFact(2); % apply y conversion
+coordL_cm(1,:) = coordL_cm(1,:)./convFact(1); % apply x conversion
+coordL_cm(2,:) = coordL_cm(2,:)./convFact(2); % apply y conversion
 
 coordR_cm = coordR; % as above, for R instead
-coordR_cm.coord(1,:) = coordR_cm.coord(1,:)./convFact(1); % apply x conversion
-coordR_cm.coord(2,:) = coordR_cm.coord(2,:)./convFact(2); % apply y conversion
+coordR_cm(1,:) = coordR_cm(1,:)./convFact(1); % apply x conversion
+coordR_cm(2,:) = coordR_cm(2,:)./convFact(2); % apply y conversion
 
 
 % convert choice point to cm
@@ -161,9 +155,7 @@ coord = struct('coordL',coordL,'coordL_cm',coordL_cm,'coordR',coordR,'coordR_cm'
 figure; set(gca,'YDir','reverse'); view(rotation,90); hold on; 
 
 title('Your coords in centimeters')
-plot(coordL_cm.coord(1,:),coordL_cm.coord(2,:),'ob');
-plot(coordR_cm.coord(1,:),coordR_cm.coord(2,:),'og'); 
-plot(chp_cm(1),chp_cm(2),'or','MarkerSize',10,'LineWidth',4)
+plot(coordL_cm(1,:),coordL_cm(2,:),'ob'); plot(coordR_cm(1,:),coordR_cm(2,:),'og'); plot(chp_cm(1),chp_cm(2),'or','MarkerSize',10,'LineWidth',4)
 
 %% Save coord field in metadata
 

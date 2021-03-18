@@ -54,7 +54,7 @@ thr_out = cfg.threshold;
 switch cfg.method
     case 'zscore'
         [temp_data,mu,sigma] = zscore(temp_data);
-        switch cfg.dcn
+        switch cfg.operation
             case '>' 
                 thr_out = mu + cfg.threshold.*sigma; % store threshold for output argument
             case '<'
