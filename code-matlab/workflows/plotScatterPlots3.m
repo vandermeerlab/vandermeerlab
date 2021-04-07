@@ -1,7 +1,7 @@
 % Generate scatter plots of (MFR of High FR trials - MFR of Low FR Trials) vs various quantities
 
-lfq = 0;
-hfq = 100;
+lfq = 40;
+hfq = 95;
 cd('/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/Results/combined_results_optimal/');
 rats = {'R117','R119','R131','R132'};
 
@@ -17,6 +17,7 @@ msn_away_lfr_sfc = [];
 msn_away_hfr_sfc = [];
 msn_near_psd_difs = [];
 msn_away_psd_difs = [];
+msn_near_sfc_difs = [];
 
 
 fsi_near_fr_difs = [];
@@ -31,6 +32,7 @@ fsi_away_lfr_sfc = [];
 fsi_away_hfr_sfc = [];
 fsi_near_psd_difs = [];
 fsi_away_psd_difs = [];
+fsi_near_sfc_difs = [];
 
 for idx = 1:length(rats)
     curRat = rats{idx};
@@ -74,6 +76,11 @@ for idx = 1:length(rats)
             [~,p7] = max(od.S1.msn_res(iC).psd(1,lf:rf));
             [~,p8] = max(od.S1.msn_res(iC).psd(2,lf:rf));
             
+            [~,id_lf] = max(od.S1.msn_res(iC).sfc(1,lf:rf));
+            [~,id_hf] = max(od.S1.msn_res(iC).sfc(2,lf:rf));
+            msn_near_sfc_difs = [msn_near_sfc_difs, od.S1.freqs(lf+id_hf-1) - od.S1.freqs(lf+id_lf-1)];
+            
+            
             msn_near_sts_difs = [msn_near_sts_difs (od.S1.freqs(lf+p2-1)-od.S1.freqs(lf+p1-1))];
             msn_near_sta_difs = [msn_near_sta_difs (od.S1.freqs(lf+p4-1)-od.S1.freqs(lf+p3-1))];     
             msn_near_lfr_sfc = [msn_near_lfr_sfc lfr_sfc];
@@ -111,6 +118,10 @@ for idx = 1:length(rats)
             [hfr_sfc,~] = max(od.S1.fsi_res(iC).sfc(2,lf:rf));
             [~,p7] = max(od.S1.fsi_res(iC).psd(1,lf:rf));
             [~,p8] = max(od.S1.fsi_res(iC).psd(2,lf:rf));
+            
+            [~,id_lf] = max(od.S1.fsi_res(iC).sfc(1,lf:rf));
+            [~,id_hf] = max(od.S1.fsi_res(iC).sfc(2,lf:rf));
+            fsi_near_sfc_difs = [fsi_near_sfc_difs, od.S1.freqs(lf+id_hf-1) - od.S1.freqs(lf+id_lf-1)];
 
             fsi_near_sts_difs = [fsi_near_sts_difs (od.S1.freqs(lf+p2-1)-od.S1.freqs(lf+p1-1))];
             fsi_near_sta_difs = [fsi_near_sta_difs (od.S1.freqs(lf+p4-1)-od.S1.freqs(lf+p3-1))];
@@ -210,107 +221,107 @@ fsi_away_sfc = fsi_away_lfr_sfc./2 + fsi_away_hfr_sfc./2;
 
 close all;
 
-figure;
-subplot(2,4,1);
-scatter(msn_near_fr_difs, msn_near_sts_difs, 'filled', 'MarkerFaceColor', 'red', 'MarkerFaceAlpha', 0.4);
-xlabel('MSN Near MFR Dif')
-ylabel('MSN Near STS Dif')
-subplot(2,4,2);
-scatter(msn_near_fr_difs, msn_near_sta_difs, 'filled', 'MarkerFaceColor', 'red', 'MarkerFaceAlpha', 0.4);
-xlabel('MSN Near MFR Dif')
-ylabel('MSN Near STA Dif')
-subplot(2,4,3);
-scatter(msn_near_fr_difs, msn_near_psd_difs, 'filled', 'MarkerFaceColor', 'red', 'MarkerFaceAlpha', 0.4);
-xlabel('MSN Near MFR Dif')
-ylabel('MSN Near PSD Dif')
-subplot(2,4,4);
-scatter(msn_near_fr_difs, msn_near_sfc, 'filled', 'MarkerFaceColor', 'red', 'MarkerFaceAlpha', 0.4);
-xlabel('MSN Near MFR Dif')
-ylabel('MSN Near mean SFC')
-
-
-subplot(2,4,5);
-scatter(fsi_near_fr_difs, fsi_near_sts_difs, 'filled', 'MarkerFaceColor', 'green', 'MarkerFaceAlpha', 0.4);
-xlabel('FSI Near MFR Dif')
-ylabel('FSI Near STS Dif')
-subplot(2,4,6);
-scatter(fsi_near_fr_difs, fsi_near_sta_difs, 'filled', 'MarkerFaceColor', 'green', 'MarkerFaceAlpha', 0.4);
-xlabel('FSI Near MFR Dif')
-ylabel('FSI Near STA Dif')
-subplot(2,4,7);
-scatter(fsi_near_fr_difs, fsi_near_psd_difs, 'filled', 'MarkerFaceColor', 'green', 'MarkerFaceAlpha', 0.4);
-xlabel('FSI Near MFR Dif')
-ylabel('FSI Near PSD Dif')
-subplot(2,4,8);
-scatter(fsi_near_fr_difs, fsi_near_sfc, 'filled', 'MarkerFaceColor', 'green', 'MarkerFaceAlpha', 0.4);
-xlabel('FSI Near MFR Dif')
-ylabel('FSI Near mean SFC')
-
-figure;
-subplot(2,4,1);
-scatter(msn_away_fr_difs, msn_away_sts_difs, 'filled', 'MarkerFaceColor', 'red', 'MarkerFaceAlpha', 0.4);
-xlabel('MSN Away MFR Dif')
-ylabel('MSN Away STS Dif')
-subplot(2,4,2);
-scatter(msn_away_fr_difs, msn_away_sta_difs, 'filled', 'MarkerFaceColor', 'red', 'MarkerFaceAlpha', 0.4);
-xlabel('MSN Away MFR Dif')
-ylabel('MSN Away STA Dif')
-subplot(2,4,3);
-scatter(msn_away_fr_difs, msn_away_psd_difs, 'filled', 'MarkerFaceColor', 'red', 'MarkerFaceAlpha', 0.4);
-xlabel('MSN Away MFR Dif')
-ylabel('MSN Away PSD Dif')
-subplot(2,4,4);
-scatter(msn_away_fr_difs, msn_away_sfc, 'filled', 'MarkerFaceColor', 'red', 'MarkerFaceAlpha', 0.4);
-xlabel('MSN Away MFR Dif')
-ylabel('MSN Away mean SFC')
-
-
-subplot(2,4,5);
-scatter(fsi_away_fr_difs, fsi_away_sts_difs, 'filled', 'MarkerFaceColor', 'green', 'MarkerFaceAlpha', 0.4);
-xlabel('FSI Away MFR Dif')
-ylabel('FSI Away STS Dif')
-subplot(2,4,6);
-scatter(fsi_away_fr_difs, fsi_away_sta_difs, 'filled', 'MarkerFaceColor', 'green', 'MarkerFaceAlpha', 0.4);
-xlabel('FSI Away MFR Dif')
-ylabel('FSI Away STA Dif')
-subplot(2,4,7);
-scatter(fsi_away_fr_difs, fsi_away_psd_difs, 'filled', 'MarkerFaceColor', 'green', 'MarkerFaceAlpha', 0.4);
-xlabel('FSI Away MFR Dif')
-ylabel('FSI Away PSD Dif')
-subplot(2,4,8);
-scatter(fsi_away_fr_difs, fsi_away_sfc, 'filled', 'MarkerFaceColor', 'green', 'MarkerFaceAlpha', 0.4);
-xlabel('FSI Away MFR Dif')
-ylabel('FSI Away mean SFC')
-
-figure
-subplot(2,1,1)
-for i = 1:length(msn_away_fr_difs)
-plot([msn_away_fr_difs(i),msn_away_fr_difs(i)],[msn_away_lfr_sfc(i),msn_away_hfr_sfc(i)],'Color', 'r');
-hold on
-end
-xlabel('MSN Away FR Dif')
-ylabel('MSN Away SFC (low-high)')
-subplot(2,1,2)
-for i = 1:length(fsi_away_fr_difs)
-plot([fsi_away_fr_difs(i),fsi_away_fr_difs(i)],[fsi_away_lfr_sfc(i),fsi_away_hfr_sfc(i)],'Color', 'g');
-hold on
-end
-xlabel('FSI Away FR Dif')
-ylabel('FSI Away SFC (low-high)')
-
-figure
-subplot(2,1,1)
-for i = 1:length(msn_near_fr_difs)
-plot([msn_near_fr_difs(i),msn_near_fr_difs(i)],[msn_near_lfr_sfc(i),msn_near_hfr_sfc(i)],'Color', 'r');
-hold on
-end
-xlabel('MSN Near FR Dif')
-ylabel('MSN Near SFC (low-high)')
-subplot(2,1,2)
-for i = 1:length(fsi_near_fr_difs)
-plot([fsi_near_fr_difs(i),fsi_near_fr_difs(i)],[fsi_near_lfr_sfc(i),fsi_near_hfr_sfc(i)],'Color', 'g');
-hold on
-end
-xlabel('FSI Near FR Dif')
-ylabel('FSI Near SFC (low-high)')
+% figure;
+% subplot(2,4,1);
+% scatter(msn_near_fr_difs, msn_near_sts_difs, 'filled', 'MarkerFaceColor', 'red', 'MarkerFaceAlpha', 0.4);
+% xlabel('MSN Near MFR Dif')
+% ylabel('MSN Near STS Dif')
+% subplot(2,4,2);
+% scatter(msn_near_fr_difs, msn_near_sta_difs, 'filled', 'MarkerFaceColor', 'red', 'MarkerFaceAlpha', 0.4);
+% xlabel('MSN Near MFR Dif')
+% ylabel('MSN Near STA Dif')
+% subplot(2,4,3);
+% scatter(msn_near_fr_difs, msn_near_psd_difs, 'filled', 'MarkerFaceColor', 'red', 'MarkerFaceAlpha', 0.4);
+% xlabel('MSN Near MFR Dif')
+% ylabel('MSN Near PSD Dif')
+% subplot(2,4,4);
+% scatter(msn_near_fr_difs, msn_near_sfc, 'filled', 'MarkerFaceColor', 'red', 'MarkerFaceAlpha', 0.4);
+% xlabel('MSN Near MFR Dif')
+% ylabel('MSN Near mean SFC')
+% 
+% 
+% subplot(2,4,5);
+% scatter(fsi_near_fr_difs, fsi_near_sts_difs, 'filled', 'MarkerFaceColor', 'green', 'MarkerFaceAlpha', 0.4);
+% xlabel('FSI Near MFR Dif')
+% ylabel('FSI Near STS Dif')
+% subplot(2,4,6);
+% scatter(fsi_near_fr_difs, fsi_near_sta_difs, 'filled', 'MarkerFaceColor', 'green', 'MarkerFaceAlpha', 0.4);
+% xlabel('FSI Near MFR Dif')
+% ylabel('FSI Near STA Dif')
+% subplot(2,4,7);
+% scatter(fsi_near_fr_difs, fsi_near_psd_difs, 'filled', 'MarkerFaceColor', 'green', 'MarkerFaceAlpha', 0.4);
+% xlabel('FSI Near MFR Dif')
+% ylabel('FSI Near PSD Dif')
+% subplot(2,4,8);
+% scatter(fsi_near_fr_difs, fsi_near_sfc, 'filled', 'MarkerFaceColor', 'green', 'MarkerFaceAlpha', 0.4);
+% xlabel('FSI Near MFR Dif')
+% ylabel('FSI Near mean SFC')
+% 
+% figure;
+% subplot(2,4,1);
+% scatter(msn_away_fr_difs, msn_away_sts_difs, 'filled', 'MarkerFaceColor', 'red', 'MarkerFaceAlpha', 0.4);
+% xlabel('MSN Away MFR Dif')
+% ylabel('MSN Away STS Dif')
+% subplot(2,4,2);
+% scatter(msn_away_fr_difs, msn_away_sta_difs, 'filled', 'MarkerFaceColor', 'red', 'MarkerFaceAlpha', 0.4);
+% xlabel('MSN Away MFR Dif')
+% ylabel('MSN Away STA Dif')
+% subplot(2,4,3);
+% scatter(msn_away_fr_difs, msn_away_psd_difs, 'filled', 'MarkerFaceColor', 'red', 'MarkerFaceAlpha', 0.4);
+% xlabel('MSN Away MFR Dif')
+% ylabel('MSN Away PSD Dif')
+% subplot(2,4,4);
+% scatter(msn_away_fr_difs, msn_away_sfc, 'filled', 'MarkerFaceColor', 'red', 'MarkerFaceAlpha', 0.4);
+% xlabel('MSN Away MFR Dif')
+% ylabel('MSN Away mean SFC')
+% 
+% 
+% subplot(2,4,5);
+% scatter(fsi_away_fr_difs, fsi_away_sts_difs, 'filled', 'MarkerFaceColor', 'green', 'MarkerFaceAlpha', 0.4);
+% xlabel('FSI Away MFR Dif')
+% ylabel('FSI Away STS Dif')
+% subplot(2,4,6);
+% scatter(fsi_away_fr_difs, fsi_away_sta_difs, 'filled', 'MarkerFaceColor', 'green', 'MarkerFaceAlpha', 0.4);
+% xlabel('FSI Away MFR Dif')
+% ylabel('FSI Away STA Dif')
+% subplot(2,4,7);
+% scatter(fsi_away_fr_difs, fsi_away_psd_difs, 'filled', 'MarkerFaceColor', 'green', 'MarkerFaceAlpha', 0.4);
+% xlabel('FSI Away MFR Dif')
+% ylabel('FSI Away PSD Dif')
+% subplot(2,4,8);
+% scatter(fsi_away_fr_difs, fsi_away_sfc, 'filled', 'MarkerFaceColor', 'green', 'MarkerFaceAlpha', 0.4);
+% xlabel('FSI Away MFR Dif')
+% ylabel('FSI Away mean SFC')
+% 
+% figure
+% subplot(2,1,1)
+% for i = 1:length(msn_away_fr_difs)
+% plot([msn_away_fr_difs(i),msn_away_fr_difs(i)],[msn_away_lfr_sfc(i),msn_away_hfr_sfc(i)],'Color', 'r');
+% hold on
+% end
+% xlabel('MSN Away FR Dif')
+% ylabel('MSN Away SFC (low-high)')
+% subplot(2,1,2)
+% for i = 1:length(fsi_away_fr_difs)
+% plot([fsi_away_fr_difs(i),fsi_away_fr_difs(i)],[fsi_away_lfr_sfc(i),fsi_away_hfr_sfc(i)],'Color', 'g');
+% hold on
+% end
+% xlabel('FSI Away FR Dif')
+% ylabel('FSI Away SFC (low-high)')
+% 
+% figure
+% subplot(2,1,1)
+% for i = 1:length(msn_near_fr_difs)
+% plot([msn_near_fr_difs(i),msn_near_fr_difs(i)],[msn_near_lfr_sfc(i),msn_near_hfr_sfc(i)],'Color', 'r');
+% hold on
+% end
+% xlabel('MSN Near FR Dif')
+% ylabel('MSN Near SFC (low-high)')
+% subplot(2,1,2)
+% for i = 1:length(fsi_near_fr_difs)
+% plot([fsi_near_fr_difs(i),fsi_near_fr_difs(i)],[fsi_near_lfr_sfc(i),fsi_near_hfr_sfc(i)],'Color', 'g');
+% hold on
+% end
+% xlabel('FSI Near FR Dif')
+% ylabel('FSI Near SFC (low-high)')
 
