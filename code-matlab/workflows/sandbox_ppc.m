@@ -39,6 +39,7 @@ function od = generateSTS(cfg_in)
     end
 
     csc = LoadCSC(cfg); csc.data = csc.data-nanmean(csc.data); % could locdetrend to improve STA estimate
+    ft_lfp = ft_read_neuralynx_interp(ExpKeys.goodGamma_vStr); % For later usage with field-trip
     
     lfp_tt = regexp(cfg.fc, 'CSC\d+', 'match');
     lfp_tt = str2double(lfp_tt{1}{1}(4:end)); % need this to skip cells from same tt (could make into function)
@@ -432,12 +433,16 @@ function res = calculateMSNspec(cfg_in, S)
                 this_p2(iS,:) = P2(cfg_in.foi_mt);
             end
             res.mtsts_ptile(iP,:) = mean(this_p2,1);
+            res.mtsts_full = res.mtsts_full + sum(this_p2,1);
+            res.sta_full = res.sta_full + sum_seg;
             % Calculate spectrum of STA for the mfr percentile based binned spikes
             this_sta = sum_seg/length(idx);
             [P2,~] = mtspectrumc(this_sta, cfg_in.cfg_mt);
             res.sta_mtspec_ptile(iP,:) = P2(cfg_in.foi_mt);
-            res.sta_ptile(iP,:) = this_sta;
-        end 
+            res.sta_ptile(iP,:) = this_sta;          
+        end
+        
+        
 end
 
 
