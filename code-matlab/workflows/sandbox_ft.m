@@ -11,7 +11,8 @@ please.rats = {'R117'}%,'R119','R131','R132'}; % vStr-only rats
 [cfg_in.fd,cfg_in.fd_extra] = getDataPath(please);
 cfg_in.write_output = 1;
 cfg_in.output_dir = 'D:\RandomVstrAnalysis\temp';
-cfg_in.exc_types = 0;
+cfg_in.incl_types = [1, 2];
+cfg_in.nMinSpikes = 400;
 
 
 %%
@@ -39,6 +40,9 @@ function od = generateSTS(cfg_in)
     end
 
     csc = LoadCSC(cfg); csc.data = csc.data-nanmean(csc.data); % could locdetrend to improve STA estimate
+    % Note that Fieldtrip will interpoalate data to avoid gaps. Include
+    % sanity tests to ensure STA/STS segments don't include these gaps.
+    ft_csc = ft_read_neuralynx_interp(cfg.fc);
     
     
     lfp_tt = regexp(cfg.fc, 'CSC\d+', 'match');
@@ -58,13 +62,13 @@ function od = generateSTS(cfg_in)
     cfg_master.write_output = 0;
     cfg_master.output_prefix = 'sts_';
     cfg_master.output_dir = 'C:\temp';
-    cfg_master.exc_types = 0; %cell types to be excluded
-
+    cfg_master.incl_cell_types = [1,2]; %cell types to be included
     cfg_master = ProcessConfig(cfg_master,cfg_in);
     
     % spikes
     sd.S = LoadSpikesTarget(cfg_master);
-
+  
+      
     % Categorize cells and add tetrode depths
     cfg_wv = []; cfg_wv.cMethod = cfg_master.ccMethod;
     s_out = CategorizeStriatumWave(cfg_wv, sd.S);
@@ -83,9 +87,9 @@ function od = generateSTS(cfg_in)
         % LoadSpikes
         if length(sd.S.t{iC}) ~= length(sd.S.ft_spikes(iC).timestamp{1})
             warning('Field trip has different spikes than LoadSpikes for the cell %s', sd.S.label{iC});
-            sd.S.ft_spk_valid(iC) = 0;
+            sd.S.ft_spk_valid(iC) = false;
         else
-            sd.S.ft_spk_valid(iC) = 1;
+            sd.S.ft_spk_valid(iC) = true;
         end
         sd.S.usr.cell_type(iC) = s_out.ident(find(s_out.unit == iC));
         sd.S.usr.tetrodeDepths(iC) = ExpKeys.TetrodeDepths(sd.S.usr.tt_num(iC));
@@ -107,7 +111,7 @@ function od = generateSTS(cfg_in)
         s_out2 = CategorizeStriatumWave(cfg_wv, S2);
         s_out = CalcWVDistances([], s_out, s_out2); % add comparison with previous day's waveforms
 
-        popdir;
+        popdir; 
 
         % for each cell in current session, decide if duplicate
         for iC = 1:length(sd.S.t)
@@ -130,12 +134,28 @@ function od = generateSTS(cfg_in)
         end
     end % of previous day available checks
     
-    % PLEASE SEE:Use the sd.S.usr.duplicate field if you are calculating it anyway!!
-    
-    
+    % PLEASE SEE: Use the sd.S.usr.duplicate field if you are calculating
+    % it anyway!!
+    % Keep only non duplicate cells and those which were read by FieldTrip 
+    % correctly
+    % Also Get rid of cells of exc_types or spikes < nMinSpikes;
+    % Also get rid of cells on the LFP tt
+    keep = false(1,length(sd.S.t));
+    for iK = 1:length(keep)
+        for iT = 1:length(cfg_master.incl_cell_types)
+           keep(iK) = keep(iK) | (cfg_master.incl_cell_types(iT) == sd.S.usr.cell_type(iK)); 
+        end
+        keep(iK) = keep(iK) & (length(sd.S.t{iK}) > cfg_master.nMinSpikes);
+    end
+    keep = keep & ~sd.S.usr.duplicate & sd.S.ft_spk_valid;
+    sd.S = SelectTS([], sd.S, keep);
+    sd.S.ft_spikes = sd.S.ft_spikes(keep);
+    sd.S.ft_spk_valid = sd.S.ft_spk_valid(keep);
+   
+    % Block of code to divide recordings session into near and away trials
     
     % restrict spikes to a timeWindow of +/-5 seconds around the reward  
-    sd.rt1 = getRewardTimes();
+    rt1 = getRewardTimes();
     rt1 = rt1(rt1 > ExpKeys.TimeOnTrack);
     rt2 = getRewardTimes2();
     rt2 = rt2(rt2 > ExpKeys.TimeOnTrack);
@@ -188,6 +208,8 @@ function od = generateSTS(cfg_in)
     w_end = sort([w_end1; w_end2]);
     rt_iv = iv(w_start, w_end);
     rt_iv = MergeIV([], rt_iv);
+
+    
     % Saving near trial fields
     od.S1 = restrict(sd.S, rt_iv);
     od.S1.cell_type = sd.S.usr.cell_type;
@@ -198,7 +220,6 @@ function od = generateSTS(cfg_in)
     % For away_reward_trials
     w_start = [ExpKeys.TimeOnTrack;rt2(1:end-1)+5];
     w_end = (rt1-5);
-    
     % Get rid of extra long-trials (greater than mean + 1*SD)
     trial_length = w_end - w_start;
     mtl = mean(trial_length); stl = std(trial_length);
