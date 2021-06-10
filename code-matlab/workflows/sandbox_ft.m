@@ -44,6 +44,30 @@ function od = generateSTS(cfg_in)
     % sanity tests to ensure STA/STS segments don't include these gaps.
     ft_csc = ft_read_neuralynx_interp(cfg.fc);
     
+    % hacky code to separate at ontrack-data
+    temp_tvec = [0:length(ft_csc.time{1})-1];
+    temp_offset = (double(ft_csc.hdr.LastTimeStamp)/1e6 - double(ft_csc.hdr.FirstTimeStamp)/1e6)/(length(temp_tvec) - 1);
+    temp_tvec = temp_tvec * temp_offset;
+     
+    % Modify ft_csc
+    ft_csc.time{1} = temp_tvec;
+    ft_csc.fsample = 1/temp_offset;
+    
+    temp_tvec = temp_tvec + double(ft_csc.hdr.FirstTimeStamp)/1e6;
+    
+    
+    temp_start = nearest_idx3(ExpKeys.TimeOnTrack, temp_tvec);
+    temp_end = nearest_idx3(ExpKeys.TimeOffTrack, temp_tvec);
+    cfg_trl.begsample = temp_start;
+    cfg_trl.endsample = temp_stop;
+ 
+    cfg_trl.endsample = temp_end;
+    data_trl = =ft_redefinetrial(cfg_trl, ft_csc);
+    
+%     temp_off = (double(ft_csc.hdr.LastTimeStamp)/1e6 - double(ft_csc.hdr.FirstTimeStamp)/1e6)/length(temp_tvec);
+%     temp_tvec = [double(ft_csc.hdr.FirstTimeStamp)/1e6:temp_off:double(ft_csc.hdr.LastTimeStamp)/1e6];
+    
+    
     
     lfp_tt = regexp(cfg.fc, 'CSC\d+', 'match');
     lfp_tt = str2double(lfp_tt{1}{1}(4:end)); % need this to skip cells from same tt (could make into function)
@@ -151,6 +175,25 @@ function od = generateSTS(cfg_in)
     sd.S = SelectTS([], sd.S, keep);
     sd.S.ft_spikes = sd.S.ft_spikes(keep);
     sd.S.ft_spk_valid = sd.S.ft_spk_valid(keep);
+    
+    od.cell_type = sd.S.usr.cell_type;
+    od.tt_id = sd.S.usr.tt_num;
+%     Calculate and store spectral measures for all valid cells
+    for iC = 1:length(sd.S.ft_spikes)
+       % Calculate and save STA
+        cfg_ft.timwin = [-0.5 0.5];
+        cfg_ft.spikechannel = sd.S.ft_spikes(iC).label{1};
+        cfg_ft.channel = ft_csc.label(1);
+        this_data = ft_appendspike([], ft_csc, sd.S.ft_spikes(iC));
+        this_sta = ft_spiketriggeredaverage(cfg_ft, this_data);
+        
+        
+%        od.all_spikes_spec. 
+    end
+    
+    
+    
+    % Savin spectral measures 
    
     % Block of code to divide recordings session into near and away trials
     
