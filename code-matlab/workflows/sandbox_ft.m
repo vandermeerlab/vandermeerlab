@@ -7,7 +7,7 @@
 clear;
 cd('D:\ADRLabData');
 please = [];
-please.rats = {'R117'}%,'R119','R131','R132'}; % vStr-only rats
+please.rats = {'R117', 'R119','R131','R132'}; % vStr-only rats
 [cfg_in.fd,cfg_in.fd_extra] = getDataPath(please);
 cfg_in.write_output = 1;
 cfg_in.output_dir = 'D:\RandomVstrAnalysis\temp';
@@ -17,7 +17,7 @@ cfg_in.nMinSpikes = 400;
 
 %%
 % Top level loop which calls the main function for all the sessions
-for iS = 1%:length(cfg_in.fd) % for each session...
+for iS = 1:length(cfg_in.fd) % for each session...
     cfg_in.iS = iS;
     pushdir(cfg_in.fd{iS});
     generateSTS(cfg_in); % do the business
@@ -44,7 +44,7 @@ function od = generateSTS(cfg_in)
     % sanity tests to ensure STA/STS segments don't include these gaps.
     ft_csc = ft_read_neuralynx_interp(cfg.fc);
     
-    % hacky code to separate at ontrack-data
+    % hacky code to separate out only ontrack-data
     temp_tvec = [0:length(ft_csc.time{1})-1];
     temp_offset = (double(ft_csc.hdr.LastTimeStamp)/1e6 - double(ft_csc.hdr.FirstTimeStamp)/1e6)/(length(temp_tvec) - 1);
     temp_tvec = temp_tvec * temp_offset;
@@ -53,22 +53,18 @@ function od = generateSTS(cfg_in)
     ft_csc.time{1} = temp_tvec;
     ft_csc.fsample = 1/temp_offset;
     
+    % Ensure that the new data doesn't have any Nans in it
     temp_tvec = temp_tvec + double(ft_csc.hdr.FirstTimeStamp)/1e6;
-    
-    
     temp_start = nearest_idx3(ExpKeys.TimeOnTrack, temp_tvec);
     temp_end = nearest_idx3(ExpKeys.TimeOffTrack, temp_tvec);
-    cfg_trl.begsample = temp_start;
-    cfg_trl.endsample = temp_stop;
- 
-    cfg_trl.endsample = temp_end;
-    data_trl = =ft_redefinetrial(cfg_trl, ft_csc);
+    cfg_onTrack.begsample = temp_start;
+    cfg_onTrack.endsample = temp_end;
+    data_onTrack = ft_redefinetrial(cfg_onTrack, ft_csc);
     
-%     temp_off = (double(ft_csc.hdr.LastTimeStamp)/1e6 - double(ft_csc.hdr.FirstTimeStamp)/1e6)/length(temp_tvec);
-%     temp_tvec = [double(ft_csc.hdr.FirstTimeStamp)/1e6:temp_off:double(ft_csc.hdr.LastTimeStamp)/1e6];
-    
-    
-    
+    if ~isempty(find(isnan(data_onTrack.time{1}),1))
+        warning('On Track data for %s has gaps', cfg.fc{1});
+    end
+        
     lfp_tt = regexp(cfg.fc, 'CSC\d+', 'match');
     lfp_tt = str2double(lfp_tt{1}{1}(4:end)); % need this to skip cells from same tt (could make into function)
     fprintf('LFP ttno is %d\n', lfp_tt);
@@ -91,8 +87,10 @@ function od = generateSTS(cfg_in)
     
     % spikes
     sd.S = LoadSpikesTarget(cfg_master);
-  
-      
+    
+    % Restrict spikes to only OnTrack
+    sd.S = restrict(sd.S, iv(ExpKeys.TimeOnTrack, ExpKeys.TimeOffTrack));
+    
     % Categorize cells and add tetrode depths
     cfg_wv = []; cfg_wv.cMethod = cfg_master.ccMethod;
     s_out = CategorizeStriatumWave(cfg_wv, sd.S);
@@ -107,17 +105,8 @@ function od = generateSTS(cfg_in)
     for iC = 1:length(sd.S.t)
         % Read the spike files into field trip format
         sd.S.ft_spikes(iC) = ft_read_spike(sd.S.label{iC});
-        % Ensure that ft_read_spike reads the same number of spikes as
-        % LoadSpikes
-        if length(sd.S.t{iC}) ~= length(sd.S.ft_spikes(iC).timestamp{1})
-            warning('Field trip has different spikes than LoadSpikes for the cell %s', sd.S.label{iC});
-            sd.S.ft_spk_valid(iC) = false;
-        else
-            sd.S.ft_spk_valid(iC) = true;
-        end
-        sd.S.usr.cell_type(iC) = s_out.ident(find(s_out.unit == iC));
+        sd.S.usr.cell_type(iC) = s_out.ident((s_out.unit == iC));
         sd.S.usr.tetrodeDepths(iC) = ExpKeys.TetrodeDepths(sd.S.usr.tt_num(iC));
-
         cfg_tt.ttno = sd.S.usr.tt_num(iC);
         [sd.S.usr.distanceTurned(iC), prev_fd] = DistanceTurned(cfg_tt, cfg_master.fd, cfg_master.fd_extra);
         cfg_tt.verbose = 0;
@@ -171,232 +160,275 @@ function od = generateSTS(cfg_in)
         end
         keep(iK) = keep(iK) & (length(sd.S.t{iK}) > cfg_master.nMinSpikes);
     end
-    keep = keep & ~sd.S.usr.duplicate & sd.S.ft_spk_valid;
+    keep = keep & ~sd.S.usr.duplicate;% & sd.S.ft_spk_valid;
     sd.S = SelectTS([], sd.S, keep);
     sd.S.ft_spikes = sd.S.ft_spikes(keep);
-    sd.S.ft_spk_valid = sd.S.ft_spk_valid(keep);
     
     od.cell_type = sd.S.usr.cell_type;
     od.tt_id = sd.S.usr.tt_num;
-%     Calculate and store spectral measures for all valid cells
+%     Calculate spectral measures for all valid cells
     for iC = 1:length(sd.S.ft_spikes)
-       % Calculate and save STA
+        
+        % Calculate and save STA
         cfg_ft.timwin = [-0.5 0.5];
         cfg_ft.spikechannel = sd.S.ft_spikes(iC).label{1};
         cfg_ft.channel = ft_csc.label(1);
         this_data = ft_appendspike([], ft_csc, sd.S.ft_spikes(iC));
+        % Restrict data to only on-track data
+        this_data = ft_redefinetrial(cfg_onTrack, this_data);
+        this_flag = true;
+        % Sanity check to ensure that redefine trial has the same number of
+        % spikes as restrict()
+        if (sum(this_data.trial{1}(2,:)) ~= length(sd.S.t{iC}))
+           this_flag = false;
+           warning('ft_redefinetrial has %d spikes but restrict shows %d spikes on Track', ...
+               sum(this_data.trial{1}(2,:)), length(sd.S.t{iC}))
+        end
         this_sta = ft_spiketriggeredaverage(cfg_ft, this_data);
+        od.onTrack_spec{iC}.sta_time = this_sta.time;
+        od.onTrack_spec{iC}.sta_vals = this_sta.avg(:,:)';
+        od.onTrack_spec{iC}.flag_unequalSpikes = this_flag;
         
+        % Calculate and save STS
+        cfg_sts.method = 'mtmconvol';
+        cfg_sts.foi = 1:1:100;
+        cfg_sts.t_ftimwin = 5./cfg_sts.foi;
+        cfg_sts.taper = 'hanning';
+        cfg_sts.spikechannel =  sd.S.ft_spikes(iC).label{1};
+        cfg_sts.channel = this_data.label{1};
+        this_sts = ft_spiketriggeredspectrum(cfg_sts, this_data);
+        this_flag = true;
+        % Display warning to show that there were Nans in this calculation
+        if ~isempty(find(isnan(this_sts.fourierspctrm{1}),1))
+            this_flag = false;
+            warning('Cell %s has nans in its STS',sd.S.label{iC});
+        end
+        od.onTrack_spec{iC}.freqs = this_sts.freq;
+        od.onTrack_spec{iC}.sts_vals = nanmean(sq(abs(this_sts.fourierspctrm{1})));
+        od.onTrack_spec{iC}.flag_nansts = this_flag;
         
-%        od.all_spikes_spec. 
-    end
-    
-    
-    
-    % Savin spectral measures 
-   
-    % Block of code to divide recordings session into near and away trials
-    
-    % restrict spikes to a timeWindow of +/-5 seconds around the reward  
-    rt1 = getRewardTimes();
-    rt1 = rt1(rt1 > ExpKeys.TimeOnTrack);
-    rt2 = getRewardTimes2();
-    rt2 = rt2(rt2 > ExpKeys.TimeOnTrack);
-    
-    % Sometimes (in R117-2007-06-12, for instance) getRewardTimes() returns
-    % times that are spaced out less than 5 sec apart (possibly erroneus). 
-    % Getting rid of such reward times to maintain consistency
-    rt_dif = diff(rt1);
-    rt_dif = find(rt_dif <= 5);
-    valid_rt1 = true(length(rt1),1);
-    valid_rt2 = true(length(rt2),1);
-    for i = 1:length(rt_dif)
-        valid_rt1(rt_dif(i)) = false;
-        valid_rt1(rt_dif(i)+1) = false;
-        valid_rt2(rt2 >= rt1(rt_dif(i)) & rt2 <= rt1(rt_dif(i)+2)) = false;
-    end
-    % Sometimes (in R119-2007-07-05, for instance) getRewardTimes2() returns
-    % times that are spaced out less than 5 sec apart (possibly erroneus). 
-    % Getting rid of such reward times to maintain consistency
-    rt_dif = diff(rt2);
-    rt_dif = find(rt_dif <= 5);
-    for i = 1:length(rt_dif)
-        valid_rt2(rt_dif(i)) = false;
-        valid_rt2(rt_dif(i)+1) = false;
-        valid_rt1(rt1 >= rt2(rt_dif(i)-1) & rt1 <= rt2(rt_dif(i)+1)) = false;
-    end
-    
-    rt1 = rt1(valid_rt1);
-    rt2 = rt2(valid_rt2);
-    
-    % Sometimes (in R117-2007-06-17, for instance) the second reward is
-    % triggered but not the first one in the last trial
-    if length(rt1) ~= length(rt2)
-        rt1 = rt1(1:end-1);
-    end
-    
-    % Sanity check to make sure that rt2 is always triggered after rt1
-    keep = (rt1 <= rt2);
-    rt1 = rt1(keep);
-    rt2 = rt2(keep);
-    
-    % For near reward_trials  
-    w_start1 = rt1 - 5;
-    w_end1 = rt1 + 5;
-    w_start2 = rt2 - 5;
-    w_end2 =  rt2 + 5;
-    % Last trial time shouldn't exceed Experiment end time
-    w_end2(end) = min(w_end2(end), ExpKeys.TimeOffTrack);
-    w_start = sort([w_start1; w_start2]);
-    w_end = sort([w_end1; w_end2]);
-    rt_iv = iv(w_start, w_end);
-    rt_iv = MergeIV([], rt_iv);
-
-    
-    % Saving near trial fields
-    od.S1 = restrict(sd.S, rt_iv);
-    od.S1.cell_type = sd.S.usr.cell_type;
-    od.S1.tt_id = sd.S.usr.tt_num;
-    od.S1.trial_starts = w_start;
-    od.S1.trial_ends = w_end;
-    
-    % For away_reward_trials
-    w_start = [ExpKeys.TimeOnTrack;rt2(1:end-1)+5];
-    w_end = (rt1-5);
-    % Get rid of extra long-trials (greater than mean + 1*SD)
-    trial_length = w_end - w_start;
-    mtl = mean(trial_length); stl = std(trial_length);
-    valid_trials = (trial_length <= mtl + stl); 
-    w_start = w_start(valid_trials);
-    w_end= w_end(valid_trials);
-    rt_iv = iv(w_start, w_end);
-    rt_iv = MergeIV([], rt_iv);
-    % Saving away trial fields
-    od.S2 = restrict(sd.S, rt_iv);
-    od.S2.cell_type = sd.S.usr.cell_type;
-    od.S2.tt_id = sd.S.usr.tt_num;
-    od.S2.trial_starts = w_start;
-    od.S2.trial_ends = w_end;
-
-    % Keep cells greater with greater than nMinSpike spikes and of the allowed types
-    od.S1 = KeepCells(od.S1,cfg_master.nMinSpikes,cfg_master.exc_types,lfp_tt);
-    od.S2 = KeepCells(od.S2,cfg_master.nMinSpikes,cfg_master.exc_types,lfp_tt);
-    
-    % Parameters for STS
-    % Use dummy data to get Frequency values of pwelch and mtspectumFc
-    cfg_s.Fs = 1/median(diff(csc.tvec));
-    cfg_s.sts_wl = round(cfg_s.Fs);
-    dd = zeros(1,cfg_s.sts_wl);
-    [~,F] = pwelch(dd,length(dd),[],[],cfg_s.Fs); 
-    cfg_s.foi = (F >= 0 & F <= 100);
-    cfg_s.f_len = sum(cfg_s.foi);
-    cfg_s.cfg_mt.tapers = [3 5];
-    cfg_s.cfg_mt.Fs = cfg_s.Fs;
-    [~,F] = mtspectrumc(dd,cfg_s.cfg_mt);
-    cfg_s.foi_mt = (F >= 0 & F <= 100);
-    cfg_s.f_len_mt = sum(cfg_s.foi_mt);
-    cfg_s.lfp_data = csc.data;
-    cfg_s.lfp_ts = csc.tvec;
-    cfg_s.pbins = 2;
-    cfg_s.num_samples = 1000;
-    
-    % determining spike triggered LFP segment length using dummy data
-    [dum_seg,~]  = xcorr(csc.data, csc.data, floor(cfg_s.sts_wl/2));
-    cfg_s.seg_len = length(dum_seg);
-    tcount = length(od.S1.trial_starts);
-    od.S1.freqs = F(F >= 0 & F <= 100);
-    od.S1.msn_res = repmat(struct('sta_mtspec_ptile', zeros(cfg_s.pbins, cfg_s.f_len_mt), ...
-                    'sta_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
-                    'mtsts_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
-                    'scount_ptile',zeros(cfg_s.pbins, 1), ...
-                    'mfr', zeros(1, tcount), ...
-                    'ptile_mfrs', zeros(cfg_s.pbins,2)), length(find(od.S1.cell_type == 1)), 1);
-    od.S1.fsi_res = repmat(struct('sta_mtspec_ptile', zeros(cfg_s.pbins, cfg_s.f_len_mt), ...
-                    'sta_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
-                    'mtsts_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
-                    'us_sta_mtspec_ptile', zeros(cfg_s.pbins, cfg_s.f_len_mt), ...
-                    'us_sta_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
-                    'us_mtsts_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
-                    'scount_ptile',zeros(cfg_s.pbins, 1), ...
-                    'scount_sub_ptile',zeros(cfg_s.pbins, cfg_s.num_samples), ...
-                    'mfr', zeros(1, tcount), ...
-                    'ptile_mfrs', zeros(cfg_s.pbins,2)), length(find(od.S1.cell_type == 2)), 1);
-    tcount = length(od.S2.trial_starts);           
-    od.S2.freqs = F(F >= 0 & F <= 100);
-    od.S2.msn_res = repmat(struct('sta_mtspec_ptile', zeros(cfg_s.pbins, cfg_s.f_len_mt), ...
-                    'sta_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
-                    'mtsts_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
-                    'scount_ptile',zeros(cfg_s.pbins, 1), ...
-                    'mfr', zeros(1, tcount), ...
-                    'ptile_mfrs', zeros(cfg_s.pbins,2)), length(find(od.S2.cell_type == 1)), 1);
-    od.S2.fsi_res = repmat(struct('sta_mtspec_ptile', zeros(cfg_s.pbins, cfg_s.f_len_mt), ...
-                    'sta_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
-                    'mtsts_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
-                    'us_sta_mtspec_ptile', zeros(cfg_s.pbins, cfg_s.f_len_mt), ...
-                    'us_sta_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
-                    'us_mtsts_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
-                    'scount_ptile',zeros(cfg_s.pbins, 1), ...
-                    'scount_sub_ptile',zeros(cfg_s.pbins, cfg_s.num_samples), ...
-                    'mfr', zeros(1, tcount), ...
-                    'ptile_mfrs', zeros(cfg_s.pbins,2)), length(find(od.S2.cell_type == 2)), 1);
-                
-    % For near trials
-    msn = find(od.S1.cell_type == 1);
-    msn_lfr_dist = zeros(length(msn),1);
-    msn_hfr_dist = zeros(length(msn),1);
-    for iC = 1:length(msn)
-        S1 = SelectTS([],od.S1,msn(iC));
-        cfg_s.trial_starts = od.S1.trial_starts;
-        cfg_s.trial_ends = od.S1.trial_ends;
-        od.S1.msn_res(iC) = calculateMSNspec(cfg_s, S1);
-        msn_lfr_dist(iC) = od.S1.msn_res(iC).scount_ptile(1);
-        msn_hfr_dist(iC) = od.S1.msn_res(iC).scount_ptile(2);
-    end
-    keep = (msn_lfr_dist >= 200) & (msn_hfr_dist >= 200);
-    msn_lfr_dist = msn_lfr_dist(keep);
-    msn_hfr_dist = msn_hfr_dist(keep);
-    if numel(msn_lfr_dist) > 0
-        fsi = find(od.S1.cell_type == 2);
-        for iC = 1:length(fsi)
-            S1 = SelectTS([],od.S1,fsi(iC));
-            cfg_s.trial_starts = od.S1.trial_starts;
-            cfg_s.trial_ends = od.S1.trial_ends;
-            cfg_s.ldist = msn_lfr_dist;
-            cfg_s.hdist = msn_hfr_dist;
-            od.S1.fsi_res(iC) = calculateFSIspec(cfg_s, S1);
+        % Calculate and save PPC
+        cfg_ppc               = [];
+        cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
+        cfg_ppc.spikechannel  = this_sts.label;
+        cfg_ppc.channel       = this_sts.lfplabel; % selected LFP channels
+        cfg_ppc.avgoverchan   = 'unweighted'; % weight spike-LFP phases irrespective of LFP power
+        cfg_ppc.timwin        = 'all'; % compute over all available spikes in the window
+        this_ppc              = ft_spiketriggeredspectrum_stat(cfg_ppc,this_sts);
+        this_flag = true;
+        % Display warning to show that there were Nans in this calculation
+        if ~isempty(find(isnan(this_ppc.ppc0),1))
+            this_flag = false;
+            warning('Cell %s has nans in its ppc',sd.S.label{iC});
         end
+        od.onTrack_spec{iC}.ppc = this_ppc.ppc0';
+        od.onTrack_spec{iC}.flag_nanppc = this_flag;
     end
-    % For away trials
-    msn = find(od.S2.cell_type == 1);
-    msn_lfr_dist = zeros(length(msn),1);
-    msn_hfr_dist = zeros(length(msn),1);
-    for iC = 1:length(msn)
-        S2 = SelectTS([],od.S2,msn(iC));
-        cfg_s.trial_starts = od.S2.trial_starts;
-        cfg_s.trial_ends = od.S2.trial_ends;
-        od.S2.msn_res(iC) = calculateMSNspec(cfg_s, S2);
-        msn_lfr_dist(iC) = od.S2.msn_res(iC).scount_ptile(1);
-        msn_hfr_dist(iC) = od.S2.msn_res(iC).scount_ptile(2);
-    end
-    keep = (msn_lfr_dist >= 200) & (msn_hfr_dist >= 200);
-    msn_lfr_dist = msn_lfr_dist(keep);
-    msn_hfr_dist = msn_hfr_dist(keep);
-    if numel(msn_lfr_dist) > 0
-        fsi = find(od.S2.cell_type == 2);
-        for iC = 1:length(fsi)
-            S2 = SelectTS([],od.S2,fsi(iC));
-            cfg_s.trial_starts = od.S2.trial_starts;
-            cfg_s.trial_ends = od.S2.trial_ends;
-            cfg_s.ldist = msn_lfr_dist;
-            cfg_s.hdist = msn_hfr_dist;
-            od.S2.fsi_res(iC) = calculateFSIspec(cfg_s, S2);
-        end
-    end
+    
+    % For now let's look at all the onspike results
+%    
+%     % Block of code to divide recordings session into near and away trials
+%     
+%     % restrict spikes to a timeWindow of +/-5 seconds around the reward  
+%     rt1 = getRewardTimes();
+%     rt1 = rt1(rt1 > ExpKeys.TimeOnTrack);
+%     rt2 = getRewardTimes2();
+%     rt2 = rt2(rt2 > ExpKeys.TimeOnTrack);
+%     
+%     % Sometimes (in R117-2007-06-12, for instance) getRewardTimes() returns
+%     % times that are spaced out less than 5 sec apart (possibly erroneus). 
+%     % Getting rid of such reward times to maintain consistency
+%     rt_dif = diff(rt1);
+%     rt_dif = find(rt_dif <= 5);
+%     valid_rt1 = true(length(rt1),1);
+%     valid_rt2 = true(length(rt2),1);
+%     for i = 1:length(rt_dif)
+%         valid_rt1(rt_dif(i)) = false;
+%         valid_rt1(rt_dif(i)+1) = false;
+%         valid_rt2(rt2 >= rt1(rt_dif(i)) & rt2 <= rt1(rt_dif(i)+2)) = false;
+%     end
+%     % Sometimes (in R119-2007-07-05, for instance) getRewardTimes2() returns
+%     % times that are spaced out less than 5 sec apart (possibly erroneus). 
+%     % Getting rid of such reward times to maintain consistency
+%     rt_dif = diff(rt2);
+%     rt_dif = find(rt_dif <= 5);
+%     for i = 1:length(rt_dif)
+%         valid_rt2(rt_dif(i)) = false;
+%         valid_rt2(rt_dif(i)+1) = false;
+%         valid_rt1(rt1 >= rt2(rt_dif(i)-1) & rt1 <= rt2(rt_dif(i)+1)) = false;
+%     end
+%     
+%     rt1 = rt1(valid_rt1);
+%     rt2 = rt2(valid_rt2);
+%     
+%     % Sometimes (in R117-2007-06-17, for instance) the second reward is
+%     % triggered but not the first one in the last trial
+%     if length(rt1) ~= length(rt2)
+%         rt1 = rt1(1:end-1);
+%     end
+%     
+%     % Sanity check to make sure that rt2 is always triggered after rt1
+%     keep = (rt1 <= rt2);
+%     rt1 = rt1(keep);
+%     rt2 = rt2(keep);
+%     
+%     % For near reward_trials  
+%     w_start1 = rt1 - 5;
+%     w_end1 = rt1 + 5;
+%     w_start2 = rt2 - 5;
+%     w_end2 =  rt2 + 5;
+%     % Last trial time shouldn't exceed Experiment end time
+%     w_end2(end) = min(w_end2(end), ExpKeys.TimeOffTrack);
+%     w_start = sort([w_start1; w_start2]);
+%     w_end = sort([w_end1; w_end2]);
+%     rt_iv = iv(w_start, w_end);
+%     rt_iv = MergeIV([], rt_iv);
+% 
+%     
+%     % Saving near trial fields
+%     od.S1 = restrict(sd.S, rt_iv);
+%     od.S1.cell_type = sd.S.usr.cell_type;
+%     od.S1.tt_id = sd.S.usr.tt_num;
+%     od.S1.trial_starts = w_start;
+%     od.S1.trial_ends = w_end;
+%     
+%     % For away_reward_trials
+%     w_start = [ExpKeys.TimeOnTrack;rt2(1:end-1)+5];
+%     w_end = (rt1-5);
+%     % Get rid of extra long-trials (greater than mean + 1*SD)
+%     trial_length = w_end - w_start;
+%     mtl = mean(trial_length); stl = std(trial_length);
+%     valid_trials = (trial_length <= mtl + stl); 
+%     w_start = w_start(valid_trials);
+%     w_end= w_end(valid_trials);
+%     rt_iv = iv(w_start, w_end);
+%     rt_iv = MergeIV([], rt_iv);
+%     % Saving away trial fields
+%     od.S2 = restrict(sd.S, rt_iv);
+%     od.S2.cell_type = sd.S.usr.cell_type;
+%     od.S2.tt_id = sd.S.usr.tt_num;
+%     od.S2.trial_starts = w_start;
+%     od.S2.trial_ends = w_end;
+% 
+%     % Keep cells greater with greater than nMinSpike spikes and of the allowed types
+%     od.S1 = KeepCells(od.S1,cfg_master.nMinSpikes,cfg_master.exc_types,lfp_tt);
+%     od.S2 = KeepCells(od.S2,cfg_master.nMinSpikes,cfg_master.exc_types,lfp_tt);
+%     
+%     % Parameters for STS
+%     % Use dummy data to get Frequency values of pwelch and mtspectumFc
+%     cfg_s.Fs = 1/median(diff(csc.tvec));
+%     cfg_s.sts_wl = round(cfg_s.Fs);
+%     dd = zeros(1,cfg_s.sts_wl);
+%     [~,F] = pwelch(dd,length(dd),[],[],cfg_s.Fs); 
+%     cfg_s.foi = (F >= 0 & F <= 100);
+%     cfg_s.f_len = sum(cfg_s.foi);
+%     cfg_s.cfg_mt.tapers = [3 5];
+%     cfg_s.cfg_mt.Fs = cfg_s.Fs;
+%     [~,F] = mtspectrumc(dd,cfg_s.cfg_mt);
+%     cfg_s.foi_mt = (F >= 0 & F <= 100);
+%     cfg_s.f_len_mt = sum(cfg_s.foi_mt);
+%     cfg_s.lfp_data = csc.data;
+%     cfg_s.lfp_ts = csc.tvec;
+%     cfg_s.pbins = 2;
+%     cfg_s.num_samples = 1000;
+%     
+%     % determining spike triggered LFP segment length using dummy data
+%     [dum_seg,~]  = xcorr(csc.data, csc.data, floor(cfg_s.sts_wl/2));
+%     cfg_s.seg_len = length(dum_seg);
+%     tcount = length(od.S1.trial_starts);
+%     od.S1.freqs = F(F >= 0 & F <= 100);
+%     od.S1.msn_res = repmat(struct('sta_mtspec_ptile', zeros(cfg_s.pbins, cfg_s.f_len_mt), ...
+%                     'sta_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
+%                     'mtsts_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
+%                     'scount_ptile',zeros(cfg_s.pbins, 1), ...
+%                     'mfr', zeros(1, tcount), ...
+%                     'ptile_mfrs', zeros(cfg_s.pbins,2)), length(find(od.S1.cell_type == 1)), 1);
+%     od.S1.fsi_res = repmat(struct('sta_mtspec_ptile', zeros(cfg_s.pbins, cfg_s.f_len_mt), ...
+%                     'sta_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
+%                     'mtsts_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
+%                     'us_sta_mtspec_ptile', zeros(cfg_s.pbins, cfg_s.f_len_mt), ...
+%                     'us_sta_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
+%                     'us_mtsts_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
+%                     'scount_ptile',zeros(cfg_s.pbins, 1), ...
+%                     'scount_sub_ptile',zeros(cfg_s.pbins, cfg_s.num_samples), ...
+%                     'mfr', zeros(1, tcount), ...
+%                     'ptile_mfrs', zeros(cfg_s.pbins,2)), length(find(od.S1.cell_type == 2)), 1);
+%     tcount = length(od.S2.trial_starts);           
+%     od.S2.freqs = F(F >= 0 & F <= 100);
+%     od.S2.msn_res = repmat(struct('sta_mtspec_ptile', zeros(cfg_s.pbins, cfg_s.f_len_mt), ...
+%                     'sta_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
+%                     'mtsts_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
+%                     'scount_ptile',zeros(cfg_s.pbins, 1), ...
+%                     'mfr', zeros(1, tcount), ...
+%                     'ptile_mfrs', zeros(cfg_s.pbins,2)), length(find(od.S2.cell_type == 1)), 1);
+%     od.S2.fsi_res = repmat(struct('sta_mtspec_ptile', zeros(cfg_s.pbins, cfg_s.f_len_mt), ...
+%                     'sta_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
+%                     'mtsts_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
+%                     'us_sta_mtspec_ptile', zeros(cfg_s.pbins, cfg_s.f_len_mt), ...
+%                     'us_sta_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
+%                     'us_mtsts_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
+%                     'scount_ptile',zeros(cfg_s.pbins, 1), ...
+%                     'scount_sub_ptile',zeros(cfg_s.pbins, cfg_s.num_samples), ...
+%                     'mfr', zeros(1, tcount), ...
+%                     'ptile_mfrs', zeros(cfg_s.pbins,2)), length(find(od.S2.cell_type == 2)), 1);
+%                 
+%     % For near trials
+%     msn = find(od.S1.cell_type == 1);
+%     msn_lfr_dist = zeros(length(msn),1);
+%     msn_hfr_dist = zeros(length(msn),1);
+%     for iC = 1:length(msn)
+%         S1 = SelectTS([],od.S1,msn(iC));
+%         cfg_s.trial_starts = od.S1.trial_starts;
+%         cfg_s.trial_ends = od.S1.trial_ends;
+%         od.S1.msn_res(iC) = calculateMSNspec(cfg_s, S1);
+%         msn_lfr_dist(iC) = od.S1.msn_res(iC).scount_ptile(1);
+%         msn_hfr_dist(iC) = od.S1.msn_res(iC).scount_ptile(2);
+%     end
+%     keep = (msn_lfr_dist >= 200) & (msn_hfr_dist >= 200);
+%     msn_lfr_dist = msn_lfr_dist(keep);
+%     msn_hfr_dist = msn_hfr_dist(keep);
+%     if numel(msn_lfr_dist) > 0
+%         fsi = find(od.S1.cell_type == 2);
+%         for iC = 1:length(fsi)
+%             S1 = SelectTS([],od.S1,fsi(iC));
+%             cfg_s.trial_starts = od.S1.trial_starts;
+%             cfg_s.trial_ends = od.S1.trial_ends;
+%             cfg_s.ldist = msn_lfr_dist;
+%             cfg_s.hdist = msn_hfr_dist;
+%             od.S1.fsi_res(iC) = calculateFSIspec(cfg_s, S1);
+%         end
+%     end
+%     % For away trials
+%     msn = find(od.S2.cell_type == 1);
+%     msn_lfr_dist = zeros(length(msn),1);
+%     msn_hfr_dist = zeros(length(msn),1);
+%     for iC = 1:length(msn)
+%         S2 = SelectTS([],od.S2,msn(iC));
+%         cfg_s.trial_starts = od.S2.trial_starts;
+%         cfg_s.trial_ends = od.S2.trial_ends;
+%         od.S2.msn_res(iC) = calculateMSNspec(cfg_s, S2);
+%         msn_lfr_dist(iC) = od.S2.msn_res(iC).scount_ptile(1);
+%         msn_hfr_dist(iC) = od.S2.msn_res(iC).scount_ptile(2);
+%     end
+%     keep = (msn_lfr_dist >= 200) & (msn_hfr_dist >= 200);
+%     msn_lfr_dist = msn_lfr_dist(keep);
+%     msn_hfr_dist = msn_hfr_dist(keep);
+%     if numel(msn_lfr_dist) > 0
+%         fsi = find(od.S2.cell_type == 2);
+%         for iC = 1:length(fsi)
+%             S2 = SelectTS([],od.S2,fsi(iC));
+%             cfg_s.trial_starts = od.S2.trial_starts;
+%             cfg_s.trial_ends = od.S2.trial_ends;
+%             cfg_s.ldist = msn_lfr_dist;
+%             cfg_s.hdist = msn_hfr_dist;
+%             od.S2.fsi_res(iC) = calculateFSIspec(cfg_s, S2);
+%         end
+%     end
     
     if cfg_master.write_output
          [~, fp, ~] = fileparts(pwd);
          pushdir(cfg_master.output_dir);
-         fn_out = cat(2, fp, '_sts.mat');
+         fn_out = cat(2, fp, '_ft_spec.mat');
          save(fn_out,'od'); % should add option to save in specified output dir
          popdir;
     end
