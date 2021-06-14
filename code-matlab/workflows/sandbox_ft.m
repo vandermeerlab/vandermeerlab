@@ -5,14 +5,14 @@
 % subsampling
 %% setup
 clear;
-% cd('D:\ADRLabData');
-cd('/Users/manishm/Work/vanDerMeerLab/ADRLabData');
+cd('D:\ADRLabData');
+% cd('/Users/manishm/Work/vanDerMeerLab/ADRLabData');
 please = [];
 please.rats = {'R117', 'R119','R131','R132'}; % vStr-only rats
 [cfg_in.fd,cfg_in.fd_extra] = getDataPath(please);
 cfg_in.write_output = 1;
-% cfg_in.output_dir = 'D:\RandomVstrAnalysis\temp';
-cfg_in.output_dir = '/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp';
+cfg_in.output_dir = 'D:\RandomVstrAnalysis\temp2';
+% cfg_in.output_dir = '/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp';
 cfg_in.incl_types = [1, 2];
 cfg_in.nMinSpikes = 400;
 
@@ -280,47 +280,144 @@ function od = generateSTS(cfg_in)
         % TODO: Catch warnings from Merge IV and set a flag
         rt_iv = MergeIV([], rt_iv);
         
-        
-        %% Break down data into near trials
-        % Ensure that the new data doesn't have any Nans in it
-        temp_tvec = ft_csc.time{1} + double(ft_csc.hdr.FirstTimeStamp)/1e6;
-        
+        % Break down data into near trials
+        temp_tvec = ft_csc.time{1} + double(ft_csc.hdr.FirstTimeStamp)/1e6;     
         temp_start = nearest_idx3(rt_iv.tstart, temp_tvec);
         temp_end = nearest_idx3(rt_iv.tend, temp_tvec);
-        cfg_near_trials.begsample = temp_start';
-        cfg_near_trials.endsample = temp_end';
-        cfg_near_trials.trials = ones(size(cfg_near_trials.begsample));
-        data_near_trials = ft_redefinetrial(cfg_near_trials, this_data);
-
-        %%
+        cfg_near_trials.trl = [temp_start, temp_end, zeros(size(temp_start))];
+        near_data = ft_redefinetrial(cfg_near_trials, this_data);
+        % Sanity check to ensure that redefine trial has the same number of
+        % spikes as restrict()
+        this_flag = true;
+        spk_count1 = length(restrict(sd.S, rt_iv).t{iC});
+        spk_count2 = 0;
+        for iT = 1:length(near_data.trial)
+           spk_count2 = spk_count2 + sum(near_data.trial{iT}(2,:)); 
+        end
+        if spk_count1 ~= spk_count2
+            this_flag = false;
+            warning('ft_redefinetrial has %d spikes but restrict shows %d spikes in near-Reward trials', ...
+                spk_count1, spk_count2)
+            
+        end
+        % Calculate and save STA
+        this_sta = ft_spiketriggeredaverage(cfg_ft, near_data);
+        od.near_spec{iC}.sta_time = this_sta.time;
+        od.near_spec{iC}.sta_vals = this_sta.avg(:,:)';
+        od.near_spec{iC}.flag_unequalSpikes = this_flag;
+      
+        % Calculate and save STS
+        cfg_sts.method = 'mtmconvol';
+        cfg_sts.foi = 1:1:100;
+        cfg_sts.t_ftimwin = 5./cfg_sts.foi;
+        cfg_sts.taper = 'hanning';
+        cfg_sts.spikechannel =  sd.S.ft_spikes(iC).label{1};
+        cfg_sts.channel = near_data.label{1};
+        this_sts = ft_spiketriggeredspectrum(cfg_sts, near_data);
+        this_flag = true;
+        % Display warning to show that there were Nans in this calculation
+        if ~isempty(find(isnan(this_sts.fourierspctrm{1}),1))
+            this_flag = false;
+            warning('Cell %s has nans in its STS',sd.S.label{iC});
+        end
+        od.near_spec{iC}.freqs = this_sts.freq;
+        od.near_spec{iC}.sts_vals = nanmean(sq(abs(this_sts.fourierspctrm{1})));
+        od.near_spec{iC}.flag_nansts = this_flag;
+        
+        % Calculate and save PPC
+        cfg_ppc               = [];
+        cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
+        cfg_ppc.spikechannel  = this_sts.label;
+        cfg_ppc.channel       = this_sts.lfplabel; % selected LFP channels
+        cfg_ppc.avgoverchan   = 'unweighted'; % weight spike-LFP phases irrespective of LFP power
+        cfg_ppc.timwin        = 'all'; % compute over all available spikes in the window
+        this_ppc              = ft_spiketriggeredspectrum_stat(cfg_ppc,this_sts);
+        this_flag = true;
+        % Display warning to show that there were Nans in this calculation
+        if ~isempty(find(isnan(this_ppc.ppc0),1))
+            this_flag = false;
+            warning('Cell %s has nans in its ppc',sd.S.label{iC});
+        end
+        od.near_spec{iC}.ppc = this_ppc.ppc0';
+        od.near_spec{iC}.flag_nanppc = this_flag;
     
+        % For away_reward_trials
+        w_start = [ExpKeys.TimeOnTrack;rt2(1:end-1)+5];
+        w_end = (rt1-5);
+        % Get rid of extra long-trials (greater than mean + 1*SD)
+        trial_length = w_end - w_start;
+        mtl = mean(trial_length); stl = std(trial_length);
+        valid_trials = (trial_length <= mtl + stl); 
+        w_start = w_start(valid_trials);
+        w_end= w_end(valid_trials);
+        rt_iv = iv(w_start, w_end);
+        % TODO: Catch warnings from Merge IV and set a flag
+        rt_iv = MergeIV([], rt_iv);
+        
+                %Break down data into away trials
+        temp_tvec = ft_csc.time{1} + double(ft_csc.hdr.FirstTimeStamp)/1e6;     
+        temp_start = nearest_idx3(rt_iv.tstart, temp_tvec);
+        temp_end = nearest_idx3(rt_iv.tend, temp_tvec);
+        cfg_away_trials.trl = [temp_start, temp_end, zeros(size(temp_start))];
+        away_data = ft_redefinetrial(cfg_away_trials, this_data);
+        % Sanity check to ensure that redefine trial has the same number of
+        % spikes as restrict()
+        this_flag = true;
+        spk_count1 = length(restrict(sd.S, rt_iv).t{iC});
+        spk_count2 = 0;
+        for iT = 1:length(away_data.trial)
+           spk_count2 = spk_count2 + sum(away_data.trial{iT}(2,:)); 
+        end
+        if spk_count1 ~= spk_count2
+            this_flag = false;
+            warning('ft_redefinetrial has %d spikes but restrict shows %d spikes in away-Reward trials', ...
+                spk_count1, spk_count2)
+            
+        end
+        % Calculate and save STA
+        this_sta = ft_spiketriggeredaverage(cfg_ft, away_data);
+        od.away_spec{iC}.sta_time = this_sta.time;
+        od.away_spec{iC}.sta_vals = this_sta.avg(:,:)';
+        od.away_spec{iC}.flag_unequalSpikes = this_flag;
+      
+        % Calculate and save STS
+        cfg_sts.method = 'mtmconvol';
+        cfg_sts.foi = 1:1:100;
+        cfg_sts.t_ftimwin = 5./cfg_sts.foi;
+        cfg_sts.taper = 'hanning';
+        cfg_sts.spikechannel =  sd.S.ft_spikes(iC).label{1};
+        cfg_sts.channel = away_data.label{1};
+        this_sts = ft_spiketriggeredspectrum(cfg_sts, away_data);
+        this_flag = true;
+        % Display warning to show that there were Nans in this calculation
+        if ~isempty(find(isnan(this_sts.fourierspctrm{1}),1))
+            this_flag = false;
+            warning('Cell %s has nans in its STS',sd.S.label{iC});
+        end
+        od.away_spec{iC}.freqs = this_sts.freq;
+        od.away_spec{iC}.sts_vals = nanmean(sq(abs(this_sts.fourierspctrm{1})));
+        od.away_spec{iC}.flag_nansts = this_flag;
+        
+        % Calculate and save PPC
+        cfg_ppc               = [];
+        cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
+        cfg_ppc.spikechannel  = this_sts.label;
+        cfg_ppc.channel       = this_sts.lfplabel; % selected LFP channels
+        cfg_ppc.avgoverchan   = 'unweighted'; % weight spike-LFP phases irrespective of LFP power
+        cfg_ppc.timwin        = 'all'; % compute over all available spikes in the window
+        this_ppc              = ft_spiketriggeredspectrum_stat(cfg_ppc,this_sts);
+        this_flag = true;
+        % Display warning to show that there were Nans in this calculation
+        if ~isempty(find(isnan(this_ppc.ppc0),1))
+            this_flag = false;
+            warning('Cell %s has nans in its ppc',sd.S.label{iC});
+        end
+        od.away_spec{iC}.ppc = this_ppc.ppc0';
+        od.away_spec{iC}.flag_nanppc = this_flag;
+      
     end
-% 
 %     
-%     % Saving near trial fields
-%     od.S1 = restrict(sd.S, rt_iv);
-%     od.S1.cell_type = sd.S.usr.cell_type;
-%     od.S1.tt_id = sd.S.usr.tt_num;
-%     od.S1.trial_starts = w_start;
-%     od.S1.trial_ends = w_end;
-%     
-%     % For away_reward_trials
-%     w_start = [ExpKeys.TimeOnTrack;rt2(1:end-1)+5];
-%     w_end = (rt1-5);
-%     % Get rid of extra long-trials (greater than mean + 1*SD)
-%     trial_length = w_end - w_start;
-%     mtl = mean(trial_length); stl = std(trial_length);
-%     valid_trials = (trial_length <= mtl + stl); 
-%     w_start = w_start(valid_trials);
-%     w_end= w_end(valid_trials);
-%     rt_iv = iv(w_start, w_end);
-%     rt_iv = MergeIV([], rt_iv);
-%     % Saving away trial fields
-%     od.S2 = restrict(sd.S, rt_iv);
-%     od.S2.cell_type = sd.S.usr.cell_type;
-%     od.S2.tt_id = sd.S.usr.tt_num;
-%     od.S2.trial_starts = w_start;
-%     od.S2.trial_ends = w_end;
+
 % 
 %     % Keep cells greater with greater than nMinSpike spikes and of the allowed types
 %     od.S1 = KeepCells(od.S1,cfg_master.nMinSpikes,cfg_master.exc_types,lfp_tt);
