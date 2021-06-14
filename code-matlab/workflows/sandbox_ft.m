@@ -5,12 +5,14 @@
 % subsampling
 %% setup
 clear;
-cd('D:\ADRLabData');
+% cd('D:\ADRLabData');
+cd('/Users/manishm/Work/vanDerMeerLab/ADRLabData');
 please = [];
 please.rats = {'R117', 'R119','R131','R132'}; % vStr-only rats
 [cfg_in.fd,cfg_in.fd_extra] = getDataPath(please);
 cfg_in.write_output = 1;
-cfg_in.output_dir = 'D:\RandomVstrAnalysis\temp';
+% cfg_in.output_dir = 'D:\RandomVstrAnalysis\temp';
+cfg_in.output_dir = '/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp';
 cfg_in.incl_types = [1, 2];
 cfg_in.nMinSpikes = 400;
 
@@ -174,115 +176,125 @@ function od = generateSTS(cfg_in)
         cfg_ft.spikechannel = sd.S.ft_spikes(iC).label{1};
         cfg_ft.channel = ft_csc.label(1);
         this_data = ft_appendspike([], ft_csc, sd.S.ft_spikes(iC));
-        % Restrict data to only on-track data
-        this_data = ft_redefinetrial(cfg_onTrack, this_data);
-        this_flag = true;
-        % Sanity check to ensure that redefine trial has the same number of
-        % spikes as restrict()
-        if (sum(this_data.trial{1}(2,:)) ~= length(sd.S.t{iC}))
-           this_flag = false;
-           warning('ft_redefinetrial has %d spikes but restrict shows %d spikes on Track', ...
-               sum(this_data.trial{1}(2,:)), length(sd.S.t{iC}))
-        end
-        this_sta = ft_spiketriggeredaverage(cfg_ft, this_data);
-        od.onTrack_spec{iC}.sta_time = this_sta.time;
-        od.onTrack_spec{iC}.sta_vals = this_sta.avg(:,:)';
-        od.onTrack_spec{iC}.flag_unequalSpikes = this_flag;
+%         % Restrict data to only on-track data
+%         on_track_data = ft_redefinetrial(cfg_onTrack, this_data);
+%         this_flag = true;
+%         % Sanity check to ensure that redefine trial has the same number of
+%         % spikes as restrict()
+%         if (sum(on_track_data.trial{1}(2,:)) ~= length(sd.S.t{iC}))
+%            this_flag = false;
+%            warning('ft_redefinetrial has %d spikes but restrict shows %d spikes on Track', ...
+%                sum(on_track_data.trial{1}(2,:)), length(sd.S.t{iC}))
+%         end
+%         this_sta = ft_spiketriggeredaverage(cfg_ft, on_track_data);
+%         od.onTrack_spec{iC}.sta_time = this_sta.time;
+%         od.onTrack_spec{iC}.sta_vals = this_sta.avg(:,:)';
+%         od.onTrack_spec{iC}.flag_unequalSpikes = this_flag;
+%         
+%         % Calculate and save STS
+%         cfg_sts.method = 'mtmconvol';
+%         cfg_sts.foi = 1:1:100;
+%         cfg_sts.t_ftimwin = 5./cfg_sts.foi;
+%         cfg_sts.taper = 'hanning';
+%         cfg_sts.spikechannel =  sd.S.ft_spikes(iC).label{1};
+%         cfg_sts.channel = on_track_data.label{1};
+%         this_sts = ft_spiketriggeredspectrum(cfg_sts, on_track_data);
+%         this_flag = true;
+%         % Display warning to show that there were Nans in this calculation
+%         if ~isempty(find(isnan(this_sts.fourierspctrm{1}),1))
+%             this_flag = false;
+%             warning('Cell %s has nans in its STS',sd.S.label{iC});
+%         end
+%         od.onTrack_spec{iC}.freqs = this_sts.freq;
+%         od.onTrack_spec{iC}.sts_vals = nanmean(sq(abs(this_sts.fourierspctrm{1})));
+%         od.onTrack_spec{iC}.flag_nansts = this_flag;
+%         
+%         % Calculate and save PPC
+%         cfg_ppc               = [];
+%         cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
+%         cfg_ppc.spikechannel  = this_sts.label;
+%         cfg_ppc.channel       = this_sts.lfplabel; % selected LFP channels
+%         cfg_ppc.avgoverchan   = 'unweighted'; % weight spike-LFP phases irrespective of LFP power
+%         cfg_ppc.timwin        = 'all'; % compute over all available spikes in the window
+%         this_ppc              = ft_spiketriggeredspectrum_stat(cfg_ppc,this_sts);
+%         this_flag = true;
+%         % Display warning to show that there were Nans in this calculation
+%         if ~isempty(find(isnan(this_ppc.ppc0),1))
+%             this_flag = false;
+%             warning('Cell %s has nans in its ppc',sd.S.label{iC});
+%         end
+%         od.onTrack_spec{iC}.ppc = this_ppc.ppc0';
+%         od.onTrack_spec{iC}.flag_nanppc = this_flag;
         
-        % Calculate and save STS
-        cfg_sts.method = 'mtmconvol';
-        cfg_sts.foi = 1:1:100;
-        cfg_sts.t_ftimwin = 5./cfg_sts.foi;
-        cfg_sts.taper = 'hanning';
-        cfg_sts.spikechannel =  sd.S.ft_spikes(iC).label{1};
-        cfg_sts.channel = this_data.label{1};
-        this_sts = ft_spiketriggeredspectrum(cfg_sts, this_data);
-        this_flag = true;
-        % Display warning to show that there were Nans in this calculation
-        if ~isempty(find(isnan(this_sts.fourierspctrm{1}),1))
-            this_flag = false;
-            warning('Cell %s has nans in its STS',sd.S.label{iC});
+        % Block of code to divide recordings session into near and away trials
+
+        % restrict spikes to a timeWindow of +/-5 seconds around the reward  
+        rt1 = getRewardTimes();
+        rt1 = rt1(rt1 > ExpKeys.TimeOnTrack);
+        rt2 = getRewardTimes2();
+        rt2 = rt2(rt2 > ExpKeys.TimeOnTrack);
+        % Sometimes (in R117-2007-06-12, for instance) getRewardTimes() returns
+        % times that are spaced out less than 5 sec apart (possibly erroneus). 
+        % Getting rid of such reward times to maintain consistency
+        rt_dif = diff(rt1);
+        rt_dif = find(rt_dif <= 5);
+        valid_rt1 = true(length(rt1),1);
+        valid_rt2 = true(length(rt2),1);
+        for i = 1:length(rt_dif)
+            valid_rt1(rt_dif(i)) = false;
+            valid_rt1(rt_dif(i)+1) = false;
+            valid_rt2(rt2 >= rt1(rt_dif(i)) & rt2 <= rt1(rt_dif(i)+2)) = false;
         end
-        od.onTrack_spec{iC}.freqs = this_sts.freq;
-        od.onTrack_spec{iC}.sts_vals = nanmean(sq(abs(this_sts.fourierspctrm{1})));
-        od.onTrack_spec{iC}.flag_nansts = this_flag;
+        % Sometimes (in R119-2007-07-05, for instance) getRewardTimes2() returns
+        % times that are spaced out less than 5 sec apart (possibly erroneus). 
+        % Getting rid of such reward times to maintain consistency
+        rt_dif = diff(rt2);
+        rt_dif = find(rt_dif <= 5);
+        for i = 1:length(rt_dif)
+            valid_rt2(rt_dif(i)) = false;
+            valid_rt2(rt_dif(i)+1) = false;
+            valid_rt1(rt1 >= rt2(rt_dif(i)-1) & rt1 <= rt2(rt_dif(i)+1)) = false;
+        end
+        rt1 = rt1(valid_rt1);
+        rt2 = rt2(valid_rt2);
+        % Sometimes (in R117-2007-06-17, for instance) the second reward is
+        % triggered but not the first one in the last trial
+        if length(rt1) ~= length(rt2)
+            rt1 = rt1(1:end-1);
+        end
+        % Sanity check to make sure that rt2 is always triggered after rt1
+        keep = (rt1 <= rt2);
+        rt1 = rt1(keep);
+        rt2 = rt2(keep);
+
+        % For near reward_trials  
+        w_start1 = rt1 - 5;
+        w_end1 = rt1 + 5;
+        w_start2 = rt2 - 5;
+        w_end2 =  rt2 + 5;
+        % Last trial time shouldn't exceed Experiment end time
+        w_end2(end) = min(w_end2(end), ExpKeys.TimeOffTrack);
+        w_start = sort([w_start1; w_start2]);
+        w_end = sort([w_end1; w_end2]);
+        rt_iv = iv(w_start, w_end);
+        % TODO: Catch warnings from Merge IV and set a flag
+        rt_iv = MergeIV([], rt_iv);
         
-        % Calculate and save PPC
-        cfg_ppc               = [];
-        cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
-        cfg_ppc.spikechannel  = this_sts.label;
-        cfg_ppc.channel       = this_sts.lfplabel; % selected LFP channels
-        cfg_ppc.avgoverchan   = 'unweighted'; % weight spike-LFP phases irrespective of LFP power
-        cfg_ppc.timwin        = 'all'; % compute over all available spikes in the window
-        this_ppc              = ft_spiketriggeredspectrum_stat(cfg_ppc,this_sts);
-        this_flag = true;
-        % Display warning to show that there were Nans in this calculation
-        if ~isempty(find(isnan(this_ppc.ppc0),1))
-            this_flag = false;
-            warning('Cell %s has nans in its ppc',sd.S.label{iC});
-        end
-        od.onTrack_spec{iC}.ppc = this_ppc.ppc0';
-        od.onTrack_spec{iC}.flag_nanppc = this_flag;
-    end
+        
+        %% Break down data into near trials
+        % Ensure that the new data doesn't have any Nans in it
+        temp_tvec = ft_csc.time{1} + double(ft_csc.hdr.FirstTimeStamp)/1e6;
+        
+        temp_start = nearest_idx3(rt_iv.tstart, temp_tvec);
+        temp_end = nearest_idx3(rt_iv.tend, temp_tvec);
+        cfg_near_trials.begsample = temp_start';
+        cfg_near_trials.endsample = temp_end';
+        cfg_near_trials.trials = ones(size(cfg_near_trials.begsample));
+        data_near_trials = ft_redefinetrial(cfg_near_trials, this_data);
+
+        %%
     
-    % For now let's look at all the onspike results
-%    
-%     % Block of code to divide recordings session into near and away trials
-%     
-%     % restrict spikes to a timeWindow of +/-5 seconds around the reward  
-%     rt1 = getRewardTimes();
-%     rt1 = rt1(rt1 > ExpKeys.TimeOnTrack);
-%     rt2 = getRewardTimes2();
-%     rt2 = rt2(rt2 > ExpKeys.TimeOnTrack);
-%     
-%     % Sometimes (in R117-2007-06-12, for instance) getRewardTimes() returns
-%     % times that are spaced out less than 5 sec apart (possibly erroneus). 
-%     % Getting rid of such reward times to maintain consistency
-%     rt_dif = diff(rt1);
-%     rt_dif = find(rt_dif <= 5);
-%     valid_rt1 = true(length(rt1),1);
-%     valid_rt2 = true(length(rt2),1);
-%     for i = 1:length(rt_dif)
-%         valid_rt1(rt_dif(i)) = false;
-%         valid_rt1(rt_dif(i)+1) = false;
-%         valid_rt2(rt2 >= rt1(rt_dif(i)) & rt2 <= rt1(rt_dif(i)+2)) = false;
-%     end
-%     % Sometimes (in R119-2007-07-05, for instance) getRewardTimes2() returns
-%     % times that are spaced out less than 5 sec apart (possibly erroneus). 
-%     % Getting rid of such reward times to maintain consistency
-%     rt_dif = diff(rt2);
-%     rt_dif = find(rt_dif <= 5);
-%     for i = 1:length(rt_dif)
-%         valid_rt2(rt_dif(i)) = false;
-%         valid_rt2(rt_dif(i)+1) = false;
-%         valid_rt1(rt1 >= rt2(rt_dif(i)-1) & rt1 <= rt2(rt_dif(i)+1)) = false;
-%     end
-%     
-%     rt1 = rt1(valid_rt1);
-%     rt2 = rt2(valid_rt2);
-%     
-%     % Sometimes (in R117-2007-06-17, for instance) the second reward is
-%     % triggered but not the first one in the last trial
-%     if length(rt1) ~= length(rt2)
-%         rt1 = rt1(1:end-1);
-%     end
-%     
-%     % Sanity check to make sure that rt2 is always triggered after rt1
-%     keep = (rt1 <= rt2);
-%     rt1 = rt1(keep);
-%     rt2 = rt2(keep);
-%     
-%     % For near reward_trials  
-%     w_start1 = rt1 - 5;
-%     w_end1 = rt1 + 5;
-%     w_start2 = rt2 - 5;
-%     w_end2 =  rt2 + 5;
-%     % Last trial time shouldn't exceed Experiment end time
-%     w_end2(end) = min(w_end2(end), ExpKeys.TimeOffTrack);
-%     w_start = sort([w_start1; w_start2]);
-%     w_end = sort([w_end1; w_end2]);
-%     rt_iv = iv(w_start, w_end);
-%     rt_iv = MergeIV([], rt_iv);
+    end
 % 
 %     
 %     % Saving near trial fields
