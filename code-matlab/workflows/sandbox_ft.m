@@ -5,14 +5,14 @@
 % subsampling
 %% setup
 clear;
-% cd('D:\ADRLabData');
-cd('/Users/manishm/Work/vanDerMeerLab/ADRLabData');
+cd('D:\ADRLabData');
+% cd('/Users/manishm/Work/vanDerMeerLab/ADRLabData');
 please = [];
 please.rats = {'R117', 'R119','R131','R132'}; % vStr-only rats
 [cfg_in.fd,cfg_in.fd_extra] = getDataPath(please);
 cfg_in.write_output = 1;
-% cfg_in.output_dir = 'D:\RandomVstrAnalysis\temp';
-cfg_in.output_dir = '/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp';
+cfg_in.output_dir = 'D:\RandomVstrAnalysis\temp';
+% cfg_in.output_dir = '/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp';
 cfg_in.incl_types = [1, 2];
 cfg_in.nMinSpikes = 400;
 
@@ -367,7 +367,7 @@ function od = generateSTS(cfg_in)
             spk_tcount = zeros(nz_tcount,1);
             for iT = 1:nz_tcount
                 nz_tspikes{iT} = all_tspikes{nz_trials(iT)};
-                spk_tcount(iT) = length(nz_tspikes{iT});
+                spk_tcount(iT) = nz_tspikes{iT};
             end
             % Find out the firing rate threhsold to split the trials such that
             % spikes are more or less equally divided
@@ -595,7 +595,7 @@ function od = generateSTS(cfg_in)
             spk_tcount = zeros(nz_tcount,1);
             for iT = 1:nz_tcount
                 nz_tspikes{iT} = all_tspikes{nz_trials(iT)};
-                spk_tcount(iT) = length(nz_tspikes{iT});
+                spk_tcount(iT) = nz_tspikes{iT};
             end
             % Find out the firing rate threhsold to split the trials such that
             % spikes are more or less equally divided
