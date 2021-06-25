@@ -1,4 +1,4 @@
-cd('D:\RandomVstrAnalysis\combined_results');
+cd('/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/Results/ft_results');
 rats = {'R117','R119','R131','R132'};
 lfq = 30;
 hfq = 100;
@@ -13,6 +13,7 @@ for idx = 1:length(rats)
         num_cells = length(od.label);
         for iC = 1:num_cells    
             % Plot On Track stuff first
+            figure;
             subplot(3,3,1)
             plot(od.onTrack_spec{iC}.sta_time, od.onTrack_spec{iC}.sta_vals);
             title(sprintf('On Track STA, %d spikes', od.onTrack_spec{iC}.spk_count));
@@ -32,12 +33,13 @@ for idx = 1:length(rats)
             end
             
             % Plot Near Reward stuff next
+            flag_leg = false;
             if ~od.near_spec{iC}.flag_zeroSpikes
-                
                 subplot(3,3,4)
                 plot(od.near_spec{iC}.sta_time, od.near_spec{iC}.sta_vals);
                 hold on;
                 this_legend = {};
+                flag_leg = true;
                 this_legend{1} = sprintf('Near All Spikes: %d',od.near_spec{iC}.spk_count);
                 if ~od.near_lfr_spec{iC}.flag_zeroSpikes
                     plot(od.near_spec{iC}.sta_time, od.near_lfr_spec{iC}.sta_vals, 'Color', 'red');
@@ -47,31 +49,127 @@ for idx = 1:length(rats)
                     plot(od.near_spec{iC}.sta_time, od.near_hfr_spec{iC}.sta_vals, 'Color', 'green');
                     this_legend{3} = sprintf('Near HFR spikes: %d',od.near_hfr_spec{iC}.spk_count);
                 end
-                legend(this_legend)
-                title('Near Reward STA');
+                if flag_leg
+                    legend(this_legend)
+                    title('Near Reward STA');
+                end
                 
+                flag_leg = false;
+                subplot(3,3,5)
+                if ~od.near_spec{iC}.flag_nansts
+                    plot(od.near_spec{iC}.freqs, od.near_spec{iC}.sts_vals);
+                    hold on;
+                    this_legend = {};
+                    flag_leg = true;
+                    this_legend{1} = sprintf('Near All Spikes: %d',od.near_spec{iC}.spk_count);
+                end
+                if ~od.near_lfr_spec{iC}.flag_nansts
+                    plot(od.near_spec{iC}.freqs, od.near_lfr_spec{iC}.sts_vals, 'Color', 'red');
+                    this_legend{2} = sprintf('Near LFR spikes: %d',od.near_lfr_spec{iC}.spk_count);
+                end
+                if ~od.near_hfr_spec{iC}.flag_nansts
+                    plot(od.near_spec{iC}.freqs, od.near_hfr_spec{iC}.sts_vals, 'Color', 'green');
+                    this_legend{3} = sprintf('Near HFR spikes: %d',od.near_hfr_spec{iC}.spk_count);
+                end
+                if flag_leg
+                    legend(this_legend)
+                    xlabel('Freqs')
+                    title('Near Reward STS');
+                end
                 
-                
-                
+                flag_leg = false;
+                subplot(3,3,6)
+                if ~od.near_spec{iC}.flag_nanppc
+                    plot(od.near_spec{iC}.freqs, od.away_spec{iC}.ppc);
+                    hold on;
+                    this_legend = {};
+                    flag_leg = true;
+                    this_legend{1} = sprintf('Near All Spikes: %d',od.near_spec{iC}.spk_count);
+                end
+                if ~od.near_lfr_spec{iC}.flag_nanppc
+                    plot(od.near_spec{iC}.freqs, od.near_lfr_spec{iC}.ppc, 'Color', 'red');
+                    this_legend{2} = sprintf('Near LFR spikes: %d',od.near_lfr_spec{iC}.spk_count);
+                end
+                if ~od.near_hfr_spec{iC}.flag_nanppc
+                    plot(od.near_spec{iC}.freqs, od.near_hfr_spec{iC}.ppc, 'Color', 'green');
+                    this_legend{3} = sprintf('Near HFR spikes: %d',od.near_hfr_spec{iC}.spk_count);
+                end
+                if flag_leg
+                    legend(this_legend)
+                    xlabel('Freqs')
+                    title('Near Reward PPC');
+                end
             end
-
             
-            if ~od.onTrack_spec{iC}.flag_nansts
-                subplot(3,3,2)
-                plot(od.onTrack_spec{iC}.freqs, od.onTrack_spec{iC}.sts_vals);
-                xlabel('Freqs')
-                title('On Track STS');
+             % Plot Away Reward stuff next
+            flag_leg = false;
+            if ~od.away_spec{iC}.flag_zeroSpikes
+                subplot(3,3,7)
+                plot(od.away_spec{iC}.sta_time, od.away_spec{iC}.sta_vals);
+                hold on;
+                this_legend = {};
+                flag_leg = true;
+                this_legend{1} = sprintf('Away All Spikes: %d',od.away_spec{iC}.spk_count);
+                if ~od.away_lfr_spec{iC}.flag_zeroSpikes
+                    plot(od.away_spec{iC}.sta_time, od.away_lfr_spec{iC}.sta_vals, 'Color', 'red');
+                    this_legend{2} = sprintf('Away LFR spikes: %d',od.away_lfr_spec{iC}.spk_count);
+                end
+                if ~od.away_hfr_spec{iC}.flag_zeroSpikes
+                    plot(od.away_spec{iC}.sta_time, od.away_hfr_spec{iC}.sta_vals, 'Color', 'green');
+                    this_legend{3} = sprintf('Away HFR spikes: %d',od.away_hfr_spec{iC}.spk_count);
+                end
+                if flag_leg
+                    legend(this_legend)
+                    title('Away Reward STA');
+                end
+                
+                flag_leg = false;
+                subplot(3,3,8)
+                if ~od.away_spec{iC}.flag_nansts
+                    plot(od.away_spec{iC}.freqs, od.away_spec{iC}.sts_vals);
+                    hold on;
+                    this_legend = {};
+                    flag_leg = true;
+                    this_legend{1} = sprintf('Away All Spikes: %d',od.away_spec{iC}.spk_count);
+                end
+                if ~od.away_lfr_spec{iC}.flag_nansts
+                    plot(od.away_spec{iC}.freqs, od.away_lfr_spec{iC}.sts_vals, 'Color', 'red');
+                    this_legend{2} = sprintf('Away LFR spikes: %d',od.away_lfr_spec{iC}.spk_count);
+                end
+                if ~od.away_hfr_spec{iC}.flag_nansts
+                    plot(od.away_spec{iC}.freqs, od.away_hfr_spec{iC}.sts_vals, 'Color', 'green');
+                    this_legend{3} = sprintf('Away HFR spikes: %d',od.away_hfr_spec{iC}.spk_count);
+                end
+                if flag_leg
+                    legend(this_legend)
+                    xlabel('Freqs')
+                    title('Away Reward STS');
+                end
+                
+                flag_leg = false;
+                subplot(3,3,9)
+                if ~od.away_spec{iC}.flag_nanppc
+                    plot(od.away_spec{iC}.freqs, od.away_spec{iC}.ppc);
+                    hold on;
+                    this_legend = {};
+                    flag_leg = true;
+                    this_legend{1} = sprintf('Away All Spikes: %d',od.away_spec{iC}.spk_count);
+                end
+                if ~od.away_lfr_spec{iC}.flag_nanppc
+                    plot(od.away_spec{iC}.freqs, od.away_lfr_spec{iC}.ppc, 'Color', 'red');
+                    this_legend{2} = sprintf('Away LFR spikes: %d',od.away_lfr_spec{iC}.spk_count);
+                end
+                if ~od.away_hfr_spec{iC}.flag_nanppc
+                    plot(od.away_spec{iC}.freqs, od.away_hfr_spec{iC}.ppc, 'Color', 'green');
+                    this_legend{3} = sprintf('Away HFR spikes: %d',od.away_hfr_spec{iC}.spk_count);
+                end
+                if flag_leg
+                    legend(this_legend)
+                    xlabel('Freqs')
+                    title('Away Reward PPC');
+                end
             end
-            
-            if ~od.onTrack_spec{iC}.flag_nanppc
-                subplot(3,3,3)
-                plot(od.onTrack_spec{iC}.freqs, od.onTrack_spec{iC}.ppc);
-                xlabel('Freqs')
-                title('On Track PPC');
-            end
-            
-            
-            
+            dummy = 1;   
         end
         
         msn_labels = od.S1.label(od.S1.cell_type == 1);
