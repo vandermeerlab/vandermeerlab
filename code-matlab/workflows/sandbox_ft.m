@@ -386,6 +386,9 @@ function od = generateSTS(cfg_in)
             end            
             hfr_trials = mfr > fr_thresh;
             lfr_trials = ~hfr_trials;
+            
+            od.near_spec{iC}.mfr = mfr;
+            od.near_spec{iC}.fr_thresh = fr_thresh;
 
             % Calculate and Save all spec results for near_hfr_data
             cfg_near_hfr_trials.trl = cfg_near_trials.trl(hfr_trials,:);
@@ -614,6 +617,8 @@ function od = generateSTS(cfg_in)
             end            
             hfr_trials = mfr > fr_thresh;
             lfr_trials = ~hfr_trials;
+            od.away_spec{iC}.mfr = mfr;
+            od.away_spec{iC}.fr_thresh = fr_thresh;
 
             % Calculate and Save all spec results for away_hfr_data
             cfg_away_hfr_trials.trl = cfg_away_trials.trl(hfr_trials,:);
