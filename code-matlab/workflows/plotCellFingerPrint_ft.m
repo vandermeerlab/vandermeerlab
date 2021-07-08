@@ -1,5 +1,5 @@
-% cd('D:\RandomVstrAnalysis\ft_results');
-cd('/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/Results/ft_results')
+cd('D:\RandomVstrAnalysis\ft_results');
+% cd('/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/Results/ft_results')
 
 rats = {'R117','R119','R131','R132'};
 lg = [30,65];
@@ -80,7 +80,10 @@ for idx = 1:length(rats)
                     flag_leg = true;
                     this_legend{length(this_legend)+1} = sprintf ...
                         ('All Trials lg peak: %2.2f Hz, hg peak: %2.2f Hz ',...
-                            near_sts_lg_peak, near_sts_hg_peak);              
+                            near_sts_lg_peak, near_sts_hg_peak);
+                else
+                    close all;
+                    continue;
                 end
                 if ~od.near_lfr_spec{iC}.flag_nansts && od.near_lfr_spec{iC}.spk_count >= 100
                     % Plot low gamma peak
@@ -101,6 +104,9 @@ for idx = 1:length(rats)
                     this_legend{length(this_legend)+1} = sprintf ...
                         ('LFR trials lg peak: %2.2f Hz, hg peak: %2.2f Hz ',...
                             near_lfr_sts_lg_peak, near_lfr_sts_hg_peak);   
+                else
+                    close all;
+                    continue;
                 end
                 if ~od.near_hfr_spec{iC}.flag_nansts && od.near_hfr_spec{iC}.spk_count >= 100
                     % Plot low gamma peak
@@ -121,6 +127,9 @@ for idx = 1:length(rats)
                     this_legend{length(this_legend)+1} = sprintf ...
                         ('HFR trials lg peak: %2.2f Hz, hg peak: %2.2f Hz ',...
                             near_hfr_sts_lg_peak, near_hfr_sts_hg_peak); 
+                else
+                    close all;
+                    continue;
                 end
                 if flag_leg
                     legend(this_legend, 'Location', 'northwest')
@@ -152,6 +161,9 @@ for idx = 1:length(rats)
                     this_legend{length(this_legend)+1} = sprintf ...
                         ('All Trials lg peak: %2.2f Hz, hg peak: %2.2f Hz ',...
                             near_ppc_lg_peak, near_ppc_hg_peak); 
+                else
+                    close all;
+                    continue;
                 end
                 if ~od.near_lfr_spec{iC}.flag_nanppc && od.near_lfr_spec{iC}.spk_count >= 100
                     % Plot low gamma peak
@@ -172,6 +184,9 @@ for idx = 1:length(rats)
                     this_legend{length(this_legend)+1} = sprintf ...
                         ('LFR Trials lg peak: %2.2f Hz, hg peak: %2.2f Hz ',...
                             near_lfr_ppc_lg_peak, near_lfr_ppc_hg_peak); 
+                else
+                    close all;
+                    continue;
                 end
                 if ~od.near_hfr_spec{iC}.flag_nanppc && od.near_hfr_spec{iC}.spk_count >= 100
                     % Plot low gamma peak
@@ -192,15 +207,21 @@ for idx = 1:length(rats)
                     this_legend{length(this_legend)+1} = sprintf ...
                         ('HFR Trials lg peak: %2.2f Hz, hg peak: %2.2f Hz ',...
                             near_hfr_ppc_lg_peak, near_hfr_ppc_hg_peak);
+                else
+                    close all;
+                    continue;
                 end
                 if flag_leg
                     legend(this_legend, 'Location', 'northeast')
                     xlabel('Freqs')
                     title('Near Reward PPC');
                 end
+            else
+                close all;
+                continue;
             end
             
-                        % Plot Away Reward stuff next
+            % Plot Away Reward stuff next
             flag_leg = false;
             if ~od.away_spec{iC}.flag_zeroSpikes && od.away_spec{iC}.spk_count >= 100
                 subplot(3,3,7)
