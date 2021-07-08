@@ -1,7 +1,9 @@
-cd('D:\RandomVstrAnalysis\ft_results');
+% cd('D:\RandomVstrAnalysis\ft_results');
+cd('/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/Results/ft_results')
+
 rats = {'R117','R119','R131','R132'};
-lfq = 30;
-hfq = 100;
+lg = [30,65];
+hg = [65,100];
 for idx = 1:length(rats)
     curRat = rats{idx};
     searchString = strcat(curRat,'*ft_spec.mat');
@@ -58,37 +60,67 @@ for idx = 1:length(rats)
                 flag_leg = false;
                 subplot(3,3,5)
                 if ~od.near_spec{iC}.flag_nansts && od.near_spec{iC}.spk_count >= 100
-                    lf = find(od.near_spec{iC}.freqs >= lfq, 1, 'first');
-                    rf = find(od.near_spec{iC}.freqs <= hfq, 1, 'last');
+                    % Plot low gamma peak
+                    lf = find(od.near_spec{iC}.freqs >= lg(1), 1, 'first');
+                    rf = find(od.near_spec{iC}.freqs <= lg(2), 1, 'last');
                     [~,p1] = max(od.near_spec{iC}.sts_vals(lf:rf));
-                    near_sts_peak = od.near_spec{iC}.freqs(lf+p1-1);
+                    near_sts_lg_peak = od.near_spec{iC}.freqs(lf+p1-1);
                     plot(od.near_spec{iC}.freqs, od.near_spec{iC}.sts_vals, 'blue');
-                    q0 = xline(near_sts_peak, 'blue');
+                    q0 = xline(near_sts_lg_peak, 'blue');
                     q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
                     hold on;
+                    % Plot high gamma peak
+                    lf = find(od.near_spec{iC}.freqs >= hg(1), 1, 'first');
+                    rf = find(od.near_spec{iC}.freqs <= hg(2), 1, 'last');
+                    [~,p1] = max(od.near_spec{iC}.sts_vals(lf:rf));
+                    near_sts_hg_peak = od.near_spec{iC}.freqs(lf+p1-1);
+                    q0 = xline(near_sts_hg_peak, '--blue');
+                    q0.Annotation.LegendInformation.IconDisplayStyle = 'off';      
                     this_legend = {};
                     flag_leg = true;
-                    this_legend{length(this_legend)+1} = sprintf('All Trials: %2.2f Hz',near_sts_peak);
+                    this_legend{length(this_legend)+1} = sprintf ...
+                        ('All Trials lg peak: %2.2f Hz, hg peak: %2.2f Hz ',...
+                            near_sts_lg_peak, near_sts_hg_peak);              
                 end
                 if ~od.near_lfr_spec{iC}.flag_nansts && od.near_lfr_spec{iC}.spk_count >= 100
-                    lf = find(od.near_lfr_spec{iC}.freqs >= lfq, 1, 'first');
-                    rf = find(od.near_lfr_spec{iC}.freqs <= hfq, 1, 'last');
+                    % Plot low gamma peak
+                    lf = find(od.near_lfr_spec{iC}.freqs >= lg(1), 1, 'first');
+                    rf = find(od.near_lfr_spec{iC}.freqs <= lg(2), 1, 'last');
                     [~,p1] = max(od.near_lfr_spec{iC}.sts_vals(lf:rf));
-                    near_lfr_sts_peak = od.near_lfr_spec{iC}.freqs(lf+p1-1);
+                    near_lfr_sts_lg_peak = od.near_lfr_spec{iC}.freqs(lf+p1-1);
                     plot(od.near_lfr_spec{iC}.freqs, od.near_lfr_spec{iC}.sts_vals, 'Color', 'red');
-                    q0 = xline(near_lfr_sts_peak, 'red');
+                    q0 = xline(near_lfr_sts_lg_peak, 'red');
                     q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
-                    this_legend{length(this_legend)+1} = sprintf('LFR Trials: %2.2f hz',near_lfr_sts_peak);
+                    % Plot high gamma peak
+                    lf = find(od.near_lfr_spec{iC}.freqs >= hg(1), 1, 'first');
+                    rf = find(od.near_lfr_spec{iC}.freqs <= hg(2), 1, 'last');
+                    [~,p1] = max(od.near_lfr_spec{iC}.sts_vals(lf:rf));
+                    near_lfr_sts_hg_peak = od.near_lfr_spec{iC}.freqs(lf+p1-1);
+                    q0 = xline(near_lfr_sts_hg_peak, '--red');
+                    q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
+                    this_legend{length(this_legend)+1} = sprintf ...
+                        ('LFR trials lg peak: %2.2f Hz, hg peak: %2.2f Hz ',...
+                            near_lfr_sts_lg_peak, near_lfr_sts_hg_peak);   
                 end
                 if ~od.near_hfr_spec{iC}.flag_nansts && od.near_hfr_spec{iC}.spk_count >= 100
-                    lf = find(od.near_hfr_spec{iC}.freqs >= lfq, 1, 'first');
-                    rf = find(od.near_hfr_spec{iC}.freqs <= hfq, 1, 'last');
+                    % Plot low gamma peak
+                    lf = find(od.near_hfr_spec{iC}.freqs >= lg(1), 1, 'first');
+                    rf = find(od.near_hfr_spec{iC}.freqs <= lg(2), 1, 'last');
                     [~,p1] = max(od.near_hfr_spec{iC}.sts_vals(lf:rf));
-                    near_hfr_sts_peak = od.near_hfr_spec{iC}.freqs(lf+p1-1);
+                    near_hfr_sts_lg_peak = od.near_hfr_spec{iC}.freqs(lf+p1-1);
                     plot(od.near_hfr_spec{iC}.freqs, od.near_hfr_spec{iC}.sts_vals, 'Color', 'green');
-                    q0 = xline(near_hfr_sts_peak, 'green');
+                    q0 = xline(near_hfr_sts_lg_peak, 'green');
                     q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
-                    this_legend{length(this_legend)+1} = sprintf('HFR Trials: %2.2f Hz',near_hfr_sts_peak);
+                    % Plot high gamma peak
+                    lf = find(od.near_hfr_spec{iC}.freqs >= hg(1), 1, 'first');
+                    rf = find(od.near_hfr_spec{iC}.freqs <= hg(2), 1, 'last');
+                    [~,p1] = max(od.near_hfr_spec{iC}.sts_vals(lf:rf));
+                    near_hfr_sts_hg_peak = od.near_hfr_spec{iC}.freqs(lf+p1-1);
+                    q0 = xline(near_hfr_sts_hg_peak, '--green');
+                    q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
+                    this_legend{length(this_legend)+1} = sprintf ...
+                        ('HFR trials lg peak: %2.2f Hz, hg peak: %2.2f Hz ',...
+                            near_hfr_sts_lg_peak, near_hfr_sts_hg_peak); 
                 end
                 if flag_leg
                     legend(this_legend, 'Location', 'northwest')
@@ -99,37 +131,67 @@ for idx = 1:length(rats)
                 flag_leg = false;
                 subplot(3,3,6)
                 if ~od.near_spec{iC}.flag_nanppc && od.near_spec{iC}.spk_count >= 100
-                    lf = find(od.near_spec{iC}.freqs >= lfq, 1, 'first');
-                    rf = find(od.near_spec{iC}.freqs <= hfq, 1, 'last');
+                    % Plot low gamma peak
+                    lf = find(od.near_spec{iC}.freqs >= lg(1), 1, 'first');
+                    rf = find(od.near_spec{iC}.freqs <= lg(2), 1, 'last');
                     [~,p1] = max(od.near_spec{iC}.ppc(lf:rf));
-                    near_ppc_peak = od.near_spec{iC}.freqs(lf+p1-1);
+                    near_ppc_lg_peak = od.near_spec{iC}.freqs(lf+p1-1);
                     plot(od.near_spec{iC}.freqs, od.near_spec{iC}.ppc, 'blue');
-                    q0 = xline(near_ppc_peak, 'blue');
+                    q0 = xline(near_ppc_lg_peak, 'blue');
                     q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
                     hold on;
+                    % Plot high gamma peak
+                    lf = find(od.near_spec{iC}.freqs >= hg(1), 1, 'first');
+                    rf = find(od.near_spec{iC}.freqs <= hg(2), 1, 'last');
+                    [~,p1] = max(od.near_spec{iC}.ppc(lf:rf));
+                    near_ppc_hg_peak = od.near_spec{iC}.freqs(lf+p1-1);
+                    q0 = xline(near_ppc_hg_peak, 'blue');
+                    q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
                     this_legend = {};
                     flag_leg = true;
-                    this_legend{length(this_legend)+1} = sprintf('All Trials: %2.2f Hz',near_ppc_peak);
+                    this_legend{length(this_legend)+1} = sprintf ...
+                        ('All Trials lg peak: %2.2f Hz, hg peak: %2.2f Hz ',...
+                            near_ppc_lg_peak, near_ppc_hg_peak); 
                 end
                 if ~od.near_lfr_spec{iC}.flag_nanppc && od.near_lfr_spec{iC}.spk_count >= 100
-                    lf = find(od.near_lfr_spec{iC}.freqs >= lfq, 1, 'first');
-                    rf = find(od.near_lfr_spec{iC}.freqs <= hfq, 1, 'last');
+                    % Plot low gamma peak
+                    lf = find(od.near_lfr_spec{iC}.freqs >= lg(1), 1, 'first');
+                    rf = find(od.near_lfr_spec{iC}.freqs <= lg(2), 1, 'last');
                     [~,p1] = max(od.near_lfr_spec{iC}.ppc(lf:rf));
-                    near_lfr_ppc_peak = od.near_lfr_spec{iC}.freqs(lf+p1-1);
+                    near_lfr_ppc_lg_peak = od.near_lfr_spec{iC}.freqs(lf+p1-1);
                     plot(od.near_lfr_spec{iC}.freqs, od.near_lfr_spec{iC}.ppc, 'Color', 'red');
-                    q0 = xline(near_lfr_ppc_peak, 'red');
+                    q0 = xline(near_lfr_ppc_lg_peak, 'red');
                     q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
-                    this_legend{length(this_legend)+1} = sprintf('LFR Trials: %2.2f hz',near_lfr_ppc_peak);
+                    % Plot high gamma peak
+                    lf = find(od.near_lfr_spec{iC}.freqs >= hg(1), 1, 'first');
+                    rf = find(od.near_lfr_spec{iC}.freqs <= hg(2), 1, 'last');
+                    [~,p1] = max(od.near_lfr_spec{iC}.ppc(lf:rf));
+                    near_lfr_ppc_hg_peak = od.near_lfr_spec{iC}.freqs(lf+p1-1);
+                    q0 = xline(near_lfr_ppc_hg_peak, '--red');
+                    q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
+                    this_legend{length(this_legend)+1} = sprintf ...
+                        ('LFR Trials lg peak: %2.2f Hz, hg peak: %2.2f Hz ',...
+                            near_lfr_ppc_lg_peak, near_lfr_ppc_hg_peak); 
                 end
                 if ~od.near_hfr_spec{iC}.flag_nanppc && od.near_hfr_spec{iC}.spk_count >= 100
-                    lf = find(od.near_hfr_spec{iC}.freqs >= lfq, 1, 'first');
-                    rf = find(od.near_hfr_spec{iC}.freqs <= hfq, 1, 'last');
+                    % Plot low gamma peak
+                    lf = find(od.near_hfr_spec{iC}.freqs >= lg(1), 1, 'first');
+                    rf = find(od.near_hfr_spec{iC}.freqs <= lg(2), 1, 'last');
                     [~,p1] = max(od.near_hfr_spec{iC}.ppc(lf:rf));
-                    near_hfr_ppc_peak = od.near_hfr_spec{iC}.freqs(lf+p1-1);
+                    near_hfr_ppc_lg_peak = od.near_hfr_spec{iC}.freqs(lf+p1-1);
                     plot(od.near_hfr_spec{iC}.freqs, od.near_hfr_spec{iC}.ppc, 'Color', 'green');
-                    q0 = xline(near_hfr_ppc_peak, 'green');
+                    q0 = xline(near_hfr_ppc_lg_peak, 'green');
                     q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
-                    this_legend{length(this_legend)+1} = sprintf('HFR Trials: %2.2f Hz',near_hfr_ppc_peak);
+                    % Plot high gamma peak
+                    lf = find(od.near_hfr_spec{iC}.freqs >=hg(1), 1, 'first');
+                    rf = find(od.near_hfr_spec{iC}.freqs <= hg(2), 1, 'last');
+                    [~,p1] = max(od.near_hfr_spec{iC}.ppc(lf:rf));
+                    near_hfr_ppc_hg_peak = od.near_hfr_spec{iC}.freqs(lf+p1-1);
+                    q0 = xline(near_hfr_ppc_hg_peak, '--green');
+                    q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
+                    this_legend{length(this_legend)+1} = sprintf ...
+                        ('HFR Trials lg peak: %2.2f Hz, hg peak: %2.2f Hz ',...
+                            near_hfr_ppc_lg_peak, near_hfr_ppc_hg_peak);
                 end
                 if flag_leg
                     legend(this_legend, 'Location', 'northeast')
@@ -138,7 +200,7 @@ for idx = 1:length(rats)
                 end
             end
             
-            % Plot Away Reward stuff next
+                        % Plot Away Reward stuff next
             flag_leg = false;
             if ~od.away_spec{iC}.flag_zeroSpikes && od.away_spec{iC}.spk_count >= 100
                 subplot(3,3,7)
@@ -163,37 +225,67 @@ for idx = 1:length(rats)
                 flag_leg = false;
                 subplot(3,3,8)
                 if ~od.away_spec{iC}.flag_nansts && od.away_spec{iC}.spk_count >= 100
-                    lf = find(od.away_spec{iC}.freqs >= lfq, 1, 'first');
-                    rf = find(od.away_spec{iC}.freqs <= hfq, 1, 'last');
+                    % Plot low gamma peak
+                    lf = find(od.away_spec{iC}.freqs >= lg(1), 1, 'first');
+                    rf = find(od.away_spec{iC}.freqs <= lg(2), 1, 'last');
                     [~,p1] = max(od.away_spec{iC}.sts_vals(lf:rf));
-                    away_sts_peak = od.away_spec{iC}.freqs(lf+p1-1);
+                    away_sts_lg_peak = od.away_spec{iC}.freqs(lf+p1-1);
                     plot(od.away_spec{iC}.freqs, od.away_spec{iC}.sts_vals, 'blue');
-                    q0 = xline(away_sts_peak, 'blue');
+                    q0 = xline(away_sts_lg_peak, 'blue');
                     q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
                     hold on;
+                    % Plot high gamma peak
+                    lf = find(od.away_spec{iC}.freqs >= hg(1), 1, 'first');
+                    rf = find(od.away_spec{iC}.freqs <= hg(2), 1, 'last');
+                    [~,p1] = max(od.away_spec{iC}.sts_vals(lf:rf));
+                    away_sts_hg_peak = od.away_spec{iC}.freqs(lf+p1-1);
+                    q0 = xline(away_sts_hg_peak, '--blue');
+                    q0.Annotation.LegendInformation.IconDisplayStyle = 'off';      
                     this_legend = {};
                     flag_leg = true;
-                    this_legend{length(this_legend)+1} = sprintf('All Trials: %2.2f Hz',away_sts_peak);
+                    this_legend{length(this_legend)+1} = sprintf ...
+                        ('All Trials lg peak: %2.2f Hz, hg peak: %2.2f Hz ',...
+                            away_sts_lg_peak, away_sts_hg_peak);              
                 end
                 if ~od.away_lfr_spec{iC}.flag_nansts && od.away_lfr_spec{iC}.spk_count >= 100
-                    lf = find(od.away_lfr_spec{iC}.freqs >= lfq, 1, 'first');
-                    rf = find(od.away_lfr_spec{iC}.freqs <= hfq, 1, 'last');
+                    % Plot low gamma peak
+                    lf = find(od.away_lfr_spec{iC}.freqs >= lg(1), 1, 'first');
+                    rf = find(od.away_lfr_spec{iC}.freqs <= lg(2), 1, 'last');
                     [~,p1] = max(od.away_lfr_spec{iC}.sts_vals(lf:rf));
-                    away_lfr_sts_peak = od.away_lfr_spec{iC}.freqs(lf+p1-1);
+                    away_lfr_sts_lg_peak = od.away_lfr_spec{iC}.freqs(lf+p1-1);
                     plot(od.away_lfr_spec{iC}.freqs, od.away_lfr_spec{iC}.sts_vals, 'Color', 'red');
-                    q0 = xline(away_lfr_sts_peak, 'red');
+                    q0 = xline(away_lfr_sts_lg_peak, 'red');
                     q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
-                    this_legend{length(this_legend)+1} = sprintf('LFR Trials: %2.2f hz',away_lfr_sts_peak);
+                    % Plot high gamma peak
+                    lf = find(od.away_lfr_spec{iC}.freqs >= hg(1), 1, 'first');
+                    rf = find(od.away_lfr_spec{iC}.freqs <= hg(2), 1, 'last');
+                    [~,p1] = max(od.away_lfr_spec{iC}.sts_vals(lf:rf));
+                    away_lfr_sts_hg_peak = od.away_lfr_spec{iC}.freqs(lf+p1-1);
+                    q0 = xline(away_lfr_sts_hg_peak, '--red');
+                    q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
+                    this_legend{length(this_legend)+1} = sprintf ...
+                        ('LFR trials lg peak: %2.2f Hz, hg peak: %2.2f Hz ',...
+                            away_lfr_sts_lg_peak, away_lfr_sts_hg_peak);   
                 end
                 if ~od.away_hfr_spec{iC}.flag_nansts && od.away_hfr_spec{iC}.spk_count >= 100
-                    lf = find(od.away_hfr_spec{iC}.freqs >= lfq, 1, 'first');
-                    rf = find(od.away_hfr_spec{iC}.freqs <= hfq, 1, 'last');
+                    % Plot low gamma peak
+                    lf = find(od.away_hfr_spec{iC}.freqs >= lg(1), 1, 'first');
+                    rf = find(od.away_hfr_spec{iC}.freqs <= lg(2), 1, 'last');
                     [~,p1] = max(od.away_hfr_spec{iC}.sts_vals(lf:rf));
-                    away_hfr_sts_peak = od.away_hfr_spec{iC}.freqs(lf+p1-1);
+                    away_hfr_sts_lg_peak = od.away_hfr_spec{iC}.freqs(lf+p1-1);
                     plot(od.away_hfr_spec{iC}.freqs, od.away_hfr_spec{iC}.sts_vals, 'Color', 'green');
-                    q0 = xline(away_hfr_sts_peak, 'green');
+                    q0 = xline(away_hfr_sts_lg_peak, 'green');
                     q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
-                    this_legend{length(this_legend)+1} = sprintf('HFR Trials: %2.2f Hz',away_hfr_sts_peak);
+                    % Plot high gamma peak
+                    lf = find(od.away_hfr_spec{iC}.freqs >= hg(1), 1, 'first');
+                    rf = find(od.away_hfr_spec{iC}.freqs <= hg(2), 1, 'last');
+                    [~,p1] = max(od.away_hfr_spec{iC}.sts_vals(lf:rf));
+                    away_hfr_sts_hg_peak = od.away_hfr_spec{iC}.freqs(lf+p1-1);
+                    q0 = xline(away_hfr_sts_hg_peak, '--green');
+                    q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
+                    this_legend{length(this_legend)+1} = sprintf ...
+                        ('HFR trials lg peak: %2.2f Hz, hg peak: %2.2f Hz ',...
+                            away_hfr_sts_lg_peak, away_hfr_sts_hg_peak); 
                 end
                 if flag_leg
                     legend(this_legend, 'Location', 'northwest')
@@ -204,37 +296,67 @@ for idx = 1:length(rats)
                 flag_leg = false;
                 subplot(3,3,9)
                 if ~od.away_spec{iC}.flag_nanppc && od.away_spec{iC}.spk_count >= 100
-                    lf = find(od.away_spec{iC}.freqs >= lfq, 1, 'first');
-                    rf = find(od.away_spec{iC}.freqs <= hfq, 1, 'last');
+                    % Plot low gamma peak
+                    lf = find(od.away_spec{iC}.freqs >= lg(1), 1, 'first');
+                    rf = find(od.away_spec{iC}.freqs <= lg(2), 1, 'last');
                     [~,p1] = max(od.away_spec{iC}.ppc(lf:rf));
-                    away_ppc_peak = od.away_spec{iC}.freqs(lf+p1-1);
+                    away_ppc_lg_peak = od.away_spec{iC}.freqs(lf+p1-1);
                     plot(od.away_spec{iC}.freqs, od.away_spec{iC}.ppc, 'blue');
-                    q0 = xline(away_ppc_peak, 'blue');
+                    q0 = xline(away_ppc_lg_peak, 'blue');
                     q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
                     hold on;
+                    % Plot high gamma peak
+                    lf = find(od.away_spec{iC}.freqs >= hg(1), 1, 'first');
+                    rf = find(od.away_spec{iC}.freqs <= hg(2), 1, 'last');
+                    [~,p1] = max(od.away_spec{iC}.ppc(lf:rf));
+                    away_ppc_hg_peak = od.away_spec{iC}.freqs(lf+p1-1);
+                    q0 = xline(away_ppc_hg_peak, 'blue');
+                    q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
                     this_legend = {};
                     flag_leg = true;
-                    this_legend{length(this_legend)+1} = sprintf('All Trials: %2.2f Hz',away_ppc_peak);
+                    this_legend{length(this_legend)+1} = sprintf ...
+                        ('All Trials lg peak: %2.2f Hz, hg peak: %2.2f Hz ',...
+                            away_ppc_lg_peak, away_ppc_hg_peak); 
                 end
                 if ~od.away_lfr_spec{iC}.flag_nanppc && od.away_lfr_spec{iC}.spk_count >= 100
-                    lf = find(od.away_lfr_spec{iC}.freqs >= lfq, 1, 'first');
-                    rf = find(od.away_lfr_spec{iC}.freqs <= hfq, 1, 'last');
+                    % Plot low gamma peak
+                    lf = find(od.away_lfr_spec{iC}.freqs >= lg(1), 1, 'first');
+                    rf = find(od.away_lfr_spec{iC}.freqs <= lg(2), 1, 'last');
                     [~,p1] = max(od.away_lfr_spec{iC}.ppc(lf:rf));
-                    away_lfr_ppc_peak = od.away_lfr_spec{iC}.freqs(lf+p1-1);
+                    away_lfr_ppc_lg_peak = od.away_lfr_spec{iC}.freqs(lf+p1-1);
                     plot(od.away_lfr_spec{iC}.freqs, od.away_lfr_spec{iC}.ppc, 'Color', 'red');
-                    q0 = xline(away_lfr_ppc_peak, 'red');
+                    q0 = xline(away_lfr_ppc_lg_peak, 'red');
                     q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
-                    this_legend{length(this_legend)+1} = sprintf('LFR Trials: %2.2f hz',away_lfr_ppc_peak);
+                    % Plot high gamma peak
+                    lf = find(od.away_lfr_spec{iC}.freqs >= hg(1), 1, 'first');
+                    rf = find(od.away_lfr_spec{iC}.freqs <= hg(2), 1, 'last');
+                    [~,p1] = max(od.away_lfr_spec{iC}.ppc(lf:rf));
+                    away_lfr_ppc_hg_peak = od.away_lfr_spec{iC}.freqs(lf+p1-1);
+                    q0 = xline(away_lfr_ppc_hg_peak, '--red');
+                    q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
+                    this_legend{length(this_legend)+1} = sprintf ...
+                        ('LFR Trials lg peak: %2.2f Hz, hg peak: %2.2f Hz ',...
+                            away_lfr_ppc_lg_peak, away_lfr_ppc_hg_peak); 
                 end
                 if ~od.away_hfr_spec{iC}.flag_nanppc && od.away_hfr_spec{iC}.spk_count >= 100
-                    lf = find(od.away_hfr_spec{iC}.freqs >= lfq, 1, 'first');
-                    rf = find(od.away_hfr_spec{iC}.freqs <= hfq, 1, 'last');
+                    % Plot low gamma peak
+                    lf = find(od.away_hfr_spec{iC}.freqs >= lg(1), 1, 'first');
+                    rf = find(od.away_hfr_spec{iC}.freqs <= lg(2), 1, 'last');
                     [~,p1] = max(od.away_hfr_spec{iC}.ppc(lf:rf));
-                    away_hfr_ppc_peak = od.away_hfr_spec{iC}.freqs(lf+p1-1);
+                    away_hfr_ppc_lg_peak = od.away_hfr_spec{iC}.freqs(lf+p1-1);
                     plot(od.away_hfr_spec{iC}.freqs, od.away_hfr_spec{iC}.ppc, 'Color', 'green');
-                    q0 = xline(away_hfr_ppc_peak, 'green');
+                    q0 = xline(away_hfr_ppc_lg_peak, 'green');
                     q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
-                    this_legend{length(this_legend)+1} = sprintf('HFR Trials: %2.2f Hz',away_hfr_ppc_peak);
+                    % Plot high gamma peak
+                    lf = find(od.away_hfr_spec{iC}.freqs >=hg(1), 1, 'first');
+                    rf = find(od.away_hfr_spec{iC}.freqs <= hg(2), 1, 'last');
+                    [~,p1] = max(od.away_hfr_spec{iC}.ppc(lf:rf));
+                    away_hfr_ppc_hg_peak = od.away_hfr_spec{iC}.freqs(lf+p1-1);
+                    q0 = xline(away_hfr_ppc_hg_peak, '--green');
+                    q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
+                    this_legend{length(this_legend)+1} = sprintf ...
+                        ('HFR Trials lg peak: %2.2f Hz, hg peak: %2.2f Hz ',...
+                            away_hfr_ppc_lg_peak, away_hfr_ppc_hg_peak);
                 end
                 if flag_leg
                     legend(this_legend, 'Location', 'northeast')
@@ -243,17 +365,22 @@ for idx = 1:length(rats)
                 end
             end
             
-            % Indicate category of cell in suffix
-            if near_hfr_ppc_peak - near_lfr_ppc_peak > 20
-                o_prefix = cat(2, o_prefix, '_ppc_g20');
-            elseif near_hfr_ppc_peak - near_lfr_ppc_peak < -20
-                o_prefix = cat(2, o_prefix, '_ppc_gn20');
-            elseif near_hfr_ppc_peak - near_lfr_ppc_peak > 10
-                o_prefix = cat(2, o_prefix, '_ppc_g10');
-            elseif near_hfr_ppc_peak - near_lfr_ppc_peak < -10
-                o_prefix = cat(2, o_prefix, '_ppc_gn10');
+            % Indicate lg category of cell in suffix
+            if near_hfr_ppc_lg_peak - near_lfr_ppc_lg_peak > 10
+                o_prefix = cat(2, o_prefix, '_lg_ppc_g10');
+            elseif near_hfr_ppc_lg_peak - near_lfr_ppc_lg_peak < -10
+                o_prefix = cat(2, o_prefix, '_lg_ppc_gn10');
             else
-                o_prefix = cat(2, o_prefix, '_ppc_l10');
+                o_prefix = cat(2, o_prefix, '_lg_ppc_l10');
+            end
+            
+            % Indicate hg category of cell in suffix
+            if near_hfr_ppc_hg_peak - near_lfr_ppc_hg_peak > 10
+                o_prefix = cat(2, o_prefix, '_hg_ppc_g10');
+            elseif near_hfr_ppc_hg_peak - near_lfr_ppc_hg_peak < -10
+                o_prefix = cat(2, o_prefix, '_hg_ppc_gn10');
+            else
+                o_prefix = cat(2, o_prefix, '_hg_ppc_l10');
             end
             
             %Indicate cell type
