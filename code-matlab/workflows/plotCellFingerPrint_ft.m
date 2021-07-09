@@ -1,5 +1,5 @@
 % cd('D:\RandomVstrAnalysis\ft_results');
-cd('/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/Results/ft_results')
+cd('/Users/manishm/Dropbox (Dartmouth College)/AnalysisResults/FieldTripResults')
 
 rats = {'R117','R119','R131','R132'};
 lg = [30,65];
@@ -419,6 +419,7 @@ for idx = 1:length(rats)
                     else
 %                         close all;
 %                         continue;
+                        [~,p1] = max(od.away_spec{iC}.sts_vals(lf:rf));
                     end
                     away_sts_lg_peak = od.away_spec{iC}.freqs(lf+p1-1);
                     plot(od.away_spec{iC}.freqs, od.away_spec{iC}.sts_vals, 'blue');
@@ -441,6 +442,7 @@ for idx = 1:length(rats)
                     else
 %                         close all;
 %                         continue;
+                       [~,p1] = max(od.away_spec{iC}.sts_vals(lf:rf));
                     end
                     away_sts_hg_peak = od.away_spec{iC}.freqs(lf+p1-1);
                     q0 = xline(away_sts_hg_peak, '--blue');
@@ -471,6 +473,7 @@ for idx = 1:length(rats)
                     else
 %                         close all;
 %                         continue;
+                        [~,p1] = max(od.away_lfr_spec{iC}.sts_vals(lf:rf));
                     end
                     away_lfr_sts_lg_peak = od.away_lfr_spec{iC}.freqs(lf+p1-1);
                     plot(od.away_lfr_spec{iC}.freqs, od.away_lfr_spec{iC}.sts_vals, 'Color', 'red');
@@ -492,6 +495,7 @@ for idx = 1:length(rats)
                     else
 %                         close all;
 %                         continue;
+                        [~,p1] = max(od.away_lfr_spec{iC}.sts_vals(lf:rf));
                     end
                     away_lfr_sts_hg_peak = od.away_lfr_spec{iC}.freqs(lf+p1-1);
                     q0 = xline(away_lfr_sts_hg_peak, '--red');
@@ -520,6 +524,7 @@ for idx = 1:length(rats)
                     else
 %                         close all;
 %                         continue;
+                        [~,p1] = max(od.away_hfr_spec{iC}.sts_vals(lf:rf));
                     end
                     away_hfr_sts_lg_peak = od.away_hfr_spec{iC}.freqs(lf+p1-1);
                     plot(od.away_hfr_spec{iC}.freqs, od.away_hfr_spec{iC}.sts_vals, 'Color', 'green');
@@ -541,6 +546,7 @@ for idx = 1:length(rats)
                     else
 %                         close all;
 %                         continue;
+                       [~,p1] = max(od.away_hfr_spec{iC}.sts_vals(lf:rf));
                     end
                     away_hfr_sts_hg_peak = od.away_hfr_spec{iC}.freqs(lf+p1-1);
                     q0 = xline(away_hfr_sts_hg_peak, '--green');
@@ -577,6 +583,7 @@ for idx = 1:length(rats)
                     else
 %                         close all;
 %                         continue;
+                        [~,p1] = max(od.away_spec{iC}.ppc(lf:rf));
                     end
                     away_ppc_lg_peak = od.away_spec{iC}.freqs(lf+p1-1);
                     plot(od.away_spec{iC}.freqs, od.away_spec{iC}.ppc, 'blue');
@@ -599,6 +606,7 @@ for idx = 1:length(rats)
                     else
 %                         close all;
 %                         continue;
+                       [~,p1] = max(od.away_spec{iC}.ppc(lf:rf));
                     end
                     away_ppc_hg_peak = od.away_spec{iC}.freqs(lf+p1-1);
                     q0 = xline(away_ppc_hg_peak, 'blue');
@@ -629,6 +637,7 @@ for idx = 1:length(rats)
                     else
 %                         close all;
 %                         continue;
+                        [~,p1] = max(od.away_lfr_spec{iC}.ppc(lf:rf));
                     end
                     away_lfr_ppc_lg_peak = od.away_lfr_spec{iC}.freqs(lf+p1-1);
                     plot(od.away_lfr_spec{iC}.freqs, od.away_lfr_spec{iC}.ppc, 'Color', 'red');
@@ -650,6 +659,7 @@ for idx = 1:length(rats)
                     else
 %                         close all;
 %                         continue;
+                        [~,p1] = max(od.away_lfr_spec{iC}.ppc(lf:rf));
                     end
                     away_lfr_ppc_hg_peak = od.away_lfr_spec{iC}.freqs(lf+p1-1);
                     q0 = xline(away_lfr_ppc_hg_peak, '--red');
@@ -678,6 +688,7 @@ for idx = 1:length(rats)
                     else
 %                         close all;
 %                         continue;
+                        [~,p1] = max(od.away_hfr_spec{iC}.ppc(lf:rf));
                     end
                     away_hfr_ppc_lg_peak = od.away_hfr_spec{iC}.freqs(lf+p1-1);
                     plot(od.away_hfr_spec{iC}.freqs, od.away_hfr_spec{iC}.ppc, 'Color', 'green');
@@ -699,6 +710,7 @@ for idx = 1:length(rats)
                     else
 %                         close all;
 %                         continue;
+                        [~,p1] = max(od.away_hfr_spec{iC}.ppc(lf:rf));
                     end
                     away_hfr_ppc_hg_peak = od.away_hfr_spec{iC}.freqs(lf+p1-1);
                     q0 = xline(away_hfr_ppc_hg_peak, '--green');
