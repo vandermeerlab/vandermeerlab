@@ -14,7 +14,9 @@ cfg_in.write_output = 1;
 cfg_in.output_dir = 'D:\RandomVstrAnalysis\temp';
 % cfg_in.output_dir = '/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp';
 cfg_in.incl_types = [1, 2];
-cfg_in.nMinSpikes = 400;
+cfg_in.nMinSpikes1 = 400; % For on track
+cfg_in.nMinSpikes2 = 200; % For near and away
+cfg_in.nMinSpikes3 = 100; % For lfr, hfr, p1 and p2
 
 
 %%
@@ -79,7 +81,6 @@ function od = generateSTS(cfg_in)
     cfg_master.ccMethod = 'MvdM'; % cell type classification method
     cfg_master.maxPrevCorr = 0.99; % if wv correlation with previous day is bigger than this, cell is possible duplicate
     cfg_master.maxPeakn = 0.2; % if peak wv difference (normalized) with previous day is smaller than this, cell is possible duplicate
-    cfg_master.nMinSpikes = 100;
     cfg_master.iS = 1; % current session number out of fd list, get this from input cfg
     cfg_master.fd = []; % full list of session fd's, get this from input cfg
     cfg_master.fd_extra = []; % get this from input cfg
@@ -122,7 +123,7 @@ function od = generateSTS(cfg_in)
     else
         pushdir(prev_fd);
         S2 = LoadSpikes([]);
-        nSpikes = cellfun(@length, S2.t); keep = nSpikes >= cfg_master.nMinSpikes;
+        nSpikes = cellfun(@length, S2.t); keep = nSpikes >= cfg_master.nMinSpikes1;
         S2 = SelectTS([], S2, keep);
 
         s_out2 = CategorizeStriatumWave(cfg_wv, S2);
@@ -155,14 +156,14 @@ function od = generateSTS(cfg_in)
     % it anyway!!
     % Keep only non duplicate cells and those which were read by FieldTrip 
     % correctly
-    % Also Get rid of cells of exc_types or spikes < nMinSpikes;
+    % Also Get rid of cells of exc_types or spikes < nMinSpikes1;
     % Also get rid of cells on the LFP tt
     keep = false(1,length(sd.S.t));
     for iK = 1:length(keep)
         for iT = 1:length(cfg_master.incl_cell_types)
            keep(iK) = keep(iK) | (cfg_master.incl_cell_types(iT) == sd.S.usr.cell_type(iK)); 
         end
-        keep(iK) = keep(iK) & (length(sd.S.t{iK}) > cfg_master.nMinSpikes) & ~(sd.S.usr.tt_num(iK) == lfp_tt);
+        keep(iK) = keep(iK) & (length(sd.S.t{iK}) > cfg_master.nMinSpikes1) & ~(sd.S.usr.tt_num(iK) == lfp_tt);
     end
     keep = keep & ~sd.S.usr.duplicate;% & sd.S.ft_spk_valid;
     sd.S = SelectTS([], sd.S, keep);
@@ -301,11 +302,11 @@ function od = generateSTS(cfg_in)
            spk_count2 = spk_count2 + sum(near_data.trial{iT}(2,:)); 
         end
         % Skip if no spikes present!
-        if spk_count2 == 0
-            od.msn_res.near_spec{iM}.flag_zeroSpikes = true;
+        if spk_count2 <  cfg_master.nMinSpikes2
+            od.msn_res.near_spec{iM}.flag_tooFewSpikes = true;
         else
             od.msn_res.near_spec{iM}.spk_count = spk_count2;
-            od.msn_res.near_spec{iM}.flag_zeroSpikes = false;
+            od.msn_res.near_spec{iM}.flag_tooFewSpikes = false;
             if spk_count1 ~= spk_count2
                 this_flag = true;
                 warning('ft_redefinetrial has %d spikes but restrict shows %d spikes in near-Reward trials', ...
@@ -439,11 +440,11 @@ function od = generateSTS(cfg_in)
             for iT = 1:length(near_hfr_data.trial)
                 spk_count = spk_count + sum(near_hfr_data.trial{iT}(2,:)); 
             end
-            if spk_count == 0
-                od.msn_res.near_hfr_spec{iM}.flag_zeroSpikes = true;
+            if spk_count < cfg_master.nMinSpikes2
+                od.msn_res.near_hfr_spec{iM}.flag_tooFewSpikes = true;
             else
                 od.msn_res.near_hfr_spec{iM}.spk_count = spk_count;
-                od.msn_res.near_hfr_spec{iM}.flag_zeroSpikes = false;
+                od.msn_res.near_hfr_spec{iM}.flag_tooFewSpikes = false;
                 
                 % Calculate and save STA
                 this_sta = ft_spiketriggeredaverage(cfg_ft, near_hfr_data);
@@ -495,11 +496,11 @@ function od = generateSTS(cfg_in)
             for iT = 1:length(near_lfr_data.trial)
                 spk_count = spk_count + sum(near_lfr_data.trial{iT}(2,:)); 
             end
-            if spk_count == 0
-                od.msn_res.near_lfr_spec{iM}.flag_zeroSpikes = true;
+            if spk_count <  cfg_master.nMinSpikes3
+                od.msn_res.near_lfr_spec{iM}.flag_tooFewSpikes = true;
             else
                 od.msn_res.near_lfr_spec{iM}.spk_count = spk_count;
-                od.msn_res.near_lfr_spec{iM}.flag_zeroSpikes = false;
+                od.msn_res.near_lfr_spec{iM}.flag_tooFewSpikes = false;
                 
                 % Calculate and save STA
                 this_sta = ft_spiketriggeredaverage(cfg_ft, near_lfr_data);
@@ -551,11 +552,11 @@ function od = generateSTS(cfg_in)
             for iT = 1:length(near_p1_data.trial)
                 spk_count = spk_count + sum(near_p1_data.trial{iT}(2,:)); 
             end
-            if spk_count == 0
-                od.msn_res.near_p1_spec{iM}.flag_zeroSpikes = true;
+            if spk_count < cfg_master.nMinSpikes3
+                od.msn_res.near_p1_spec{iM}.flag_tooFewSpikes = true;
             else
                 od.msn_res.near_p1_spec{iM}.spk_count = spk_count;
-                od.msn_res.near_p1_spec{iM}.flag_zeroSpikes = false;
+                od.msn_res.near_p1_spec{iM}.flag_tooFewSpikes = false;
                 
                 % Calculate and save STA
                 this_sta = ft_spiketriggeredaverage(cfg_ft, near_p1_data);
@@ -607,11 +608,11 @@ function od = generateSTS(cfg_in)
             for iT = 1:length(near_p2_data.trial)
                 spk_count = spk_count + sum(near_p2_data.trial{iT}(2,:)); 
             end
-            if spk_count == 0
-                od.msn_res.near_p2_spec{iM}.flag_zeroSpikes = true;
+            if spk_count < cfg_master.nMinSpikes3
+                od.msn_res.near_p2_spec{iM}.flag_tooFewSpikes = true;
             else
                 od.msn_res.near_p2_spec{iM}.spk_count = spk_count;
-                od.msn_res.near_p2_spec{iM}.flag_zeroSpikes = false;
+                od.msn_res.near_p2_spec{iM}.flag_tooFewSpikes = false;
                 
                 % Calculate and save STA
                 this_sta = ft_spiketriggeredaverage(cfg_ft, near_p2_data);
@@ -656,14 +657,14 @@ function od = generateSTS(cfg_in)
         end 
         
         % For away_reward_trials
-                w_start1 = rt1 - 5;
-        w_end1 = rt1 + 5;
-        w_start2 = rt2 - 5;
-        w_end2 =  rt2 + 5;
-        % Last trial time shouldn't exceed Experiment end time
-        w_end2(end) = min(w_end2(end), ExpKeys.TimeOffTrack);
-        w_start = sort([w_start1; w_start2]);
-        w_end = sort([w_end1; w_end2]);
+        w_start = [ExpKeys.TimeOnTrack;rt2(1:end-1)+5];
+        w_end = (rt1-5);
+        % Get rid of extra long-trials (greater than mean + 1*SD)
+        trial_length = w_end - w_start;
+        mtl = mean(trial_length); stl = std(trial_length);
+        valid_trials = (trial_length <= mtl + stl); 
+        w_start = w_start(valid_trials);
+        w_end= w_end(valid_trials);
         rt_iv = iv(w_start, w_end);
         % TODO: Catch warnings from Merge IV and set a flag
         rt_iv = MergeIV([], rt_iv);
@@ -683,11 +684,11 @@ function od = generateSTS(cfg_in)
            spk_count2 = spk_count2 + sum(away_data.trial{iT}(2,:)); 
         end
         % Skip if no spikes present!
-        if spk_count2 == 0
-            od.msn_res.away_spec{iM}.flag_zeroSpikes = true;
+        if spk_count2 < cfg_master.nMinSpikes2
+            od.msn_res.away_spec{iM}.flag_tooFewSpikes = true;
         else
             od.msn_res.away_spec{iM}.spk_count = spk_count2;
-            od.msn_res.away_spec{iM}.flag_zeroSpikes = false;
+            od.msn_res.away_spec{iM}.flag_tooFewSpikes = false;
             if spk_count1 ~= spk_count2
                 this_flag = true;
                 warning('ft_redefinetrial has %d spikes but restrict shows %d spikes in away-Reward trials', ...
@@ -771,7 +772,6 @@ function od = generateSTS(cfg_in)
             hfr_trials = mfr > fr_thresh;
             lfr_trials = ~hfr_trials;
             
-            
             % Divide trials into partitions with equal spikes but not on
             % the basis of fr_threshold
             % make 2 groups and put the largest remaining element to the partition
@@ -821,11 +821,11 @@ function od = generateSTS(cfg_in)
             for iT = 1:length(away_hfr_data.trial)
                 spk_count = spk_count + sum(away_hfr_data.trial{iT}(2,:)); 
             end
-            if spk_count == 0
-                od.msn_res.away_hfr_spec{iM}.flag_zeroSpikes = true;
+            if spk_count < cfg_master.nMinSpikes3
+                od.msn_res.away_hfr_spec{iM}.flag_tooFewSpikes = true;
             else
                 od.msn_res.away_hfr_spec{iM}.spk_count = spk_count;
-                od.msn_res.away_hfr_spec{iM}.flag_zeroSpikes = false;
+                od.msn_res.away_hfr_spec{iM}.flag_tooFewSpikes = false;
                 
                 % Calculate and save STA
                 this_sta = ft_spiketriggeredaverage(cfg_ft, away_hfr_data);
@@ -877,11 +877,11 @@ function od = generateSTS(cfg_in)
             for iT = 1:length(away_lfr_data.trial)
                 spk_count = spk_count + sum(away_lfr_data.trial{iT}(2,:)); 
             end
-            if spk_count == 0
-                od.msn_res.away_lfr_spec{iM}.flag_zeroSpikes = true;
+            if spk_count < cfg_master.nMinSpikes3
+                od.msn_res.away_lfr_spec{iM}.flag_tooFewSpikes = true;
             else
                 od.msn_res.away_lfr_spec{iM}.spk_count = spk_count;
-                od.msn_res.away_lfr_spec{iM}.flag_zeroSpikes = false;
+                od.msn_res.away_lfr_spec{iM}.flag_tooFewSpikes = false;
                 
                 % Calculate and save STA
                 this_sta = ft_spiketriggeredaverage(cfg_ft, away_lfr_data);
@@ -933,11 +933,11 @@ function od = generateSTS(cfg_in)
             for iT = 1:length(away_p1_data.trial)
                 spk_count = spk_count + sum(away_p1_data.trial{iT}(2,:)); 
             end
-            if spk_count == 0
-                od.msn_res.away_p1_spec{iM}.flag_zeroSpikes = true;
+            if spk_count < cfg_master.nMinSpikes3
+                od.msn_res.away_p1_spec{iM}.flag_tooFewSpikes = true;
             else
                 od.msn_res.away_p1_spec{iM}.spk_count = spk_count;
-                od.msn_res.away_p1_spec{iM}.flag_zeroSpikes = false;
+                od.msn_res.away_p1_spec{iM}.flag_tooFewSpikes = false;
                 
                 % Calculate and save STA
                 this_sta = ft_spiketriggeredaverage(cfg_ft, away_p1_data);
@@ -989,17 +989,15 @@ function od = generateSTS(cfg_in)
             for iT = 1:length(away_p2_data.trial)
                 spk_count = spk_count + sum(away_p2_data.trial{iT}(2,:)); 
             end
-            if spk_count == 0
-                od.msn_res.away_p2_spec{iM}.flag_zeroSpikes = true;
+            if spk_count < cfg_master.nMinSpikes3
+                od.msn_res.away_p2_spec{iM}.flag_tooFewSpikes = true;
             else
                 od.msn_res.away_p2_spec{iM}.spk_count = spk_count;
-                od.msn_res.away_p2_spec{iM}.flag_zeroSpikes = false;
-                
+                od.msn_res.away_p2_spec{iM}.flag_tooFewSpikes = false;
                 % Calculate and save STA
                 this_sta = ft_spiketriggeredaverage(cfg_ft, away_p2_data);
                 od.msn_res.away_p2_spec{iM}.sta_time = this_sta.time;
                 od.msn_res.away_p2_spec{iM}.sta_vals = this_sta.avg(:,:)';
-
                 % Calculate and save STS
                 cfg_sts.method = 'mtmconvol';
                 cfg_sts.foi = 1:1:100;
@@ -1017,7 +1015,6 @@ function od = generateSTS(cfg_in)
                 od.msn_res.away_p2_spec{iM}.flag_nansts = this_flag;
                 od.msn_res.away_p2_spec{iM}.freqs = this_sts.freq;
                 od.msn_res.away_p2_spec{iM}.sts_vals = nanmean(sq(abs(this_sts.fourierspctrm{1})));
-
                 % Calculate and save PPC
                 cfg_ppc               = [];
                 cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
@@ -1036,18 +1033,64 @@ function od = generateSTS(cfg_in)
                 od.msn_res.away_p2_spec{iM}.flag_nanppc = this_flag;
             end     
         end
-       
     end
+    
+    % Get the msn distributions
+    msn_onTrack_dist = [];
+    msn_near_dist = [];
+    msn_near_lfr_dist = [];
+    msn_near_hfr_dist = [];
+    msn_near_p1_dist = [];
+    msn_near_p2_dist = [];
+    msn_away_dist = [];
+    msn_away_lfr_dist = [];
+    msn_away_hfr_dist = [];
+    msn_away_p1_dist = [];
+    msn_away_p2_dist = [];
+
+    for iM = 1:length(od.msn_res.onTrack_spec)
+        msn_onTrack_dist = [msn_onTrack_dist od.msn_res.onTrack_spec{iM}.spk_count];
+        if ~od.msn_res.near_spec{iM}.flag_tooFewSpikes & ~od.msn_res.near_spec{iM}.flag_nansts & ~od.msn_res.near_spec{iM}.flag_nanppc
+            msn_near_dist = [msn_near_dist od.msn_res.near_spec{iM}.spk_count];
+            if ~od.msn_res.near_lfr_spec{iM}.flag_tooFewSpikes & ~od.msn_res.near_lfr_spec{iM}.flag_nansts & ~od.msn_res.near_lfr_spec{iM}.flag_nanppc
+                msn_near_lfr_dist = [msn_near_lfr_dist od.msn_res.near_lfr_spec{iM}.spk_count];
+            end
+            if ~od.msn_res.near_hfr_spec{iM}.flag_tooFewSpikes & ~od.msn_res.near_hfr_spec{iM}.flag_nansts & ~od.msn_res.near_hfr_spec{iM}.flag_nanppc
+                msn_near_hfr_dist = [msn_near_hfr_dist od.msn_res.near_hfr_spec{iM}.spk_count];
+            end
+            if ~od.msn_res.near_p1_spec{iM}.flag_tooFewSpikes & ~od.msn_res.near_p1_spec{iM}.flag_nansts & ~od.msn_res.near_p1_spec{iM}.flag_nanppc
+                msn_near_p1_dist = [msn_near_p1_dist od.msn_res.near_p1_spec{iM}.spk_count];
+            end
+            if ~od.msn_res.near_p2_spec{iM}.flag_tooFewSpikes & ~od.msn_res.near_p2_spec{iM}.flag_nansts & ~od.msn_res.near_p2_spec{iM}.flag_nanppc
+                msn_near_p2_dist = [msn_near_p2_dist od.msn_res.near_p2_spec{iM}.spk_count];
+            end
+        end
+        if ~od.msn_res.away_spec{iM}.flag_tooFewSpikes & ~od.msn_res.away_spec{iM}.flag_nansts & ~od.msn_res.away_spec{iM}.flag_nanppc
+            msn_away_dist = [msn_away_dist od.msn_res.away_spec{iM}.spk_count];
+            if ~od.msn_res.away_lfr_spec{iM}.flag_tooFewSpikes & ~od.msn_res.away_lfr_spec{iM}.flag_nansts & ~od.msn_res.away_lfr_spec{iM}.flag_nanppc
+                msn_away_lfr_dist = [msn_away_lfr_dist od.msn_res.away_lfr_spec{iM}.spk_count];
+            end
+            if ~od.msn_res.away_hfr_spec{iM}.flag_tooFewSpikes & ~od.msn_res.away_hfr_spec{iM}.flag_nansts & ~od.msn_res.away_hfr_spec{iM}.flag_nanppc
+                msn_away_hfr_dist = [msn_away_hfr_dist od.msn_res.away_hfr_spec{iM}.spk_count];
+            end
+            if ~od.msn_res.away_p1_spec{iM}.flag_tooFewSpikes & ~od.msn_res.away_p1_spec{iM}.flag_nansts & ~od.msn_res.away_p1_spec{iM}.flag_nanppc
+                msn_away_p1_dist = [msn_away_p1_dist od.msn_res.away_p1_spec{iM}.spk_count];
+            end
+            if ~od.msn_res.away_p2_spec{iM}.flag_tooFewSpikes & ~od.msn_res.away_p2_spec{iM}.flag_nansts & ~od.msn_res.away_p2_spec{iM}.flag_nanppc
+                msn_away_p2_dist = [msn_away_p2_dist od.msn_res.away_p2_spec{iM}.spk_count];
+            end
+        end
+    end
+    
     all_fsi = find(od.S1.cell_type == 1);
 
-    if cfg_master.write_output
+    if cfg_master.write_output  
          [~, fp, ~] = fileparts(pwd);
          pushdir(cfg_master.output_dir);
          fn_out = cat(2, fp, '_ft_spec.mat');
          save(fn_out,'od'); % should add option to save in specified output dir
          popdir;
     end
-    
 end
 
 %% Other functions
