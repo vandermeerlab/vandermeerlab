@@ -1,18 +1,22 @@
 %% script to generate STA spectra and average STS on a trial-by trial basis as well as for binned trials
+% trials are binned on the basis of mean firing rate in the trial such that
+% the number of spikes in each of the bins are as close as possible
+% The spectra for the FSIs are calculated after multiple rounds of
+% subsampling
 %% setup
 clear;
-cd('/Users/manishm/Work/vanDerMeerLab/ADRLabData');
+cd('D:\ADRLabData');
 please = [];
-please.rats = {'R117','R119','R131','R132'}; % vStr-only rats
+please.rats = {'R117'}%,'R119','R131','R132'}; % vStr-only rats
 [cfg_in.fd,cfg_in.fd_extra] = getDataPath(please);
 cfg_in.write_output = 1;
-cfg_in.output_dir = '/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp';
+cfg_in.output_dir = 'D:\RandomVstrAnalysis\temp';
 cfg_in.exc_types = 0;
 
 
 %%
 % Top level loop which calls the main function for all the sessions
-for iS = 1:length(cfg_in.fd) % for each session...
+for iS = 1%:length(cfg_in.fd) % for each session...
     cfg_in.iS = iS;
     pushdir(cfg_in.fd{iS});
     generateSTS(cfg_in); % do the business
@@ -115,109 +119,199 @@ function od = generateSTS(cfg_in)
         end
     end % of previous day available checks
 
-    % Divide Spikes into two kinds of epochs: Around +/-5 s of the reward 
-    % times (near trials) and the others (away trials).
+    % restrict spikes to a timeWindow of +/-5 seconds around the reward  
+    rt1 = getRewardTimes();
+    rt1 = rt1(rt1 > ExpKeys.TimeOnTrack);
+    rt2 = getRewardTimes2();
+    rt2 = rt2(rt2 > ExpKeys.TimeOnTrack);
     
-    rt = getRewardTimes();
-    % Sometimes (in R117-2007-06-17, for instance) the reward detection is triggered
-    % before the trials start. For these cases, a sanity check is put in
-    % place to ensure that only the valid reward times are retained
-    rt = rt(rt > ExpKeys.TimeOnTrack);
-    % Sometimes (in R117-2007-06-11, for instance) getRewardTimes() returns
+    % Sometimes (in R117-2007-06-12, for instance) getRewardTimes() returns
     % times that are spaced out less than 5 sec apart (possibly erroneus). 
     % Getting rid of such reward times to maintain consistency
-    rt_dif = diff(rt);
+    rt_dif = diff(rt1);
     rt_dif = find(rt_dif <= 5);
-    valid_rt = true(length(rt),1);
+    valid_rt1 = true(length(rt1),1);
+    valid_rt2 = true(length(rt2),1);
     for i = 1:length(rt_dif)
-        valid_rt(rt_dif(i)) = false;
-        valid_rt(rt_dif(i)+1) = false;
+        valid_rt1(rt_dif(i)) = false;
+        valid_rt1(rt_dif(i)+1) = false;
+        valid_rt2(rt2 >= rt1(rt_dif(i)) & rt2 <= rt1(rt_dif(i)+2)) = false;
     end
-    rt = rt(valid_rt);
+    % Sometimes (in R119-2007-07-05, for instance) getRewardTimes2() returns
+    % times that are spaced out less than 5 sec apart (possibly erroneus). 
+    % Getting rid of such reward times to maintain consistency
+    rt_dif = diff(rt2);
+    rt_dif = find(rt_dif <= 5);
+    for i = 1:length(rt_dif)
+        valid_rt2(rt_dif(i)) = false;
+        valid_rt2(rt_dif(i)+1) = false;
+        valid_rt1(rt1 >= rt2(rt_dif(i)-1) & rt1 <= rt2(rt_dif(i)+1)) = false;
+    end
     
-    near_trial_starts = rt - 5;
-    near_trial_ends = rt + 5;
-    rt_iv = iv(near_trial_starts, near_trial_ends);
-    rt_iv = MergeIV([],rt_iv);
+    rt1 = rt1(valid_rt1);
+    rt2 = rt2(valid_rt2);
+    
+    % Sometimes (in R117-2007-06-17, for instance) the second reward is
+    % triggered but not the first one in the last trial
+    if length(rt1) ~= length(rt2)
+        rt1 = rt1(1:end-1);
+    end
+    
+    % Sanity check to make sure that rt2 is always triggered after rt1
+    keep = (rt1 <= rt2);
+    rt1 = rt1(keep);
+    rt2 = rt2(keep);
+    
+    % For near reward_trials  
+    w_start1 = rt1 - 5;
+    w_end1 = rt1 + 5;
+    w_start2 = rt2 - 5;
+    w_end2 =  rt2 + 5;
+    % Last trial time shouldn't exceed Experiment end time
+    w_end2(end) = min(w_end2(end), ExpKeys.TimeOffTrack);
+    w_start = sort([w_start1; w_start2]);
+    w_end = sort([w_end1; w_end2]);
+    rt_iv = iv(w_start, w_end);
+    rt_iv = MergeIV([], rt_iv);
+    % Saving near trial fields
     od.S1 = restrict(sd.S, rt_iv);
-   
-    away_trial_starts = [ExpKeys.TimeOnTrack;rt(1:end-1)+5];
-    away_trial_ends = (rt-5);
-    % Get rid of extra long-trials (greater than mean + 1*SD)
-    trial_length = away_trial_ends - away_trial_starts;
-    mtl = mean(trial_length); stl = std(trial_length);
-    valid_trials = (trial_length <= mtl + stl); 
-    away_trial_starts = away_trial_starts(valid_trials);
-    away_trial_ends = away_trial_ends(valid_trials);
-    rt_iv = iv(away_trial_starts, away_trial_ends);
-    rt_iv = MergeIV([],rt_iv);
-    od.S2 = restrict(sd.S, rt_iv);
-    
-    % Saving other specific fields
     od.S1.cell_type = sd.S.usr.cell_type;
     od.S1.tt_id = sd.S.usr.tt_num;
-    od.S1.trial_starts = near_trial_starts;
-    od.S1.trial_ends = near_trial_ends;
+    od.S1.trial_starts = w_start;
+    od.S1.trial_ends = w_end;
+    
+    % For away_reward_trials
+    w_start = [ExpKeys.TimeOnTrack;rt2(1:end-1)+5];
+    w_end = (rt1-5);
+    
+    % Get rid of extra long-trials (greater than mean + 1*SD)
+    trial_length = w_end - w_start;
+    mtl = mean(trial_length); stl = std(trial_length);
+    valid_trials = (trial_length <= mtl + stl); 
+    w_start = w_start(valid_trials);
+    w_end= w_end(valid_trials);
+    rt_iv = iv(w_start, w_end);
+    rt_iv = MergeIV([], rt_iv);
+    % Saving away trial fields
+    od.S2 = restrict(sd.S, rt_iv);
     od.S2.cell_type = sd.S.usr.cell_type;
     od.S2.tt_id = sd.S.usr.tt_num;
-    od.S2.trial_starts = away_trial_starts;
-    od.S2.trial_ends = away_trial_ends;
+    od.S2.trial_starts = w_start;
+    od.S2.trial_ends = w_end;
 
     % Keep cells greater with greater than nMinSpike spikes and of the allowed types
     od.S1 = KeepCells(od.S1,cfg_master.nMinSpikes,cfg_master.exc_types,lfp_tt);
     od.S2 = KeepCells(od.S2,cfg_master.nMinSpikes,cfg_master.exc_types,lfp_tt);
     
     % Parameters for STS
-    % Use dummy data to get Frequency values of pwelch
+    % Use dummy data to get Frequency values of pwelch and mtspectumFc
     cfg_s.Fs = 1/median(diff(csc.tvec));
     cfg_s.sts_wl = round(cfg_s.Fs);
     dd = zeros(1,cfg_s.sts_wl);
-    [~,F] = pwelch(dd,length(dd),[],[],cfg_s.Fs);
+    [~,F] = pwelch(dd,length(dd),[],[],cfg_s.Fs); 
     cfg_s.foi = (F >= 0 & F <= 100);
     cfg_s.f_len = sum(cfg_s.foi);
+    cfg_s.cfg_mt.tapers = [3 5];
+    cfg_s.cfg_mt.Fs = cfg_s.Fs;
+    [~,F] = mtspectrumc(dd,cfg_s.cfg_mt);
+    cfg_s.foi_mt = (F >= 0 & F <= 100);
+    cfg_s.f_len_mt = sum(cfg_s.foi_mt);
     cfg_s.lfp_data = csc.data;
     cfg_s.lfp_ts = csc.tvec;
-    cfg_s.pbins = 4;
+    cfg_s.pbins = 2;
+    cfg_s.num_samples = 1000;
+    
     % determining spike triggered LFP segment length using dummy data
     [dum_seg,~]  = xcorr(csc.data, csc.data, floor(cfg_s.sts_wl/2));
     cfg_s.seg_len = length(dum_seg);
     tcount = length(od.S1.trial_starts);
     od.S1.freqs = F(F >= 0 & F <= 100);
-    od.S1.spec_res = repmat(struct('sta_spec_full', zeros(tcount,cfg_s.f_len), ...
-                    'sta_spec_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
-                    'w_sta_spec_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
-                    'uw_sta_spec_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
-                    'sts_full', zeros(tcount, cfg_s.f_len), ...
-                    'sts_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
+    od.S1.msn_res = repmat(struct('sta_mtspec_ptile', zeros(cfg_s.pbins, cfg_s.f_len_mt), ...
+                    'sta_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
+                    'mtsts_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
                     'scount_ptile',zeros(cfg_s.pbins, 1), ...
                     'mfr', zeros(1, tcount), ...
-                    'ptile_mfrs', zeros(cfg_s.pbins,2)), length(od.S1.t), 1);
+                    'ptile_mfrs', zeros(cfg_s.pbins,2)), length(find(od.S1.cell_type == 1)), 1);
+    od.S1.fsi_res = repmat(struct('sta_mtspec_ptile', zeros(cfg_s.pbins, cfg_s.f_len_mt), ...
+                    'sta_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
+                    'mtsts_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
+                    'us_sta_mtspec_ptile', zeros(cfg_s.pbins, cfg_s.f_len_mt), ...
+                    'us_sta_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
+                    'us_mtsts_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
+                    'scount_ptile',zeros(cfg_s.pbins, 1), ...
+                    'scount_sub_ptile',zeros(cfg_s.pbins, cfg_s.num_samples), ...
+                    'mfr', zeros(1, tcount), ...
+                    'ptile_mfrs', zeros(cfg_s.pbins,2)), length(find(od.S1.cell_type == 2)), 1);
     tcount = length(od.S2.trial_starts);           
     od.S2.freqs = F(F >= 0 & F <= 100);
-    od.S2.spec_res = repmat(struct('sta_spec_full', zeros(tcount,cfg_s.f_len), ...
-                    'sta_spec_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
-                    'w_sta_spec_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
-                    'uw_sta_spec_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
-                    'sts_full', zeros(tcount, cfg_s.f_len), ...
-                    'sts_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
+    od.S2.msn_res = repmat(struct('sta_mtspec_ptile', zeros(cfg_s.pbins, cfg_s.f_len_mt), ...
+                    'sta_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
+                    'mtsts_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
                     'scount_ptile',zeros(cfg_s.pbins, 1), ...
                     'mfr', zeros(1, tcount), ...
-                    'ptile_mfrs', zeros(cfg_s.pbins,2)), length(od.S2.t), 1);
+                    'ptile_mfrs', zeros(cfg_s.pbins,2)), length(find(od.S2.cell_type == 1)), 1);
+    od.S2.fsi_res = repmat(struct('sta_mtspec_ptile', zeros(cfg_s.pbins, cfg_s.f_len_mt), ...
+                    'sta_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
+                    'mtsts_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
+                    'us_sta_mtspec_ptile', zeros(cfg_s.pbins, cfg_s.f_len_mt), ...
+                    'us_sta_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
+                    'us_mtsts_ptile', zeros(cfg_s.pbins, cfg_s.f_len), ...
+                    'scount_ptile',zeros(cfg_s.pbins, 1), ...
+                    'scount_sub_ptile',zeros(cfg_s.pbins, cfg_s.num_samples), ...
+                    'mfr', zeros(1, tcount), ...
+                    'ptile_mfrs', zeros(cfg_s.pbins,2)), length(find(od.S2.cell_type == 2)), 1);
                 
     % For near trials
-    for iC = length(od.S1.t):-1:1
-        S1 = SelectTS([],od.S1,iC);
+    msn = find(od.S1.cell_type == 1);
+    msn_lfr_dist = zeros(length(msn),1);
+    msn_hfr_dist = zeros(length(msn),1);
+    for iC = 1:length(msn)
+        S1 = SelectTS([],od.S1,msn(iC));
         cfg_s.trial_starts = od.S1.trial_starts;
         cfg_s.trial_ends = od.S1.trial_ends;
-        od.S1.spec_res(iC) = calculateSTS(cfg_s, S1);
+        od.S1.msn_res(iC) = calculateMSNspec(cfg_s, S1);
+        msn_lfr_dist(iC) = od.S1.msn_res(iC).scount_ptile(1);
+        msn_hfr_dist(iC) = od.S1.msn_res(iC).scount_ptile(2);
     end
-
+    keep = (msn_lfr_dist >= 200) & (msn_hfr_dist >= 200);
+    msn_lfr_dist = msn_lfr_dist(keep);
+    msn_hfr_dist = msn_hfr_dist(keep);
+    if numel(msn_lfr_dist) > 0
+        fsi = find(od.S1.cell_type == 2);
+        for iC = 1:length(fsi)
+            S1 = SelectTS([],od.S1,fsi(iC));
+            cfg_s.trial_starts = od.S1.trial_starts;
+            cfg_s.trial_ends = od.S1.trial_ends;
+            cfg_s.ldist = msn_lfr_dist;
+            cfg_s.hdist = msn_hfr_dist;
+            od.S1.fsi_res(iC) = calculateFSIspec(cfg_s, S1);
+        end
+    end
     % For away trials
-    for iC = length(od.S2.t):-1:1
-        S2 = SelectTS([],od.S2,iC);
+    msn = find(od.S2.cell_type == 1);
+    msn_lfr_dist = zeros(length(msn),1);
+    msn_hfr_dist = zeros(length(msn),1);
+    for iC = 1:length(msn)
+        S2 = SelectTS([],od.S2,msn(iC));
         cfg_s.trial_starts = od.S2.trial_starts;
         cfg_s.trial_ends = od.S2.trial_ends;
-        od.S2.spec_res(iC) = calculateSTS(cfg_s, S2);
+        od.S2.msn_res(iC) = calculateMSNspec(cfg_s, S2);
+        msn_lfr_dist(iC) = od.S2.msn_res(iC).scount_ptile(1);
+        msn_hfr_dist(iC) = od.S2.msn_res(iC).scount_ptile(2);
+    end
+    keep = (msn_lfr_dist >= 200) & (msn_hfr_dist >= 200);
+    msn_lfr_dist = msn_lfr_dist(keep);
+    msn_hfr_dist = msn_hfr_dist(keep);
+    if numel(msn_lfr_dist) > 0
+        fsi = find(od.S2.cell_type == 2);
+        for iC = 1:length(fsi)
+            S2 = SelectTS([],od.S2,fsi(iC));
+            cfg_s.trial_starts = od.S2.trial_starts;
+            cfg_s.trial_ends = od.S2.trial_ends;
+            cfg_s.ldist = msn_lfr_dist;
+            cfg_s.hdist = msn_hfr_dist;
+            od.S2.fsi_res(iC) = calculateFSIspec(cfg_s, S2);
+        end
     end
     
     if cfg_master.write_output
@@ -232,107 +326,228 @@ end
 
 %% Other functions
 
-%% function that calculates STA spectrum in 3 variations as well as the average spectra for spike-triggered LFP
-
-function res = calculateSTS(cfg_in, S)
+%% function that calculates STA spectrum  as well as the average spectra 
+% for spike-triggered LFP using mutli-taper method for MSNs
+function res = calculateMSNspec(cfg_in, S)
         tcount = length(cfg_in.trial_starts);
-        res.sta_spec_full = zeros(tcount, cfg_in.f_len);
-        res.sts_full = zeros(tcount, cfg_in.f_len);
         res.mfr = zeros(tcount,1);
         all_tspikes = cell(1,tcount);
         for iT = 1:tcount
             triaL_iv = iv(cfg_in.trial_starts(iT),cfg_in.trial_ends(iT));
             trial_S = restrict(S, triaL_iv);
             all_tspikes{iT} = trial_S.t{1};
-            
-            % calculating and saving the average sts for each trial
-            % Bin spikes on CSC timebase
-            idx = nearest_idx3(all_tspikes{iT}, cfg_in.lfp_ts);
-            this_p = zeros(length(idx),cfg_in.f_len);
-            % For each spike
-            for iS = 1:length(idx)
-                this_seg = cfg_in.lfp_data((idx(iS)-floor(cfg_in.sts_wl/2)):(idx(iS)+floor(cfg_in.sts_wl/2)));
-                [P1,~] = pwelch(this_seg,cfg_in.seg_len, [], [], cfg_in.Fs);
-                this_p(iS,:) = P1(cfg_in.foi);
-            end
-            res.sts_full(iT,:) = mean(this_p,1);
-            
-            % saving spectrum of sta for each trial
-            this_spk_binned = zeros(size(cfg_in.lfp_ts));
-            idx = nearest_idx3( all_tspikes{iT}, cfg_in.lfp_ts);
-            this_spk_binned(idx) = 1;
-            [this_sta, ~] = xcorr(cfg_in.lfp_data, this_spk_binned, floor(cfg_in.sts_wl/2));
-            [P,~] = pwelch(this_sta, cfg_in.seg_len, [], [], cfg_in.Fs);
-            res.sta_spec_full(iT,:) = P(cfg_in.foi);
             res.mfr(iT) = length(all_tspikes{iT})/(cfg_in.trial_ends(iT) - cfg_in.trial_starts(iT));
         end
         
         % Get rid of trials with no spikes and bin the rest
         nz_trials = find(res.mfr ~= 0);
         nz_mfr = res.mfr(nz_trials);
-        nz_tsta_spec = res.sta_spec_full((nz_trials),:);
         nz_tcount = length(nz_trials);
         nz_tspikes = cell(nz_tcount,1);
+        spk_tcount = zeros(nz_tcount,1);
         for iT = 1:nz_tcount
             nz_tspikes{iT} = all_tspikes{nz_trials(iT)};
+            spk_tcount(iT) = length(nz_tspikes{iT});
         end
         
-        % Bin based on percentile and calculate results for the bins
+        % Find out the firing rate threhsold to split the trials such that
+        % spikes are more or less equally divided
+        ufr = unique(nz_mfr);
+        dif_min = sum(cell2mat(nz_tspikes));
+
+        for iF = 1:length(ufr)
+            cur_thresh = ufr(iF);
+            l_spikes = sum(spk_tcount(nz_mfr <= cur_thresh));
+            h_spikes = sum(spk_tcount(nz_mfr > cur_thresh));
+            cur_dif = abs(h_spikes - l_spikes);
+            if dif_min > cur_dif
+                dif_min = cur_dif;
+                fr_thresh = cur_thresh;
+            end
+        end
+        
+        % Bin trials based on the firing rate threshold 
+        % and calculate results for the bins
         res.ptile_mfrs = zeros(cfg_in.pbins,2);
-        res.w_sta_spec_ptile = zeros(cfg_in.pbins, cfg_in.f_len);
-        res.uw_sta_spec_ptile = zeros(cfg_in.pbins, cfg_in.f_len);
-        res.sta_spec_ptile = zeros(cfg_in.pbins, cfg_in.f_len);
-        res.sts_ptile = zeros(cfg_in.pbins, cfg_in.f_len);
+        res.sta_ptile = zeros(cfg_in.pbins, cfg_in.sts_wl);
+        res.sta_mtspec_ptile = zeros(cfg_in.pbins, cfg_in.f_len_mt);
+        res.mtsts_ptile = zeros(cfg_in.pbins, cfg_in.f_len_mt);
         res.scount_ptile = zeros(cfg_in.pbins, 1);
         for iP = 1:cfg_in.pbins
-            lpt = round(100*(iP-1)*(1/cfg_in.pbins));
-            upt = round(100*(iP)*(1/cfg_in.pbins));
-            res.ptile_mfrs(iP,1) = prctile(nz_mfr, lpt);
-            res.ptile_mfrs(iP,2) = prctile(nz_mfr, upt);
-            if (iP == cfg_in.pbins)
+            if (iP == 1)
+                res.ptile_mfrs(iP,1) = min(nz_mfr);
+                res.ptile_mfrs(iP,2) = fr_thresh;
                 ptrials = find(nz_mfr >= res.ptile_mfrs(iP,1) & nz_mfr <= res.ptile_mfrs(iP,2));
             else
-                ptrials = find(nz_mfr >= res.ptile_mfrs(iP,1) & nz_mfr < res.ptile_mfrs(iP,2));
+                res.ptile_mfrs(iP,1) = fr_thresh;
+                res.ptile_mfrs(iP,2) = max(nz_mfr);
+                ptrials = find(nz_mfr > res.ptile_mfrs(iP,1) & nz_mfr <= res.ptile_mfrs(iP,2));
             end
             p_spikes = cell(length(ptrials),1);
             if ~isempty(ptrials)
                 for iT = 1:length(ptrials)
-                    p_spikes{iT} = nz_tspikes{ptrials(iT)};
-                    res.w_sta_spec_ptile(iP,:) = res.w_sta_spec_ptile(iP,:) + ...
-                        (length(p_spikes{iT}) * nz_tsta_spec(ptrials(iT),:));
-                    res.uw_sta_spec_ptile(iP,:) = res.uw_sta_spec_ptile(iP,:) + ...
-                        nz_tsta_spec(ptrials(iT),:);
+                    p_spikes{iT} = nz_tspikes{ptrials(iT)};     
                 end
                 p_spikes = cell2mat(p_spikes);
-                % calculate spike-count weighted mean of STA spectra
-                res.w_sta_spec_ptile(iP,:) = res.w_sta_spec_ptile(iP,:)/length(p_spikes);
-                % calculate unweighted mean of STA spectra
-                res.uw_sta_spec_ptile(iP,:) = res.uw_sta_spec_ptile(iP,:)/length(ptrials);
             end
             res.scount_ptile(iP) = length(p_spikes);
             % Calculate average STS of the mfr percentile based binned spikes
             % Bin spikes on CSC timebase
             idx = nearest_idx3(p_spikes, cfg_in.lfp_ts);
-            this_p = zeros(length(idx),cfg_in.f_len);
+            this_p2 = zeros(length(idx),cfg_in.f_len_mt);
+            sum_seg = zeros(1, cfg_in.sts_wl);
             % For each spike
             for iS = 1:length(idx)
                 this_seg = cfg_in.lfp_data((idx(iS)-floor(cfg_in.sts_wl/2)):(idx(iS)+floor(cfg_in.sts_wl/2)));
-                [P,~] = pwelch(this_seg,cfg_in.seg_len, [], [], cfg_in.Fs);
-                this_p(iS,:) = P(cfg_in.foi);
+                sum_seg = sum_seg + this_seg;
+                [P2,~] = mtspectrumc(this_seg, cfg_in.cfg_mt);
+                this_p2(iS,:) = P2(cfg_in.foi_mt);
             end
-            res.sts_ptile(iP,:) = mean(this_p,1);
+            res.mtsts_ptile(iP,:) = mean(this_p2,1);
             % Calculate spectrum of STA for the mfr percentile based binned spikes
-            this_spk_binned = zeros(size(cfg_in.lfp_ts));
-            this_spk_binned(idx) = 1;
-            [this_sta, ~] = xcorr(cfg_in.lfp_data, this_spk_binned, floor(cfg_in.sts_wl/2));
-            [P,~] = pwelch(this_sta, cfg_in.seg_len, [], [], cfg_in.Fs);
-            res.sta_spec_ptile(iP,:) = P(cfg_in.foi);
+            this_sta = sum_seg/length(idx);
+            [P2,~] = mtspectrumc(this_sta, cfg_in.cfg_mt);
+            res.sta_mtspec_ptile(iP,:) = P2(cfg_in.foi_mt);
+            res.sta_ptile(iP,:) = this_sta;
         end 
-%         % Sanity check  that no spikes have been lost in winning
-%         % TODO: Convert intp a proper error message
-%         if sum(length(cell2mat(nz_tspikes))) ~= sum(length(cell2mat(res.ptile_spikes{iP})))
-%             disp ("You just lost spikes");
-%         end
+end
+
+
+%% function that calculates STA spectrum  as well as the average spectra 
+% for spike-triggered LFP using mutli-taper method for FSIs
+function res = calculateFSIspec(cfg_in, S)
+        tcount = length(cfg_in.trial_starts);
+        res.mfr = zeros(tcount,1);
+        all_tspikes = cell(1,tcount);
+        for iT = 1:tcount
+            triaL_iv = iv(cfg_in.trial_starts(iT),cfg_in.trial_ends(iT));
+            trial_S = restrict(S, triaL_iv);
+            all_tspikes{iT} = trial_S.t{1};
+            res.mfr(iT) = length(all_tspikes{iT})/(cfg_in.trial_ends(iT) - cfg_in.trial_starts(iT));
+        end
+        
+        % Get rid of trials with no spikes and bin the rest
+        nz_trials = find(res.mfr ~= 0);
+        nz_mfr = res.mfr(nz_trials);
+        nz_tcount = length(nz_trials);
+        nz_tspikes = cell(nz_tcount,1);
+        spk_tcount = zeros(nz_tcount,1);
+        for iT = 1:nz_tcount
+            nz_tspikes{iT} = all_tspikes{nz_trials(iT)};
+            spk_tcount(iT) = length(nz_tspikes{iT});
+        end
+        
+        % Find out the firing rate threhsold to split the trials such that
+        % spikes are more or less equally divided
+        ufr = unique(nz_mfr);
+        dif_min = sum(cell2mat(nz_tspikes));
+
+        for iF = 1:length(ufr)
+            cur_thresh = ufr(iF);
+            l_spikes = sum(spk_tcount(nz_mfr <= cur_thresh));
+            h_spikes = sum(spk_tcount(nz_mfr > cur_thresh));
+            cur_dif = abs(h_spikes - l_spikes);
+            if dif_min > cur_dif
+                dif_min = cur_dif;
+                fr_thresh = cur_thresh;
+            end
+        end
+        
+        % Bin trials based on the firing rate threshold 
+        % and calculate results for the bins
+        res.ptile_mfrs = zeros(cfg_in.pbins,2);
+        res.sta_ptile = zeros(cfg_in.pbins, cfg_in.sts_wl);
+        res.sta_mtspec_ptile = zeros(cfg_in.pbins, cfg_in.f_len_mt);
+        res.mtsts_ptile = zeros(cfg_in.pbins, cfg_in.f_len_mt);
+        res.scount_ptile = zeros(cfg_in.pbins, 1);
+        res.scount_sub_ptile = zeros(cfg_in.pbins, cfg_in.num_samples);
+        for iP = 1:cfg_in.pbins
+            if (iP == 1)
+                res.ptile_mfrs(iP,1) = min(nz_mfr);
+                res.ptile_mfrs(iP,2) = fr_thresh;
+                ptrials = find(nz_mfr >= res.ptile_mfrs(iP,1) & nz_mfr <= res.ptile_mfrs(iP,2));
+            else
+                res.ptile_mfrs(iP,1) = fr_thresh;
+                res.ptile_mfrs(iP,2) = max(nz_mfr);
+                ptrials = find(nz_mfr > res.ptile_mfrs(iP,1) & nz_mfr <= res.ptile_mfrs(iP,2));
+            end
+            p_spikes = cell(length(ptrials),1);
+            if ~isempty(ptrials)
+                for iT = 1:length(ptrials)
+                    p_spikes{iT} = nz_tspikes{ptrials(iT)};     
+                end
+                p_spikes = cell2mat(p_spikes);
+            end
+            res.scount_ptile(iP) = length(p_spikes);
+            idx = nearest_idx3(p_spikes, cfg_in.lfp_ts);
+            
+            % When an FSI has fewer spikes than at least one MSN, do NOT
+            % subsample and include all the spikes
+            if length(p_spikes) < max(cfg_in.ldist) || length(p_spikes) < max(cfg_in.hdist)
+                this_p2 = zeros(length(idx),cfg_in.f_len_mt);
+                sum_seg = zeros(1, cfg_in.sts_wl);
+                % For each spike
+                for iS = 1:length(idx)
+                    this_seg = cfg_in.lfp_data((idx(iS)-floor(cfg_in.sts_wl/2)):(idx(iS)+floor(cfg_in.sts_wl/2)));
+                    sum_seg = sum_seg + this_seg;
+                    [P2,~] = mtspectrumc(this_seg, cfg_in.cfg_mt);
+                    this_p2(iS,:) = P2(cfg_in.foi_mt);
+                end
+                res.mtsts_ptile(iP,:) = mean(this_p2,1);
+                res.us_mtsts_ptile(iP,:) = res.mtsts_ptile(iP,:);
+                % Calculate spectrum of STA for the mfr percentile based binned spikes
+                this_sta = sum_seg/length(idx);
+                [P2,~] = mtspectrumc(this_sta, cfg_in.cfg_mt);
+                res.sta_mtspec_ptile(iP,:) = P2(cfg_in.foi_mt);
+                res.us_sta_mtspec_ptile(iP,:) = res.sta_mtspec_ptile(iP,:);
+                res.sta_ptile(iP,:) = this_sta;
+                res.us_sta_ptile(iP, :) = res.sta_ptile(iP,:);
+                continue
+            end
+            
+            % Make a list of all ST segments and STS for all the spikes and
+            % then for each round of subsampling and calculate the spectrum
+            % of the STA and mean of the STS for a randomly chosen subset
+            all_segs = zeros(length(idx),cfg_in.sts_wl);
+            all_sts = zeros(length(idx),cfg_in.f_len_mt);
+            for iS = 1:length(idx)
+                this_seg = cfg_in.lfp_data((idx(iS)-floor(cfg_in.sts_wl/2)):(idx(iS)+floor(cfg_in.sts_wl/2)));
+                all_segs(iS,:) = this_seg;
+                [P2,~] = mtspectrumc(this_seg, cfg_in.cfg_mt);
+                all_sts(iS,:) = P2(cfg_in.foi_mt);
+            end
+            this_sta =  mean(all_segs,1);
+            res.us_sta_ptile(iP,:) = this_sta;
+            [P2,~] = mtspectrumc(this_sta, cfg_in.cfg_mt);
+            res.us_sta_mtspec_ptile(iP, :) = P2(cfg_in.foi_mt);
+            res.us_mtsts_ptile(iP,:) = mean(all_sts, 1);
+            
+            s_factor = 1/length(cfg_in.ldist);
+            as_sta = zeros(cfg_in.num_samples, cfg_in.sts_wl);
+            as_mtspec = zeros(cfg_in.num_samples, cfg_in.f_len_mt);
+            as_mtsts = zeros(cfg_in.num_samples, cfg_in.f_len_mt);
+            for iR = 1:cfg_in.num_samples
+                disp(strcat(2,'Subsampling round: ',num2str(iR)));
+                % subsampling step
+                choice = floor(rand()/s_factor)+1;
+                if (iP == 1)
+                    res.scount_sub_ptile(iP,iR) = cfg_in.ldist(choice);
+                else
+                    res.scount_sub_ptile(iP,iR) = cfg_in.hdist(choice);
+                end
+                
+                this_ids = randsample(1:length(idx), res.scount_sub_ptile(iP,iR));
+                this_sta = mean(all_segs(this_ids,:),1);
+                as_sta(iR,:) = this_sta;
+                [P2,~] = mtspectrumc(this_sta, cfg_in.cfg_mt);
+                as_mtspec(iR,:) =  P2(cfg_in.foi_mt);
+                as_mtsts(iR,:) = mean(all_sts(this_ids,:), 1);
+            end
+            %Saving the mean of all the sampling rounds
+            res.mtsts_ptile(iP,:) = mean(as_mtsts,1);
+            res.sta_mtspec_ptile(iP,:) = mean(as_mtspec,1);
+            res.sta_ptile(iP,:) = mean(as_sta,1);
+        end 
 end
 
 %% function to remove cells based on spike threshold, cell type and tetrode
