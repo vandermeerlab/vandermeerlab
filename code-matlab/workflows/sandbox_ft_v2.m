@@ -17,6 +17,7 @@ cfg_in.incl_types = [1, 2];
 cfg_in.nMinSpikes1 = 400; % For on track
 cfg_in.nMinSpikes2 = 200; % For near and away
 cfg_in.nMinSpikes3 = 100; % For lfr, hfr, p1 and p2
+cfg_in.num_subsamples = 1000;
 
 
 %%
@@ -88,6 +89,7 @@ function od = generateSTS(cfg_in)
     cfg_master.output_prefix = 'sts_';
     cfg_master.output_dir = 'C:\temp';
     cfg_master.incl_cell_types = [1,2]; %cell types to be included
+    cfg_master.num_subsamples = 1000;
     cfg_master = ProcessConfig(cfg_master,cfg_in);
     
     % spikes
@@ -172,7 +174,6 @@ function od = generateSTS(cfg_in)
     od.tt_id = sd.S.usr.tt_num;
     od.label = sd.S.label;
    
-    
     % Calculate spectral measures for all MSNs
     all_msn = find(od.cell_type == 1);
     for iM = 1:length(all_msn)
@@ -1036,53 +1037,1275 @@ function od = generateSTS(cfg_in)
     end
     
     % Get the msn distributions
-    msn_onTrack_dist = [];
-    msn_near_dist = [];
-    msn_near_lfr_dist = [];
-    msn_near_hfr_dist = [];
-    msn_near_p1_dist = [];
-    msn_near_p2_dist = [];
-    msn_away_dist = [];
-    msn_away_lfr_dist = [];
-    msn_away_hfr_dist = [];
-    msn_away_p1_dist = [];
-    msn_away_p2_dist = [];
-
-    for iM = 1:length(od.msn_res.onTrack_spec)
-        msn_onTrack_dist = [msn_onTrack_dist od.msn_res.onTrack_spec{iM}.spk_count];
-        if ~od.msn_res.near_spec{iM}.flag_tooFewSpikes & ~od.msn_res.near_spec{iM}.flag_nansts & ~od.msn_res.near_spec{iM}.flag_nanppc
-            msn_near_dist = [msn_near_dist od.msn_res.near_spec{iM}.spk_count];
-            if ~od.msn_res.near_lfr_spec{iM}.flag_tooFewSpikes & ~od.msn_res.near_lfr_spec{iM}.flag_nansts & ~od.msn_res.near_lfr_spec{iM}.flag_nanppc
-                msn_near_lfr_dist = [msn_near_lfr_dist od.msn_res.near_lfr_spec{iM}.spk_count];
+    od.msn_onTrack_dist = [];
+    od.msn_near_dist = [];
+    od.msn_near_lfr_dist = [];
+    od.msn_near_hfr_dist = [];
+    od.msn_near_p1_dist = [];
+    od.msn_near_p2_dist = [];
+    od.msn_away_dist = [];
+    od.msn_away_lfr_dist = [];
+    od.msn_away_hfr_dist = [];
+    od.msn_away_p1_dist = [];
+    od.msn_away_p2_dist = [];
+    
+    if isfield(od,'msn_res')
+        for iM = 1:length(od.msn_res.onTrack_spec)
+            od.msn_onTrack_dist = [od.msn_onTrack_dist od.msn_res.onTrack_spec{iM}.spk_count];
+            if ~od.msn_res.near_spec{iM}.flag_tooFewSpikes & ~od.msn_res.near_spec{iM}.flag_nansts & ~od.msn_res.near_spec{iM}.flag_nanppc
+                od.msn_near_dist = [od.msn_near_dist od.msn_res.near_spec{iM}.spk_count];
+                if ~od.msn_res.near_lfr_spec{iM}.flag_tooFewSpikes & ~od.msn_res.near_lfr_spec{iM}.flag_nansts & ~od.msn_res.near_lfr_spec{iM}.flag_nanppc
+                    od.msn_near_lfr_dist = [od.msn_near_lfr_dist od.msn_res.near_lfr_spec{iM}.spk_count];
+                end
+                if ~od.msn_res.near_hfr_spec{iM}.flag_tooFewSpikes & ~od.msn_res.near_hfr_spec{iM}.flag_nansts & ~od.msn_res.near_hfr_spec{iM}.flag_nanppc
+                    od.msn_near_hfr_dist = [od.msn_near_hfr_dist od.msn_res.near_hfr_spec{iM}.spk_count];
+                end
+                if ~od.msn_res.near_p1_spec{iM}.flag_tooFewSpikes & ~od.msn_res.near_p1_spec{iM}.flag_nansts & ~od.msn_res.near_p1_spec{iM}.flag_nanppc
+                    od.msn_near_p1_dist = [od.msn_near_p1_dist od.msn_res.near_p1_spec{iM}.spk_count];
+                end
+                if ~od.msn_res.near_p2_spec{iM}.flag_tooFewSpikes & ~od.msn_res.near_p2_spec{iM}.flag_nansts & ~od.msn_res.near_p2_spec{iM}.flag_nanppc
+                    od.msn_near_p2_dist = [od.msn_near_p2_dist od.msn_res.near_p2_spec{iM}.spk_count];
+                end
             end
-            if ~od.msn_res.near_hfr_spec{iM}.flag_tooFewSpikes & ~od.msn_res.near_hfr_spec{iM}.flag_nansts & ~od.msn_res.near_hfr_spec{iM}.flag_nanppc
-                msn_near_hfr_dist = [msn_near_hfr_dist od.msn_res.near_hfr_spec{iM}.spk_count];
-            end
-            if ~od.msn_res.near_p1_spec{iM}.flag_tooFewSpikes & ~od.msn_res.near_p1_spec{iM}.flag_nansts & ~od.msn_res.near_p1_spec{iM}.flag_nanppc
-                msn_near_p1_dist = [msn_near_p1_dist od.msn_res.near_p1_spec{iM}.spk_count];
-            end
-            if ~od.msn_res.near_p2_spec{iM}.flag_tooFewSpikes & ~od.msn_res.near_p2_spec{iM}.flag_nansts & ~od.msn_res.near_p2_spec{iM}.flag_nanppc
-                msn_near_p2_dist = [msn_near_p2_dist od.msn_res.near_p2_spec{iM}.spk_count];
-            end
-        end
-        if ~od.msn_res.away_spec{iM}.flag_tooFewSpikes & ~od.msn_res.away_spec{iM}.flag_nansts & ~od.msn_res.away_spec{iM}.flag_nanppc
-            msn_away_dist = [msn_away_dist od.msn_res.away_spec{iM}.spk_count];
-            if ~od.msn_res.away_lfr_spec{iM}.flag_tooFewSpikes & ~od.msn_res.away_lfr_spec{iM}.flag_nansts & ~od.msn_res.away_lfr_spec{iM}.flag_nanppc
-                msn_away_lfr_dist = [msn_away_lfr_dist od.msn_res.away_lfr_spec{iM}.spk_count];
-            end
-            if ~od.msn_res.away_hfr_spec{iM}.flag_tooFewSpikes & ~od.msn_res.away_hfr_spec{iM}.flag_nansts & ~od.msn_res.away_hfr_spec{iM}.flag_nanppc
-                msn_away_hfr_dist = [msn_away_hfr_dist od.msn_res.away_hfr_spec{iM}.spk_count];
-            end
-            if ~od.msn_res.away_p1_spec{iM}.flag_tooFewSpikes & ~od.msn_res.away_p1_spec{iM}.flag_nansts & ~od.msn_res.away_p1_spec{iM}.flag_nanppc
-                msn_away_p1_dist = [msn_away_p1_dist od.msn_res.away_p1_spec{iM}.spk_count];
-            end
-            if ~od.msn_res.away_p2_spec{iM}.flag_tooFewSpikes & ~od.msn_res.away_p2_spec{iM}.flag_nansts & ~od.msn_res.away_p2_spec{iM}.flag_nanppc
-                msn_away_p2_dist = [msn_away_p2_dist od.msn_res.away_p2_spec{iM}.spk_count];
+            if ~od.msn_res.away_spec{iM}.flag_tooFewSpikes & ~od.msn_res.away_spec{iM}.flag_nansts & ~od.msn_res.away_spec{iM}.flag_nanppc
+                od.msn_away_dist = [od.msn_away_dist od.msn_res.away_spec{iM}.spk_count];
+                if ~od.msn_res.away_lfr_spec{iM}.flag_tooFewSpikes & ~od.msn_res.away_lfr_spec{iM}.flag_nansts & ~od.msn_res.away_lfr_spec{iM}.flag_nanppc
+                    od.msn_away_lfr_dist = [od.msn_away_lfr_dist od.msn_res.away_lfr_spec{iM}.spk_count];
+                end
+                if ~od.msn_res.away_hfr_spec{iM}.flag_tooFewSpikes & ~od.msn_res.away_hfr_spec{iM}.flag_nansts & ~od.msn_res.away_hfr_spec{iM}.flag_nanppc
+                    od.msn_away_hfr_dist = [od.msn_away_hfr_dist od.msn_res.away_hfr_spec{iM}.spk_count];
+                end
+                if ~od.msn_res.away_p1_spec{iM}.flag_tooFewSpikes & ~od.msn_res.away_p1_spec{iM}.flag_nansts & ~od.msn_res.away_p1_spec{iM}.flag_nanppc
+                    od.msn_away_p1_dist = [od.msn_away_p1_dist od.msn_res.away_p1_spec{iM}.spk_count];
+                end
+                if ~od.msn_res.away_p2_spec{iM}.flag_tooFewSpikes & ~od.msn_res.away_p2_spec{iM}.flag_nansts & ~od.msn_res.away_p2_spec{iM}.flag_nanppc
+                    od.msn_away_p2_dist = [od.msn_away_p2_dist od.msn_res.away_p2_spec{iM}.spk_count];
+                end
             end
         end
     end
     
-    all_fsi = find(od.S1.cell_type == 1);
+    % Calculate spectral measures for all FSIs
+    all_fsi = find(od.cell_type == 2);
+    for iM = 1:length(all_fsi)
+        iC  = all_fsi(iM);
+        % Calculate and save STA
+        cfg_ft.timwin = [-0.5 0.5];
+        cfg_ft.spikechannel = sd.S.ft_spikes(iC).label{1};
+        cfg_ft.channel = ft_csc.label(1);
+        this_data = ft_appendspike([], ft_csc, sd.S.ft_spikes(iC));
+        % Restrict data to only on-track data
+        on_track_data = ft_redefinetrial(cfg_onTrack, this_data);
+        this_flag = false;
+        % Sanity check to ensure that redefine trial has the same number of
+        % spikes as restrict()
+        if (sum(on_track_data.trial{1}(2,:)) ~= length(sd.S.t{iC}))
+           this_flag = true;
+           warning('ft_redefinetrial has %d spikes but restrict shows %d spikes on Track', ...
+               sum(on_track_data.trial{1}(2,:)), length(sd.S.t{iC}))
+        end
+        od.fsi_res.onTrack_spec{iM}.spk_count = sum(on_track_data.trial{1}(2,:));
+        this_sta = ft_spiketriggeredaverage(cfg_ft, on_track_data);
+        od.fsi_res.onTrack_spec{iM}.sta_time = this_sta.time;
+        od.fsi_res.onTrack_spec{iM}.sta_vals = this_sta.avg(:,:)';
+        od.fsi_res.onTrack_spec{iM}.flag_unequalSpikes = this_flag;
+        
+        % Calculate and save STS
+        cfg_sts.method = 'mtmconvol';
+        cfg_sts.foi = 1:1:100;
+        cfg_sts.t_ftimwin = 5./cfg_sts.foi;
+        cfg_sts.taper = 'hanning';
+        cfg_sts.spikechannel =  sd.S.ft_spikes(iC).label{1};
+        cfg_sts.channel = on_track_data.label{1};
+        this_sts = ft_spiketriggeredspectrum(cfg_sts, on_track_data);
+        this_flag = false;
+        % Display warning to show that there were Nans in this calculation
+        if ~isempty(find(isnan(this_sts.fourierspctrm{1}),1))
+            this_flag = true;
+            warning('Cell %s has nans in its STS',sd.S.label{iC});
+        end
+        od.fsi_res.onTrack_spec{iM}.freqs = this_sts.freq;
+        od.fsi_res.onTrack_spec{iM}.sts_vals = nanmean(sq(abs(this_sts.fourierspctrm{1})));
+        od.fsi_res.onTrack_spec{iM}.flag_nansts = this_flag;
+        
+        % Calculate and save PPC
+        cfg_ppc               = [];
+        cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
+        cfg_ppc.spikechannel  = this_sts.label;
+        cfg_ppc.channel       = this_sts.lfplabel; % selected LFP channels
+        cfg_ppc.avgoverchan   = 'unweighted'; % weight spike-LFP phases irrespective of LFP power
+        cfg_ppc.timwin        = 'all'; % compute over all available spikes in the window
+        this_ppc              = ft_spiketriggeredspectrum_stat(cfg_ppc,this_sts);
+        this_flag = false;
+        % Display warning to show that there were Nans in this calculation
+        if ~isempty(find(isnan(this_ppc.ppc0),1))
+            this_flag = true;
+            warning('Cell %s has nans in its ppc',sd.S.label{iC});
+        end
+        od.fsi_res.onTrack_spec{iM}.ppc = this_ppc.ppc0';
+        od.fsi_res.onTrack_spec{iM}.flag_nanppc = this_flag;
+
+        % Calculate and save subsampled meausres for onTrack
+        % When an FSI has fewer spikes than at least one MSN, do NOT
+        % subsample and include all the spikes
+        if isempty(od.msn_onTrack_dist)
+            od.fsi_res.onTrack_spec{iM}.flag_no_subsampling = true;
+        elseif od.fsi_res.onTrack_spec{iM}.spk_count < max(od.msn_onTrack_dist)
+            od.fsi_res.onTrack_spec{iM}.flag_no_subsampling = true;
+        elseif isfield(od.fsi_res.onTrack_spec{iM},'flag_nansts') && od.fsi_res.onTrack_spec{iM}.flag_nansts
+            od.fsi_res.onTrack_spec{iM}.flag_no_subsampling = true;
+        elseif isfield(od.fsi_res.onTrack_spec{iM},'flag_nanppc') && od.fsi_res.onTrack_spec{iM}.flag_nanppc
+            od.fsi_res.onTrack_spec{iM}.flag_no_subsampling = true;
+        else
+            od.fsi_res.onTrack_spec{iM}.flag_no_subsampling = false;
+            temp_sts_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.onTrack_spec{iM}.sts_vals));
+            temp_ppc_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.onTrack_spec{iM}.ppc));
+            for iS = 1:cfg_master.num_subsamples
+                s_factor = 1/length(od.msn_onTrack_dist);
+                choice = floor(rand()/s_factor)+1;
+                sub_idx = randsample(1:od.fsi_res.onTrack_spec{iM}.spk_count, od.msn_onTrack_dist(choice));
+                sub_idx = sort(sub_idx); sub_sts = this_sts;
+                sub_sts.fourierspctrm{1} = sub_sts.fourierspctrm{1}(sub_idx,:,:);
+                sub_sts.time{1} = sub_sts.time{1}(sub_idx,:);
+                sub_sts.trial{1} = sub_sts.trial{1}(sub_idx,:);
+                temp_sts_vals(iS,:) = nanmean(sq(abs(sub_sts.fourierspctrm{1})));
+                sub_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc, sub_sts);
+                temp_ppc_vals(iS,:) = sub_ppc.ppc0';
+            end
+            od.fsi_res.onTrack_spec{iM}.subsampled_sts = mean(temp_sts_vals,1);
+            od.fsi_res.onTrack_spec{iM}.subsampled_ppc = mean(temp_ppc_vals,1);
+        end
+        
+        % Block of code to divide recordings session into near and away trials
+
+        % restrict spikes to a timeWindow of +/-5 seconds around the reward  
+        rt1 = getRewardTimes();
+        rt1 = rt1(rt1 > ExpKeys.TimeOnTrack);
+        rt2 = getRewardTimes2();
+        rt2 = rt2(rt2 > ExpKeys.TimeOnTrack);
+        % Sometimes (in R117-2007-06-12, for instance) getRewardTimes() returns
+        % times that are spaced out less than 5 sec apart (possibly erroneus). 
+        % Getting rid of such reward times to maintain consistency
+        rt_dif = diff(rt1);
+        rt_dif = find(rt_dif <= 5);
+        valid_rt1 = true(length(rt1),1);
+        valid_rt2 = true(length(rt2),1);
+        for i = 1:length(rt_dif)
+            valid_rt1(rt_dif(i)) = false;
+            valid_rt1(rt_dif(i)+1) = false;
+            valid_rt2(rt2 >= rt1(rt_dif(i)) & rt2 <= rt1(rt_dif(i)+2)) = false;
+        end
+        % Sometimes (in R119-2007-07-05, for instance) getRewardTimes2() returns
+        % times that are spaced out less than 5 sec apart (possibly erroneus). 
+        % Getting rid of such reward times to maintain consistency
+        rt_dif = diff(rt2);
+        rt_dif = find(rt_dif <= 5);
+        for i = 1:length(rt_dif)
+            valid_rt2(rt_dif(i)) = false;
+            valid_rt2(rt_dif(i)+1) = false;
+            valid_rt1(rt1 >= rt2(rt_dif(i)-1) & rt1 <= rt2(rt_dif(i)+1)) = false;
+        end
+        rt1 = rt1(valid_rt1);
+        rt2 = rt2(valid_rt2);
+        % Sometimes (in R117-2007-06-17, for instance) the second reward is
+        % triggered but not the first one in the last trial
+        if length(rt1) ~= length(rt2)
+            rt1 = rt1(1:end-1);
+        end
+        % Sanity check to make sure that rt2 is always triggered after rt1
+        keep = (rt1 <= rt2);
+        rt1 = rt1(keep);
+        rt2 = rt2(keep);
+
+        % For near reward_trials  
+        w_start1 = rt1 - 5;
+        w_end1 = rt1 + 5;
+        w_start2 = rt2 - 5;
+        w_end2 =  rt2 + 5;
+        % Last trial time shouldn't exceed Experiment end time
+        w_end2(end) = min(w_end2(end), ExpKeys.TimeOffTrack);
+        w_start = sort([w_start1; w_start2]);
+        w_end = sort([w_end1; w_end2]);
+        rt_iv = iv(w_start, w_end);
+        % TODO: Catch warnings from Merge IV and set a flag
+        rt_iv = MergeIV([], rt_iv);
+        
+        % Break down data into near trials
+        temp_tvec = ft_csc.time{1} + double(ft_csc.hdr.FirstTimeStamp)/1e6;     
+        temp_start = nearest_idx3(rt_iv.tstart, temp_tvec);
+        temp_end = nearest_idx3(rt_iv.tend, temp_tvec);
+        cfg_near_trials.trl = [temp_start, temp_end, zeros(size(temp_start))];
+        near_data = ft_redefinetrial(cfg_near_trials, this_data);
+        % Sanity check to ensure that redefine trial has the same number of
+        % spikes as restrict()
+        this_flag = false;
+        spk_count1 = length(restrict(sd.S, rt_iv).t{iC});
+        spk_count2 = 0;
+        for iT = 1:length(near_data.trial)
+           spk_count2 = spk_count2 + sum(near_data.trial{iT}(2,:)); 
+        end
+        % Skip if no spikes present!
+        if spk_count2 <  cfg_master.nMinSpikes2
+            od.fsi_res.near_spec{iM}.flag_tooFewSpikes = true;
+        else
+            od.fsi_res.near_spec{iM}.spk_count = spk_count2;
+            od.fsi_res.near_spec{iM}.flag_tooFewSpikes = false;
+            if spk_count1 ~= spk_count2
+                this_flag = true;
+                warning('ft_redefinetrial has %d spikes but restrict shows %d spikes in near-Reward trials', ...
+                    spk_count1, spk_count2)
+
+            end
+            % Calculate and save STA
+            this_sta = ft_spiketriggeredaverage(cfg_ft, near_data);
+            od.fsi_res.near_spec{iM}.sta_time = this_sta.time;
+            od.fsi_res.near_spec{iM}.sta_vals = this_sta.avg(:,:)';
+            od.fsi_res.near_spec{iM}.flag_unequalSpikes = this_flag;
+
+            % Calculate and save STS
+            cfg_sts.method = 'mtmconvol';
+            cfg_sts.foi = 1:1:100;
+            cfg_sts.t_ftimwin = 5./cfg_sts.foi;
+            cfg_sts.taper = 'hanning';
+            cfg_sts.spikechannel =  sd.S.ft_spikes(iC).label{1};
+            cfg_sts.channel = near_data.label{1};
+            this_sts = ft_spiketriggeredspectrum(cfg_sts, near_data);
+            this_flag = false;
+            % Display warning to show that there were Nans in this calculation
+            if ~isempty(find(isnan(this_sts.fourierspctrm{1}),1))
+                this_flag = true;
+                warning('Cell %s has nans in its STS',sd.S.label{iC});
+            end
+            od.fsi_res.near_spec{iM}.freqs = this_sts.freq;
+            od.fsi_res.near_spec{iM}.sts_vals = nanmean(sq(abs(this_sts.fourierspctrm{1})));
+            od.fsi_res.near_spec{iM}.flag_nansts = this_flag;
+
+            % Calculate and save PPC
+            cfg_ppc               = [];
+            cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
+            cfg_ppc.spikechannel  = this_sts.label;
+            cfg_ppc.channel       = this_sts.lfplabel; % selected LFP channels
+            cfg_ppc.avgoverchan   = 'unweighted'; % weight spike-LFP phases irrespective of LFP power
+            cfg_ppc.timwin        = 'all'; % compute over all available spikes in the window
+            this_ppc              = ft_spiketriggeredspectrum_stat(cfg_ppc,this_sts);
+            this_flag = false;
+            % Display warning to show that there were Nans in this calculation
+            if ~isempty(find(isnan(this_ppc.ppc0),1))
+                this_flag = true;
+                warning('Cell %s has nans in its ppc',sd.S.label{iC});
+            end
+            od.fsi_res.near_spec{iM}.ppc = this_ppc.ppc0';
+            od.fsi_res.near_spec{iM}.flag_nanppc = this_flag;
+            
+            % Calculate and save subsampled meausres for near Reward trials
+            % When an FSI has fewer spikes than at least one MSN, do NOT
+            % subsample and include all the spikes
+            if isempty(od.msn_near_dist)
+                od.fsi_res.near_spec{iM}.flag_no_subsampling = true;
+            elseif od.fsi_res.near_spec{iM}.spk_count < max(od.msn_near_dist)
+                od.fsi_res.near_spec{iM}.flag_no_subsampling = true;
+            elseif isfield(od.fsi_res.near_spec{iM},'flag_nansts') && od.fsi_res.near_spec{iM}.flag_nansts
+                od.fsi_res.near_spec{iM}.flag_no_subsampling = true;
+            elseif isfield(od.fsi_res.near_spec{iM},'flag_nanppc') && od.fsi_res.near_spec{iM}.flag_nanppc
+                od.fsi_res.near_spec{iM}.flag_no_subsampling = true;
+            elseif isfield(od.fsi_res.onTrack_spec{iM},'flag_no_subsampling') && od.fsi_res.onTrack_spec{iM}.flag_no_subsampling
+                od.fsi_res.near_spec{iM}.flag_no_subsampling = true;
+            else
+                od.fsi_res.near_spec{iM}.flag_no_subsampling = false;
+                temp_sts_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.near_spec{iM}.sts_vals));
+                temp_ppc_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.near_spec{iM}.ppc));
+                for iS = 1:cfg_master.num_subsamples
+                    s_factor = 1/length(od.msn_near_dist);
+                    choice = floor(rand()/s_factor)+1;
+                    sub_idx = randsample(1:od.fsi_res.near_spec{iM}.spk_count, od.msn_near_dist(choice));
+                    sub_idx = sort(sub_idx); sub_sts = this_sts;
+                    sub_sts.fourierspctrm{1} = sub_sts.fourierspctrm{1}(sub_idx,:,:);
+                    sub_sts.time{1} = sub_sts.time{1}(sub_idx,:);
+                    sub_sts.trial{1} = sub_sts.trial{1}(sub_idx,:);
+                    temp_sts_vals(iS,:) = nanmean(sq(abs(sub_sts.fourierspctrm{1})));
+                    sub_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc, sub_sts);
+                    temp_ppc_vals(iS,:) = sub_ppc.ppc0';
+                end
+                od.fsi_res.near_spec{iM}.subsampled_sts = mean(temp_sts_vals,1);
+                od.fsi_res.near_spec{iM}.subsampled_ppc = mean(temp_ppc_vals,1);
+            end
+            
+            % Block of code to split trials into HFR and LFR
+            tcount = length(near_data.trial);
+            mfr = zeros(tcount, 1);
+            all_tspikes = cell(1,tcount);
+            for iT = 1:tcount
+                all_tspikes{iT} = sum(near_data.trial{iT}(2,:));
+                mfr(iT) = all_tspikes{iT}/near_data.time{iT}(end); 
+            end
+            % Get rid of trials with no spikes and bin the rest
+            nz_trials = find(mfr ~= 0);
+            nz_mfr = mfr(nz_trials);
+            nz_tcount = length(nz_trials);
+            nz_tspikes = cell(nz_tcount,1);
+            spk_tcount = zeros(nz_tcount,1);
+            for iT = 1:nz_tcount
+                nz_tspikes{iT} = all_tspikes{nz_trials(iT)};
+                spk_tcount(iT) = nz_tspikes{iT};
+            end
+            % Find out the firing rate threhsold to split the trials such that
+            % spikes are more or less equally divided
+            ufr = unique(nz_mfr);
+            dif_min = sum(cell2mat(nz_tspikes));
+            fr_thresh = 0;
+            for iF = 1:length(ufr)
+                cur_thresh = ufr(iF);
+                l_spikes = sum(spk_tcount(nz_mfr <= cur_thresh));
+                h_spikes = sum(spk_tcount(nz_mfr > cur_thresh));
+                cur_dif = abs(h_spikes - l_spikes);
+                if dif_min > cur_dif
+                    dif_min = cur_dif;
+                    fr_thresh = cur_thresh;
+                end
+            end            
+            hfr_trials = mfr > fr_thresh;
+            lfr_trials = ~hfr_trials;
+            
+            
+            % Divide trials into partitions with equal spikes but not on
+            % the basis of fr_threshold
+            % make 2 groups and put the largest remaining element to the partition
+            % with the smallest sum. Once a sum reaches n/2, put the rest
+            % of the trials in the other group
+            % Potential Problem: The remaining lower spike might be the
+            % lfr trials, and thus biasing the partition.
+            total_spks = sum(spk_tcount);
+            spk_thresh = total_spks/2;
+            [sorted_tcount, sorted_idx] = sort(cell2mat(all_tspikes), 'descend');
+            trial_part = zeros(size(sorted_tcount));
+            g1_sum = 0;
+            g2_sum = 0;
+            for iT = 1:length(sorted_tcount)
+                if g1_sum <= g2_sum
+                    trial_part(iT) = 1;
+                else
+                    trial_part(iT) = 2;
+                end
+                g1_sum = sum(sorted_tcount(trial_part == 1));
+                g2_sum = sum(sorted_tcount(trial_part == 2));
+                if g1_sum >= spk_thresh
+                    trial_part(iT+1:end) = 2;
+                    break;
+                end
+                if g2_sum >= spk_thresh
+                    trial_part(iT+1:end) = 1;
+                    break;
+                end
+            end
+            p1_trials = false(size(sorted_tcount));
+            p1_trials(sorted_idx(trial_part==1)) = true;
+            p2_trials = ~p1_trials;
+           
+            od.fsi_res.near_spec{iM}.mfr = mfr;
+            od.fsi_res.near_spec{iM}.fr_thresh = fr_thresh;
+            od.fsi_res.near_spec{iM}.trial_spk_count = cell2mat(all_tspikes);
+            od.fsi_res.near_spec{iM}.p1_trials = p1_trials;
+            od.fsi_res.near_spec{iM}.p2_trials = p2_trials;
+
+            % Calculate and Save all spec results for near_hfr_data
+            cfg_near_hfr_trials.trl = cfg_near_trials.trl(hfr_trials,:);
+            near_hfr_data = ft_redefinetrial(cfg_near_hfr_trials, this_data);
+            
+            % Skip if no spks in near_hfr
+            spk_count = 0;
+            for iT = 1:length(near_hfr_data.trial)
+                spk_count = spk_count + sum(near_hfr_data.trial{iT}(2,:)); 
+            end
+            if spk_count < cfg_master.nMinSpikes2
+                od.fsi_res.near_hfr_spec{iM}.flag_tooFewSpikes = true;
+            else
+                od.fsi_res.near_hfr_spec{iM}.spk_count = spk_count;
+                od.fsi_res.near_hfr_spec{iM}.flag_tooFewSpikes = false;
+                
+                % Calculate and save STA
+                this_sta = ft_spiketriggeredaverage(cfg_ft, near_hfr_data);
+                od.fsi_res.near_hfr_spec{iM}.sta_time = this_sta.time;
+                od.fsi_res.near_hfr_spec{iM}.sta_vals = this_sta.avg(:,:)';
+
+                % Calculate and save STS
+                cfg_sts.method = 'mtmconvol';
+                cfg_sts.foi = 1:1:100;
+                cfg_sts.t_ftimwin = 5./cfg_sts.foi;
+                cfg_sts.taper = 'hanning';
+                cfg_sts.spikechannel =  sd.S.ft_spikes(iC).label{1};
+                cfg_sts.channel = near_hfr_data.label{1};
+                this_sts = ft_spiketriggeredspectrum(cfg_sts, near_hfr_data);
+                this_flag = false;
+                % Display warning to show that there were Nans in this calculation
+                if ~isempty(find(isnan(this_sts.fourierspctrm{1}),1))
+                    this_flag = true;
+                    warning('Cell %s has nans in its near STS',sd.S.label{iC});
+                end
+                od.fsi_res.near_hfr_spec{iM}.flag_nansts = this_flag;
+                od.fsi_res.near_hfr_spec{iM}.freqs = this_sts.freq;
+                od.fsi_res.near_hfr_spec{iM}.sts_vals = nanmean(sq(abs(this_sts.fourierspctrm{1})));
+
+                % Calculate and save PPC
+                cfg_ppc               = [];
+                cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
+                cfg_ppc.spikechannel  = this_sts.label;
+                cfg_ppc.channel       = this_sts.lfplabel; % selected LFP channels
+                cfg_ppc.avgoverchan   = 'unweighted'; % weight spike-LFP phases irrespective of LFP power
+                cfg_ppc.timwin        = 'all'; % compute over all available spikes in the window
+                this_ppc              = ft_spiketriggeredspectrum_stat(cfg_ppc,this_sts);
+                this_flag = false;
+                % Display warning to show that there were Nans in this calculation
+                if ~isempty(find(isnan(this_ppc.ppc0),1))
+                    this_flag = true;
+                    warning('Cell %s has nans in its ppc',sd.S.label{iC});
+                end
+                od.fsi_res.near_hfr_spec{iM}.ppc = this_ppc.ppc0';
+                od.fsi_res.near_hfr_spec{iM}.flag_nanppc = this_flag;
+                
+                % Calculate and save subsampled meausres for near Reward hfr trials
+                % When an FSI has fewer spikes than at least one MSN, do NOT
+                % subsample and include all the spikes
+                if isempty(od.msn_near_hfr_dist)
+                    od.fsi_res.near_hfr_spec{iM}.flag_no_subsampling = true;
+                elseif od.fsi_res.near_hfr_spec{iM}.spk_count < max(od.msn_near_hfr_dist)
+                    od.fsi_res.near_hfr_spec{iM}.flag_no_subsampling = true;
+                elseif isfield(od.fsi_res.near_hfr_spec{iM},'flag_nansts') && od.fsi_res.near_hfr_spec{iM}.flag_nansts
+                    od.fsi_res.near_hfr_spec{iM}.flag_no_subsampling = true;
+                elseif isfield(od.fsi_res.near_hfr_spec{iM},'flag_nanppc') && od.fsi_res.near_hfr_spec{iM}.flag_nanppc
+                    od.fsi_res.near_hfr_spec{iM}.flag_no_subsampling = true;
+                elseif isfield(od.fsi_res.near_spec{iM},'flag_no_subsampling') && od.fsi_res.near_spec{iM}.flag_no_subsampling
+                    od.fsi_res.near_hfr_spec{iM}.flag_no_subsampling = true;
+                else
+                    od.fsi_res.near_hfr_spec{iM}.flag_no_subsampling = false;
+                    temp_sts_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.near_hfr_spec{iM}.sts_vals));
+                    temp_ppc_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.near_hfr_spec{iM}.ppc));
+                    for iS = 1:cfg_master.num_subsamples
+                        s_factor = 1/length(od.msn_near_hfr_dist);
+                        choice = floor(rand()/s_factor)+1;
+                        sub_idx = randsample(1:od.fsi_res.near_hfr_spec{iM}.spk_count, od.msn_near_hfr_dist(choice));
+                        sub_idx = sort(sub_idx); sub_sts = this_sts;
+                        sub_sts.fourierspctrm{1} = sub_sts.fourierspctrm{1}(sub_idx,:,:);
+                        sub_sts.time{1} = sub_sts.time{1}(sub_idx,:);
+                        sub_sts.trial{1} = sub_sts.trial{1}(sub_idx,:);
+                        temp_sts_vals(iS,:) = nanmean(sq(abs(sub_sts.fourierspctrm{1})));
+                        sub_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc, sub_sts);
+                        temp_ppc_vals(iS,:) = sub_ppc.ppc0';
+                    end
+                    od.fsi_res.near_hfr_spec{iM}.subsampled_sts = mean(temp_sts_vals,1);
+                    od.fsi_res.near_hfr_spec{iM}.subsampled_ppc = mean(temp_ppc_vals,1);
+                end
+            end
+                          
+            % Calculate and Save all spec results for near_lfr_data
+            cfg_near_lfr_trials.trl = cfg_near_trials.trl(lfr_trials,:);
+            near_lfr_data = ft_redefinetrial(cfg_near_lfr_trials, this_data);
+            
+            % Skip if no spks in near_lfr
+            spk_count = 0;
+            for iT = 1:length(near_lfr_data.trial)
+                spk_count = spk_count + sum(near_lfr_data.trial{iT}(2,:)); 
+            end
+            if spk_count <  cfg_master.nMinSpikes3
+                od.fsi_res.near_lfr_spec{iM}.flag_tooFewSpikes = true;
+            else
+                od.fsi_res.near_lfr_spec{iM}.spk_count = spk_count;
+                od.fsi_res.near_lfr_spec{iM}.flag_tooFewSpikes = false;
+                
+                % Calculate and save STA
+                this_sta = ft_spiketriggeredaverage(cfg_ft, near_lfr_data);
+                od.fsi_res.near_lfr_spec{iM}.sta_time = this_sta.time;
+                od.fsi_res.near_lfr_spec{iM}.sta_vals = this_sta.avg(:,:)';
+
+                % Calculate and save STS
+                cfg_sts.method = 'mtmconvol';
+                cfg_sts.foi = 1:1:100;
+                cfg_sts.t_ftimwin = 5./cfg_sts.foi;
+                cfg_sts.taper = 'hanning';
+                cfg_sts.spikechannel =  sd.S.ft_spikes(iC).label{1};
+                cfg_sts.channel = near_lfr_data.label{1};
+                this_sts = ft_spiketriggeredspectrum(cfg_sts, near_lfr_data);
+                this_flag = false;
+                % Display warning to show that there were Nans in this calculation
+                if ~isempty(find(isnan(this_sts.fourierspctrm{1}),1))
+                    this_flag = true;
+                    warning('Cell %s has nans in its STS',sd.S.label{iC});
+                end
+                od.fsi_res.near_lfr_spec{iM}.freqs = this_sts.freq;
+                od.fsi_res.near_lfr_spec{iM}.sts_vals = nanmean(sq(abs(this_sts.fourierspctrm{1})));
+                od.fsi_res.near_lfr_spec{iM}.flag_nansts = this_flag;
+
+                % Calculate and save PPC
+                cfg_ppc               = [];
+                cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
+                cfg_ppc.spikechannel  = this_sts.label;
+                cfg_ppc.channel       = this_sts.lfplabel; % selected LFP channels
+                cfg_ppc.avgoverchan   = 'unweighted'; % weight spike-LFP phases irrespective of LFP power
+                cfg_ppc.timwin        = 'all'; % compute over all available spikes in the window
+                this_ppc              = ft_spiketriggeredspectrum_stat(cfg_ppc,this_sts);
+                this_flag = false;
+                % Display warning to show that there were Nans in this calculation
+                if ~isempty(find(isnan(this_ppc.ppc0),1))
+                    this_flag = true;
+                    warning('Cell %s has nans in its ppc',sd.S.label{iC});
+                end
+                od.fsi_res.near_lfr_spec{iM}.ppc = this_ppc.ppc0';
+                od.fsi_res.near_lfr_spec{iM}.flag_nanppc = this_flag;
+                
+                % Calculate and save subsampled meausres for near Reward lfr trials
+                % When an FSI has fewer spikes than at least one MSN, do NOT
+                % subsample and include all the spikes
+                if isempty(od.msn_near_lfr_dist)
+                    od.fsi_res.near_lfr_spec{iM}.flag_no_subsampling = true;
+                elseif od.fsi_res.near_lfr_spec{iM}.spk_count < max(od.msn_near_lfr_dist)
+                    od.fsi_res.near_lfr_spec{iM}.flag_no_subsampling = true;
+                elseif isfield(od.fsi_res.near_lfr_spec{iM},'flag_nansts') && od.fsi_res.near_lfr_spec{iM}.flag_nansts
+                    od.fsi_res.near_lfr_spec{iM}.flag_no_subsampling = true;
+                elseif isfield(od.fsi_res.near_lfr_spec{iM},'flag_nanppc') && od.fsi_res.near_lfr_spec{iM}.flag_nanppc
+                    od.fsi_res.near_lfr_spec{iM}.flag_no_subsampling = true;
+                elseif isfield(od.fsi_res.near_spec{iM},'flag_no_subsampling') && od.fsi_res.near_spec{iM}.flag_no_subsampling
+                    od.fsi_res.near_lfr_spec{iM}.flag_no_subsampling = true;
+                else
+                    od.fsi_res.near_lfr_spec{iM}.flag_no_subsampling = false;
+                    temp_sts_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.near_lfr_spec{iM}.sts_vals));
+                    temp_ppc_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.near_lfr_spec{iM}.ppc));
+                    for iS = 1:cfg_master.num_subsamples
+                        s_factor = 1/length(od.msn_near_lfr_dist);
+                        choice = floor(rand()/s_factor)+1;
+                        sub_idx = randsample(1:od.fsi_res.near_lfr_spec{iM}.spk_count, od.msn_near_lfr_dist(choice));
+                        sub_idx = sort(sub_idx); sub_sts = this_sts;
+                        sub_sts.fourierspctrm{1} = sub_sts.fourierspctrm{1}(sub_idx,:,:);
+                        sub_sts.time{1} = sub_sts.time{1}(sub_idx,:);
+                        sub_sts.trial{1} = sub_sts.trial{1}(sub_idx,:);
+                        temp_sts_vals(iS,:) = nanmean(sq(abs(sub_sts.fourierspctrm{1})));
+                        sub_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc, sub_sts);
+                        temp_ppc_vals(iS,:) = sub_ppc.ppc0';
+                    end
+                    od.fsi_res.near_lfr_spec{iM}.subsampled_sts = mean(temp_sts_vals,1);
+                    od.fsi_res.near_lfr_spec{iM}.subsampled_ppc = mean(temp_ppc_vals,1);
+                end
+            end
+            
+            % Calculate and Save all spec results for near_p1_data
+            cfg_near_p1_trials.trl = cfg_near_trials.trl(p1_trials,:);
+            near_p1_data = ft_redefinetrial(cfg_near_p1_trials, this_data);
+            
+            % Skip if no spks in near_p1
+            spk_count = 0;
+            for iT = 1:length(near_p1_data.trial)
+                spk_count = spk_count + sum(near_p1_data.trial{iT}(2,:)); 
+            end
+            if spk_count < cfg_master.nMinSpikes3
+                od.fsi_res.near_p1_spec{iM}.flag_tooFewSpikes = true;
+            else
+                od.fsi_res.near_p1_spec{iM}.spk_count = spk_count;
+                od.fsi_res.near_p1_spec{iM}.flag_tooFewSpikes = false;
+                
+                % Calculate and save STA
+                this_sta = ft_spiketriggeredaverage(cfg_ft, near_p1_data);
+                od.fsi_res.near_p1_spec{iM}.sta_time = this_sta.time;
+                od.fsi_res.near_p1_spec{iM}.sta_vals = this_sta.avg(:,:)';
+
+                % Calculate and save STS
+                cfg_sts.method = 'mtmconvol';
+                cfg_sts.foi = 1:1:100;
+                cfg_sts.t_ftimwin = 5./cfg_sts.foi;
+                cfg_sts.taper = 'hanning';
+                cfg_sts.spikechannel =  sd.S.ft_spikes(iC).label{1};
+                cfg_sts.channel = near_p1_data.label{1};
+                this_sts = ft_spiketriggeredspectrum(cfg_sts, near_p1_data);
+                this_flag = false;
+                % Display warning to show that there were Nans in this calculation
+                if ~isempty(find(isnan(this_sts.fourierspctrm{1}),1))
+                    this_flag = true;
+                    warning('Cell %s has nans in its near STS',sd.S.label{iC});
+                end
+                od.fsi_res.near_p1_spec{iM}.flag_nansts = this_flag;
+                od.fsi_res.near_p1_spec{iM}.freqs = this_sts.freq;
+                od.fsi_res.near_p1_spec{iM}.sts_vals = nanmean(sq(abs(this_sts.fourierspctrm{1})));
+
+                % Calculate and save PPC
+                cfg_ppc               = [];
+                cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
+                cfg_ppc.spikechannel  = this_sts.label;
+                cfg_ppc.channel       = this_sts.lfplabel; % selected LFP channels
+                cfg_ppc.avgoverchan   = 'unweighted'; % weight spike-LFP phases irrespective of LFP power
+                cfg_ppc.timwin        = 'all'; % compute over all available spikes in the window
+                this_ppc              = ft_spiketriggeredspectrum_stat(cfg_ppc,this_sts);
+                this_flag = false;
+                % Display warning to show that there were Nans in this calculation
+                if ~isempty(find(isnan(this_ppc.ppc0),1))
+                    this_flag = true;
+                    warning('Cell %s has nans in its ppc',sd.S.label{iC});
+                end
+                od.fsi_res.near_p1_spec{iM}.ppc = this_ppc.ppc0';
+                od.fsi_res.near_p1_spec{iM}.flag_nanppc = this_flag;
+                
+                % Calculate and save subsampled meausres for near Reward p1 trials
+                % When an FSI has fewer spikes than at least one MSN, do NOT
+                % subsample and include all the spikes
+                if isempty(od.msn_near_p1_dist)
+                    od.fsi_res.near_p1_spec{iM}.flag_no_subsampling = true;
+                elseif od.fsi_res.near_p1_spec{iM}.spk_count < max(od.msn_near_p1_dist)
+                    od.fsi_res.near_p1_spec{iM}.flag_no_subsampling = true;
+                elseif isfield(od.fsi_res.near_p1_spec{iM},'flag_nansts') && od.fsi_res.near_p1_spec{iM}.flag_nansts
+                    od.fsi_res.near_p1_spec{iM}.flag_no_subsampling = true;
+                elseif isfield(od.fsi_res.near_p1_spec{iM},'flag_nanppc') && od.fsi_res.near_p1_spec{iM}.flag_nanppc
+                    od.fsi_res.near_p1_spec{iM}.flag_no_subsampling = true;
+                elseif isfield(od.fsi_res.near_spec{iM},'flag_no_subsampling') && od.fsi_res.near_spec{iM}.flag_no_subsampling
+                    od.fsi_res.near_p1_spec{iM}.flag_no_subsampling = true;
+                else
+                    od.fsi_res.near_p1_spec{iM}.flag_no_subsampling = false;
+                    temp_sts_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.near_p1_spec{iM}.sts_vals));
+                    temp_ppc_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.near_p1_spec{iM}.ppc));
+                    for iS = 1:cfg_master.num_subsamples
+                        s_factor = 1/length(od.msn_near_p1_dist);
+                        choice = floor(rand()/s_factor)+1;
+                        sub_idx = randsample(1:od.fsi_res.near_p1_spec{iM}.spk_count, od.msn_near_p1_dist(choice));
+                        sub_idx = sort(sub_idx); sub_sts = this_sts;
+                        sub_sts.fourierspctrm{1} = sub_sts.fourierspctrm{1}(sub_idx,:,:);
+                        sub_sts.time{1} = sub_sts.time{1}(sub_idx,:);
+                        sub_sts.trial{1} = sub_sts.trial{1}(sub_idx,:);
+                        temp_sts_vals(iS,:) = nanmean(sq(abs(sub_sts.fourierspctrm{1})));
+                        sub_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc, sub_sts);
+                        temp_ppc_vals(iS,:) = sub_ppc.ppc0';
+                    end
+                    od.fsi_res.near_p1_spec{iM}.subsampled_sts = mean(temp_sts_vals,1);
+                    od.fsi_res.near_p1_spec{iM}.subsampled_ppc = mean(temp_ppc_vals,1);
+                end
+            end
+            
+            % Calculate and Save all spec results for near_p2_data
+            cfg_near_p2_trials.trl = cfg_near_trials.trl(p2_trials,:);
+            near_p2_data = ft_redefinetrial(cfg_near_p2_trials, this_data);
+            
+            % Skip if no spks in near_p2
+            spk_count = 0;
+            for iT = 1:length(near_p2_data.trial)
+                spk_count = spk_count + sum(near_p2_data.trial{iT}(2,:)); 
+            end
+            if spk_count < cfg_master.nMinSpikes3
+                od.fsi_res.near_p2_spec{iM}.flag_tooFewSpikes = true;
+            else
+                od.fsi_res.near_p2_spec{iM}.spk_count = spk_count;
+                od.fsi_res.near_p2_spec{iM}.flag_tooFewSpikes = false;
+                
+                % Calculate and save STA
+                this_sta = ft_spiketriggeredaverage(cfg_ft, near_p2_data);
+                od.fsi_res.near_p2_spec{iM}.sta_time = this_sta.time;
+                od.fsi_res.near_p2_spec{iM}.sta_vals = this_sta.avg(:,:)';
+
+                % Calculate and save STS
+                cfg_sts.method = 'mtmconvol';
+                cfg_sts.foi = 1:1:100;
+                cfg_sts.t_ftimwin = 5./cfg_sts.foi;
+                cfg_sts.taper = 'hanning';
+                cfg_sts.spikechannel =  sd.S.ft_spikes(iC).label{1};
+                cfg_sts.channel = near_p2_data.label{1};
+                this_sts = ft_spiketriggeredspectrum(cfg_sts, near_p2_data);
+                this_flag = false;
+                % Display warning to show that there were Nans in this calculation
+                if ~isempty(find(isnan(this_sts.fourierspctrm{1}),1))
+                    this_flag = true;
+                    warning('Cell %s has nans in its near STS',sd.S.label{iC});
+                end
+                od.fsi_res.near_p2_spec{iM}.flag_nansts = this_flag;
+                od.fsi_res.near_p2_spec{iM}.freqs = this_sts.freq;
+                od.fsi_res.near_p2_spec{iM}.sts_vals = nanmean(sq(abs(this_sts.fourierspctrm{1})));
+
+                % Calculate and save PPC
+                cfg_ppc               = [];
+                cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
+                cfg_ppc.spikechannel  = this_sts.label;
+                cfg_ppc.channel       = this_sts.lfplabel; % selected LFP channels
+                cfg_ppc.avgoverchan   = 'unweighted'; % weight spike-LFP phases irrespective of LFP power
+                cfg_ppc.timwin        = 'all'; % compute over all available spikes in the window
+                this_ppc              = ft_spiketriggeredspectrum_stat(cfg_ppc,this_sts);
+                this_flag = false;
+                % Display warning to show that there were Nans in this calculation
+                if ~isempty(find(isnan(this_ppc.ppc0),1))
+                    this_flag = true;
+                    warning('Cell %s has nans in its ppc',sd.S.label{iC});
+                end
+                od.fsi_res.near_p2_spec{iM}.ppc = this_ppc.ppc0';
+                od.fsi_res.near_p2_spec{iM}.flag_nanppc = this_flag;
+                
+                % Calculate and save subsampled meausres for near Reward p2 trials
+                % When an FSI has fewer spikes than at least one MSN, do NOT
+                % subsample and include all the spikes
+                if isempty(od.msn_near_p2_dist)
+                    od.fsi_res.near_p2_spec{iM}.flag_no_subsampling = true;
+                elseif od.fsi_res.near_p2_spec{iM}.spk_count < max(od.msn_near_p2_dist)
+                    od.fsi_res.near_p2_spec{iM}.flag_no_subsampling = true;
+                elseif isfield(od.fsi_res.near_p2_spec{iM},'flag_nansts') && od.fsi_res.near_p2_spec{iM}.flag_nansts
+                    od.fsi_res.near_p2_spec{iM}.flag_no_subsampling = true;
+                elseif isfield(od.fsi_res.near_p2_spec{iM},'flag_nanppc') && od.fsi_res.near_p2_spec{iM}.flag_nanppc
+                    od.fsi_res.near_p2_spec{iM}.flag_no_subsampling = true;
+                elseif isfield(od.fsi_res.near_spec{iM},'flag_no_subsampling') && od.fsi_res.near_spec{iM}.flag_no_subsampling
+                    od.fsi_res.near_p2_spec{iM}.flag_no_subsampling = true;
+                else
+                    od.fsi_res.near_p2_spec{iM}.flag_no_subsampling = false;
+                    temp_sts_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.near_p2_spec{iM}.sts_vals));
+                    temp_ppc_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.near_p2_spec{iM}.ppc));
+                    for iS = 1:cfg_master.num_subsamples
+                        s_factor = 1/length(od.msn_near_p2_dist);
+                        choice = floor(rand()/s_factor)+1;
+                        sub_idx = randsample(1:od.fsi_res.near_p2_spec{iM}.spk_count, od.msn_near_p2_dist(choice));
+                        sub_idx = sort(sub_idx); sub_sts = this_sts;
+                        sub_sts.fourierspctrm{1} = sub_sts.fourierspctrm{1}(sub_idx,:,:);
+                        sub_sts.time{1} = sub_sts.time{1}(sub_idx,:);
+                        sub_sts.trial{1} = sub_sts.trial{1}(sub_idx,:);
+                        temp_sts_vals(iS,:) = nanmean(sq(abs(sub_sts.fourierspctrm{1})));
+                        sub_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc, sub_sts);
+                        temp_ppc_vals(iS,:) = sub_ppc.ppc0';
+                    end
+                    od.fsi_res.near_p2_spec{iM}.subsampled_sts = mean(temp_sts_vals,1);
+                    od.fsi_res.near_p2_spec{iM}.subsampled_ppc = mean(temp_ppc_vals,1);
+                end
+            end 
+        end
+        % For away_reward_trials
+        w_start = [ExpKeys.TimeOnTrack;rt2(1:end-1)+5];
+        w_end = (rt1-5);
+        % Get rid of extra long-trials (greater than mean + 1*SD)
+        trial_length = w_end - w_start;
+        mtl = mean(trial_length); stl = std(trial_length);
+        valid_trials = (trial_length <= mtl + stl); 
+        w_start = w_start(valid_trials);
+        w_end= w_end(valid_trials);
+        rt_iv = iv(w_start, w_end);
+        % TODO: Catch warnings from Merge IV and set a flag
+        rt_iv = MergeIV([], rt_iv);
+        
+        % Break down data into away trials
+        temp_tvec = ft_csc.time{1} + double(ft_csc.hdr.FirstTimeStamp)/1e6;     
+        temp_start = nearest_idx3(rt_iv.tstart, temp_tvec);
+        temp_end = nearest_idx3(rt_iv.tend, temp_tvec);
+        cfg_away_trials.trl = [temp_start, temp_end, zeros(size(temp_start))];
+        away_data = ft_redefinetrial(cfg_away_trials, this_data);
+        % Sanity check to ensure that redefine trial has the same number of
+        % spikes as restrict()
+        this_flag = false;
+        spk_count1 = length(restrict(sd.S, rt_iv).t{iC});
+        spk_count2 = 0;
+        for iT = 1:length(away_data.trial)
+           spk_count2 = spk_count2 + sum(away_data.trial{iT}(2,:)); 
+        end
+        % Skip if no spikes present!
+        if spk_count2 < cfg_master.nMinSpikes2
+            od.fsi_res.away_spec{iM}.flag_tooFewSpikes = true;
+        else
+            od.fsi_res.away_spec{iM}.spk_count = spk_count2;
+            od.fsi_res.away_spec{iM}.flag_tooFewSpikes = false;
+            if spk_count1 ~= spk_count2
+                this_flag = true;
+                warning('ft_redefinetrial has %d spikes but restrict shows %d spikes in away-Reward trials', ...
+                    spk_count1, spk_count2)
+
+            end
+            % Calculate and save STA
+            this_sta = ft_spiketriggeredaverage(cfg_ft, away_data);
+            od.fsi_res.away_spec{iM}.sta_time = this_sta.time;
+            od.fsi_res.away_spec{iM}.sta_vals = this_sta.avg(:,:)';
+            od.fsi_res.away_spec{iM}.flag_unequalSpikes = this_flag;
+
+            % Calculate and save STS
+            cfg_sts.method = 'mtmconvol';
+            cfg_sts.foi = 1:1:100;
+            cfg_sts.t_ftimwin = 5./cfg_sts.foi;
+            cfg_sts.taper = 'hanning';
+            cfg_sts.spikechannel =  sd.S.ft_spikes(iC).label{1};
+            cfg_sts.channel = away_data.label{1};
+            this_sts = ft_spiketriggeredspectrum(cfg_sts, away_data);
+            this_flag = false;
+            % Display warning to show that there were Nans in this calculation
+            if ~isempty(find(isnan(this_sts.fourierspctrm{1}),1))
+                this_flag = true;
+                warning('Cell %s has nans in its STS',sd.S.label{iC});
+            end
+            od.fsi_res.away_spec{iM}.freqs = this_sts.freq;
+            od.fsi_res.away_spec{iM}.sts_vals = nanmean(sq(abs(this_sts.fourierspctrm{1})));
+            od.fsi_res.away_spec{iM}.flag_nansts = this_flag;
+
+            % Calculate and save PPC
+            cfg_ppc               = [];
+            cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
+            cfg_ppc.spikechannel  = this_sts.label;
+            cfg_ppc.channel       = this_sts.lfplabel; % selected LFP channels
+            cfg_ppc.avgoverchan   = 'unweighted'; % weight spike-LFP phases irrespective of LFP power
+            cfg_ppc.timwin        = 'all'; % compute over all available spikes in the window
+            this_ppc              = ft_spiketriggeredspectrum_stat(cfg_ppc,this_sts);
+            this_flag = false;
+            % Display warning to show that there were Nans in this calculation
+            if ~isempty(find(isnan(this_ppc.ppc0),1))
+                this_flag = true;
+                warning('Cell %s has nans in its ppc',sd.S.label{iC});
+            end
+            od.fsi_res.away_spec{iM}.ppc = this_ppc.ppc0';
+            od.fsi_res.away_spec{iM}.flag_nanppc = this_flag;
+            
+            % Calculate and save subsampled meausres for away Reward trials
+            % When an FSI has fewer spikes than at least one MSN, do NOT
+            % subsample and include all the spikes
+            if isempty(od.msn_away_dist)
+                od.fsi_res.away_spec{iM}.flag_no_subsampling = true;
+            elseif od.fsi_res.away_spec{iM}.spk_count < max(od.msn_away_dist)
+                od.fsi_res.away_spec{iM}.flag_no_subsampling = true;
+            elseif isfield(od.fsi_res.away_spec{iM},'flag_nansts') && od.fsi_res.away_spec{iM}.flag_nansts
+                od.fsi_res.away_spec{iM}.flag_no_subsampling = true;
+            elseif isfield(od.fsi_res.away_spec{iM},'flag_nanppc') && od.fsi_res.away_spec{iM}.flag_nanppc
+                od.fsi_res.away_spec{iM}.flag_no_subsampling = true;
+            elseif isfield(od.fsi_res.onTrack_spec{iM},'flag_no_subsampling') && od.fsi_res.onTrack_spec{iM}.flag_no_subsampling
+                od.fsi_res.away_spec{iM}.flag_no_subsampling = true;
+            else
+                od.fsi_res.away_spec{iM}.flag_no_subsampling = false;
+                temp_sts_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.away_spec{iM}.sts_vals));
+                temp_ppc_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.away_spec{iM}.ppc));
+                for iS = 1:cfg_master.num_subsamples
+                    s_factor = 1/length(od.msn_away_dist);
+                    choice = floor(rand()/s_factor)+1;
+                    sub_idx = randsample(1:od.fsi_res.away_spec{iM}.spk_count, od.msn_away_dist(choice));
+                    sub_idx = sort(sub_idx); sub_sts = this_sts;
+                    sub_sts.fourierspctrm{1} = sub_sts.fourierspctrm{1}(sub_idx,:,:);
+                    sub_sts.time{1} = sub_sts.time{1}(sub_idx,:);
+                    sub_sts.trial{1} = sub_sts.trial{1}(sub_idx,:);
+                    temp_sts_vals(iS,:) = nanmean(sq(abs(sub_sts.fourierspctrm{1})));
+                    sub_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc, sub_sts);
+                    temp_ppc_vals(iS,:) = sub_ppc.ppc0';
+                end
+                od.fsi_res.away_spec{iM}.subsampled_sts = mean(temp_sts_vals,1);
+                od.fsi_res.away_spec{iM}.subsampled_ppc = mean(temp_ppc_vals,1);
+            end
+            
+            % Block of code to split trials into HFR and LFR
+            tcount = length(away_data.trial);
+            mfr = zeros(tcount, 1);
+            all_tspikes = cell(1,tcount);
+            for iT = 1:tcount
+                all_tspikes{iT} = sum(away_data.trial{iT}(2,:));
+                mfr(iT) = all_tspikes{iT}/away_data.time{iT}(end); 
+            end
+            % Get rid of trials with no spikes and bin the rest
+            nz_trials = find(mfr ~= 0);
+            nz_mfr = mfr(nz_trials);
+            nz_tcount = length(nz_trials);
+            nz_tspikes = cell(nz_tcount,1);
+            spk_tcount = zeros(nz_tcount,1);
+            for iT = 1:nz_tcount
+                nz_tspikes{iT} = all_tspikes{nz_trials(iT)};
+                spk_tcount(iT) = nz_tspikes{iT};
+            end
+            % Find out the firing rate threhsold to split the trials such that
+            % spikes are more or less equally divided
+            ufr = unique(nz_mfr);
+            dif_min = sum(cell2mat(nz_tspikes));
+            fr_thresh = 0;
+            for iF = 1:length(ufr)
+                cur_thresh = ufr(iF);
+                l_spikes = sum(spk_tcount(nz_mfr <= cur_thresh));
+                h_spikes = sum(spk_tcount(nz_mfr > cur_thresh));
+                cur_dif = abs(h_spikes - l_spikes);
+                if dif_min > cur_dif
+                    dif_min = cur_dif;
+                    fr_thresh = cur_thresh;
+                end
+            end            
+            hfr_trials = mfr > fr_thresh;
+            lfr_trials = ~hfr_trials;
+            
+            % Divide trials into partitions with equal spikes but not on
+            % the basis of fr_threshold
+            % make 2 groups and put the largest remaining element to the partition
+            % with the smallest sum. Once a sum reaches n/2, put the rest
+            % of the trials in the other group
+            % Potential Problem: The remaining lower spike might be the
+            % lfr trials, and thus biasing the partition.
+            total_spks = sum(spk_tcount);
+            spk_thresh = total_spks/2;
+            [sorted_tcount, sorted_idx] = sort(cell2mat(all_tspikes), 'descend');
+            trial_part = zeros(size(sorted_tcount));
+            g1_sum = 0;
+            g2_sum = 0;
+            for iT = 1:length(sorted_tcount)
+                if g1_sum <= g2_sum
+                    trial_part(iT) = 1;
+                else
+                    trial_part(iT) = 2;
+                end
+                g1_sum = sum(sorted_tcount(trial_part == 1));
+                g2_sum = sum(sorted_tcount(trial_part == 2));
+                if g1_sum >= spk_thresh
+                    trial_part(iT+1:end) = 2;
+                    break;
+                end
+                if g2_sum >= spk_thresh
+                    trial_part(iT+1:end) = 1;
+                    break;
+                end
+            end
+            p1_trials = false(size(sorted_tcount));
+            p1_trials(sorted_idx(trial_part==1)) = true;
+            p2_trials = ~p1_trials;
+           
+            od.fsi_res.away_spec{iM}.mfr = mfr;
+            od.fsi_res.away_spec{iM}.fr_thresh = fr_thresh;
+            od.fsi_res.away_spec{iM}.trial_spk_count = cell2mat(all_tspikes);
+            od.fsi_res.away_spec{iM}.p1_trials = p1_trials;
+            od.fsi_res.away_spec{iM}.p2_trials = p2_trials;
+
+            % Calculate and Save all spec results for away_hfr_data
+            cfg_away_hfr_trials.trl = cfg_away_trials.trl(hfr_trials,:);
+            away_hfr_data = ft_redefinetrial(cfg_away_hfr_trials, this_data);
+            
+            % Skip if no spks in away_hfr
+            spk_count = 0;
+            for iT = 1:length(away_hfr_data.trial)
+                spk_count = spk_count + sum(away_hfr_data.trial{iT}(2,:)); 
+            end
+            if spk_count < cfg_master.nMinSpikes3
+                od.fsi_res.away_hfr_spec{iM}.flag_tooFewSpikes = true;
+            else
+                od.fsi_res.away_hfr_spec{iM}.spk_count = spk_count;
+                od.fsi_res.away_hfr_spec{iM}.flag_tooFewSpikes = false;
+                
+                % Calculate and save STA
+                this_sta = ft_spiketriggeredaverage(cfg_ft, away_hfr_data);
+                od.fsi_res.away_hfr_spec{iM}.sta_time = this_sta.time;
+                od.fsi_res.away_hfr_spec{iM}.sta_vals = this_sta.avg(:,:)';
+
+                % Calculate and save STS
+                cfg_sts.method = 'mtmconvol';
+                cfg_sts.foi = 1:1:100;
+                cfg_sts.t_ftimwin = 5./cfg_sts.foi;
+                cfg_sts.taper = 'hanning';
+                cfg_sts.spikechannel =  sd.S.ft_spikes(iC).label{1};
+                cfg_sts.channel = away_hfr_data.label{1};
+                this_sts = ft_spiketriggeredspectrum(cfg_sts, away_hfr_data);
+                this_flag = false;
+                % Display warning to show that there were Nans in this calculation
+                if ~isempty(find(isnan(this_sts.fourierspctrm{1}),1))
+                    this_flag = true;
+                    warning('Cell %s has nans in its away STS',sd.S.label{iC});
+                end
+                od.fsi_res.away_hfr_spec{iM}.flag_nansts = this_flag;
+                od.fsi_res.away_hfr_spec{iM}.freqs = this_sts.freq;
+                od.fsi_res.away_hfr_spec{iM}.sts_vals = nanmean(sq(abs(this_sts.fourierspctrm{1})));
+
+                % Calculate and save PPC
+                cfg_ppc               = [];
+                cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
+                cfg_ppc.spikechannel  = this_sts.label;
+                cfg_ppc.channel       = this_sts.lfplabel; % selected LFP channels
+                cfg_ppc.avgoverchan   = 'unweighted'; % weight spike-LFP phases irrespective of LFP power
+                cfg_ppc.timwin        = 'all'; % compute over all available spikes in the window
+                this_ppc              = ft_spiketriggeredspectrum_stat(cfg_ppc,this_sts);
+                this_flag = false;
+                % Display warning to show that there were Nans in this calculation
+                if ~isempty(find(isnan(this_ppc.ppc0),1))
+                    this_flag = true;
+                    warning('Cell %s has nans in its ppc',sd.S.label{iC});
+                end
+                od.fsi_res.away_hfr_spec{iM}.ppc = this_ppc.ppc0';
+                od.fsi_res.away_hfr_spec{iM}.flag_nanppc = this_flag;
+                
+                % Calculate and save subsampled meausres for away Reward hfr trials
+                % When an FSI has fewer spikes than at least one MSN, do NOT
+                % subsample and include all the spikes
+                if isempty(od.msn_away_hfr_dist)
+                    od.fsi_res.away_hfr_spec{iM}.flag_no_subsampling = true;
+                elseif od.fsi_res.away_hfr_spec{iM}.spk_count < max(od.msn_away_hfr_dist)
+                    od.fsi_res.away_hfr_spec{iM}.flag_no_subsampling = true;
+                elseif isfield(od.fsi_res.away_hfr_spec{iM},'flag_nansts') && od.fsi_res.away_hfr_spec{iM}.flag_nansts
+                    od.fsi_res.away_hfr_spec{iM}.flag_no_subsampling = true;
+                elseif isfield(od.fsi_res.away_hfr_spec{iM},'flag_nanppc') && od.fsi_res.away_hfr_spec{iM}.flag_nanppc
+                    od.fsi_res.away_hfr_spec{iM}.flag_no_subsampling = true;
+                elseif isfield(od.fsi_res.away_spec{iM},'flag_no_subsampling') && od.fsi_res.away_spec{iM}.flag_no_subsampling
+                    od.fsi_res.away_hfr_spec{iM}.flag_no_subsampling = true;
+                else
+                    od.fsi_res.away_hfr_spec{iM}.flag_no_subsampling = false;
+                    temp_sts_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.away_hfr_spec{iM}.sts_vals));
+                    temp_ppc_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.away_hfr_spec{iM}.ppc));
+                    for iS = 1:cfg_master.num_subsamples
+                        s_factor = 1/length(od.msn_away_hfr_dist);
+                        choice = floor(rand()/s_factor)+1;
+                        sub_idx = randsample(1:od.fsi_res.away_hfr_spec{iM}.spk_count, od.msn_away_hfr_dist(choice));
+                        sub_idx = sort(sub_idx); sub_sts = this_sts;
+                        sub_sts.fourierspctrm{1} = sub_sts.fourierspctrm{1}(sub_idx,:,:);
+                        sub_sts.time{1} = sub_sts.time{1}(sub_idx,:);
+                        sub_sts.trial{1} = sub_sts.trial{1}(sub_idx,:);
+                        temp_sts_vals(iS,:) = nanmean(sq(abs(sub_sts.fourierspctrm{1})));
+                        sub_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc, sub_sts);
+                        temp_ppc_vals(iS,:) = sub_ppc.ppc0';
+                    end
+                    od.fsi_res.away_hfr_spec{iM}.subsampled_sts = mean(temp_sts_vals,1);
+                    od.fsi_res.away_hfr_spec{iM}.subsampled_ppc = mean(temp_ppc_vals,1);
+                end
+            end      
+                       
+            % Calculate and Save all spec results for away_lfr_data
+            cfg_away_lfr_trials.trl = cfg_away_trials.trl(lfr_trials,:);
+            away_lfr_data = ft_redefinetrial(cfg_away_lfr_trials, this_data);
+            
+            % Skip if no spks in away_lfr
+            spk_count = 0;
+            for iT = 1:length(away_lfr_data.trial)
+                spk_count = spk_count + sum(away_lfr_data.trial{iT}(2,:)); 
+            end
+            if spk_count < cfg_master.nMinSpikes3
+                od.fsi_res.away_lfr_spec{iM}.flag_tooFewSpikes = true;
+            else
+                od.fsi_res.away_lfr_spec{iM}.spk_count = spk_count;
+                od.fsi_res.away_lfr_spec{iM}.flag_tooFewSpikes = false;
+                
+                % Calculate and save STA
+                this_sta = ft_spiketriggeredaverage(cfg_ft, away_lfr_data);
+                od.fsi_res.away_lfr_spec{iM}.sta_time = this_sta.time;
+                od.fsi_res.away_lfr_spec{iM}.sta_vals = this_sta.avg(:,:)';
+
+                % Calculate and save STS
+                cfg_sts.method = 'mtmconvol';
+                cfg_sts.foi = 1:1:100;
+                cfg_sts.t_ftimwin = 5./cfg_sts.foi;
+                cfg_sts.taper = 'hanning';
+                cfg_sts.spikechannel =  sd.S.ft_spikes(iC).label{1};
+                cfg_sts.channel = away_lfr_data.label{1};
+                this_sts = ft_spiketriggeredspectrum(cfg_sts, away_lfr_data);
+                this_flag = false;
+                % Display warning to show that there were Nans in this calculation
+                if ~isempty(find(isnan(this_sts.fourierspctrm{1}),1))
+                    this_flag = true;
+                    warning('Cell %s has nans in its STS',sd.S.label{iC});
+                end
+                od.fsi_res.away_lfr_spec{iM}.freqs = this_sts.freq;
+                od.fsi_res.away_lfr_spec{iM}.sts_vals = nanmean(sq(abs(this_sts.fourierspctrm{1})));
+                od.fsi_res.away_lfr_spec{iM}.flag_nansts = this_flag;
+
+                % Calculate and save PPC
+                cfg_ppc               = [];
+                cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
+                cfg_ppc.spikechannel  = this_sts.label;
+                cfg_ppc.channel       = this_sts.lfplabel; % selected LFP channels
+                cfg_ppc.avgoverchan   = 'unweighted'; % weight spike-LFP phases irrespective of LFP power
+                cfg_ppc.timwin        = 'all'; % compute over all available spikes in the window
+                this_ppc              = ft_spiketriggeredspectrum_stat(cfg_ppc,this_sts);
+                this_flag = false;
+                % Display warning to show that there were Nans in this calculation
+                if ~isempty(find(isnan(this_ppc.ppc0),1))
+                    this_flag = true;
+                    warning('Cell %s has nans in its ppc',sd.S.label{iC});
+                end
+                od.fsi_res.away_lfr_spec{iM}.ppc = this_ppc.ppc0';
+                od.fsi_res.away_lfr_spec{iM}.flag_nanppc = this_flag;
+                
+                % Calculate and save subsampled meausres for away Reward lfr trials
+                % When an FSI has fewer spikes than at least one MSN, do NOT
+                % subsample and include all the spikes
+                if isempty(od.msn_away_lfr_dist)
+                    od.fsi_res.away_lfr_spec{iM}.flag_no_subsampling = true;
+                elseif od.fsi_res.away_lfr_spec{iM}.spk_count < max(od.msn_away_lfr_dist)
+                    od.fsi_res.away_lfr_spec{iM}.flag_no_subsampling = true;
+                elseif isfield(od.fsi_res.away_lfr_spec{iM},'flag_nansts') && od.fsi_res.away_lfr_spec{iM}.flag_nansts
+                    od.fsi_res.away_lfr_spec{iM}.flag_no_subsampling = true;
+                elseif isfield(od.fsi_res.away_lfr_spec{iM},'flag_nanppc') && od.fsi_res.away_lfr_spec{iM}.flag_nanppc
+                    od.fsi_res.away_lfr_spec{iM}.flag_no_subsampling = true;
+                elseif isfield(od.fsi_res.away_spec{iM},'flag_no_subsampling') && od.fsi_res.away_spec{iM}.flag_no_subsampling
+                    od.fsi_res.away_lfr_spec{iM}.flag_no_subsampling = true;
+                else
+                    od.fsi_res.away_lfr_spec{iM}.flag_no_subsampling = false;
+                    temp_sts_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.away_lfr_spec{iM}.sts_vals));
+                    temp_ppc_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.away_lfr_spec{iM}.ppc));
+                    for iS = 1:cfg_master.num_subsamples
+                        s_factor = 1/length(od.msn_away_lfr_dist);
+                        choice = floor(rand()/s_factor)+1;
+                        sub_idx = randsample(1:od.fsi_res.away_lfr_spec{iM}.spk_count, od.msn_away_lfr_dist(choice));
+                        sub_idx = sort(sub_idx); sub_sts = this_sts;
+                        sub_sts.fourierspctrm{1} = sub_sts.fourierspctrm{1}(sub_idx,:,:);
+                        sub_sts.time{1} = sub_sts.time{1}(sub_idx,:);
+                        sub_sts.trial{1} = sub_sts.trial{1}(sub_idx,:);
+                        temp_sts_vals(iS,:) = nanmean(sq(abs(sub_sts.fourierspctrm{1})));
+                        sub_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc, sub_sts);
+                        temp_ppc_vals(iS,:) = sub_ppc.ppc0';
+                    end
+                    od.fsi_res.away_lfr_spec{iM}.subsampled_sts = mean(temp_sts_vals,1);
+                    od.fsi_res.away_lfr_spec{iM}.subsampled_ppc = mean(temp_ppc_vals,1);
+                end
+            end
+            
+            % Calculate and Save all spec results for away_p1_data
+            cfg_away_p1_trials.trl = cfg_away_trials.trl(p1_trials,:);
+            away_p1_data = ft_redefinetrial(cfg_away_p1_trials, this_data);
+            
+            % Skip if no spks in away_p1
+            spk_count = 0;
+            for iT = 1:length(away_p1_data.trial)
+                spk_count = spk_count + sum(away_p1_data.trial{iT}(2,:)); 
+            end
+            if spk_count < cfg_master.nMinSpikes3
+                od.fsi_res.away_p1_spec{iM}.flag_tooFewSpikes = true;
+            else
+                od.fsi_res.away_p1_spec{iM}.spk_count = spk_count;
+                od.fsi_res.away_p1_spec{iM}.flag_tooFewSpikes = false;
+                
+                % Calculate and save STA
+                this_sta = ft_spiketriggeredaverage(cfg_ft, away_p1_data);
+                od.fsi_res.away_p1_spec{iM}.sta_time = this_sta.time;
+                od.fsi_res.away_p1_spec{iM}.sta_vals = this_sta.avg(:,:)';
+
+                % Calculate and save STS
+                cfg_sts.method = 'mtmconvol';
+                cfg_sts.foi = 1:1:100;
+                cfg_sts.t_ftimwin = 5./cfg_sts.foi;
+                cfg_sts.taper = 'hanning';
+                cfg_sts.spikechannel =  sd.S.ft_spikes(iC).label{1};
+                cfg_sts.channel = away_p1_data.label{1};
+                this_sts = ft_spiketriggeredspectrum(cfg_sts, away_p1_data);
+                this_flag = false;
+                % Display warning to show that there were Nans in this calculation
+                if ~isempty(find(isnan(this_sts.fourierspctrm{1}),1))
+                    this_flag = true;
+                    warning('Cell %s has nans in its away STS',sd.S.label{iC});
+                end
+                od.fsi_res.away_p1_spec{iM}.flag_nansts = this_flag;
+                od.fsi_res.away_p1_spec{iM}.freqs = this_sts.freq;
+                od.fsi_res.away_p1_spec{iM}.sts_vals = nanmean(sq(abs(this_sts.fourierspctrm{1})));
+
+                % Calculate and save PPC
+                cfg_ppc               = [];
+                cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
+                cfg_ppc.spikechannel  = this_sts.label;
+                cfg_ppc.channel       = this_sts.lfplabel; % selected LFP channels
+                cfg_ppc.avgoverchan   = 'unweighted'; % weight spike-LFP phases irrespective of LFP power
+                cfg_ppc.timwin        = 'all'; % compute over all available spikes in the window
+                this_ppc              = ft_spiketriggeredspectrum_stat(cfg_ppc,this_sts);
+                this_flag = false;
+                % Display warning to show that there were Nans in this calculation
+                if ~isempty(find(isnan(this_ppc.ppc0),1))
+                    this_flag = true;
+                    warning('Cell %s has nans in its ppc',sd.S.label{iC});
+                end
+                od.fsi_res.away_p1_spec{iM}.ppc = this_ppc.ppc0';
+                od.fsi_res.away_p1_spec{iM}.flag_nanppc = this_flag;
+                
+                % Calculate and save subsampled meausres for away Reward p1 trials
+                % When an FSI has fewer spikes than at least one MSN, do NOT
+                % subsample and include all the spikes
+                if isempty(od.msn_away_p1_dist)
+                    od.fsi_res.away_p1_spec{iM}.flag_no_subsampling = true;
+                elseif od.fsi_res.away_p1_spec{iM}.spk_count < max(od.msn_away_p1_dist)
+                    od.fsi_res.away_p1_spec{iM}.flag_no_subsampling = true;
+                elseif isfield(od.fsi_res.away_p1_spec{iM},'flag_nansts') && od.fsi_res.away_p1_spec{iM}.flag_nansts
+                    od.fsi_res.away_p1_spec{iM}.flag_no_subsampling = true;
+                elseif isfield(od.fsi_res.away_p1_spec{iM},'flag_nanppc') && od.fsi_res.away_p1_spec{iM}.flag_nanppc
+                    od.fsi_res.away_p1_spec{iM}.flag_no_subsampling = true;
+                elseif isfield(od.fsi_res.away_spec{iM},'flag_no_subsampling') && od.fsi_res.away_spec{iM}.flag_no_subsampling
+                    od.fsi_res.away_p1_spec{iM}.flag_no_subsampling = true;
+                else
+                    od.fsi_res.away_p1_spec{iM}.flag_no_subsampling = false;
+                    temp_sts_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.away_p1_spec{iM}.sts_vals));
+                    temp_ppc_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.away_p1_spec{iM}.ppc));
+                    for iS = 1:cfg_master.num_subsamples
+                        s_factor = 1/length(od.msn_away_p1_dist);
+                        choice = floor(rand()/s_factor)+1;
+                        sub_idx = randsample(1:od.fsi_res.away_p1_spec{iM}.spk_count, od.msn_away_p1_dist(choice));
+                        sub_idx = sort(sub_idx); sub_sts = this_sts;
+                        sub_sts.fourierspctrm{1} = sub_sts.fourierspctrm{1}(sub_idx,:,:);
+                        sub_sts.time{1} = sub_sts.time{1}(sub_idx,:);
+                        sub_sts.trial{1} = sub_sts.trial{1}(sub_idx,:);
+                        temp_sts_vals(iS,:) = nanmean(sq(abs(sub_sts.fourierspctrm{1})));
+                        sub_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc, sub_sts);
+                        temp_ppc_vals(iS,:) = sub_ppc.ppc0';
+                    end
+                    od.fsi_res.away_p1_spec{iM}.subsampled_sts = mean(temp_sts_vals,1);
+                    od.fsi_res.away_p1_spec{iM}.subsampled_ppc = mean(temp_ppc_vals,1);
+                end
+            end
+            
+            % Calculate and Save all spec results for away_p2_data
+            cfg_away_p2_trials.trl = cfg_away_trials.trl(p2_trials,:);
+            away_p2_data = ft_redefinetrial(cfg_away_p2_trials, this_data);
+            
+            % Skip if no spks in away_p2
+            spk_count = 0;
+            for iT = 1:length(away_p2_data.trial)
+                spk_count = spk_count + sum(away_p2_data.trial{iT}(2,:)); 
+            end
+            if spk_count < cfg_master.nMinSpikes3
+                od.fsi_res.away_p2_spec{iM}.flag_tooFewSpikes = true;
+            else
+                od.fsi_res.away_p2_spec{iM}.spk_count = spk_count;
+                od.fsi_res.away_p2_spec{iM}.flag_tooFewSpikes = false;
+                % Calculate and save STA
+                this_sta = ft_spiketriggeredaverage(cfg_ft, away_p2_data);
+                od.fsi_res.away_p2_spec{iM}.sta_time = this_sta.time;
+                od.fsi_res.away_p2_spec{iM}.sta_vals = this_sta.avg(:,:)';
+                % Calculate and save STS
+                cfg_sts.method = 'mtmconvol';
+                cfg_sts.foi = 1:1:100;
+                cfg_sts.t_ftimwin = 5./cfg_sts.foi;
+                cfg_sts.taper = 'hanning';
+                cfg_sts.spikechannel =  sd.S.ft_spikes(iC).label{1};
+                cfg_sts.channel = away_p2_data.label{1};
+                this_sts = ft_spiketriggeredspectrum(cfg_sts, away_p2_data);
+                this_flag = false;
+                % Display warning to show that there were Nans in this calculation
+                if ~isempty(find(isnan(this_sts.fourierspctrm{1}),1))
+                    this_flag = true;
+                    warning('Cell %s has nans in its away STS',sd.S.label{iC});
+                end
+                od.fsi_res.away_p2_spec{iM}.flag_nansts = this_flag;
+                od.fsi_res.away_p2_spec{iM}.freqs = this_sts.freq;
+                od.fsi_res.away_p2_spec{iM}.sts_vals = nanmean(sq(abs(this_sts.fourierspctrm{1})));
+                % Calculate and save PPC
+                cfg_ppc               = [];
+                cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
+                cfg_ppc.spikechannel  = this_sts.label;
+                cfg_ppc.channel       = this_sts.lfplabel; % selected LFP channels
+                cfg_ppc.avgoverchan   = 'unweighted'; % weight spike-LFP phases irrespective of LFP power
+                cfg_ppc.timwin        = 'all'; % compute over all available spikes in the window
+                this_ppc              = ft_spiketriggeredspectrum_stat(cfg_ppc,this_sts);
+                this_flag = false;
+                % Display warning to show that there were Nans in this calculation
+                if ~isempty(find(isnan(this_ppc.ppc0),1))
+                    this_flag = true;
+                    warning('Cell %s has nans in its ppc',sd.S.label{iC});
+                end
+                od.fsi_res.away_p2_spec{iM}.ppc = this_ppc.ppc0';
+                od.fsi_res.away_p2_spec{iM}.flag_nanppc = this_flag;
+                
+                % Calculate and save subsampled meausres for away Reward p2 trials
+                % When an FSI has fewer spikes than at least one MSN, do NOT
+                % subsample and include all the spikes
+                if isempty(od.msn_away_p2_dist)
+                    od.fsi_res.away_p2_spec{iM}.flag_no_subsampling = true;
+                elseif od.fsi_res.away_p2_spec{iM}.spk_count < max(od.msn_away_p2_dist)
+                    od.fsi_res.away_p2_spec{iM}.flag_no_subsampling = true;
+                elseif isfield(od.fsi_res.away_p2_spec{iM},'flag_nansts') && od.fsi_res.away_p2_spec{iM}.flag_nansts
+                    od.fsi_res.away_p2_spec{iM}.flag_no_subsampling = true;
+                elseif isfield(od.fsi_res.away_p2_spec{iM},'flag_nanppc') && od.fsi_res.away_p2_spec{iM}.flag_nanppc
+                    od.fsi_res.away_p2_spec{iM}.flag_no_subsampling = true;
+                elseif isfield(od.fsi_res.away_spec{iM},'flag_no_subsampling') && od.fsi_res.away_spec{iM}.flag_no_subsampling
+                    od.fsi_res.away_p2_spec{iM}.flag_no_subsampling = true;
+                else
+                    od.fsi_res.away_p2_spec{iM}.flag_no_subsampling = false;
+                    temp_sts_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.away_p2_spec{iM}.sts_vals));
+                    temp_ppc_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.away_p2_spec{iM}.ppc));
+                    for iS = 1:cfg_master.num_subsamples
+                        s_factor = 1/length(od.msn_away_p2_dist);
+                        choice = floor(rand()/s_factor)+1;
+                        sub_idx = randsample(1:od.fsi_res.away_p2_spec{iM}.spk_count, od.msn_away_p2_dist(choice));
+                        sub_idx = sort(sub_idx); sub_sts = this_sts;
+                        sub_sts.fourierspctrm{1} = sub_sts.fourierspctrm{1}(sub_idx,:,:);
+                        sub_sts.time{1} = sub_sts.time{1}(sub_idx,:);
+                        sub_sts.trial{1} = sub_sts.trial{1}(sub_idx,:);
+                        temp_sts_vals(iS,:) = nanmean(sq(abs(sub_sts.fourierspctrm{1})));
+                        sub_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc, sub_sts);
+                        temp_ppc_vals(iS,:) = sub_ppc.ppc0';
+                    end
+                    od.fsi_res.away_p2_spec{iM}.subsampled_sts = mean(temp_sts_vals,1);
+                    od.fsi_res.away_p2_spec{iM}.subsampled_ppc = mean(temp_ppc_vals,1);
+                end
+            end     
+        end
+    end
 
     if cfg_master.write_output  
          [~, fp, ~] = fileparts(pwd);
@@ -1121,4 +2344,3 @@ function S = LoadSpikesTarget(cfg_in)
         S = SelectTS([], S, keep);
     end
 end
-
