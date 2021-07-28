@@ -1,5 +1,5 @@
-% cd('D:\RandomVstrAnalysis\ft_results');
-cd('/Users/manishm/Dropbox (Dartmouth College)/AnalysisResults/FieldTripResults/ft_results');
+cd('D:\RandomVstrAnalysis\ft_results');
+% cd('/Users/manishm/Dropbox (Dartmouth College)/AnalysisResults/FieldTripResults/ft_results');
 
 rats = {'R117','R119','R131','R132'};
 lg = [30,65];
