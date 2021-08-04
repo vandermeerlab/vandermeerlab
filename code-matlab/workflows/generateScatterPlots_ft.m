@@ -38,6 +38,8 @@ msn_near_frs = [];
 msn_near_lfr_frs = [];
 msn_near_hfr_frs = [];
 
+sessions_with_msn_ppc_peak_ge_fsi = [];
+
 cd('D:\RandomVstrAnalysis\ft_results');
 % cd('/Users/manishm/Dropbox (Dartmouth College)/AnalysisResults/FieldTripResults/ft_results');
 
@@ -52,6 +54,18 @@ for idx = 1:length(rats)
     for jdx = 1:length(ofiles)        
         load(ofiles(jdx).name);
         fsi_labels  = od.label(od.cell_type == 2);
+        fsi_near_sts_lg_peak_vals = [];
+        fsi_near_sts_hg_peak_vals = [];
+        fsi_near_lfr_hg_sts_peak_vals = [];
+        fsi_near_lfr_lg_sts_peak_vals = [];
+        fsi_near_hfr_hg_sts_peak_vals = [];
+        fsi_near_hfr_lg_sts_peak_vals = [];
+        fsi_near_ppc_lg_peak_vals = [];
+        fsi_near_ppc_hg_peak_vals = [];
+        fsi_near_lfr_hg_ppc_peak_vals = [];
+        fsi_near_lfr_lg_ppc_peak_vals = [];
+        fsi_near_hfr_hg_ppc_peak_vals = [];
+        fsi_near_hfr_lg_ppc_peak_vals = [];
         for iC = 1:length(fsi_labels)
             if ~od.fsi_res.near_spec{iC}.flag_tooFewSpikes && ...
                ~od.fsi_res.near_spec{iC}.flag_nansts && ...
@@ -328,6 +342,19 @@ for idx = 1:length(rats)
                 if all_sts_peaks_in_lg && all_ppc_peaks_in_lg && ...
                     all_sts_peaks_in_hg && all_ppc_peaks_in_hg ...
                     
+                    near_lg_sts_pk_val = od.fsi_res.near_spec{iC}.subsampled_sts(lg(1)+near_lg_sts_pk-1);
+                    near_hg_sts_pk_val = od.fsi_res.near_spec{iC}.subsampled_sts(hg(1)+near_hg_sts_pk-1);
+                    near_lfr_lg_sts_pk_val = od.fsi_res.near_lfr_spec{iC}.subsampled_sts(lg(1)+near_lfr_lg_sts_pk-1);
+                    near_lfr_hg_sts_pk_val = od.fsi_res.near_lfr_spec{iC}.subsampled_sts(hg(1)+near_lfr_hg_sts_pk-1);
+                    near_hfr_lg_sts_pk_val = od.fsi_res.near_hfr_spec{iC}.subsampled_sts(lg(1)+near_hfr_lg_sts_pk-1);
+                    near_hfr_hg_sts_pk_val = od.fsi_res.near_hfr_spec{iC}.subsampled_sts(hg(1)+near_hfr_hg_sts_pk-1);
+                    near_lg_ppc_pk_val = od.fsi_res.near_spec{iC}.subsampled_ppc(lg(1)+near_lg_ppc_pk-1);
+                    near_hg_ppc_pk_val = od.fsi_res.near_spec{iC}.subsampled_ppc(hg(1)+near_hg_ppc_pk-1);
+                    near_lfr_lg_ppc_pk_val = od.fsi_res.near_lfr_spec{iC}.subsampled_ppc(lg(1)+near_lfr_lg_ppc_pk-1);
+                    near_lfr_hg_ppc_pk_val = od.fsi_res.near_lfr_spec{iC}.subsampled_ppc(hg(1)+near_lfr_hg_ppc_pk-1);
+                    near_hfr_lg_ppc_pk_val = od.fsi_res.near_hfr_spec{iC}.subsampled_ppc(lg(1)+near_hfr_lg_ppc_pk-1);
+                    near_hfr_hg_ppc_pk_val = od.fsi_res.near_hfr_spec{iC}.subsampled_ppc(hg(1)+near_hfr_hg_ppc_pk-1);
+                    
                     near_lg_sts_pk = od.fsi_res.near_spec{iC}.freqs(lg(1)+near_lg_sts_pk-1);
                     near_hg_sts_pk = od.fsi_res.near_spec{iC}.freqs(hg(1)+near_hg_sts_pk-1);
                     near_lfr_lg_sts_pk = od.fsi_res.near_lfr_spec{iC}.freqs(lg(1)+near_lfr_lg_sts_pk-1);
@@ -353,6 +380,21 @@ for idx = 1:length(rats)
                     fsi_near_lfr_lg_ppc_peaks = [fsi_near_lfr_lg_ppc_peaks, near_lfr_lg_ppc_pk];
                     fsi_near_hfr_hg_ppc_peaks = [fsi_near_hfr_hg_ppc_peaks, near_hfr_hg_ppc_pk];
                     fsi_near_hfr_lg_ppc_peaks = [fsi_near_hfr_lg_ppc_peaks, near_hfr_lg_ppc_pk];
+                    
+                    fsi_near_sts_lg_peak_vals = [fsi_near_sts_lg_peak_vals, near_lg_sts_pk_val];
+                    fsi_near_sts_hg_peak_vals = [fsi_near_sts_hg_peak_vals, near_hg_sts_pk_val];
+                    fsi_near_lfr_hg_sts_peak_vals = [fsi_near_lfr_hg_sts_peak_vals, near_lfr_hg_sts_pk_val];
+                    fsi_near_lfr_lg_sts_peak_vals = [fsi_near_lfr_lg_sts_peak_vals, near_lfr_lg_sts_pk_val];
+                    fsi_near_hfr_hg_sts_peak_vals = [fsi_near_hfr_hg_sts_peak_vals, near_hfr_hg_sts_pk_val];
+                    fsi_near_hfr_lg_sts_peak_vals = [fsi_near_hfr_lg_sts_peak_vals, near_hfr_lg_sts_pk_val];
+                    fsi_near_ppc_lg_peak_vals = [fsi_near_ppc_lg_peak_vals, near_lg_ppc_pk_val];
+                    fsi_near_ppc_hg_peak_vals = [fsi_near_ppc_hg_peak_vals, near_hg_ppc_pk_val];
+                    fsi_near_lfr_hg_ppc_peak_vals = [fsi_near_lfr_hg_ppc_peak_vals, near_lfr_hg_ppc_pk_val];
+                    fsi_near_lfr_lg_ppc_peak_vals = [fsi_near_lfr_lg_ppc_peak_vals, near_lfr_lg_ppc_pk_val];
+                    fsi_near_hfr_hg_ppc_peak_vals = [fsi_near_hfr_hg_ppc_peak_vals, near_hfr_hg_ppc_pk_val];
+                    fsi_near_hfr_lg_ppc_peak_vals = [fsi_near_hfr_lg_ppc_peak_vals, near_hfr_lg_ppc_pk_val];
+                    
+                    
                     fsi_near_lfr_sts_corrs = [fsi_near_lfr_sts_corrs, near_lfr_sts_corr];
                     fsi_near_hfr_sts_corrs = [fsi_near_hfr_sts_corrs, near_hfr_sts_corr];
                     fsi_near_lfr_ppc_corrs = [fsi_near_lfr_ppc_corrs, near_lfr_ppc_corr];
@@ -368,6 +410,18 @@ for idx = 1:length(rats)
         end
         
         msn_labels  = od.label(od.cell_type == 1);
+        msn_near_sts_lg_peak_vals = [];
+        msn_near_sts_hg_peak_vals = [];
+        msn_near_lfr_hg_sts_peak_vals = [];
+        msn_near_lfr_lg_sts_peak_vals = [];
+        msn_near_hfr_hg_sts_peak_vals = [];
+        msn_near_hfr_lg_sts_peak_vals = [];
+        msn_near_ppc_lg_peak_vals = [];
+        msn_near_ppc_hg_peak_vals = [];
+        msn_near_lfr_hg_ppc_peak_vals = [];
+        msn_near_lfr_lg_ppc_peak_vals = [];
+        msn_near_hfr_hg_ppc_peak_vals = [];
+        msn_near_hfr_lg_ppc_peak_vals = [];
         for iC = 1:length(msn_labels)
             if ~od.msn_res.near_spec{iC}.flag_tooFewSpikes && ...
                ~od.msn_res.near_spec{iC}.flag_nansts && ...
@@ -618,6 +672,19 @@ for idx = 1:length(rats)
                 if all_sts_peaks_in_lg && all_ppc_peaks_in_lg && ...
                     all_sts_peaks_in_hg && all_ppc_peaks_in_hg ...
                     
+                    near_lg_sts_pk_val = od.msn_res.near_spec{iC}.sts_vals(lg(1)+near_lg_sts_pk-1);
+                    near_hg_sts_pk_val = od.msn_res.near_spec{iC}.sts_vals(hg(1)+near_hg_sts_pk-1);
+                    near_lfr_lg_sts_pk_val = od.msn_res.near_lfr_spec{iC}.sts_vals(lg(1)+near_lfr_lg_sts_pk-1);
+                    near_lfr_hg_sts_pk_val = od.msn_res.near_lfr_spec{iC}.sts_vals(hg(1)+near_lfr_hg_sts_pk-1);
+                    near_hfr_lg_sts_pk_val = od.msn_res.near_hfr_spec{iC}.sts_vals(lg(1)+near_hfr_lg_sts_pk-1);
+                    near_hfr_hg_sts_pk_val = od.msn_res.near_hfr_spec{iC}.sts_vals(hg(1)+near_hfr_hg_sts_pk-1);
+                    near_lg_ppc_pk_val = od.msn_res.near_spec{iC}.ppc(lg(1)+near_lg_ppc_pk-1);
+                    near_hg_ppc_pk_val = od.msn_res.near_spec{iC}.ppc(hg(1)+near_hg_ppc_pk-1);
+                    near_lfr_lg_ppc_pk_val = od.msn_res.near_lfr_spec{iC}.ppc(lg(1)+near_lfr_lg_ppc_pk-1);
+                    near_lfr_hg_ppc_pk_val = od.msn_res.near_lfr_spec{iC}.ppc(hg(1)+near_lfr_hg_ppc_pk-1);
+                    near_hfr_lg_ppc_pk_val = od.msn_res.near_hfr_spec{iC}.ppc(lg(1)+near_hfr_lg_ppc_pk-1);
+                    near_hfr_hg_ppc_pk_val = od.msn_res.near_hfr_spec{iC}.ppc(hg(1)+near_hfr_hg_ppc_pk-1);
+                    
                     near_lg_sts_pk = od.msn_res.near_spec{iC}.freqs(lg(1)+near_lg_sts_pk-1);
                     near_hg_sts_pk = od.msn_res.near_spec{iC}.freqs(hg(1)+near_hg_sts_pk-1);
                     near_lfr_lg_sts_pk = od.msn_res.near_lfr_spec{iC}.freqs(lg(1)+near_lfr_lg_sts_pk-1);
@@ -631,6 +698,19 @@ for idx = 1:length(rats)
                     near_hfr_lg_ppc_pk = od.msn_res.near_hfr_spec{iC}.freqs(lg(1)+near_hfr_lg_ppc_pk-1);
                     near_hfr_hg_ppc_pk = od.msn_res.near_hfr_spec{iC}.freqs(hg(1)+near_hfr_hg_ppc_pk-1);
                     
+                    msn_near_sts_lg_peak_vals = [msn_near_sts_lg_peak_vals, near_lg_sts_pk_val];
+                    msn_near_sts_hg_peak_vals = [msn_near_sts_hg_peak_vals, near_hg_sts_pk_val];
+                    msn_near_lfr_hg_sts_peak_vals = [msn_near_lfr_hg_sts_peak_vals, near_lfr_hg_sts_pk_val];
+                    msn_near_lfr_lg_sts_peak_vals = [msn_near_lfr_lg_sts_peak_vals, near_lfr_lg_sts_pk_val];
+                    msn_near_hfr_hg_sts_peak_vals = [msn_near_hfr_hg_sts_peak_vals, near_hfr_hg_sts_pk_val];
+                    msn_near_hfr_lg_sts_peak_vals = [msn_near_hfr_lg_sts_peak_vals, near_hfr_lg_sts_pk_val];
+                    msn_near_ppc_lg_peak_vals = [msn_near_ppc_lg_peak_vals, near_lg_ppc_pk_val];
+                    msn_near_ppc_hg_peak_vals = [msn_near_ppc_hg_peak_vals, near_hg_ppc_pk_val];
+                    msn_near_lfr_hg_ppc_peak_vals = [msn_near_lfr_hg_ppc_peak_vals, near_lfr_hg_ppc_pk_val];
+                    msn_near_lfr_lg_ppc_peak_vals = [msn_near_lfr_lg_ppc_peak_vals, near_lfr_lg_ppc_pk_val];
+                    msn_near_hfr_hg_ppc_peak_vals = [msn_near_hfr_hg_ppc_peak_vals, near_hfr_hg_ppc_pk_val];
+                    msn_near_hfr_lg_ppc_peak_vals = [msn_near_hfr_lg_ppc_peak_vals, near_hfr_lg_ppc_pk_val];
+                    
                     msn_near_sts_lg_peaks = [msn_near_sts_lg_peaks, near_lg_sts_pk];
                     msn_near_sts_hg_peaks = [msn_near_sts_hg_peaks, near_hg_sts_pk];
                     msn_near_lfr_hg_sts_peaks = [msn_near_lfr_hg_sts_peaks, near_lfr_hg_sts_pk];
@@ -643,6 +723,7 @@ for idx = 1:length(rats)
                     msn_near_lfr_lg_ppc_peaks = [msn_near_lfr_lg_ppc_peaks, near_lfr_lg_ppc_pk];
                     msn_near_hfr_hg_ppc_peaks = [msn_near_hfr_hg_ppc_peaks, near_hfr_hg_ppc_pk];
                     msn_near_hfr_lg_ppc_peaks = [msn_near_hfr_lg_ppc_peaks, near_hfr_lg_ppc_pk];
+                    
                     msn_near_lfr_sts_corrs = [msn_near_lfr_sts_corrs, near_lfr_sts_corr];
                     msn_near_hfr_sts_corrs = [msn_near_hfr_sts_corrs, near_hfr_sts_corr];
                     msn_near_lfr_ppc_corrs = [msn_near_lfr_ppc_corrs, near_lfr_ppc_corr];
@@ -654,11 +735,21 @@ for idx = 1:length(rats)
             else
                 continue
             end
-        end    
+        end
+        dummy = 1;
+        if max(msn_near_ppc_lg_peak_vals) >= min(fsi_near_ppc_lg_peak_vals) | ...
+           max(msn_near_hfr_lg_ppc_peak_vals) >= min(fsi_near_hfr_lg_ppc_peak_vals) | ...
+           max(msn_near_lfr_lg_ppc_peak_vals) >= min(fsi_near_lfr_lg_ppc_peak_vals) | ...
+           max(msn_near_ppc_hg_peak_vals) >= min(fsi_near_ppc_hg_peak_vals) | ...
+           max(msn_near_hfr_hg_ppc_peak_vals) >= min(fsi_near_hfr_hg_ppc_peak_vals) | ...
+           max(msn_near_lfr_hg_ppc_peak_vals) >= min(fsi_near_lfr_hg_ppc_peak_vals)
+            
+                sessions_with_msn_ppc_peak_ge_fsi = [sessions_with_msn_ppc_peak_ge_fsi; extractBefore(ofiles(jdx).name, '_')];
+        end
     end
 end
-%%
 
+%% Plot Distance betweem Peak Frequencies vs Difference in Mean Firing rates
 figure;
 subplot(2,2,1);
 scatter(fsi_near_hfr_frs - fsi_near_lfr_frs, fsi_near_hfr_lg_ppc_peaks - fsi_near_lfr_lg_ppc_peaks, ...
@@ -696,7 +787,7 @@ scatter(msn_near_hfr_frs - msn_near_lfr_frs, msn_near_hfr_hg_sts_peaks - msn_nea
 ylabel('MSN STS Peak Dif')
 xlabel('MSN Firing Rate Dif')
 
-%%
+%% Plot distribution of correlations
 figure
 subplot(2,2,1)
 hold on
@@ -720,102 +811,14 @@ histogram(msn_near_lfr_sts_corrs, -0.05:0.1:1.05, 'FaceColor','red','FaceAlpha',
 title('MSN STS Correlation');
 
 
-%%
-subplot(2,3,2);
-scatter(msn_near_sts_difs, msn_near_sfc_difs, 'filled', 'MarkerFaceColor', 'red', 'MarkerFaceAlpha', 0.4);
-xlabel('MSN Near STS Dif')
-ylabel('MSN Near SFC Dif')
-subplot(2,3,3);
-scatter(msn_near_sts_difs, msn_near_psd_difs, 'filled', 'MarkerFaceColor', 'red', 'MarkerFaceAlpha', 0.4);
-xlabel('MSN Near STS Dif')
-ylabel('MSN Near PSD Dif')
-subplot(2,3,4);
-scatter(msn_near_sta_difs, msn_near_sfc_difs, 'filled', 'MarkerFaceColor', 'red', 'MarkerFaceAlpha', 0.4);
-xlabel('MSN Near STA Dif')
-ylabel('MSN Near SFC Dif')
-subplot(2,3,5);
-scatter(msn_near_sta_difs, msn_near_psd_difs, 'filled', 'MarkerFaceColor', 'red', 'MarkerFaceAlpha', 0.4);
-xlabel('MSN Near STA Dif')
-ylabel('MSN Near PSD Dif')
-subplot(2,3,6);
-scatter(msn_near_psd_difs, msn_near_sfc_difs, 'filled', 'MarkerFaceColor', 'red', 'MarkerFaceAlpha', 0.4);
-xlabel('MSN Near PSD Dif')
-ylabel('MSN Near SFC Dif')
-
+%% Plot Scatter plots of difference between PPC peak frequncies vs difference in mean firing rate, color coded by correlation
+corr_thresh = 0.65;
+mask_hfr_corrs = (msn_near_hfr_ppc_corrs < corr_thresh);
+mask_lfr_corrs = (msn_near_lfr_ppc_corrs < corr_thresh);
 figure;
-subplot(2,3,1);
-scatter(fsi_near_sts_difs, fsi_near_sta_difs, 'filled', 'MarkerFaceColor', 'green', 'MarkerFaceAlpha', 0.4);
-xlabel('FSI Near STS Dif')
-ylabel('FSI Near STA Dif')
-subplot(2,3,2);
-scatter(fsi_near_sts_difs, fsi_near_sfc_difs, 'filled', 'MarkerFaceColor', 'green', 'MarkerFaceAlpha', 0.4);
-xlabel('FSI Near STS Dif')
-ylabel('FSI Near SFC Dif')
-subplot(2,3,3);
-scatter(fsi_near_sts_difs, fsi_near_psd_difs, 'filled', 'MarkerFaceColor', 'green', 'MarkerFaceAlpha', 0.4);
-xlabel('FSI Near STS Dif')
-ylabel('FSI Near PSD Dif')
-subplot(2,3,4);
-scatter(fsi_near_sta_difs, fsi_near_sfc_difs, 'filled', 'MarkerFaceColor', 'green', 'MarkerFaceAlpha', 0.4);
-xlabel('FSI Near STA Dif')
-ylabel('FSI Near SFC Dif')
-subplot(2,3,5);
-scatter(fsi_near_sta_difs, fsi_near_psd_difs, 'filled', 'MarkerFaceColor', 'green', 'MarkerFaceAlpha', 0.4);
-xlabel('FSI Near STA Dif')
-ylabel('FSI Near PSD Dif')
-subplot(2,3,6);
-scatter(fsi_near_psd_difs, fsi_near_sfc_difs, 'filled', 'MarkerFaceColor', 'green', 'MarkerFaceAlpha', 0.4);
-xlabel('FSI Near PSD Dif')
-ylabel('FSI Near SFC Dif')
-
-figure;
-subplot(2,3,1);
-scatter(msn_away_sts_difs, msn_away_sta_difs, 'filled', 'MarkerFaceColor', 'red', 'MarkerFaceAlpha', 0.4);
-xlabel('MSN Away STS Dif')
-ylabel('MSN Away STA Dif')
-subplot(2,3,2);
-scatter(msn_away_sts_difs, msn_away_sfc_difs, 'filled', 'MarkerFaceColor', 'red', 'MarkerFaceAlpha', 0.4);
-xlabel('MSN Away STS Dif')
-ylabel('MSN Away SFC Dif')
-subplot(2,3,3);
-scatter(msn_away_sts_difs, msn_away_psd_difs, 'filled', 'MarkerFaceColor', 'red', 'MarkerFaceAlpha', 0.4);
-xlabel('MSN Away STS Dif')
-ylabel('MSN Away PSD Dif')
-subplot(2,3,4);
-scatter(msn_away_sta_difs, msn_away_sfc_difs, 'filled', 'MarkerFaceColor', 'red', 'MarkerFaceAlpha', 0.4);
-xlabel('MSN Away STA Dif')
-ylabel('MSN Away SFC Dif')
-subplot(2,3,5);
-scatter(msn_away_sta_difs, msn_away_psd_difs, 'filled', 'MarkerFaceColor', 'red', 'MarkerFaceAlpha', 0.4);
-xlabel('MSN Away STA Dif')
-ylabel('MSN Away PSD Dif')
-subplot(2,3,6);
-scatter(msn_away_psd_difs, msn_away_sfc_difs, 'filled', 'MarkerFaceColor', 'red', 'MarkerFaceAlpha', 0.4);
-xlabel('MSN Away PSD Dif')
-ylabel('MSN Away SFC Dif')
-
-figure;
-subplot(2,3,1);
-scatter(fsi_away_sts_difs, fsi_away_sta_difs, 'filled', 'MarkerFaceColor', 'green', 'MarkerFaceAlpha', 0.4);
-xlabel('FSI Away STS Dif')
-ylabel('FSI Away STA Dif')
-subplot(2,3,2);
-scatter(fsi_away_sts_difs, fsi_away_sfc_difs, 'filled', 'MarkerFaceColor', 'green', 'MarkerFaceAlpha', 0.4);
-xlabel('FSI Away STS Dif')
-ylabel('FSI Away SFC Dif')
-subplot(2,3,3);
-scatter(fsi_away_sts_difs, fsi_away_psd_difs, 'filled', 'MarkerFaceColor', 'green', 'MarkerFaceAlpha', 0.4);
-xlabel('FSI Away STS Dif')
-ylabel('FSI Away PSD Dif')
-subplot(2,3,4);
-scatter(fsi_away_sta_difs, fsi_away_sfc_difs, 'filled', 'MarkerFaceColor', 'green', 'MarkerFaceAlpha', 0.4);
-xlabel('FSI Away STA Dif')
-ylabel('FSI Away SFC Dif')
-subplot(2,3,5);
-scatter(fsi_away_sta_difs, fsi_away_psd_difs, 'filled', 'MarkerFaceColor', 'green', 'MarkerFaceAlpha', 0.4);
-xlabel('FSI Away STA Dif')
-ylabel('FSI Away PSD Dif')
-subplot(2,3,6);
-scatter(fsi_away_psd_difs, fsi_away_sfc_difs, 'filled', 'MarkerFaceColor', 'green', 'MarkerFaceAlpha', 0.4);
-xlabel('FSI Away PSD Dif')
-ylabel('FSI Away SFC Dif')
+subplot(2,1,1)
+scatter(msn_near_hfr_frs(mask_hfr_corrs & mask_lfr_corrs) - msn_near_lfr_frs(mask_hfr_corrs & mask_lfr_corrs), msn_near_hfr_lg_ppc_peaks(mask_hfr_corrs & mask_lfr_corrs) - msn_near_lfr_lg_ppc_peaks(mask_hfr_corrs & mask_lfr_corrs), ...
+'filled', 'MarkerFaceColor', 'red', 'MarkerFaceAlpha', 0.4);
+subplot(2,1,2)
+scatter(msn_near_hfr_frs(~mask_hfr_corrs & ~mask_lfr_corrs) - msn_near_lfr_frs(~mask_hfr_corrs & ~mask_lfr_corrs), msn_near_hfr_lg_ppc_peaks(~mask_hfr_corrs & ~mask_lfr_corrs) - msn_near_lfr_lg_ppc_peaks(~mask_hfr_corrs & ~mask_lfr_corrs), ...
+'filled', 'MarkerFaceColor', 'green', 'MarkerFaceAlpha', 0.4);
