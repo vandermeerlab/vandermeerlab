@@ -757,7 +757,7 @@ scatter(fsi_near_hfr_frs - fsi_near_lfr_frs, fsi_near_hfr_lg_ppc_peaks - fsi_nea
 hold on;
 scatter(fsi_near_hfr_frs - fsi_near_lfr_frs, fsi_near_hfr_hg_ppc_peaks - fsi_near_lfr_hg_ppc_peaks, ...
     'filled', 'MarkerFaceColor', 'green', 'MarkerFaceAlpha', 0.4);
-ylabel('FSI Peak Dif')
+ylabel('FSI PPC Peak Dif')
 xlabel('FSI Firing Rate Dif')
 
 subplot(2,2,3);
@@ -819,6 +819,7 @@ figure;
 subplot(2,1,1)
 scatter(msn_near_hfr_frs(mask_hfr_corrs & mask_lfr_corrs) - msn_near_lfr_frs(mask_hfr_corrs & mask_lfr_corrs), msn_near_hfr_lg_ppc_peaks(mask_hfr_corrs & mask_lfr_corrs) - msn_near_lfr_lg_ppc_peaks(mask_hfr_corrs & mask_lfr_corrs), ...
 'filled', 'MarkerFaceColor', 'red', 'MarkerFaceAlpha', 0.4);
-subplot(2,1,2)
+% subplot(2,1,2)
+hold on
 scatter(msn_near_hfr_frs(~mask_hfr_corrs & ~mask_lfr_corrs) - msn_near_lfr_frs(~mask_hfr_corrs & ~mask_lfr_corrs), msn_near_hfr_lg_ppc_peaks(~mask_hfr_corrs & ~mask_lfr_corrs) - msn_near_lfr_lg_ppc_peaks(~mask_hfr_corrs & ~mask_lfr_corrs), ...
 'filled', 'MarkerFaceColor', 'green', 'MarkerFaceAlpha', 0.4);
