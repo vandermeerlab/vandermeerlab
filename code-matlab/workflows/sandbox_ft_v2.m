@@ -374,7 +374,7 @@ function od = generateSTS(cfg_in)
                 nz_tspikes{iT} = all_tspikes{nz_trials(iT)};
                 spk_tcount(iT) = nz_tspikes{iT};
             end
-            % Find out the firing rate threhsold to split the trials such that
+            % Find out the firing rate threshold to split the trials such that
             % spikes are more or less equally divided
             ufr = unique(nz_mfr);
             dif_min = sum(cell2mat(nz_tspikes));
@@ -582,6 +582,7 @@ function od = generateSTS(cfg_in)
                 all_freqs = zeros([cfg_master.nControlSplits, size(od.msn_res.near_spec{iM}.freqs)]);
                 all_sts_vals = zeros([2, cfg_master.nControlSplits, length(od.msn_res.near_spec{iM}.sts_vals)]);
                 all_ppc = zeros([2, cfg_master.nControlSplits, size(od.msn_res.near_spec{iM}.ppc)]);
+                all_spk_count = zeros(2, cfg_master.nControlSplits);
          
                 
                 % For each split, fill in the tables
@@ -590,6 +591,7 @@ function od = generateSTS(cfg_in)
                 % cell    
                 flag_nan_in_split = false;      
                 for iSplit = 1:cfg_master.nControlSplits
+  
                     % Calculate and Save all spec results for near_lfr_data
                     this_p1_trials = find(od.msn_res.near_spec{iM}.valid_splits(iSplit,:));
                     this_p1_cfg.trl = cfg_near_trials.trl(this_p1_trials,:);
@@ -598,6 +600,19 @@ function od = generateSTS(cfg_in)
                     this_p2_cfg.trl = cfg_near_trials.trl(this_p2_trials,:);
                     this_p2_data = ft_redefinetrial(this_p2_cfg, this_data);
                     
+                    p1_spk_count = 0;
+                    for iT = 1:length(this_p1_data.trial)
+                        p1_spk_count = p1_spk_count + sum(this_p1_data.trial{iT}(2,:)); 
+                    end
+                    
+                    p2_spk_count = 0;
+                    for iT = 1:length(this_p2_data.trial)
+                        p2_spk_count = p2_spk_count + sum(this_p2_data.trial{iT}(2,:)); 
+                    end
+                    
+                    all_spk_count(1,iSplit) = p1_spk_count;
+                    all_spk_count(2,iSplit) = p2_spk_count;
+
                     % Calculate and save STA
                     this_p1_sta = ft_spiketriggeredaverage(cfg_ft, this_p1_data);
                     this_p2_sta = ft_spiketriggeredaverage(cfg_ft, this_p2_data);
@@ -649,23 +664,20 @@ function od = generateSTS(cfg_in)
                 % Save averages and std
                 od.msn_res.near_p1_spec{iM}.sta_time = od.msn_res.near_spec{iM}.sta_time;
                 od.msn_res.near_p2_spec{iM}.sta_time = od.msn_res.near_spec{iM}.sta_time;
-                od.msn_res.near_p1_spec{iM}.freqs = mean(all_freqs(1,:,:),2);
-                od.msn_res.near_p2_spec{iM}.freqs = mean(all_freqs(2,:,:),2);
-            
-                od.msn_res.near_p1_spec{iM}.mean_sta = mean(all_sta_vals(1,:,:),2);
-                od.msn_res.near_p2_spec{iM}.mean_sta = mean(all_sta_vals(2,:,:),2);
-                od.msn_res.near_p1_spec{iM}.sd_sta = std(all_sta_vals(1,:,:),2);
-                od.msn_res.near_p2_spec{iM}.sd_sta = std(all_sta_vals(2,:,:),2);
-                
-                od.msn_res.near_p1_spec{iM}.mean_sts = mean(all_sts_vals(1,:,:),2);
-                od.msn_res.near_p2_spec{iM}.mean_sts = mean(all_sts_vals(2,:,:),2);
-                od.msn_res.near_p1_spec{iM}.sd_sts = std(all_sts_vals(1,:,:),2);
-                od.msn_res.near_p2_spec{iM}.sd_sts = std(all_sts_vals(2,:,:),2);
-                
-                od.msn_res.near_p1_spec{iM}.mean_ppc = mean(all_ppc(1,:,:),2);
-                od.msn_res.near_p2_spec{iM}.mean_ppc = mean(all_ppc(2,:,:),2);
-                od.msn_res.near_p1_spec{iM}.sd_ppc = std(all_ppc(1,:,:),2);
-                od.msn_res.near_p2_spec{iM}.sd_ppc = std(all_ppc(2,:,:),2);
+                od.msn_res.near_p1_spec{iM}.freqs = squeeze(mean(all_freqs(1,:,:),2))';
+                od.msn_res.near_p2_spec{iM}.freqs = squeeze(mean(all_freqs(2,:,:),2))';
+                od.msn_res.near_p1_spec{iM}.mean_sta = squeeze(mean(all_sta_vals(1,:,:),2))';
+                od.msn_res.near_p2_spec{iM}.mean_sta = squeeze(mean(all_sta_vals(2,:,:),2))';
+                od.msn_res.near_p1_spec{iM}.sd_sta = squeeze(std(all_sta_vals(1,:,:)))';
+                od.msn_res.near_p2_spec{iM}.sd_sta = squeeze(std(all_sta_vals(2,:,:)))';
+                od.msn_res.near_p1_spec{iM}.mean_sts = squeeze(mean(all_sts_vals(1,:,:),2))';
+                od.msn_res.near_p2_spec{iM}.mean_sts = squeeze(mean(all_sts_vals(2,:,:),2))';
+                od.msn_res.near_p1_spec{iM}.sd_sts = squeeze(std(all_sts_vals(1,:,:)))';
+                od.msn_res.near_p2_spec{iM}.sd_sts = squeeze(std(all_sts_vals(2,:,:)))';
+                od.msn_res.near_p1_spec{iM}.mean_ppc = squeeze(mean(all_ppc(1,:,:),2))';
+                od.msn_res.near_p2_spec{iM}.mean_ppc = squeeze(mean(all_ppc(2,:,:),2))';
+                od.msn_res.near_p1_spec{iM}.sd_ppc = squeeze(std(all_ppc(1,:,:)))';
+                od.msn_res.near_p2_spec{iM}.sd_ppc = squeeze(std(all_ppc(2,:,:)))';
                        
             else
                 od.msn_res.near_spec{iM}.no_control_split_flag = true;
@@ -771,7 +783,7 @@ function od = generateSTS(cfg_in)
                 nz_tspikes{iT} = all_tspikes{nz_trials(iT)};
                 spk_tcount(iT) = nz_tspikes{iT};
             end
-            % Find out the firing rate threhsold to split the trials such that
+            % Find out the firing rate threshold to split the trials such that
             % spikes are more or less equally divided
             ufr = unique(nz_mfr);
             dif_min = sum(cell2mat(nz_tspikes));
@@ -978,8 +990,8 @@ function od = generateSTS(cfg_in)
                 all_freqs = zeros([cfg_master.nControlSplits, size(od.msn_res.away_spec{iM}.freqs)]);
                 all_sts_vals = zeros([2, cfg_master.nControlSplits, length(od.msn_res.away_spec{iM}.sts_vals)]);
                 all_ppc = zeros([2, cfg_master.nControlSplits, size(od.msn_res.away_spec{iM}.ppc)]);
+                all_spk_count = zeros(2, cfg_master.nControlSplits);
          
-                
                 % For each split, fill in the tables
                 % If any one of them is nan, exit loop, set
                 % no_control_split_flag as true and move on to the next
@@ -993,6 +1005,19 @@ function od = generateSTS(cfg_in)
                     this_p2_trials = find(~od.msn_res.away_spec{iM}.valid_splits(iSplit,:));
                     this_p2_cfg.trl = cfg_away_trials.trl(this_p2_trials,:);
                     this_p2_data = ft_redefinetrial(this_p2_cfg, this_data);
+                    
+                    p1_spk_count = 0;
+                    for iT = 1:length(this_p1_data.trial)
+                        p1_spk_count = p1_spk_count + sum(this_p1_data.trial{iT}(2,:)); 
+                    end
+                    
+                    p2_spk_count = 0;
+                    for iT = 1:length(this_p2_data.trial)
+                        p2_spk_count = p2_spk_count + sum(this_p2_data.trial{iT}(2,:)); 
+                    end
+                    
+                    all_spk_count(1,iSplit) = p1_spk_count;
+                    all_spk_count(2,iSplit) = p2_spk_count;
                     
                     % Calculate and save STA
                     this_p1_sta = ft_spiketriggeredaverage(cfg_ft, this_p1_data);
@@ -1045,23 +1070,20 @@ function od = generateSTS(cfg_in)
                 % Save averages and std
                 od.msn_res.away_p1_spec{iM}.sta_time = od.msn_res.away_spec{iM}.sta_time;
                 od.msn_res.away_p2_spec{iM}.sta_time = od.msn_res.away_spec{iM}.sta_time;
-                od.msn_res.away_p1_spec{iM}.freqs = mean(all_freqs(1,:,:),2);
-                od.msn_res.away_p2_spec{iM}.freqs = mean(all_freqs(2,:,:),2);
-            
-                od.msn_res.away_p1_spec{iM}.mean_sta = mean(all_sta_vals(1,:,:),2);
-                od.msn_res.away_p2_spec{iM}.mean_sta = mean(all_sta_vals(2,:,:),2);
-                od.msn_res.away_p1_spec{iM}.sd_sta = std(all_sta_vals(1,:,:),2);
-                od.msn_res.away_p2_spec{iM}.sd_sta = std(all_sta_vals(2,:,:),2);
-                
-                od.msn_res.away_p1_spec{iM}.mean_sts = mean(all_sts_vals(1,:,:),2);
-                od.msn_res.away_p2_spec{iM}.mean_sts = mean(all_sts_vals(2,:,:),2);
-                od.msn_res.away_p1_spec{iM}.sd_sts = std(all_sts_vals(1,:,:),2);
-                od.msn_res.away_p2_spec{iM}.sd_sts = std(all_sts_vals(2,:,:),2);
-                
-                od.msn_res.away_p1_spec{iM}.mean_ppc = mean(all_ppc(1,:,:),2);
-                od.msn_res.away_p2_spec{iM}.mean_ppc = mean(all_ppc(2,:,:),2);
-                od.msn_res.away_p1_spec{iM}.sd_ppc = std(all_ppc(1,:,:),2);
-                od.msn_res.away_p2_spec{iM}.sd_ppc = std(all_ppc(2,:,:),2);                 
+                od.msn_res.away_p1_spec{iM}.freqs = squeeze(mean(all_freqs(1,:,:),2))';
+                od.msn_res.away_p2_spec{iM}.freqs = squeeze(mean(all_freqs(2,:,:),2))';
+                od.msn_res.away_p1_spec{iM}.mean_sta = squeeze(mean(all_sta_vals(1,:,:),2))';
+                od.msn_res.away_p2_spec{iM}.mean_sta = squeeze(mean(all_sta_vals(2,:,:),2))';
+                od.msn_res.away_p1_spec{iM}.sd_sta = squeeze(std(all_sta_vals(1,:,:)))';
+                od.msn_res.away_p2_spec{iM}.sd_sta = squeeze(std(all_sta_vals(2,:,:)))';
+                od.msn_res.away_p1_spec{iM}.mean_sts = squeeze(mean(all_sts_vals(1,:,:),2))';
+                od.msn_res.away_p2_spec{iM}.mean_sts = squeeze(mean(all_sts_vals(2,:,:),2))';
+                od.msn_res.away_p1_spec{iM}.sd_sts = squeeze(std(all_sts_vals(1,:,:)))';
+                od.msn_res.away_p2_spec{iM}.sd_sts = squeeze(std(all_sts_vals(2,:,:)))';
+                od.msn_res.away_p1_spec{iM}.mean_ppc = squeeze(mean(all_ppc(1,:,:),2))';
+                od.msn_res.away_p2_spec{iM}.mean_ppc = squeeze(mean(all_ppc(2,:,:),2))';
+                od.msn_res.away_p1_spec{iM}.sd_ppc = squeeze(std(all_ppc(1,:,:)))';
+                od.msn_res.away_p2_spec{iM}.sd_ppc = squeeze(std(all_ppc(2,:,:)))';                
             else
                 od.msn_res.away_spec{iM}.no_control_split_flag = true;
             end
@@ -1380,7 +1402,7 @@ function od = generateSTS(cfg_in)
                 nz_tspikes{iT} = all_tspikes{nz_trials(iT)};
                 spk_tcount(iT) = nz_tspikes{iT};
             end
-            % Find out the firing rate threhsold to split the trials such that
+            % Find out the firing rate threshold to split the trials such that
             % spikes are more or less equally divided
             ufr = unique(nz_mfr);
             dif_min = sum(cell2mat(nz_tspikes));
@@ -1399,45 +1421,64 @@ function od = generateSTS(cfg_in)
             lfr_trials = ~hfr_trials;
             
             
-            % Divide trials into partitions with equal spikes but not on
-            % the basis of fr_threshold
-            % make 2 groups and put the largest remaining element to the partition
-            % with the smallest sum. Once a sum reaches n/2, put the rest
-            % of the trials in the other group
-            % Potential Problem: The remaining lower spike might be the
-            % lfr trials, and thus biasing the partition.
-            total_spks = sum(spk_tcount);
-            spk_thresh = total_spks/2;
-            [sorted_tcount, sorted_idx] = sort(cell2mat(all_tspikes), 'descend');
-            trial_part = zeros(size(sorted_tcount));
-            g1_sum = 0;
-            g2_sum = 0;
-            for iT = 1:length(sorted_tcount)
-                if g1_sum <= g2_sum
-                    trial_part(iT) = 1;
-                else
-                    trial_part(iT) = 2;
+           % Divide trials into nControlSplits partitions with nearly equal spikes but not on
+            % the basis of fr_threshold. 
+            % Algo used: Use randomly generated splits and accept a split only if
+            % 1) difference between splits is <= 2x the diffference of the
+            % FR based split
+            % 2) not the same as an experimental split
+            % 3) not the same as an already found split
+            % Wait for 100,000,000 iterations, if you haven't found
+            % nControlSplits valid splits by then, take what you have!
+            
+            valid_splits  = false(cfg_master.nControlSplits,tcount);
+            all_tspikes_mat = cell2mat(all_tspikes);
+            last_valid_split = 0;
+            for iRand = 1:100000000 % wait till 100 million iterations
+                A = 1:tcount;
+                ndiv = 2;
+                this_idx = sort([1 randperm(length(A)-1, ndiv-1)+1 length(A)+1]);
+                for k1 = 1:length(this_idx)-1
+                    R{k1} = A(this_idx(k1):this_idx(k1+1)-1);
+                end  
+                this_perm = randperm(tcount);
+                this_split = false(1,tcount);
+                this_split(this_perm(R{1})) = true;
+                this_split_dif = abs(sum(all_tspikes_mat(this_split)) - sum(all_tspikes_mat(~this_split)));
+                % reject split of split dif is grater than threshold
+                if this_split_dif > dif_min
+                   continue; 
                 end
-                g1_sum = sum(sorted_tcount(trial_part == 1));
-                g2_sum = sum(sorted_tcount(trial_part == 2));
-                if g1_sum >= spk_thresh
-                    trial_part(iT+1:end) = 2;
-                    break;
+                % reject if split exactly the same as hypothesis split
+                if sum(this_split == hfr_trials) == tcount | sum(this_split == lfr_trials) == tcount
+                   continue;
                 end
-                if g2_sum >= spk_thresh
-                    trial_part(iT+1:end) = 1;
+                % reject if split the same as previously found valid split
+                flag_repeat_split = false;
+                for iCheck = 1:1:last_valid_split
+                    if sum(this_split == valid_splits(iCheck)) == tcount | sum(~this_split == valid_splits(iCheck)) == tcount
+                        flag_repeat_spilt = true;
+                        break;
+                    end
+                end
+                if flag_repeat_split
+                    continue;
+                end
+                % If you have made it till here, you found a valid_split!
+                last_valid_split = last_valid_split + 1;
+                valid_splits(last_valid_split,:) = this_split;
+                % If 100 valid splits are found, get out of this!
+                if last_valid_split == cfg_master.nControlSplits
                     break;
                 end
             end
-            p1_trials = false(size(sorted_tcount));
-            p1_trials(sorted_idx(trial_part==1)) = true;
-            p2_trials = ~p1_trials;
-           
+              
             od.fsi_res.near_spec{iM}.mfr = mfr;
             od.fsi_res.near_spec{iM}.fr_thresh = fr_thresh;
             od.fsi_res.near_spec{iM}.trial_spk_count = cell2mat(all_tspikes);
-            od.fsi_res.near_spec{iM}.p1_trials = p1_trials;
-            od.fsi_res.near_spec{iM}.p2_trials = p2_trials;
+            od.fsi_res.near_spec{iM}.valid_split_count = last_valid_split;
+            od.fsi_res.near_spec{iM}.valid_splits = valid_splits;
+            od.fsi_res.near_spec{iM}.randIters = iRand;
 
             % Calculate and Save all spec results for near_hfr_data
             cfg_near_hfr_trials.trl = cfg_near_trials.trl(hfr_trials,:);
@@ -1617,6 +1658,7 @@ function od = generateSTS(cfg_in)
                 end
             end
             
+
             % Calculate and Save all spec results for near_p1_data
             cfg_near_p1_trials.trl = cfg_near_trials.trl(p1_trials,:);
             near_p1_data = ft_redefinetrial(cfg_near_p1_trials, this_data);
@@ -1926,7 +1968,7 @@ function od = generateSTS(cfg_in)
                 nz_tspikes{iT} = all_tspikes{nz_trials(iT)};
                 spk_tcount(iT) = nz_tspikes{iT};
             end
-            % Find out the firing rate threhsold to split the trials such that
+            % Find out the firing rate threshold to split the trials such that
             % spikes are more or less equally divided
             ufr = unique(nz_mfr);
             dif_min = sum(cell2mat(nz_tspikes));
