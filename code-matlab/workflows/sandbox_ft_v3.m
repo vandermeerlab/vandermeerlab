@@ -5,10 +5,10 @@
 % subsampling
 %% setup
 clear;
-% cd('D:\ADRLabData');
-cd('/Users/manishm/Work/vanDerMeerLab/ADRLabData');
+cd('D:\ADRLabData');
+% cd('/Users/manishm/Work/vanDerMeerLab/ADRLabData');
 please = [];
-please.rats = {'R117', 'R119','R131','R132'}; % vStr-only rats
+please.rats = {'R117'};% {'R117', 'R119','R131','R132'}; % vStr-only rats
 [cfg_in.fd,cfg_in.fd_extra] = getDataPath(please);
 cfg_in.write_output = 1;
 cfg_in.output_dir = 'D:\RandomVstrAnalysis\temp';
@@ -17,8 +17,8 @@ cfg_in.incl_types = [1, 2];
 cfg_in.nMinSpikes1 = 400; % For on track
 cfg_in.nMinSpikes2 = 400; % For near and away
 cfg_in.nMinSpikes3 = 200; % For lfr, hfr, p1 and p2
-cfg_in.nControlSplits = 2;
-cfg_in.num_subsamples = 2;
+cfg_in.nControlSplits = 100;
+cfg_in.num_subsamples = 1000;
 
 
 %%
@@ -1121,6 +1121,7 @@ function od = generateSTS(cfg_in)
                 ~od.msn_res.near_hfr_spec{iM}.flag_nanppc & ...
                 ~od.msn_res.near_spec{iM}.flag_no_control_split        
                     od.msn_onTrack_dist = [od.msn_onTrack_dist od.msn_res.onTrack_spec{iM}.spk_count];
+                    od.msn_near_dist = [od.msn_near_dist od.msn_res.near_spec{iM}.spk_count];
                     od.msn_near_lfr_dist = [od.msn_near_lfr_dist od.msn_res.near_lfr_spec{iM}.spk_count];
                     od.msn_near_hfr_dist = [od.msn_near_hfr_dist od.msn_res.near_hfr_spec{iM}.spk_count];
                     od.msn_near_p1_dist = [od.msn_near_p1_dist round(mean(od.msn_res.near_p1_spec{iM}.spk_count))];
@@ -1137,6 +1138,7 @@ function od = generateSTS(cfg_in)
                 ~od.msn_res.away_hfr_spec{iM}.flag_nanppc & ...
                 ~od.msn_res.away_spec{iM}.flag_no_control_split        
                     od.msn_onTrack_dist = [od.msn_onTrack_dist od.msn_res.onTrack_spec{iM}.spk_count];
+                    od.msn_away_dist = [od.msn_away_dist od.msn_res.away_spec{iM}.spk_count];
                     od.msn_away_lfr_dist = [od.msn_away_lfr_dist od.msn_res.away_lfr_spec{iM}.spk_count];
                     od.msn_away_hfr_dist = [od.msn_away_hfr_dist od.msn_res.away_hfr_spec{iM}.spk_count];
                     od.msn_away_p1_dist = [od.msn_away_p1_dist round(mean(od.msn_res.away_p1_spec{iM}.spk_count))];
