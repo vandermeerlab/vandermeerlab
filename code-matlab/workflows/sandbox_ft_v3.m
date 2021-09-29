@@ -5,14 +5,14 @@
 % subsampling
 %% setup
 clear;
-cd('D:\ADRLabData');
-% cd('/Users/manishm/Work/vanDerMeerLab/ADRLabData');
+% cd('D:\ADRLabData');
+cd('/Users/manishm/Work/vanDerMeerLab/ADRLabData');
 please = [];
-please.rats = {'R117'};% {'R117', 'R119','R131','R132'}; % vStr-only rats
+please.rats = {'R119'};% {'R117', 'R119','R131','R132'}; % vStr-only rats
 [cfg_in.fd,cfg_in.fd_extra] = getDataPath(please);
 cfg_in.write_output = 1;
-cfg_in.output_dir = 'D:\RandomVstrAnalysis\temp';
-% cfg_in.output_dir = '/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp';
+% cfg_in.output_dir = 'D:\RandomVstrAnalysis\temp';
+cfg_in.output_dir = '/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp';
 cfg_in.incl_types = [1, 2];
 cfg_in.nMinSpikes1 = 400; % For on track
 cfg_in.nMinSpikes2 = 400; % For near and away
@@ -1137,7 +1137,6 @@ function od = generateSTS(cfg_in)
                 ~od.msn_res.away_hfr_spec{iM}.flag_nansts &  ...
                 ~od.msn_res.away_hfr_spec{iM}.flag_nanppc & ...
                 ~od.msn_res.away_spec{iM}.flag_no_control_split        
-                    od.msn_onTrack_dist = [od.msn_onTrack_dist od.msn_res.onTrack_spec{iM}.spk_count];
                     od.msn_away_dist = [od.msn_away_dist od.msn_res.away_spec{iM}.spk_count];
                     od.msn_away_lfr_dist = [od.msn_away_lfr_dist od.msn_res.away_lfr_spec{iM}.spk_count];
                     od.msn_away_hfr_dist = [od.msn_away_hfr_dist od.msn_res.away_hfr_spec{iM}.spk_count];
@@ -1595,7 +1594,7 @@ function od = generateSTS(cfg_in)
                 end
             end
        
-                        % Calculate and Save all spec results for Near LFR trials
+            % Calculate and Save all spec results for Near LFR trials
             lfr_trial_spike = cell(1, length(near_data.trial));
             last_spk_ct = 0;
             lfr_trl_idx = find(lfr_trials);
@@ -1703,6 +1702,8 @@ function od = generateSTS(cfg_in)
                     ~od.fsi_res.near_lfr_spec{iM}.flag_nanppc  && ...
                     ~od.fsi_res.near_hfr_spec{iM}.flag_nansts && ...
                     ~od.fsi_res.near_hfr_spec{iM}.flag_nanppc && ...
+                    ~od.fsi_res.near_hfr_spec{iM}.flag_no_subsampling && ...
+                    ~od.fsi_res.near_lfr_spec{iM}.flag_no_subsampling && ...
                     od.fsi_res.near_spec{iM}.valid_split_count == cfg_master.nControlSplits
                 
                 od.fsi_res.near_spec{iM}.flag_no_control_split = false;
@@ -2235,7 +2236,7 @@ function od = generateSTS(cfg_in)
                 end
             end
        
-                        % Calculate and Save all spec results for Away LFR trials
+            % Calculate and Save all spec results for Away LFR trials
             lfr_trial_spike = cell(1, length(away_data.trial));
             last_spk_ct = 0;
             lfr_trl_idx = find(lfr_trials);
@@ -2343,6 +2344,9 @@ function od = generateSTS(cfg_in)
                     ~od.fsi_res.away_lfr_spec{iM}.flag_nanppc  && ...
                     ~od.fsi_res.away_hfr_spec{iM}.flag_nansts && ...
                     ~od.fsi_res.away_hfr_spec{iM}.flag_nanppc && ...
+                    ~od.fsi_res.away_hfr_spec{iM}.flag_no_subsampling && ...
+                    ~od.fsi_res.away_lfr_spec{iM}.flag_no_subsampling && ...
+                    od.fsi_res.near_spec{iM}.valid_split_count == cfg_master.nControlSplits
                     od.fsi_res.away_spec{iM}.valid_split_count == cfg_master.nControlSplits
                 
                 od.fsi_res.away_spec{iM}.flag_no_control_split = false;
