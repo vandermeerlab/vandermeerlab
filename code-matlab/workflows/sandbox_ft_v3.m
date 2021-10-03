@@ -5,14 +5,14 @@
 % subsampling
 %% setup
 clear;
-% cd('D:\ADRLabData');
-cd('/Users/manishm/Work/vanDerMeerLab/ADRLabData');
+cd('D:\ADRLabData');
+% cd('/Users/manishm/Work/vanDerMeerLab/ADRLabData');
 please = [];
 please.rats = {'R119'};% {'R117', 'R119','R131','R132'}; % vStr-only rats
 [cfg_in.fd,cfg_in.fd_extra] = getDataPath(please);
 cfg_in.write_output = 1;
-% cfg_in.output_dir = 'D:\RandomVstrAnalysis\temp';
-cfg_in.output_dir = '/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp';
+cfg_in.output_dir = 'D:\RandomVstrAnalysis\temp';
+% cfg_in.output_dir = '/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp';
 cfg_in.incl_types = [1, 2];
 cfg_in.nMinSpikes1 = 400; % For on track
 cfg_in.nMinSpikes2 = 400; % For near and away
@@ -24,7 +24,7 @@ cfg_in.num_subsamples = 1000;
 %%
 % Top level loop which calls the main function for all the sessions
 diary on;
-for iS = 1:length(cfg_in.fd) % for each session...
+for iS = length(cfg_in.fd):-1:7 % for each session...
     cfg_in.iS = iS;
     pushdir(cfg_in.fd{iS});
     generateSTS(cfg_in); % do the business
