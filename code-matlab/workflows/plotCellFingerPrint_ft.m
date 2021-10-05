@@ -760,30 +760,14 @@ for idx = 1:length(rats)
             close all;  
         end
         
-        msn_labels  = od.label(od.cell_type == 1);
+        msn_labels  = od.label(od.cell_type == 2);
         for iC = 1:length(msn_labels)
             o_prefix = extractBefore(msn_labels{iC},'.t');
-            
-            % Plot On Track stuff first
             fig = figure('WindowState', 'maximized');
             
             % Plot Near Reward stuff next
             flag_leg = false;
-            if ~od.msn_res.near_spec{iC}.flag_tooFewSpikes && ...
-               ~od.msn_res.near_spec{iC}.flag_nansts && ...
-               ~od.msn_res.near_spec{iC}.flag_nanppc && ...
-               ~od.msn_res.near_lfr_spec{iC}.flag_tooFewSpikes && ...
-               ~od.msn_res.near_lfr_spec{iC}.flag_nansts && ...
-               ~od.msn_res.near_lfr_spec{iC}.flag_nanppc && ...
-               ~od.msn_res.near_hfr_spec{iC}.flag_tooFewSpikes && ...
-               ~od.msn_res.near_hfr_spec{iC}.flag_nansts && ...
-               ~od.msn_res.near_hfr_spec{iC}.flag_nanppc && ...
-               ~od.msn_res.near_p1_spec{iC}.flag_tooFewSpikes && ...
-               ~od.msn_res.near_p1_spec{iC}.flag_nansts && ...
-               ~od.msn_res.near_p1_spec{iC}.flag_nanppc && ...
-               ~od.msn_res.near_p2_spec{iC}.flag_tooFewSpikes && ...
-               ~od.msn_res.near_p2_spec{iC}.flag_nansts && ...
-               ~od.msn_res.near_p2_spec{iC}.flag_nanppc
+            if ~od.msn_res.near_spec{iC}.flag_no_control_split          
                 
                 % Plot STA
                 subplot(3,3,1)
@@ -796,20 +780,7 @@ for idx = 1:length(rats)
                 this_legend{length(this_legend)+1} = sprintf('LFR Trials: %d spikes',od.msn_res.near_lfr_spec{iC}.spk_count);
                 plot(od.msn_res.near_spec{iC}.sta_time, od.msn_res.near_hfr_spec{iC}.sta_vals, 'Color', 'green');
                 this_legend{length(this_legend)+1} = sprintf('HFR Trials: %d spikes',od.msn_res.near_hfr_spec{iC}.spk_count);
-                legend(this_legend, 'Location', 'northwest')
-                title('Near Reward STA');
-                
-                subplot(3,3,4)
-                plot(od.msn_res.near_spec{iC}.sta_time, od.msn_res.near_spec{iC}.sta_vals);
-                hold on;
-                this_legend = {};
-                flag_leg = true;
-                this_legend{length(this_legend)+1} = sprintf('All Trials: %d spikes',od.msn_res.near_spec{iC}.spk_count);
-                plot(od.msn_res.near_spec{iC}.sta_time, od.msn_res.near_p1_spec{iC}.sta_vals, 'Color', 'magenta');
-                this_legend{length(this_legend)+1} = sprintf('P1 Trials: %d spikes',od.msn_res.near_p1_spec{iC}.spk_count);
-                plot(od.msn_res.near_spec{iC}.sta_time, od.msn_res.near_p2_spec{iC}.sta_vals, 'Color', 'black');
-                this_legend{length(this_legend)+1} = sprintf('P2 Trials: %d spikes',od.msn_res.near_p2_spec{iC}.spk_count);
-                legend(this_legend, 'Location', 'northwest')
+                legend(this_legend, 'Location', 'northwest', 'FontSize', 8)
                 title('Near Reward STA');
                 
                 flag_near_lg_sts_peak = true;
@@ -832,7 +803,16 @@ for idx = 1:length(rats)
                 flag_near_p2_hg_sts_peak = true;
                 flag_near_p2_lg_ppc_peak = true;
                 flag_near_p2_hg_ppc_peak = true;
+                near_p1_lg_sts_pk = zeros(1,num_control_splits);
+                near_p2_lg_sts_pk = zeros(1,num_control_splits);
+                near_p1_hg_sts_pk = zeros(1,num_control_splits);
+                near_p2_hg_sts_pk = zeros(1,num_control_splits);
+                near_p1_lg_ppc_pk = zeros(1,num_control_splits);
+                near_p2_hg_ppc_pk = zeros(1,num_control_splits);
+                near_p1_hg_ppc_pk = zeros(1,num_control_splits);
+                near_p2_lg_ppc_pk = zeros(1,num_control_splits);
                 
+
                 % Peaks in near_spec
                 % Find Low Gamma STS Peak
                 lf = find(od.msn_res.near_spec{iC}.freqs >= lg(1), 1, 'first');
@@ -934,7 +914,8 @@ for idx = 1:length(rats)
                     end
                 else
                     flag_near_lfr_hg_sts_peak = false; 
-                end    
+                end
+                
                 % Find High Gamma PPC Peak
                 pks = findpeaks(od.msn_res.near_lfr_spec{iC}.ppc(lf:rf));
                 max_val = max(od.msn_res.near_lfr_spec{iC}.ppc);
@@ -1011,116 +992,140 @@ for idx = 1:length(rats)
                 % Find Low Gamma STS Peak
                 lf = find(od.msn_res.near_p1_spec{iC}.freqs >= lg(1), 1, 'first');
                 rf = find(od.msn_res.near_p1_spec{iC}.freqs <= lg(2), 1, 'last');
-                pks = findpeaks(od.msn_res.near_p1_spec{iC}.sts_vals(lf:rf));
-                max_val = max(od.msn_res.near_p1_spec{iC}.sts_vals);
-                if ~isempty(pks.loc) 
-                    [pk1, loc1] = max(od.msn_res.near_p1_spec{iC}.sts_vals(lf+pks.loc-1));
-                    if pk1 > max_val*pk_thresh
-                        near_p1_lg_sts_pk = pks.loc(loc1);
+                for iP = 1:num_control_splits
+                    pks = findpeaks(od.msn_res.near_p1_spec{iC}.sts(iP,lf:rf));
+                    max_val = max(od.msn_res.near_p1_spec{iC}.sts(iP,:));
+                    if ~isempty(pks.loc) 
+                        [pk1, loc1] = max(od.msn_res.near_p1_spec{iC}.sts(iP,lf+pks.loc-1));
+                        if pk1 > max_val*pk_thresh
+                            near_p1_lg_sts_pk(iP) = pks.loc(loc1);
+                        else
+                           flag_near_p1_lg_sts_peak = false;
+                        end
                     else
-                       flag_near_p1_lg_sts_peak = false;
+                        flag_near_p1_lg_sts_peak = false; 
                     end
-                else
-                    flag_near_p1_lg_sts_peak = false; 
-                end                
+                end   
                 % Find Low Gamma PPC Peak
-                pks = findpeaks(od.msn_res.near_p1_spec{iC}.ppc(lf:rf));
-                max_val = max(od.msn_res.near_p1_spec{iC}.ppc);
-                if ~isempty(pks.loc) 
-                    [pk1, loc1] = max(od.msn_res.near_p1_spec{iC}.ppc(lf+pks.loc-1));
-                    if pk1 > max_val*pk_thresh
-                        near_p1_lg_ppc_pk = pks.loc(loc1);
+                lf = find(od.msn_res.near_p1_spec{iC}.freqs >= lg(1), 1, 'first');
+                rf = find(od.msn_res.near_p1_spec{iC}.freqs <= lg(2), 1, 'last');
+                for iP = 1:num_control_splits
+                    pks = findpeaks(od.msn_res.near_p1_spec{iC}.ppc(iP,lf:rf));
+                    max_val = max(od.msn_res.near_p1_spec{iC}.ppc(iP,:));
+                    if ~isempty(pks.loc) 
+                        [pk1, loc1] = max(od.msn_res.near_p1_spec{iC}.ppc(iP,lf+pks.loc-1));
+                        if pk1 > max_val*pk_thresh
+                            near_p1_lg_ppc_pk(iP) = pks.loc(loc1);
+                        else
+                           flag_near_p1_lg_ppc_peak = false;
+                        end
                     else
-                       flag_near_p1_lg_ppc_peak = false;
+                        flag_near_p1_lg_ppc_peak = false; 
                     end
-                else
-                    flag_near_p1_lg_ppc_peak = false; 
-                end    
+                end
                 % Find High Gamma STS Peak
                 lf = find(od.msn_res.near_p1_spec{iC}.freqs >= hg(1), 1, 'first');
                 rf = find(od.msn_res.near_p1_spec{iC}.freqs <= hg(2), 1, 'last');
-                pks = findpeaks(od.msn_res.near_p1_spec{iC}.sts_vals(lf:rf));
-                max_val = max(od.msn_res.near_p1_spec{iC}.sts_vals);
-                if ~isempty(pks.loc) 
-                    [pk1, loc1] = max(od.msn_res.near_p1_spec{iC}.sts_vals(lf+pks.loc-1));
-                    if pk1 > max_val*pk_thresh
-                        near_p1_hg_sts_pk = pks.loc(loc1);
+                for iP = 1:num_control_splits
+                    pks = findpeaks(od.msn_res.near_p1_spec{iC}.sts(iP,lf:rf));
+                    max_val = max(od.msn_res.near_p1_spec{iC}.sts(iP,:));
+                    if ~isempty(pks.loc) 
+                        [pk1, loc1] = max(od.msn_res.near_p1_spec{iC}.sts(iP,lf+pks.loc-1));
+                        if pk1 > max_val*pk_thresh
+                            near_p1_hg_sts_pk(iP) = pks.loc(loc1);
+                        else
+                           flag_near_p1_hg_sts_peak = false;
+                        end
                     else
-                       flag_near_p1_hg_sts_peak = false;
+                        flag_near_p1_hg_sts_peak = false; 
                     end
-                else
-                    flag_near_p1_hg_sts_peak = false; 
-                end    
+                end   
                 % Find High Gamma PPC Peak
-                pks = findpeaks(od.msn_res.near_p1_spec{iC}.ppc(lf:rf));
-                max_val = max(od.msn_res.near_p1_spec{iC}.ppc);
-                if ~isempty(pks.loc) 
-                    [pk1, loc1] = max(od.msn_res.near_p1_spec{iC}.ppc(lf+pks.loc-1));
-                    if pk1 > max_val*pk_thresh
-                        near_p1_hg_ppc_pk = pks.loc(loc1);
+                lf = find(od.msn_res.near_p1_spec{iC}.freqs >= hg(1), 1, 'first');
+                rf = find(od.msn_res.near_p1_spec{iC}.freqs <= hg(2), 1, 'last');
+                for iP = 1:num_control_splits
+                    pks = findpeaks(od.msn_res.near_p1_spec{iC}.ppc(iP,lf:rf));
+                    max_val = max(od.msn_res.near_p1_spec{iC}.ppc(iP,:));
+                    if ~isempty(pks.loc) 
+                        [pk1, loc1] = max(od.msn_res.near_p1_spec{iC}.ppc(iP,lf+pks.loc-1));
+                        if pk1 > max_val*pk_thresh
+                            near_p1_hg_ppc_pk(iP) = pks.loc(loc1);
+                        else
+                           flag_near_p1_hg_ppc_peak = false;
+                        end
                     else
-                       flag_near_p1_hg_ppc_peak = false;
+                        flag_near_p1_hg_ppc_peak = false; 
                     end
-                else
-                    flag_near_p1_hg_ppc_peak = false; 
                 end
                 
                 % Peaks in near_p2_spec
                 % Find Low Gamma STS Peak
                 lf = find(od.msn_res.near_p2_spec{iC}.freqs >= lg(1), 1, 'first');
                 rf = find(od.msn_res.near_p2_spec{iC}.freqs <= lg(2), 1, 'last');
-                pks = findpeaks(od.msn_res.near_p2_spec{iC}.sts_vals(lf:rf));
-                max_val = max(od.msn_res.near_p2_spec{iC}.sts_vals);
-                if ~isempty(pks.loc) 
-                    [pk1, loc1] = max(od.msn_res.near_p2_spec{iC}.sts_vals(lf+pks.loc-1));
-                    if pk1 > max_val*pk_thresh
-                        near_p2_lg_sts_pk = pks.loc(loc1);
+                for iP = 1:num_control_splits
+                    pks = findpeaks(od.msn_res.near_p2_spec{iC}.sts(iP,lf:rf));
+                    max_val = max(od.msn_res.near_p2_spec{iC}.sts(iP,:));
+                    if ~isempty(pks.loc) 
+                        [pk1, loc1] = max(od.msn_res.near_p2_spec{iC}.sts(iP,lf+pks.loc-1));
+                        if pk1 > max_val*pk_thresh
+                            near_p2_lg_sts_pk(iP) = pks.loc(loc1);
+                        else
+                           flag_near_p2_lg_sts_peak = false;
+                        end
                     else
-                       flag_near_p2_lg_sts_peak = false;
+                        flag_near_p2_lg_sts_peak = false; 
                     end
-                else
-                    flag_near_p2_lg_sts_peak = false; 
-                end                
+                end   
                 % Find Low Gamma PPC Peak
-                pks = findpeaks(od.msn_res.near_p2_spec{iC}.ppc(lf:rf));
-                max_val = max(od.msn_res.near_p2_spec{iC}.ppc);
-                if ~isempty(pks.loc) 
-                    [pk1, loc1] = max(od.msn_res.near_p2_spec{iC}.ppc(lf+pks.loc-1));
-                    if pk1 > max_val*pk_thresh
-                        near_p2_lg_ppc_pk = pks.loc(loc1);
+                lf = find(od.msn_res.near_p2_spec{iC}.freqs >= lg(1), 1, 'first');
+                rf = find(od.msn_res.near_p2_spec{iC}.freqs <= lg(2), 1, 'last');
+                for iP = 1:num_control_splits
+                    pks = findpeaks(od.msn_res.near_p2_spec{iC}.ppc(iP,lf:rf));
+                    max_val = max(od.msn_res.near_p2_spec{iC}.ppc(iP,:));
+                    if ~isempty(pks.loc) 
+                        [pk1, loc1] = max(od.msn_res.near_p2_spec{iC}.ppc(iP,lf+pks.loc-1));
+                        if pk1 > max_val*pk_thresh
+                            near_p2_lg_ppc_pk(iP) = pks.loc(loc1);
+                        else
+                           flag_near_p2_lg_ppc_peak = false;
+                        end
                     else
-                       flag_near_p2_lg_ppc_peak = false;
+                        flag_near_p2_lg_ppc_peak = false; 
                     end
-                else
-                    flag_near_p2_lg_ppc_peak = false; 
-                end    
+                end
                 % Find High Gamma STS Peak
                 lf = find(od.msn_res.near_p2_spec{iC}.freqs >= hg(1), 1, 'first');
                 rf = find(od.msn_res.near_p2_spec{iC}.freqs <= hg(2), 1, 'last');
-                pks = findpeaks(od.msn_res.near_p2_spec{iC}.sts_vals(lf:rf));
-                max_val = max(od.msn_res.near_p2_spec{iC}.sts_vals);
-                if ~isempty(pks.loc) 
-                    [pk1, loc1] = max(od.msn_res.near_p2_spec{iC}.sts_vals(lf+pks.loc-1));
-                    if pk1 > max_val*pk_thresh
-                        near_p2_hg_sts_pk = pks.loc(loc1);
+                for iP = 1:num_control_splits
+                    pks = findpeaks(od.msn_res.near_p2_spec{iC}.sts(iP,lf:rf));
+                    max_val = max(od.msn_res.near_p2_spec{iC}.sts(iP,:));
+                    if ~isempty(pks.loc) 
+                        [pk1, loc1] = max(od.msn_res.near_p2_spec{iC}.sts(iP,lf+pks.loc-1));
+                        if pk1 > max_val*pk_thresh
+                            near_p2_hg_sts_pk(iP) = pks.loc(loc1);
+                        else
+                           flag_near_p2_hg_sts_peak = false;
+                        end
                     else
-                       flag_near_p2_hg_sts_peak = false;
+                        flag_near_p2_hg_sts_peak = false; 
                     end
-                else
-                    flag_near_p2_hg_sts_peak = false; 
-                end    
+                end   
                 % Find High Gamma PPC Peak
-                pks = findpeaks(od.msn_res.near_p2_spec{iC}.ppc(lf:rf));
-                max_val = max(od.msn_res.near_p2_spec{iC}.ppc);
-                if ~isempty(pks.loc) 
-                    [pk1, loc1] = max(od.msn_res.near_p2_spec{iC}.ppc(lf+pks.loc-1));
-                    if pk1 > max_val*pk_thresh
-                        near_p2_hg_ppc_pk = pks.loc(loc1);
+                lf = find(od.msn_res.near_p2_spec{iC}.freqs >= hg(1), 1, 'first');
+                rf = find(od.msn_res.near_p2_spec{iC}.freqs <= hg(2), 1, 'last');
+                for iP = 1:num_control_splits
+                    pks = findpeaks(od.msn_res.near_p2_spec{iC}.ppc(iP,lf:rf));
+                    max_val = max(od.msn_res.near_p2_spec{iC}.ppc(iP,:));
+                    if ~isempty(pks.loc) 
+                        [pk1, loc1] = max(od.msn_res.near_p2_spec{iC}.ppc(iP,lf+pks.loc-1));
+                        if pk1 > max_val*pk_thresh
+                            near_p2_hg_ppc_pk(iP) = pks.loc(loc1);
+                        else
+                           flag_near_p2_hg_ppc_peak = false;
+                        end
                     else
-                       flag_near_p2_hg_ppc_peak = false;
+                        flag_near_p2_hg_ppc_peak = false; 
                     end
-                else
-                    flag_near_p2_hg_ppc_peak = false; 
                 end
                 
                 all_sts_peaks_in_lg = flag_near_lg_sts_peak && ...
@@ -1144,7 +1149,8 @@ for idx = 1:length(rats)
                     flag_near_p2_hg_ppc_peak && ...
                     flag_near_p1_hg_ppc_peak;
 
-                % Skip plotting only if no peaks in either hg or lg     
+                % Skip plotting only if no peaks in either hg or lg
+                
                 if ~(all_sts_peaks_in_lg && all_ppc_peaks_in_lg) && ...
                       ~(all_sts_peaks_in_hg && all_ppc_peaks_in_hg)  
                     close all;
@@ -1163,32 +1169,44 @@ for idx = 1:length(rats)
                 near_hfr_spec_range = [min(od.msn_res.near_spec{iC}.mfr(hfr_trials)), max(od.msn_res.near_spec{iC}.mfr(hfr_trials))];
                 near_spec_mean = sum(od.msn_res.near_spec{iC}.trial_spk_count(nz_trials))/sum(od.msn_res.near_spec{iC}.trial_spk_count(nz_trials)'./od.msn_res.near_spec{iC}.mfr(nz_trials));
                 near_spec_range = [min(od.msn_res.near_spec{iC}.mfr(nz_trials)), max(od.msn_res.near_spec{iC}.mfr(nz_trials))];
-                near_lfr_sts_corr  = corrcoef(od.msn_res.near_spec{iC}.sts_vals ,od.msn_res.near_lfr_spec{iC}.sts_vals);
+                near_lfr_sts_corr = corrcoef(od.msn_res.near_spec{iC}.sts_vals,od.msn_res.near_lfr_spec{iC}.sts_vals);
                 near_lfr_sts_corr = near_lfr_sts_corr(1,2);
-                near_hfr_sts_corr  = corrcoef(od.msn_res.near_spec{iC}.sts_vals ,od.msn_res.near_hfr_spec{iC}.sts_vals);
+                near_hfr_sts_corr = corrcoef(od.msn_res.near_spec{iC}.sts_vals,od.msn_res.near_hfr_spec{iC}.sts_vals);
                 near_hfr_sts_corr = near_hfr_sts_corr(1,2);
-                near_lfr_ppc_corr  = corrcoef(od.msn_res.near_spec{iC}.ppc ,od.msn_res.near_lfr_spec{iC}.ppc);
+                near_lfr_ppc_corr = corrcoef(od.msn_res.near_spec{iC}.ppc,od.msn_res.near_lfr_spec{iC}.ppc);
                 near_lfr_ppc_corr = near_lfr_ppc_corr(1,2);
-                near_hfr_ppc_corr  = corrcoef(od.msn_res.near_spec{iC}.ppc ,od.msn_res.near_hfr_spec{iC}.ppc);
+                near_hfr_ppc_corr = corrcoef(od.msn_res.near_spec{iC}.ppc,od.msn_res.near_hfr_spec{iC}.ppc);
                 near_hfr_ppc_corr = near_hfr_ppc_corr(1,2);
                  
-                p1_trials = od.msn_res.near_spec{iC}.p1_trials;     
-                p2_trials = od.msn_res.near_spec{iC}.p2_trials;  
-                p1_trials = p1_trials & nz_trials';
-                p2_trials = p2_trials & nz_trials';
-                near_p1_spec_mean = sum(od.msn_res.near_spec{iC}.trial_spk_count(p1_trials))/sum(od.msn_res.near_spec{iC}.trial_spk_count(p1_trials)'./od.msn_res.near_spec{iC}.mfr(p1_trials));
-                near_p1_spec_range = [min(od.msn_res.near_spec{iC}.mfr(p1_trials)), max(od.msn_res.near_spec{iC}.mfr(p1_trials))];
-                near_p2_spec_mean = sum(od.msn_res.near_spec{iC}.trial_spk_count(p2_trials))/sum(od.msn_res.near_spec{iC}.trial_spk_count(p2_trials)'./od.msn_res.near_spec{iC}.mfr(p2_trials));
-                near_p2_spec_range = [min(od.msn_res.near_spec{iC}.mfr(p2_trials)), max(od.msn_res.near_spec{iC}.mfr(p2_trials))];
-                near_p1_sts_corr  = corrcoef(od.msn_res.near_spec{iC}.sts_vals ,od.msn_res.near_p1_spec{iC}.sts_vals);
+                p1_trials = od.msn_res.near_spec{iC}.valid_splits;    
+                p2_trials = ~p1_trials;
+                p1_trials = p1_trials & repmat(nz_trials',100,1);
+                p2_trials = p2_trials & repmat(nz_trials',100,1);
+                temp_p1_spk = zeros(100,1);
+                temp_p1_dur = zeros(100,1);
+                temp_p2_spk = zeros(100,1);
+                temp_p2_dur = zeros(100,1);
+                for iP = 1:100
+                    temp_p1_spk(iP) = sum(od.msn_res.near_spec{iC}.trial_spk_count(p1_trials(iP,:)));
+                    temp_p1_dur(iP) = sum(od.msn_res.near_spec{iC}.trial_spk_count(p1_trials(iP,:))./od.msn_res.near_spec{iC}.mfr(p1_trials(iP,:))');
+                    temp_p2_spk(iP) = sum(od.msn_res.near_spec{iC}.trial_spk_count(p2_trials(iP,:)));
+                    temp_p2_dur(iP) = sum(od.msn_res.near_spec{iC}.trial_spk_count(p2_trials(iP,:))./od.msn_res.near_spec{iC}.mfr(p2_trials(iP,:))');
+                end
+                temp_p1_mfr = temp_p1_spk./temp_p1_dur;
+                temp_p2_mfr = temp_p2_spk./temp_p2_dur;
+                near_p1_spec_mean = mean(temp_p1_mfr);
+                near_p1_spec_range = [min(temp_p1_mfr) max(temp_p1_mfr)];
+                near_p2_spec_mean = mean(temp_p2_mfr);
+                near_p2_spec_range = [min(temp_p2_mfr) max(temp_p2_mfr)];
+                near_p1_sts_corr  = corrcoef(od.msn_res.near_spec{iC}.sts_vals ,mean(od.msn_res.near_p1_spec{iC}.sts,1));
                 near_p1_sts_corr = near_p1_sts_corr(1,2);
-                near_p2_sts_corr  = corrcoef(od.msn_res.near_spec{iC}.sts_vals ,od.msn_res.near_p2_spec{iC}.sts_vals);
+                near_p2_sts_corr  = corrcoef(od.msn_res.near_spec{iC}.sts_vals ,mean(od.msn_res.near_p2_spec{iC}.sts,1));
                 near_p2_sts_corr = near_p2_sts_corr(1,2);
-                near_p1_ppc_corr  = corrcoef(od.msn_res.near_spec{iC}.ppc ,od.msn_res.near_p1_spec{iC}.ppc);
+                near_p1_ppc_corr  = corrcoef(od.msn_res.near_spec{iC}.ppc ,mean(od.msn_res.near_p1_spec{iC}.ppc,1));
                 near_p1_ppc_corr = near_p1_ppc_corr(1,2);
-                near_p2_ppc_corr  = corrcoef(od.msn_res.near_spec{iC}.ppc ,od.msn_res.near_p2_spec{iC}.ppc);
+                near_p2_ppc_corr  = corrcoef(od.msn_res.near_spec{iC}.ppc ,mean(od.msn_res.near_p2_spec{iC}.ppc,1));
                 near_p2_ppc_corr = near_p2_ppc_corr(1,2);
-                
+              
                 % if peaks exist in both low gamma and high gamma range
                 if all_sts_peaks_in_lg && all_ppc_peaks_in_lg && ...
                     all_sts_peaks_in_hg && all_ppc_peaks_in_hg ...
@@ -1227,44 +1245,19 @@ for idx = 1:length(rats)
                     this_legend{length(this_legend)+1} = sprintf ...
                        ('HFR Trials lg peak: %2.2f Hz, hg peak: %2.2f Hz ',...
                        near_hfr_lg_sts_pk, near_hfr_hg_sts_pk);
-                    xlabel('Freqs')
-                    title('Near Reward STS');
-                    
-                    subplot(3,3,5)
-                    hold on;
-                    plot(od.msn_res.near_spec{iC}.freqs, od.msn_res.near_spec{iC}.sts_vals, 'blue');
-                    q0 = xline(near_lg_sts_pk, 'blue');
-                    q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
-                    q0 = xline(near_hg_sts_pk, '--blue');
-                    q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
-                    this_legend{length(this_legend)+1} = sprintf ...
-                       ('All Trials lg peak: %2.2f Hz, hg peak: %2.2f Hz ',...
-                       near_lg_sts_pk, near_hg_sts_pk);
-                    plot(od.msn_res.near_p1_spec{iC}.freqs, od.msn_res.near_p1_spec{iC}.sts_vals, 'magenta');
-                    near_p1_lg_sts_pk = od.msn_res.near_p1_spec{iC}.freqs(lg(1)+near_p1_lg_sts_pk-1);
-                    q0 = xline(near_p1_lg_sts_pk, 'magenta');
-                    q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
-                    near_p1_hg_sts_pk = od.msn_res.near_p1_spec{iC}.freqs(hg(1)+near_p1_hg_sts_pk-1);
-                    q0 = xline(near_p1_hg_sts_pk, '--magenta');
-                    q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
-                    this_legend{length(this_legend)+1} = sprintf ...
-                       ('P1 Trials lg peak: %2.2f Hz, hg peak: %2.2f Hz ',...
-                       near_p1_lg_sts_pk, near_p1_hg_sts_pk);
-                    plot(od.msn_res.near_p2_spec{iC}.freqs, od.msn_res.near_p2_spec{iC}.sts_vals, 'black');
-                    near_p2_lg_sts_pk = od.msn_res.near_p2_spec{iC}.freqs(lg(1)+near_p2_lg_sts_pk-1);
-                    q0 = xline(near_p2_lg_sts_pk, 'black');
-                    q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
-                    near_p2_hg_sts_pk = od.msn_res.near_p2_spec{iC}.freqs(hg(1)+near_p2_hg_sts_pk-1);
-                    q0 = xline(near_p2_hg_sts_pk, '--black');
-                    q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
-                    this_legend{length(this_legend)+1} = sprintf ...
-                       ('P2 Trials lg peak: %2.2f Hz, hg peak: %2.2f Hz ',...
-                       near_p2_lg_sts_pk, near_p2_hg_sts_pk);
                     sts_text = this_legend;  
                     xlabel('Freqs')
                     title('Near Reward STS');
                     
-                    
+                    p1_p2_sts = od.msn_res.near_p1_spec{iC}.sts - od.msn_res.near_p2_spec{iC}.sts;
+                    p1_p2_ppc = od.msn_res.near_p1_spec{iC}.ppc - od.msn_res.near_p2_spec{iC}.ppc;
+                    mean_sts = mean(p1_p2_sts,1);
+                    sd_sts = std(p1_p2_sts);
+                    mean_ppc = mean(p1_p2_ppc, 1);
+                    sd_ppc = std(p1_p2_ppc);
+                    hfr_lfr_sts = od.msn_res.near_hfr_spec{iC}.sts_vals - od.msn_res.near_lfr_spec{iC}.sts_vals;
+                    hfr_lfr_ppc = od.msn_res.near_hfr_spec{iC}.ppc - od.msn_res.near_lfr_spec{iC}.ppc;
+                                   
                     % Plot PPC
                     subplot(3,3,3)
                     this_legend = {};
@@ -1303,39 +1296,44 @@ for idx = 1:length(rats)
                     xlabel('Freqs')
                     title('Near Reward PPC');
                     
-                    % Plot PPC
-                    subplot(3,3,6)
-                    hold on;
-                    plot(od.msn_res.near_spec{iC}.freqs, od.msn_res.near_spec{iC}.ppc, 'blue');
-                    q0 = xline(near_lg_ppc_pk, 'blue');
-                    q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
-                    q0 = xline(near_hg_ppc_pk, '--blue');
-                    q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
-                    this_legend{length(this_legend)+1} = sprintf ...
-                       ('All Trials lg peak: %2.2f Hz, hg peak: %2.2f Hz ',...
-                       near_lg_ppc_pk, near_hg_ppc_pk);
-                    plot(od.msn_res.near_p1_spec{iC}.freqs, od.msn_res.near_p1_spec{iC}.ppc, 'magenta');
-                    q0 = xline(near_p1_lg_ppc_pk, 'magenta');
-                    q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
-                    near_p1_hg_ppc_pk = od.msn_res.near_p1_spec{iC}.freqs(hg(1)+near_p1_hg_ppc_pk-1);
-                    q0 = xline(near_p1_hg_ppc_pk, '--magenta');
-                    q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
-                    this_legend{length(this_legend)+1} = sprintf ...
-                       ('P1 Trials lg peak: %2.2f Hz, hg peak: %2.2f Hz ',...
-                       near_p1_lg_ppc_pk, near_p1_hg_ppc_pk);
-                    plot(od.msn_res.near_p2_spec{iC}.freqs, od.msn_res.near_p2_spec{iC}.ppc, 'black');
-                    near_p2_lg_ppc_pk = od.msn_res.near_p2_spec{iC}.freqs(lg(1)+near_p2_lg_ppc_pk-1);
-                    q0 = xline(near_p2_lg_ppc_pk, 'black');
-                    q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
-                    near_p2_hg_ppc_pk = od.msn_res.near_p2_spec{iC}.freqs(hg(1)+near_p2_hg_ppc_pk-1);
-                    q0 = xline(near_p2_hg_ppc_pk, '--black');
-                    q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
-                    this_legend{length(this_legend)+1} = sprintf ...
-                       ('P2 Trials lg peak: %2.2f Hz, hg peak: %2.2f Hz ',...
-                       near_p2_lg_ppc_pk, near_p2_hg_ppc_pk);
-                    ppc_text = this_legend;
+                    % Plot Control split stuff
+                    subplot(3,3,4)
+                    plot(mean_sts + sd_sts, '-g')
+                    hold on; plot(mean_sts - sd_sts, '-r')
+                    plot(hfr_lfr_sts, '--blue')
+                    legend({'P1-P2: Mean + 1*SD', 'P1-P2: Mean - 1*SD', 'HFR - LFR'}, 'FontSize', 8, 'Location', 'southeast')
+                    ylabel('STS difference')
                     xlabel('Freqs')
-                    title('Near Reward PPC');
+                    
+                    subplot(3,3,5)
+                    plot(mean_ppc + sd_ppc, '-g')
+                    hold on; plot(mean_ppc - sd_ppc, '-r')
+                    plot(hfr_lfr_ppc, '--blue')
+                    legend({'P1-P2: Mean + 1*SD', 'P1-P2: Mean - 1*SD', 'HFR - LFR'}, 'FontSize', 8, 'Location', 'southeast')
+                    ylabel('PPC difference')
+                    xlabel('Freqs')
+                    
+                    % Plot histograms
+                    subplot(6,6,17)
+                    hold on
+                    histogram(near_p1_lg_sts_pk - near_p2_lg_sts_pk,'FaceColor','red','FaceAlpha',0.6);
+                    xline(near_lfr_lg_sts_pk, 'blue')
+                    ylabel('STS 5-30 Peak dif')
+                    subplot(6,6,18)
+                    hold on
+                    histogram(near_p1_lg_ppc_pk - near_p2_lg_ppc_pk,'FaceColor','red','FaceAlpha',0.6);
+                    xline(near_lfr_lg_sts_pk, 'blue')
+                    ylabel('PPC 5-30 Peak dif')
+                    subplot(6,6,23)
+                    hold on
+                    histogram(near_p1_hg_sts_pk - near_p2_hg_sts_pk,'FaceColor','green','FaceAlpha',0.6);
+                    xline(near_lfr_hg_sts_pk, 'blue')
+                    ylabel('STS 30-100 Peak hg')
+                    subplot(6,6,24)
+                    hold on
+                    histogram(near_p1_hg_ppc_pk - near_p2_hg_ppc_pk,'FaceColor','green','FaceAlpha',0.6);
+                    xline(near_lfr_hg_sts_pk, 'blue')
+                    ylabel('PPC 30-100 Peak hg')
                     
                    % Relevant info as text
                     subplot(3,3,7)
@@ -1375,14 +1373,14 @@ for idx = 1:length(rats)
                     text(0, 0.48, near_hfr_text, 'Color', 'green', 'FontSize', 9);
                     text(0, 0.4, near_hfr_text2, 'Color', 'green', 'FontSize', 9);
                     text(0.4, 0.4, near_hfr_text3, 'Color', 'green', 'FontSize', 9);
-                    text(0, 0.3, near_p1_text, 'Color', 'magenta', 'FontSize', 9);
-                    text(0, 0.22, near_p1_text2, 'Color', 'magenta', 'FontSize', 9);
-                    text(0.4, 0.22, near_p1_text3, 'Color', 'magenta', 'FontSize', 9);
+                    text(0, 0.3, near_p1_text, 'Color', 'black', 'FontSize', 9);
+                    text(0, 0.22, near_p1_text2, 'Color', 'black', 'FontSize', 9);
+                    text(0.4, 0.22, near_p1_text3, 'Color', 'black', 'FontSize', 9);
                     text(0, 0.12, near_p2_text, 'Color', 'black', 'FontSize', 9);
                     text(0, 0.04, near_p2_text2, 'Color', 'black', 'FontSize', 9);
                     text(0.4, 0.04, near_p2_text3, 'Color', 'black', 'FontSize', 9);
-                    text(0, -0.04, sim_text, 'Color', 'cyan', 'FontSize', 9);
-                    text(0, -0.14, sim_text2, 'Color', 'cyan', 'FontSize', 9);
+                    text(0, -0.04, sim_text, 'Color', 'magenta', 'FontSize', 9);
+                    text(0, -0.14, sim_text2, 'Color', 'magenta', 'FontSize', 9);
                     axis off;
                     
                     subplot(3,3,8)
@@ -1395,9 +1393,7 @@ for idx = 1:length(rats)
                     text(0, 0.8, sts_lfr_text, 'Color', 'red', 'FontSize', 9);
                     text(0, 0.7, sts_text{3}, 'Color', 'green', 'FontSize', 9);
                     text(0, 0.6, sts_hfr_text, 'Color', 'green', 'FontSize', 9);
-                    text(0, 0.5, sts_text{5}, 'Color', 'magenta', 'FontSize', 9);
                     text(0, 0.4, sts_p1_text, 'Color', 'magenta', 'FontSize', 9);
-                    text(0, 0.3, sts_text{6}, 'Color', 'black', 'FontSize', 9);
                     text(0, 0.2, sts_p2_text, 'Color', 'black', 'FontSize', 9);
                     axis off;
                     
@@ -1411,9 +1407,7 @@ for idx = 1:length(rats)
                     text(0, 0.8, ppc_lfr_text, 'Color', 'red', 'FontSize', 9);
                     text(0, 0.7, ppc_text{3}, 'Color', 'green', 'FontSize', 9);
                     text(0, 0.6, ppc_hfr_text, 'Color', 'green', 'FontSize', 9);
-                    text(0, 0.5, ppc_text{5}, 'Color', 'magenta', 'FontSize', 9);
                     text(0, 0.4, ppc_p1_text, 'Color', 'magenta', 'FontSize', 9);
-                    text(0, 0.3, ppc_text{6}, 'Color', 'black', 'FontSize', 9);
                     text(0, 0.2, ppc_p2_text, 'Color', 'black', 'FontSize', 9);
                     axis off;
                     
