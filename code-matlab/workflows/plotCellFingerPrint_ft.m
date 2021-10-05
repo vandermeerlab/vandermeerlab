@@ -1412,7 +1412,7 @@ for idx = 1:length(rats)
                     else
                         o_prefix = cat(2, o_prefix, '_hg_ppc_u10');
                     end
-                    
+                    o_name = cat(2, o_prefix, '_MSN');
                 end
             else
                 close all;
