@@ -733,24 +733,6 @@ for idx = 1:length(rats)
                     else
                         o_prefix = cat(2, o_prefix, '_hg_ppc_u10');
                     end
-                    
-                    % Indicate lg control category of cell in suffix
-                    if near_p1_lg_ppc_pk - near_p2_lg_ppc_pk > 10
-                        o_prefix = cat(2, o_prefix, '_lg_ppc_cg10');
-                    elseif near_p1_lg_ppc_pk - near_p2_lg_ppc_pk < -10
-                        o_prefix = cat(2, o_prefix, '_lg_ppc_cgn10');
-                    else
-                        o_prefix = cat(2, o_prefix, '_lg_ppc_cu10');
-                    end
-                    
-                    % Indicate hg category of cell in suffix
-                    if near_p1_hg_ppc_pk - near_p2_hg_ppc_pk > 10
-                        o_prefix = cat(2, o_prefix, '_hg_ppc_cg10');
-                    elseif near_p1_hg_ppc_pk - near_p2_hg_ppc_pk < -10
-                        o_prefix = cat(2, o_prefix, '_hg_ppc_cgn10');
-                    else
-                        o_prefix = cat(2, o_prefix, '_hg_ppc_cu10');
-                    end
                     o_name = cat(2, o_prefix, '_FSI');
                 end
             else
@@ -1431,24 +1413,6 @@ for idx = 1:length(rats)
                         o_prefix = cat(2, o_prefix, '_hg_ppc_u10');
                     end
                     
-                    % Indicate lg control category of cell in suffix
-                    if near_p1_lg_ppc_pk - near_p2_lg_ppc_pk > 10
-                        o_prefix = cat(2, o_prefix, '_lg_ppc_cg10');
-                    elseif near_p1_lg_ppc_pk - near_p2_lg_ppc_pk < -10
-                        o_prefix = cat(2, o_prefix, '_lg_ppc_cgn10');
-                    else
-                        o_prefix = cat(2, o_prefix, '_lg_ppc_cu10');
-                    end
-                    
-                    % Indicate hg category of cell in suffix
-                    if near_p1_hg_ppc_pk - near_p2_hg_ppc_pk > 10
-                        o_prefix = cat(2, o_prefix, '_hg_ppc_cg10');
-                    elseif near_p1_hg_ppc_pk - near_p2_hg_ppc_pk < -10
-                        o_prefix = cat(2, o_prefix, '_hg_ppc_cgn10');
-                    else
-                        o_prefix = cat(2, o_prefix, '_hg_ppc_cu10');
-                    end
-                    o_name = cat(2, o_prefix, '_MSN');
                 end
             else
                 close all;
