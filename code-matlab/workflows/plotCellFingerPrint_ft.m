@@ -21,7 +21,8 @@ for idx = 1:length(rats)
             
             % Plot Near Reward stuff next
             flag_leg = false;
-            if ~od.fsi_res.near_spec{iC}.flag_no_control_split          
+            if isfield(od.fsi_res.near_spec{iC},'flag_no_control_split') && ...
+                        ~od.fsi_res.near_spec{iC}.flag_no_control_split          
                 near_subsample_ppc_corr = corrcoef(od.fsi_res.near_spec{iC}.ppc ,od.fsi_res.near_spec{iC}.subsampled_ppc);
                 near_subsample_ppc_corr = near_subsample_ppc_corr(1,2);
                 near_lfr_subsample_ppc_corr = corrcoef(od.fsi_res.near_lfr_spec{iC}.ppc ,od.fsi_res.near_lfr_spec{iC}.subsampled_ppc);
@@ -760,14 +761,15 @@ for idx = 1:length(rats)
             close all;  
         end
         
-        msn_labels  = od.label(od.cell_type == 2);
+        msn_labels  = od.label(od.cell_type == 1);
         for iC = 1:length(msn_labels)
             o_prefix = extractBefore(msn_labels{iC},'.t');
             fig = figure('WindowState', 'maximized');
             
             % Plot Near Reward stuff next
             flag_leg = false;
-            if ~od.msn_res.near_spec{iC}.flag_no_control_split          
+            if isfield(od.msn_res.near_spec{iC},'flag_no_control_split') && ...
+                    ~od.msn_res.near_spec{iC}.flag_no_control_split          
                 
                 % Plot STA
                 subplot(3,3,1)
