@@ -602,22 +602,22 @@ for idx = 1:length(rats)
                     subplot(6,6,17)
                     hold on
                     histogram(near_p1_lg_sts_pk - near_p2_lg_sts_pk,'FaceColor','red','FaceAlpha',0.6);
-                    xline(near_lfr_lg_sts_pk, 'blue')
+                    xline(near_hfr_hg_sts_pk - near_lfr_hg_sts_pk, 'blue')
                     ylabel('STS 5-30 Peak dif')
                     subplot(6,6,18)
                     hold on
                     histogram(near_p1_lg_ppc_pk - near_p2_lg_ppc_pk,'FaceColor','red','FaceAlpha',0.6);
-                    xline(near_lfr_lg_sts_pk, 'blue')
+                    xline(near_hfr_lg_sts_pk - near_lfr_lg_sts_pk, 'blue')
                     ylabel('PPC 5-30 Peak dif')
                     subplot(6,6,23)
                     hold on
                     histogram(near_p1_hg_sts_pk - near_p2_hg_sts_pk,'FaceColor','green','FaceAlpha',0.6);
-                    xline(near_lfr_hg_sts_pk, 'blue')
+                    xline(near_hfr_hg_sts_pk - near_lfr_hg_sts_pk, 'blue')
                     ylabel('STS 30-100 Peak hg')
                     subplot(6,6,24)
                     hold on
                     histogram(near_p1_hg_ppc_pk - near_p2_hg_ppc_pk,'FaceColor','green','FaceAlpha',0.6);
-                    xline(near_lfr_hg_sts_pk, 'blue')
+                    xline(near_hfr_hg_sts_pk - near_lfr_hg_sts_pk, 'blue')
                     ylabel('PPC 30-100 Peak hg')
                     
                    % Relevant info as text
@@ -1301,22 +1301,22 @@ for idx = 1:length(rats)
                     subplot(6,6,17)
                     hold on
                     histogram(near_p1_lg_sts_pk - near_p2_lg_sts_pk,'FaceColor','red','FaceAlpha',0.6);
-                    xline(near_lfr_lg_sts_pk, 'blue')
+                    xline(near_hfr_lg_sts_pk - near_lfr_lg_sts_pk, 'blue')
                     ylabel('STS 5-30 Peak dif')
                     subplot(6,6,18)
                     hold on
                     histogram(near_p1_lg_ppc_pk - near_p2_lg_ppc_pk,'FaceColor','red','FaceAlpha',0.6);
-                    xline(near_lfr_lg_sts_pk, 'blue')
+                    xline(near_hfr_lg_sts_pk - near_lfr_lg_sts_pk, 'blue')
                     ylabel('PPC 5-30 Peak dif')
                     subplot(6,6,23)
                     hold on
                     histogram(near_p1_hg_sts_pk - near_p2_hg_sts_pk,'FaceColor','green','FaceAlpha',0.6);
-                    xline(near_lfr_hg_sts_pk, 'blue')
+                    xline(near_hfr_hg_sts_pk - near_lfr_hg_sts_pk, 'blue')
                     ylabel('STS 30-100 Peak hg')
                     subplot(6,6,24)
                     hold on
                     histogram(near_p1_hg_ppc_pk - near_p2_hg_ppc_pk,'FaceColor','green','FaceAlpha',0.6);
-                    xline(near_lfr_hg_sts_pk, 'blue')
+                    xline(near_hfr_hg_sts_pk - near_lfr_hg_sts_pk, 'blue')
                     ylabel('PPC 30-100 Peak hg')
                     
                    % Relevant info as text
