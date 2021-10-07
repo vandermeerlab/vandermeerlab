@@ -223,7 +223,7 @@ function od = generateSTS(cfg_in)
         cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
         cfg_ppc.spikechannel  = this_sts.label;
         cfg_ppc.channel       = this_sts.lfplabel; % selected LFP channels
-        cfg_ppc.avgoverchan   = 'unweighted'; % weight spike-LFP phases irrespective of LFP power
+        cfg_ppc.avgoverchan   = 'weighted';
         cfg_ppc.timwin        = 'all'; % compute over all available spikes in the window
         this_ppc              = ft_spiketriggeredspectrum_stat(cfg_ppc,this_sts);
         this_flag = false;
@@ -344,7 +344,7 @@ function od = generateSTS(cfg_in)
             cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
             cfg_ppc.spikechannel  = this_sts.label;
             cfg_ppc.channel       = this_sts.lfplabel; % selected LFP channels
-            cfg_ppc.avgoverchan   = 'unweighted'; % weight spike-LFP phases irrespective of LFP power
+            cfg_ppc.avgoverchan   = 'weighted';
             cfg_ppc.timwin        = 'all'; % compute over all available spikes in the window
             this_ppc              = ft_spiketriggeredspectrum_stat(cfg_ppc,this_sts);
             this_flag = false;
@@ -452,13 +452,20 @@ function od = generateSTS(cfg_in)
             od.msn_res.near_spec{iM}.valid_splits = valid_splits;
             od.msn_res.near_spec{iM}.randIters = iRand;
             
-            % Calculate and Save all spec results for Near HFR trials
+            % Extract All Spike IDs
             trl_wise_spike = cell(1, length(near_data.trial));
+            last_spk_ct = 0;
+            for iT = 1:length(near_data.trial)
+                this_spk_ct = length(find(near_data.trial{iT}(2,:)));
+                trl_wise_spike{iT} = last_spk_ct + 1 : last_spk_ct + this_spk_ct;
+                last_spk_ct = last_spk_ct + this_spk_ct;
+            end
+            
+            % Calculate and Save all spec results for Near HFR trials
             last_spk_ct = 0;
             hfr_trl_idx = find(hfr_trials);
             for iT = 1:length(hfr_trl_idx)
                 this_spk_ct = length(find(near_data.trial{hfr_trl_idx(iT)}(2,:)));
-                trl_wise_spike{hfr_trl_idx(iT)} = last_spk_ct + 1 : last_spk_ct + this_spk_ct;
                 last_spk_ct = last_spk_ct + this_spk_ct;
             end
             
@@ -508,12 +515,10 @@ function od = generateSTS(cfg_in)
             end
 
             % Calculate and Save all spec results for Near LFR trials
-            trl_wise_spike = cell(1, length(near_data.trial));
             last_spk_ct = 0;
             lfr_trl_idx = find(lfr_trials);
             for iT = 1:length(lfr_trl_idx)
                 this_spk_ct = length(find(near_data.trial{lfr_trl_idx(iT)}(2,:)));
-                trl_wise_spike{lfr_trl_idx(iT)} = last_spk_ct + 1 : last_spk_ct + this_spk_ct;
                 last_spk_ct = last_spk_ct + this_spk_ct;
             end
             
@@ -751,7 +756,7 @@ function od = generateSTS(cfg_in)
             cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
             cfg_ppc.spikechannel  = this_sts.label;
             cfg_ppc.channel       = this_sts.lfplabel; % selected LFP channels
-            cfg_ppc.avgoverchan   = 'unweighted'; % weight spike-LFP phases irrespective of LFP power
+            cfg_ppc.avgoverchan   = 'weighted';
             cfg_ppc.timwin        = 'all'; % compute over all available spikes in the window
             this_ppc              = ft_spiketriggeredspectrum_stat(cfg_ppc,this_sts);
             this_flag = false;
@@ -859,16 +864,20 @@ function od = generateSTS(cfg_in)
             od.msn_res.away_spec{iM}.valid_splits = valid_splits;
             od.msn_res.away_spec{iM}.randIters = iRand;
             
-            % Once away_data sts and ppc have been calculated, there is no
-            % need to recalculate sts. Use the subsampling logic!
+            % Extract All Spike IDs
+            trl_wise_spike = cell(1, length(away_data.trial));
+            last_spk_ct = 0;
+            for iT = 1:length(away_data.trial)
+                this_spk_ct = length(find(away_data.trial{iT}(2,:)));
+                trl_wise_spike{iT} = last_spk_ct + 1 : last_spk_ct + this_spk_ct;
+                last_spk_ct = last_spk_ct + this_spk_ct;
+            end
             
             % Calculate and Save all spec results for Away HFR trials
-            trl_wise_spike = cell(1, length(away_data.trial));
             last_spk_ct = 0;
             hfr_trl_idx = find(hfr_trials);
             for iT = 1:length(hfr_trl_idx)
                 this_spk_ct = length(find(away_data.trial{hfr_trl_idx(iT)}(2,:)));
-                trl_wise_spike{hfr_trl_idx(iT)} = last_spk_ct + 1 : last_spk_ct + this_spk_ct;
                 last_spk_ct = last_spk_ct + this_spk_ct;
             end
             
@@ -918,12 +927,10 @@ function od = generateSTS(cfg_in)
             end
 
             % Calculate and Save all spec results for Away LFR trials
-            trl_wise_spike = cell(1, length(away_data.trial));
             last_spk_ct = 0;
             lfr_trl_idx = find(lfr_trials);
             for iT = 1:length(lfr_trl_idx)
                 this_spk_ct = length(find(away_data.trial{lfr_trl_idx(iT)}(2,:)));
-                trl_wise_spike{lfr_trl_idx(iT)} = last_spk_ct + 1 : last_spk_ct + this_spk_ct;
                 last_spk_ct = last_spk_ct + this_spk_ct;
             end
             
@@ -1194,7 +1201,7 @@ function od = generateSTS(cfg_in)
         cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
         cfg_ppc.spikechannel  = this_sts.label;
         cfg_ppc.channel       = this_sts.lfplabel; % selected LFP channels
-        cfg_ppc.avgoverchan   = 'unweighted'; % weight spike-LFP phases irrespective of LFP power
+        cfg_ppc.avgoverchan   = 'weighted';
         cfg_ppc.timwin        = 'all'; % compute over all available spikes in the window
         this_ppc              = ft_spiketriggeredspectrum_stat(cfg_ppc,this_sts);
         this_flag = false;
@@ -1346,7 +1353,7 @@ function od = generateSTS(cfg_in)
             cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
             cfg_ppc.spikechannel  = this_sts.label;
             cfg_ppc.channel       = this_sts.lfplabel; % selected LFP channels
-            cfg_ppc.avgoverchan   = 'unweighted'; % weight spike-LFP phases irrespective of LFP power
+            cfg_ppc.avgoverchan   = 'weighted';
             cfg_ppc.timwin        = 'all'; % compute over all available spikes in the window
             this_ppc              = ft_spiketriggeredspectrum_stat(cfg_ppc,this_sts);
             this_flag = false;
@@ -1496,12 +1503,10 @@ function od = generateSTS(cfg_in)
             end
 
             % Calculate and Save all spec results for Near HFR trials
-            hfr_trial_spike = cell(1, length(near_data.trial));
-            last_spk_ct = 0;
             hfr_trl_idx = find(hfr_trials);
+            last_spk_ct = 0;
             for iT = 1:length(hfr_trl_idx)
                 this_spk_ct = length(find(near_data.trial{hfr_trl_idx(iT)}(2,:)));
-                hfr_trial_spike{hfr_trl_idx(iT)} = last_spk_ct + 1 : last_spk_ct + this_spk_ct;
                 last_spk_ct = last_spk_ct + this_spk_ct;
             end
 
@@ -1520,7 +1525,7 @@ function od = generateSTS(cfg_in)
                 % Save STS
                 hfr_idx = [];
                 for iT = 1:length(hfr_trl_idx)
-                    hfr_idx = [hfr_idx, hfr_trial_spike{hfr_trl_idx(iT)}];
+                    hfr_idx = [hfr_idx, trl_wise_spike{hfr_trl_idx(iT)}];
                 end 
                 hfr_sts = this_sts;
                 hfr_sts.fourierspctrm{1} = hfr_sts.fourierspctrm{1}(hfr_idx,:,:);
@@ -1567,20 +1572,12 @@ function od = generateSTS(cfg_in)
                     temp_sts_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.near_hfr_spec{iM}.sts_vals));
                     temp_ppc_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.near_hfr_spec{iM}.ppc));
 
-                    % Create a map from near hfr trial spike IDs to near spike IDS
-                    spk_id_map = zeros(2, last_spk_ct);
-                    cur_ct = 0;
-                    for iT = 1:length(hfr_trl_idx)
-                        cur_spks = length(hfr_trial_spike{hfr_trl_idx(iT)});
-                        spk_id_map(1,cur_ct+1:cur_ct+cur_spks) = hfr_trial_spike{hfr_trl_idx(iT)};
-                        spk_id_map(2,cur_ct+1:cur_ct+cur_spks) = trl_wise_spike{hfr_trl_idx(iT)};
-                        cur_ct = cur_ct + cur_spks;
-                    end
+
                     for iS = 1:cfg_master.num_subsamples
                         s_factor = 1/length(od.msn_near_hfr_dist);
                         choice = floor(rand()/s_factor)+1;
                         sub_idx = randsample(1:od.fsi_res.near_hfr_spec{iM}.spk_count, od.msn_near_hfr_dist(choice));
-                        sub_idx = spk_id_map(2,sub_idx);
+                        sub_idx = hfr_idx(sub_idx);
                         sub_idx = sort(sub_idx); sub_sts = this_sts;
                         sub_sts.fourierspctrm{1} = sub_sts.fourierspctrm{1}(sub_idx,:,:);
                         sub_sts.time{1} = sub_sts.time{1}(sub_idx,:);
@@ -1595,12 +1592,10 @@ function od = generateSTS(cfg_in)
             end
        
             % Calculate and Save all spec results for Near LFR trials
-            lfr_trial_spike = cell(1, length(near_data.trial));
-            last_spk_ct = 0;
             lfr_trl_idx = find(lfr_trials);
+            last_spk_ct = 0;
             for iT = 1:length(lfr_trl_idx)
                 this_spk_ct = length(find(near_data.trial{lfr_trl_idx(iT)}(2,:)));
-                lfr_trial_spike{lfr_trl_idx(iT)} = last_spk_ct + 1 : last_spk_ct + this_spk_ct;
                 last_spk_ct = last_spk_ct + this_spk_ct;
             end
 
@@ -1619,7 +1614,7 @@ function od = generateSTS(cfg_in)
                 % Save STS
                 lfr_idx = [];
                 for iT = 1:length(lfr_trl_idx)
-                    lfr_idx = [lfr_idx, lfr_trial_spike{lfr_trl_idx(iT)}];
+                    lfr_idx = [lfr_idx, trl_wise_spike{lfr_trl_idx(iT)}];
                 end 
                 lfr_sts = this_sts;
                 lfr_sts.fourierspctrm{1} = lfr_sts.fourierspctrm{1}(lfr_idx,:,:);
@@ -1666,20 +1661,11 @@ function od = generateSTS(cfg_in)
                     temp_sts_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.near_lfr_spec{iM}.sts_vals));
                     temp_ppc_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.near_lfr_spec{iM}.ppc));
 
-                    % Create a map from near lfr trial spike IDs to near spike IDS
-                    spk_id_map = zeros(2, last_spk_ct);
-                    cur_ct = 0;
-                    for iT = 1:length(lfr_trl_idx)
-                        cur_spks = length(lfr_trial_spike{lfr_trl_idx(iT)});
-                        spk_id_map(1,cur_ct+1:cur_ct+cur_spks) = lfr_trial_spike{lfr_trl_idx(iT)};
-                        spk_id_map(2,cur_ct+1:cur_ct+cur_spks) = trl_wise_spike{lfr_trl_idx(iT)};
-                        cur_ct = cur_ct + cur_spks;
-                    end
                     for iS = 1:cfg_master.num_subsamples
                         s_factor = 1/length(od.msn_near_lfr_dist);
                         choice = floor(rand()/s_factor)+1;
                         sub_idx = randsample(1:od.fsi_res.near_lfr_spec{iM}.spk_count, od.msn_near_lfr_dist(choice));
-                        sub_idx = spk_id_map(2,sub_idx);
+                        sub_idx = lfr_idx(sub_idx);
                         sub_idx = sort(sub_idx); sub_sts = this_sts;
                         sub_sts.fourierspctrm{1} = sub_sts.fourierspctrm{1}(sub_idx,:,:);
                         sub_sts.time{1} = sub_sts.time{1}(sub_idx,:);
@@ -1808,29 +1794,17 @@ function od = generateSTS(cfg_in)
                         temp_sts_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.near_spec{iM}.sts_vals));
                         temp_ppc_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.near_spec{iM}.ppc));
                                                    
-                        % Create a map from near p1 trial spike IDs to near spike IDS
-                        p1_trial_spike = cell(1, length(near_data.trial));
-                        last_spk_ct = 0;
                         p1_trl_idx = this_p1_trials;
+                        last_spk_ct = 0;
                         for iT = 1:length(p1_trl_idx)
                             this_spk_ct = length(find(near_data.trial{p1_trl_idx(iT)}(2,:)));
-                            p1_trial_spike{p1_trl_idx(iT)} = last_spk_ct + 1 : last_spk_ct + this_spk_ct;
                             last_spk_ct = last_spk_ct + this_spk_ct;
                         end
-                        spk_id_map = zeros(2, last_spk_ct);
-                        cur_ct = 0;
-                        for iT = 1:length(p1_trl_idx)
-                            cur_spks = length(p1_trial_spike{p1_trl_idx(iT)});
-                            spk_id_map(1,cur_ct+1:cur_ct+cur_spks) = p1_trial_spike{p1_trl_idx(iT)};
-                            spk_id_map(2,cur_ct+1:cur_ct+cur_spks) = trl_wise_spike{p1_trl_idx(iT)};
-                            cur_ct = cur_ct + cur_spks;
-                        end
-                        
 						for iS = 1:cfg_master.num_subsamples
 						    s_factor = 1/length(od.msn_near_p1_dist);
 						    choice = floor(rand()/s_factor)+1;
 						    sub_idx = randsample(1:last_spk_ct, od.msn_near_p1_dist(choice));
-                            sub_idx = spk_id_map(2,sub_idx);
+                            sub_idx = this_p1_idx(sub_idx);
 						    sub_idx = sort(sub_idx); 
 						    sub_sts = this_sts;
 						    sub_sts.fourierspctrm{1} = sub_sts.fourierspctrm{1}(sub_idx,:,:);
@@ -1857,36 +1831,24 @@ function od = generateSTS(cfg_in)
                         od.fsi_res.near_p2_spec{iM}.flag_no_subsampling = false;
                         temp_sts_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.near_spec{iM}.sts_vals));
                         temp_ppc_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.near_spec{iM}.ppc));
-                                
-                        % Create a map from near p2 trial spike IDs to near spike IDS    
-                        p2_trial_spike = cell(1, length(near_data.trial));
-                        last_spk_ct = 0;
+                                  
                         p2_trl_idx = this_p2_trials;
+                        last_spk_ct = 0;
                         for iT = 1:length(p2_trl_idx)
                             this_spk_ct = length(find(near_data.trial{p2_trl_idx(iT)}(2,:)));
-                            p2_trial_spike{p2_trl_idx(iT)} = last_spk_ct + 1 : last_spk_ct + this_spk_ct;
                             last_spk_ct = last_spk_ct + this_spk_ct;
                         end
-                        spk_id_map = zeros(2, last_spk_ct);
-                        cur_ct = 0;
-                        for iT = 1:length(p2_trl_idx)
-                            cur_spks = length(p2_trial_spike{p2_trl_idx(iT)});
-                            spk_id_map(1,cur_ct+1:cur_ct+cur_spks) = p2_trial_spike{p2_trl_idx(iT)};
-                            spk_id_map(2,cur_ct+1:cur_ct+cur_spks) = trl_wise_spike{p2_trl_idx(iT)};
-                            cur_ct = cur_ct + cur_spks;
-                        end
-                        
                         for iS = 1:cfg_master.num_subsamples
                             s_factor = 1/length(od.msn_near_p2_dist);
                             choice = floor(rand()/s_factor)+1;
                             sub_idx = randsample(1:last_spk_ct, od.msn_near_p2_dist(choice));
-                            sub_idx = spk_id_map(2,sub_idx);
+                            sub_idx = this_p2_idx;
                             sub_idx = sort(sub_idx); 
                             sub_sts = this_sts;
                             sub_sts.fourierspctrm{1} = sub_sts.fourierspctrm{1}(sub_idx,:,:);
                             sub_sts.time{1} = sub_sts.time{1}(sub_idx,:);
                             sub_sts.trial{1} = sub_sts.trial{1}(sub_idx,:);
-                              temp_sts_vals(iS,:) = nanmean(sq(abs(sub_sts.fourierspctrm{1})));
+                            temp_sts_vals(iS,:) = nanmean(sq(abs(sub_sts.fourierspctrm{1})));
                             sub_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc, sub_sts);
                             temp_ppc_vals(iS,:) = sub_ppc.ppc0';
                         end
@@ -1988,7 +1950,7 @@ function od = generateSTS(cfg_in)
             cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
             cfg_ppc.spikechannel  = this_sts.label;
             cfg_ppc.channel       = this_sts.lfplabel; % selected LFP channels
-            cfg_ppc.avgoverchan   = 'unweighted'; % weight spike-LFP phases irrespective of LFP power
+            cfg_ppc.avgoverchan   = 'weighted';
             cfg_ppc.timwin        = 'all'; % compute over all available spikes in the window
             this_ppc              = ft_spiketriggeredspectrum_stat(cfg_ppc,this_sts);
             this_flag = false;
@@ -2138,12 +2100,10 @@ function od = generateSTS(cfg_in)
             end
 
             % Calculate and Save all spec results for Away HFR trials
-            hfr_trial_spike = cell(1, length(away_data.trial));
-            last_spk_ct = 0;
             hfr_trl_idx = find(hfr_trials);
+            last_spk_ct = 0;
             for iT = 1:length(hfr_trl_idx)
                 this_spk_ct = length(find(away_data.trial{hfr_trl_idx(iT)}(2,:)));
-                hfr_trial_spike{hfr_trl_idx(iT)} = last_spk_ct + 1 : last_spk_ct + this_spk_ct;
                 last_spk_ct = last_spk_ct + this_spk_ct;
             end
 
@@ -2162,7 +2122,7 @@ function od = generateSTS(cfg_in)
                 % Save STS
                 hfr_idx = [];
                 for iT = 1:length(hfr_trl_idx)
-                    hfr_idx = [hfr_idx, hfr_trial_spike{hfr_trl_idx(iT)}];
+                    hfr_idx = [hfr_idx, trl_wise_spike{hfr_trl_idx(iT)}];
                 end 
                 hfr_sts = this_sts;
                 hfr_sts.fourierspctrm{1} = hfr_sts.fourierspctrm{1}(hfr_idx,:,:);
@@ -2209,20 +2169,12 @@ function od = generateSTS(cfg_in)
                     temp_sts_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.away_hfr_spec{iM}.sts_vals));
                     temp_ppc_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.away_hfr_spec{iM}.ppc));
 
-                    % Create a map from away hfr trial spike IDs to away spike IDS
-                    spk_id_map = zeros(2, last_spk_ct);
-                    cur_ct = 0;
-                    for iT = 1:length(hfr_trl_idx)
-                        cur_spks = length(hfr_trial_spike{hfr_trl_idx(iT)});
-                        spk_id_map(1,cur_ct+1:cur_ct+cur_spks) = hfr_trial_spike{hfr_trl_idx(iT)};
-                        spk_id_map(2,cur_ct+1:cur_ct+cur_spks) = trl_wise_spike{hfr_trl_idx(iT)};
-                        cur_ct = cur_ct + cur_spks;
-                    end
+
                     for iS = 1:cfg_master.num_subsamples
                         s_factor = 1/length(od.msn_away_hfr_dist);
                         choice = floor(rand()/s_factor)+1;
                         sub_idx = randsample(1:od.fsi_res.away_hfr_spec{iM}.spk_count, od.msn_away_hfr_dist(choice));
-                        sub_idx = spk_id_map(2,sub_idx);
+                        sub_idx = hfr_idx(sub_idx);
                         sub_idx = sort(sub_idx); sub_sts = this_sts;
                         sub_sts.fourierspctrm{1} = sub_sts.fourierspctrm{1}(sub_idx,:,:);
                         sub_sts.time{1} = sub_sts.time{1}(sub_idx,:);
@@ -2237,12 +2189,10 @@ function od = generateSTS(cfg_in)
             end
        
             % Calculate and Save all spec results for Away LFR trials
-            lfr_trial_spike = cell(1, length(away_data.trial));
-            last_spk_ct = 0;
             lfr_trl_idx = find(lfr_trials);
+            last_spk_ct = 0;
             for iT = 1:length(lfr_trl_idx)
                 this_spk_ct = length(find(away_data.trial{lfr_trl_idx(iT)}(2,:)));
-                lfr_trial_spike{lfr_trl_idx(iT)} = last_spk_ct + 1 : last_spk_ct + this_spk_ct;
                 last_spk_ct = last_spk_ct + this_spk_ct;
             end
 
@@ -2261,7 +2211,7 @@ function od = generateSTS(cfg_in)
                 % Save STS
                 lfr_idx = [];
                 for iT = 1:length(lfr_trl_idx)
-                    lfr_idx = [lfr_idx, lfr_trial_spike{lfr_trl_idx(iT)}];
+                    lfr_idx = [lfr_idx, trl_wise_spike{lfr_trl_idx(iT)}];
                 end 
                 lfr_sts = this_sts;
                 lfr_sts.fourierspctrm{1} = lfr_sts.fourierspctrm{1}(lfr_idx,:,:);
@@ -2308,20 +2258,11 @@ function od = generateSTS(cfg_in)
                     temp_sts_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.away_lfr_spec{iM}.sts_vals));
                     temp_ppc_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.away_lfr_spec{iM}.ppc));
 
-                    % Create a map from away lfr trial spike IDs to away spike IDS
-                    spk_id_map = zeros(2, last_spk_ct);
-                    cur_ct = 0;
-                    for iT = 1:length(lfr_trl_idx)
-                        cur_spks = length(lfr_trial_spike{lfr_trl_idx(iT)});
-                        spk_id_map(1,cur_ct+1:cur_ct+cur_spks) = lfr_trial_spike{lfr_trl_idx(iT)};
-                        spk_id_map(2,cur_ct+1:cur_ct+cur_spks) = trl_wise_spike{lfr_trl_idx(iT)};
-                        cur_ct = cur_ct + cur_spks;
-                    end
                     for iS = 1:cfg_master.num_subsamples
                         s_factor = 1/length(od.msn_away_lfr_dist);
                         choice = floor(rand()/s_factor)+1;
                         sub_idx = randsample(1:od.fsi_res.away_lfr_spec{iM}.spk_count, od.msn_away_lfr_dist(choice));
-                        sub_idx = spk_id_map(2,sub_idx);
+                        sub_idx = lfr_idx(sub_idx);
                         sub_idx = sort(sub_idx); sub_sts = this_sts;
                         sub_sts.fourierspctrm{1} = sub_sts.fourierspctrm{1}(sub_idx,:,:);
                         sub_sts.time{1} = sub_sts.time{1}(sub_idx,:);
@@ -2346,7 +2287,6 @@ function od = generateSTS(cfg_in)
                     ~od.fsi_res.away_hfr_spec{iM}.flag_nanppc && ...
                     ~od.fsi_res.away_hfr_spec{iM}.flag_no_subsampling && ...
                     ~od.fsi_res.away_lfr_spec{iM}.flag_no_subsampling && ...
-                    od.fsi_res.near_spec{iM}.valid_split_count == cfg_master.nControlSplits
                     od.fsi_res.away_spec{iM}.valid_split_count == cfg_master.nControlSplits
                 
                 od.fsi_res.away_spec{iM}.flag_no_control_split = false;
@@ -2437,54 +2377,42 @@ function od = generateSTS(cfg_in)
                     end
                     all_ppc(2,iSplit,:) = this_p2_ppc.ppc0';
                     
-                    % Calculate and save subsampled measures for away Reward p1 trials
-                    % When an FSI has fewer spikes than at least one MSN, do NOT
-                    % subsample and include all the spikes
-                    if isempty(od.msn_away_p1_dist)
-                        od.fsi_res.away_p1_spec{iM}.flag_no_subsampling = true;
+					% Calculate and save subsampled measures for away Reward p1 trials
+					% When an FSI has fewer spikes than at least one MSN, do NOT
+					% subsample and include all the spikes
+					if isempty(od.msn_away_p1_dist)
+						od.fsi_res.away_p1_spec{iM}.flag_no_subsampling = true;
                     elseif p1_spk_count < max(od.msn_away_p1_dist)
                         od.fsi_res.away_p1_spec{iM}.flag_no_subsampling = true;
                     elseif isfield(od.fsi_res.away_spec{iM},'flag_no_subsampling') && od.fsi_res.away_spec{iM}.flag_no_subsampling
                         od.fsi_res.away_p1_spec{iM}.flag_no_subsampling = true;
-                    else
-                        od.fsi_res.away_p1_spec{iM}.flag_no_subsampling = false;
+					else
+						od.fsi_res.away_p1_spec{iM}.flag_no_subsampling = false;
                         temp_sts_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.away_spec{iM}.sts_vals));
                         temp_ppc_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.away_spec{iM}.ppc));
-                                                   
-                        % Create a map from away p1 trial spike IDs to away spike IDS
-                        p1_trial_spike = cell(1, length(away_data.trial));
-                        last_spk_ct = 0;
+                        
                         p1_trl_idx = this_p1_trials;
+                        last_spk_ct = 0;
                         for iT = 1:length(p1_trl_idx)
                             this_spk_ct = length(find(away_data.trial{p1_trl_idx(iT)}(2,:)));
-                            p1_trial_spike{p1_trl_idx(iT)} = last_spk_ct + 1 : last_spk_ct + this_spk_ct;
                             last_spk_ct = last_spk_ct + this_spk_ct;
                         end
-                        spk_id_map = zeros(2, last_spk_ct);
-                        cur_ct = 0;
-                        for iT = 1:length(p1_trl_idx)
-                            cur_spks = length(p1_trial_spike{p1_trl_idx(iT)});
-                            spk_id_map(1,cur_ct+1:cur_ct+cur_spks) = p1_trial_spike{p1_trl_idx(iT)};
-                            spk_id_map(2,cur_ct+1:cur_ct+cur_spks) = trl_wise_spike{p1_trl_idx(iT)};
-                            cur_ct = cur_ct + cur_spks;
-                        end
-                        
-                        for iS = 1:cfg_master.num_subsamples
-                            s_factor = 1/length(od.msn_away_p1_dist);
-                            choice = floor(rand()/s_factor)+1;
-                            sub_idx = randsample(1:last_spk_ct, od.msn_away_p1_dist(choice));
-                            sub_idx = spk_id_map(2,sub_idx);
-                            sub_idx = sort(sub_idx); 
-                            sub_sts = this_sts;
-                            sub_sts.fourierspctrm{1} = sub_sts.fourierspctrm{1}(sub_idx,:,:);
-                            sub_sts.time{1} = sub_sts.time{1}(sub_idx,:);
-                            sub_sts.trial{1} = sub_sts.trial{1}(sub_idx,:);
-                            temp_sts_vals(iS,:) = nanmean(sq(abs(sub_sts.fourierspctrm{1})));
-                            sub_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc, sub_sts);
-                            temp_ppc_vals(iS,:) = sub_ppc.ppc0';
-                        end
-                        all_subsampled_sts(1,iSplit,:) = mean(temp_sts_vals,1);
-                        all_subsampled_ppc(1,iSplit,:) = mean(temp_ppc_vals,1);
+						for iS = 1:cfg_master.num_subsamples
+						    s_factor = 1/length(od.msn_away_p1_dist);
+						    choice = floor(rand()/s_factor)+1;
+						    sub_idx = randsample(1:last_spk_ct, od.msn_away_p1_dist(choice));
+                            sub_idx = this_p1_idx(sub_idx);
+						    sub_idx = sort(sub_idx); 
+						    sub_sts = this_sts;
+						    sub_sts.fourierspctrm{1} = sub_sts.fourierspctrm{1}(sub_idx,:,:);
+						    sub_sts.time{1} = sub_sts.time{1}(sub_idx,:);
+						    sub_sts.trial{1} = sub_sts.trial{1}(sub_idx,:);
+						    temp_sts_vals(iS,:) = nanmean(sq(abs(sub_sts.fourierspctrm{1})));
+						    sub_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc, sub_sts);
+						    temp_ppc_vals(iS,:) = sub_ppc.ppc0';
+						end
+						all_subsampled_sts(1,iSplit,:) = mean(temp_sts_vals,1);
+						all_subsampled_ppc(1,iSplit,:) = mean(temp_ppc_vals,1);
                     end
 
                     % Calculate and save subsampled measures for away Reward p2 trials
@@ -2500,30 +2428,18 @@ function od = generateSTS(cfg_in)
                         od.fsi_res.away_p2_spec{iM}.flag_no_subsampling = false;
                         temp_sts_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.away_spec{iM}.sts_vals));
                         temp_ppc_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.away_spec{iM}.ppc));
-                                
-                        % Create a map from away p2 trial spike IDs to away spike IDS    
-                        p2_trial_spike = cell(1, length(away_data.trial));
-                        last_spk_ct = 0;
+                                  
                         p2_trl_idx = this_p2_trials;
+                        last_spk_ct = 0;
                         for iT = 1:length(p2_trl_idx)
                             this_spk_ct = length(find(away_data.trial{p2_trl_idx(iT)}(2,:)));
-                            p2_trial_spike{p2_trl_idx(iT)} = last_spk_ct + 1 : last_spk_ct + this_spk_ct;
                             last_spk_ct = last_spk_ct + this_spk_ct;
                         end
-                        spk_id_map = zeros(2, last_spk_ct);
-                        cur_ct = 0;
-                        for iT = 1:length(p2_trl_idx)
-                            cur_spks = length(p2_trial_spike{p2_trl_idx(iT)});
-                            spk_id_map(1,cur_ct+1:cur_ct+cur_spks) = p2_trial_spike{p2_trl_idx(iT)};
-                            spk_id_map(2,cur_ct+1:cur_ct+cur_spks) = trl_wise_spike{p2_trl_idx(iT)};
-                            cur_ct = cur_ct + cur_spks;
-                        end
-                        
                         for iS = 1:cfg_master.num_subsamples
                             s_factor = 1/length(od.msn_away_p2_dist);
                             choice = floor(rand()/s_factor)+1;
                             sub_idx = randsample(1:last_spk_ct, od.msn_away_p2_dist(choice));
-                            sub_idx = spk_id_map(2,sub_idx);
+                            sub_idx = this_p2_idx(sub_idx);
                             sub_idx = sort(sub_idx); 
                             sub_sts = this_sts;
                             sub_sts.fourierspctrm{1} = sub_sts.fourierspctrm{1}(sub_idx,:,:);
