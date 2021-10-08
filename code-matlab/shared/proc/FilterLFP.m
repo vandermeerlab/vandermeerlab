@@ -22,9 +22,9 @@ function lfp_tsd = FilterLFP(cfg_in,lfp_tsd)
 cfg_def.type = 'butter';
 cfg_def.order = 4;
 cfg_def.display_filter = 0;
-cfg_def.band = 'bandpass'; % not used
+cfg_def.band = 'bandpass'; % only implemented for butterworth
 cfg_def.R = 0.5; % passband ripple (in dB) for Chebyshev filters only
-cfg_def.f = [6 10];
+cfg_def.f = [1 500];
 cfg_def.verbose = 1;
 
 mfun = mfilename;
@@ -69,7 +69,14 @@ switch cfg.type
     case 'butter'
         
         %[z,p,k] = butter(cfg.order,Wn);
-        [b,a] = butter(cfg.order,Wn);
+        switch cfg.band
+            case 'bandpass'
+                [b,a] = butter(cfg.order,Wn); 
+            case 'highpass'
+                [b,a] = butter(cfg.order,Wn,'high'); 
+            case 'lowpass'
+                [b,a] = butter(cfg.order,Wn,'low'); 
+        end
         
     case 'cheby1'
         
