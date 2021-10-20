@@ -279,6 +279,7 @@ function od = generateSTS(cfg_in)
             end
 
             % Calculate and save STS for all the trials
+            cfg_sts.method = 'mtmconvol';
             cfg_sts.foi = 1:1:100;
             cfg_sts.t_ftimwin = 5./cfg_sts.foi;
             cfg_sts.taper = 'hanning';

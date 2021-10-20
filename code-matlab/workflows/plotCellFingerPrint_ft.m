@@ -547,24 +547,24 @@ for idx = 1:length(rats)
                     hfr_lfr_sts = od.fsi_res.near_hfr_spec{iC}.subsampled_sts - od.fsi_res.near_lfr_spec{iC}.subsampled_sts;
                     hfr_lfr_ppc = od.fsi_res.near_hfr_spec{iC}.subsampled_ppc - od.fsi_res.near_lfr_spec{iC}.subsampled_ppc;
                     
-                    % Add "SIG" to filename if any of the hfr_lfr ppc lies outside mean +- 2*sd
-                    if sum(hfr_lfr_ppc(x1:end) >= mean_ppc(x1:end) + 2*sd_ppc(x1:end)) ~= 0 & ...
-                        sum(hfr_lfr_ppc(x1:end) <= mean_ppc(x1:end) - 2*sd_ppc(x1:end)) ~= 0
-                        [~ , f1] = max(hfr_lfr_ppc(x1:end) - (mean_ppc(x1:end) + 2*sd_ppc(x1:end)));
-                        [~ , f2] = max((mean_ppc(x1:end) - 2*sd_ppc(x1:end)) - hfr_lfr_ppc(x1:end));
+                    % Add "SIG" to filename if any of the hfr_lfr ppc lies outside mean +- 3*sd
+                    if sum(hfr_lfr_ppc(x1:end) >= mean_ppc(x1:end) + 3*sd_ppc(x1:end)) ~= 0 & ...
+                        sum(hfr_lfr_ppc(x1:end) <= mean_ppc(x1:end) - 3*sd_ppc(x1:end)) ~= 0
+                        [~ , f1] = max(hfr_lfr_ppc(x1:end) - (mean_ppc(x1:end) + 3*sd_ppc(x1:end)));
+                        [~ , f2] = max((mean_ppc(x1:end) - 3*sd_ppc(x1:end)) - hfr_lfr_ppc(x1:end));
                         foi = od.fsi_res.near_spec{iC}.freqs(x1:end);
                         f1 = foi(f1);
                         f2 = foi(f2);
                         this_prefix = sprintf("_SIGhfr_%.0f_SIGlfr_%.0f",f1,f2);
                         o_prefix = cat(2, o_prefix, convertStringsToChars(this_prefix));
-                    elseif sum(hfr_lfr_ppc(x1:end) >= mean_ppc(x1:end) + 2*sd_ppc(x1:end)) ~= 0
-                        [~ , f1] = max(hfr_lfr_ppc(x1:end) - (mean_ppc(x1:end) + 2*sd_ppc(x1:end)));
+                    elseif sum(hfr_lfr_ppc(x1:end) >= mean_ppc(x1:end) + 3*sd_ppc(x1:end)) ~= 0
+                        [~ , f1] = max(hfr_lfr_ppc(x1:end) - (mean_ppc(x1:end) + 3*sd_ppc(x1:end)));
                         foi = od.fsi_res.near_spec{iC}.freqs(x1:end);
                         f1 = foi(f1);
                         this_prefix = sprintf("_SIGhfr_%.0f",f1);
                         o_prefix = cat(2, o_prefix, convertStringsToChars(this_prefix));
-                    elseif sum(hfr_lfr_ppc(x1:end) <= mean_ppc(x1:end) - 2*sd_ppc(x1:end)) ~= 0
-                        [~ , f2] = max((mean_ppc(x1:end) - 2*sd_ppc(x1:end)) - hfr_lfr_ppc(x1:end));
+                    elseif sum(hfr_lfr_ppc(x1:end) <= mean_ppc(x1:end) - 3*sd_ppc(x1:end)) ~= 0
+                        [~ , f2] = max((mean_ppc(x1:end) - 3*sd_ppc(x1:end)) - hfr_lfr_ppc(x1:end));
                         foi = od.fsi_res.near_spec{iC}.freqs(x1:end);
                         f2 = foi(f2);
                         this_prefix = sprintf("_SIGlfr_%.0f",f2);
@@ -614,8 +614,8 @@ for idx = 1:length(rats)
                     
                     % Plot Control split stuff
                     subplot(3,3,4)
-                    plot(od.fsi_res.near_spec{iC}.freqs, mean_sts + 2*sd_sts, '-g')
-                    hold on; plot(od.fsi_res.near_spec{iC}.freqs, mean_sts - 2*sd_sts, '-r')
+                    plot(od.fsi_res.near_spec{iC}.freqs, mean_sts + 3*sd_sts, '-g')
+                    hold on; plot(od.fsi_res.near_spec{iC}.freqs, mean_sts - 3*sd_sts, '-r')
                     plot(od.fsi_res.near_spec{iC}.freqs, hfr_lfr_sts, '--blue')
 %                     legend({'P1-P2: Mean + 1*SD', 'P1-P2: Mean - 1*SD', 'HFR - LFR'}, 'FontSize', 8, 'Location', 'southeast')
                     x1 = find(od.fsi_res.near_spec{iC}.freqs >= 5, 1, 'first');
@@ -625,8 +625,8 @@ for idx = 1:length(rats)
                     xlabel('Freqs')
                     
                     subplot(3,3,5)
-                    plot(od.fsi_res.near_spec{iC}.freqs, mean_ppc + 2*sd_ppc, '-g')
-                    hold on; plot(od.fsi_res.near_spec{iC}.freqs, mean_ppc - 2*sd_ppc, '-r')
+                    plot(od.fsi_res.near_spec{iC}.freqs, mean_ppc + 3*sd_ppc, '-g')
+                    hold on; plot(od.fsi_res.near_spec{iC}.freqs, mean_ppc - 3*sd_ppc, '-r')
                     plot(od.fsi_res.near_spec{iC}.freqs, hfr_lfr_ppc, '--blue')
 %                     legend({'P1-P2: Mean + 1*SD', 'P1-P2: Mean - 1*SD', 'HFR - LFR'}, 'FontSize', 8, 'Location', 'southeast')
                     x1 = find(od.fsi_res.near_spec{iC}.freqs >= 5, 1, 'first');
@@ -1283,24 +1283,24 @@ for idx = 1:length(rats)
                     hfr_lfr_sts = od.msn_res.near_hfr_spec{iC}.sts_vals - od.msn_res.near_lfr_spec{iC}.sts_vals;
                     hfr_lfr_ppc = od.msn_res.near_hfr_spec{iC}.ppc - od.msn_res.near_lfr_spec{iC}.ppc;
                     
-                    % Add "SIG" to filename if any of the hfr_lfr ppc lies outside mean +- 2*sd
-                    if sum(hfr_lfr_ppc(x1:end)' >= mean_ppc(x1:end) + 2*sd_ppc(x1:end)) ~= 0 & ...
-                        sum(hfr_lfr_ppc(x1:end)' <= mean_ppc(x1:end) - 2*sd_ppc(x1:end)) ~= 0
-                        [~ , f1] = max(hfr_lfr_ppc(x1:end)' - (mean_ppc(x1:end) + 2*sd_ppc(x1:end)));
-                        [~ , f2] = max((mean_ppc(x1:end) - 2*sd_ppc(x1:end)) - hfr_lfr_ppc(x1:end)');
+                    % Add "SIG" to filename if any of the hfr_lfr ppc lies outside mean +- 3*sd
+                    if sum(hfr_lfr_ppc(x1:end)' >= mean_ppc(x1:end) + 3*sd_ppc(x1:end)) ~= 0 & ...
+                        sum(hfr_lfr_ppc(x1:end)' <= mean_ppc(x1:end) - 3*sd_ppc(x1:end)) ~= 0
+                        [~ , f1] = max(hfr_lfr_ppc(x1:end)' - (mean_ppc(x1:end) + 3*sd_ppc(x1:end)));
+                        [~ , f2] = max((mean_ppc(x1:end) - 3*sd_ppc(x1:end)) - hfr_lfr_ppc(x1:end)');
                         foi = od.msn_res.near_spec{iC}.freqs(x1:end);
                         f1 = foi(f1);
                         f2 = foi(f2);
                         this_prefix = sprintf("_SIGhfr_%.0f_SIGlfr_%.0f",f1,f2);
                         o_prefix = cat(2, o_prefix, convertStringsToChars(this_prefix));
-                    elseif sum(hfr_lfr_ppc(x1:end)' >= mean_ppc(x1:end) + 2*sd_ppc(x1:end)) ~= 0
-                        [~ , f1] = max(hfr_lfr_ppc(x1:end)' - (mean_ppc(x1:end) + 2*sd_ppc(x1:end)));
+                    elseif sum(hfr_lfr_ppc(x1:end)' >= mean_ppc(x1:end) + 3*sd_ppc(x1:end)) ~= 0
+                        [~ , f1] = max(hfr_lfr_ppc(x1:end)' - (mean_ppc(x1:end) + 3*sd_ppc(x1:end)));
                         foi = od.msn_res.near_spec{iC}.freqs(x1:end);
                         f1 = foi(f1);
                         this_prefix = sprintf("_SIGhfr_%.0f",f1);
                         o_prefix = cat(2, o_prefix, convertStringsToChars(this_prefix));
-                    elseif sum(hfr_lfr_ppc(x1:end)' <= mean_ppc(x1:end) - 2*sd_ppc(x1:end)) ~= 0
-                        [~ , f2] = max((mean_ppc(x1:end) - 2*sd_ppc(x1:end)) - hfr_lfr_ppc(x1:end)');
+                    elseif sum(hfr_lfr_ppc(x1:end)' <= mean_ppc(x1:end) - 3*sd_ppc(x1:end)) ~= 0
+                        [~ , f2] = max((mean_ppc(x1:end) - 3*sd_ppc(x1:end)) - hfr_lfr_ppc(x1:end)');
                         foi = od.msn_res.near_spec{iC}.freqs(x1:end);
                         f2 = foi(f2);
                         this_prefix = sprintf("_SIGlfr_%.0f",f2);
@@ -1350,8 +1350,8 @@ for idx = 1:length(rats)
                     
                     % Plot Control split stuff
                     subplot(3,3,4)
-                    plot(od.msn_res.near_spec{iC}.freqs, mean_sts + 2*sd_sts, '-g')
-                    hold on; plot(od.msn_res.near_spec{iC}.freqs, mean_sts - 2*sd_sts, '-r')
+                    plot(od.msn_res.near_spec{iC}.freqs, mean_sts + 3*sd_sts, '-g')
+                    hold on; plot(od.msn_res.near_spec{iC}.freqs, mean_sts - 3*sd_sts, '-r')
                     plot(od.msn_res.near_spec{iC}.freqs, hfr_lfr_sts, '--blue')
 %                     legend({'P1-P2: Mean + 1*SD', 'P1-P2: Mean - 1*SD', 'HFR - LFR'}, 'FontSize', 8, 'Location', 'southeast')
                     x1 = find(od.msn_res.near_spec{iC}.freqs >= 5, 1, 'first');
@@ -1361,8 +1361,8 @@ for idx = 1:length(rats)
                     xlabel('Freqs')
                     
                     subplot(3,3,5)
-                    plot(od.msn_res.near_spec{iC}.freqs, mean_ppc + 2*sd_ppc, '-g')
-                    hold on; plot(od.msn_res.near_spec{iC}.freqs, mean_ppc - 2*sd_ppc, '-r')
+                    plot(od.msn_res.near_spec{iC}.freqs, mean_ppc + 3*sd_ppc, '-g')
+                    hold on; plot(od.msn_res.near_spec{iC}.freqs, mean_ppc - 3*sd_ppc, '-r')
                     plot(od.msn_res.near_spec{iC}.freqs, hfr_lfr_ppc, '--blue')
 %                     legend({'P1-P2: Mean + 1*SD', 'P1-P2: Mean - 1*SD', 'HFR - LFR'}, 'FontSize', 8, 'Location', 'southeast')
                     x1 = find(od.msn_res.near_spec{iC}.freqs >= 5, 1, 'first');
