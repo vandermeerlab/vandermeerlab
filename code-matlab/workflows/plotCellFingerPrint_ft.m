@@ -496,6 +496,7 @@ for idx = 1:length(rats)
                 if all_sts_peaks_in_lg && all_ppc_peaks_in_lg && ...
                     all_sts_peaks_in_hg && all_ppc_peaks_in_hg ...
                     
+
                     % Plot STS
                     subplot(3,3,2)
                     this_legend = {};
@@ -530,10 +531,13 @@ for idx = 1:length(rats)
                     this_legend{length(this_legend)+1} = sprintf ...
                        ('HFR Trials lg peak: %2.2f Hz, hg peak: %2.2f Hz ',...
                        near_hfr_lg_sts_pk, near_hfr_hg_sts_pk);
-                    sts_text = this_legend;  
+                    sts_text = this_legend;
+                    x1 = find(od.fsi_res.near_spec{iC}.freqs >= 5, 1, 'first');
+                    x2 = 100;
+                    xlim([x1 x2])
                     xlabel('Freqs')
                     title('Near Reward STS');
-                    
+                   
                     p1_p2_sts = od.fsi_res.near_p1_spec{iC}.subsampled_sts - od.fsi_res.near_p2_spec{iC}.subsampled_sts;
                     p1_p2_ppc = od.fsi_res.near_p1_spec{iC}.subsampled_ppc - od.fsi_res.near_p2_spec{iC}.subsampled_ppc;
                     mean_sts = mean(p1_p2_sts,1);
@@ -542,6 +546,11 @@ for idx = 1:length(rats)
                     sd_ppc = std(p1_p2_ppc);
                     hfr_lfr_sts = od.fsi_res.near_hfr_spec{iC}.subsampled_sts - od.fsi_res.near_lfr_spec{iC}.subsampled_sts;
                     hfr_lfr_ppc = od.fsi_res.near_hfr_spec{iC}.subsampled_ppc - od.fsi_res.near_lfr_spec{iC}.subsampled_ppc;
+                    % Add "SIG" to filename if any of the hfr_lfr ppc lies outside mean +- 2*sd
+                    if sum(hfr_lfr_ppc(x1:end)' >= mean_ppc(x1:end) + 2*sd_ppc(x1:end)) ~= 0 | ...
+                        sum(hfr_lfr_ppc(x1:end)' <= mean_ppc(x1:end) - 2*sd_ppc(x1:end)) ~= 0 
+                        o_prefix = cat(2, o_prefix, '_SIG');
+                    end
                                    
                     % Plot PPC
                     subplot(3,3,3)
@@ -578,23 +587,32 @@ for idx = 1:length(rats)
                        ('HFR Trials lg peak: %2.2f Hz, hg peak: %2.2f Hz ',...
                        near_hfr_lg_ppc_pk, near_hfr_hg_ppc_pk);
                     ppc_text = this_legend;
+                    x1 = find(od.fsi_res.near_spec{iC}.freqs >= 5, 1, 'first');
+                    x2 = 100;
+                    xlim([x1 x2])
                     xlabel('Freqs')
                     title('Near Reward PPC');
                     
                     % Plot Control split stuff
                     subplot(3,3,4)
-                    plot(od.fsi_res.near_spec{iC}.freqs, mean_sts + sd_sts, '-g')
-                    hold on; plot(od.fsi_res.near_spec{iC}.freqs, mean_sts - sd_sts, '-r')
+                    plot(od.fsi_res.near_spec{iC}.freqs, mean_sts + 2*sd_sts, '-g')
+                    hold on; plot(od.fsi_res.near_spec{iC}.freqs, mean_sts - 2*sd_sts, '-r')
                     plot(od.fsi_res.near_spec{iC}.freqs, hfr_lfr_sts, '--blue')
 %                     legend({'P1-P2: Mean + 1*SD', 'P1-P2: Mean - 1*SD', 'HFR - LFR'}, 'FontSize', 8, 'Location', 'southeast')
+                    x1 = find(od.fsi_res.near_spec{iC}.freqs >= 5, 1, 'first');
+                    x2 = 100;
+                    xlim([x1 x2])
                     ylabel('STS difference')
                     xlabel('Freqs')
                     
                     subplot(3,3,5)
-                    plot(od.fsi_res.near_spec{iC}.freqs, mean_ppc + sd_ppc, '-g')
-                    hold on; plot(od.fsi_res.near_spec{iC}.freqs, mean_ppc - sd_ppc, '-r')
+                    plot(od.fsi_res.near_spec{iC}.freqs, mean_ppc + 2*sd_ppc, '-g')
+                    hold on; plot(od.fsi_res.near_spec{iC}.freqs, mean_ppc - 2*sd_ppc, '-r')
                     plot(od.fsi_res.near_spec{iC}.freqs, hfr_lfr_ppc, '--blue')
 %                     legend({'P1-P2: Mean + 1*SD', 'P1-P2: Mean - 1*SD', 'HFR - LFR'}, 'FontSize', 8, 'Location', 'southeast')
+                    x1 = find(od.fsi_res.near_spec{iC}.freqs >= 5, 1, 'first');
+                    x2 = 100;
+                    xlim([x1 x2])
                     ylabel('PPC difference')
                     xlabel('Freqs')
                     
@@ -1230,7 +1248,10 @@ for idx = 1:length(rats)
                     this_legend{length(this_legend)+1} = sprintf ...
                        ('HFR Trials lg peak: %2.2f Hz, hg peak: %2.2f Hz ',...
                        near_hfr_lg_sts_pk, near_hfr_hg_sts_pk);
-                    sts_text = this_legend;  
+                    sts_text = this_legend;
+                    x1 = find(od.msn_res.near_spec{iC}.freqs >= 5, 1, 'first');
+                    x2 = 100;
+                    xlim([x1 x2])
                     xlabel('Freqs')
                     title('Near Reward STS');
                     
@@ -1242,6 +1263,11 @@ for idx = 1:length(rats)
                     sd_ppc = std(p1_p2_ppc);
                     hfr_lfr_sts = od.msn_res.near_hfr_spec{iC}.sts_vals - od.msn_res.near_lfr_spec{iC}.sts_vals;
                     hfr_lfr_ppc = od.msn_res.near_hfr_spec{iC}.ppc - od.msn_res.near_lfr_spec{iC}.ppc;
+                    % Add "SIG" to filename if any of the hfr_lfr ppc lies outside mean +- 2*sd
+                    if sum(hfr_lfr_ppc(x1:end)' >= mean_ppc(x1:end) + 2*sd_ppc(x1:end)) ~= 0 | ...
+                        sum(hfr_lfr_ppc(x1:end)' <= mean_ppc(x1:end) - 2*sd_ppc(x1:end)) ~= 0 
+                        o_prefix = cat(2, o_prefix, '_SIG');
+                    end
                                    
                     % Plot PPC
                     subplot(3,3,3)
@@ -1278,23 +1304,32 @@ for idx = 1:length(rats)
                        ('HFR Trials lg peak: %2.2f Hz, hg peak: %2.2f Hz ',...
                        near_hfr_lg_ppc_pk, near_hfr_hg_ppc_pk);
                     ppc_text = this_legend;
+                    x1 = find(od.msn_res.near_spec{iC}.freqs >= 5, 1, 'first');
+                    x2 = 100;
+                    xlim([x1 x2])
                     xlabel('Freqs')
                     title('Near Reward PPC');
                     
                     % Plot Control split stuff
                     subplot(3,3,4)
-                    plot(od.msn_res.near_spec{iC}.freqs, mean_sts + sd_sts, '-g')
-                    hold on; plot(od.msn_res.near_spec{iC}.freqs, mean_sts - sd_sts, '-r')
+                    plot(od.msn_res.near_spec{iC}.freqs, mean_sts + 2*sd_sts, '-g')
+                    hold on; plot(od.msn_res.near_spec{iC}.freqs, mean_sts - 2*sd_sts, '-r')
                     plot(od.msn_res.near_spec{iC}.freqs, hfr_lfr_sts, '--blue')
 %                     legend({'P1-P2: Mean + 1*SD', 'P1-P2: Mean - 1*SD', 'HFR - LFR'}, 'FontSize', 8, 'Location', 'southeast')
+                    x1 = find(od.msn_res.near_spec{iC}.freqs >= 5, 1, 'first');
+                    x2 = 100;
+                    xlim([x1 x2])
                     ylabel('STS difference')
                     xlabel('Freqs')
                     
                     subplot(3,3,5)
-                    plot(od.msn_res.near_spec{iC}.freqs, mean_ppc + sd_ppc, '-g')
-                    hold on; plot(od.msn_res.near_spec{iC}.freqs, mean_ppc - sd_ppc, '-r')
+                    plot(od.msn_res.near_spec{iC}.freqs, mean_ppc + 2*sd_ppc, '-g')
+                    hold on; plot(od.msn_res.near_spec{iC}.freqs, mean_ppc - 2*sd_ppc, '-r')
                     plot(od.msn_res.near_spec{iC}.freqs, hfr_lfr_ppc, '--blue')
 %                     legend({'P1-P2: Mean + 1*SD', 'P1-P2: Mean - 1*SD', 'HFR - LFR'}, 'FontSize', 8, 'Location', 'southeast')
+                    x1 = find(od.msn_res.near_spec{iC}.freqs >= 5, 1, 'first');
+                    x2 = 100;
+                    xlim([x1 x2])
                     ylabel('PPC difference')
                     xlabel('Freqs')
                     
