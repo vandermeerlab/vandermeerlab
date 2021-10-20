@@ -53,6 +53,8 @@ for idx = 1:length(rats)
 %                     close all;
 %                     continue
 %                 end
+
+                
                 
                 % Plot STA
                 subplot(3,3,1)
@@ -208,6 +210,7 @@ for idx = 1:length(rats)
                     [pk1, loc1] = max(od.fsi_res.near_lfr_spec{iC}.subsampled_ppc(lf+pks.loc-1));
                     if pk1 > max_val*pk_thresh
                         near_lfr_hg_ppc_pk = pks.loc(loc1);
+                        lfr_hg_ppc_pk_idx = loc1;
                     else
                        flag_near_lfr_hg_ppc_peak = false;
                     end
@@ -266,6 +269,7 @@ for idx = 1:length(rats)
                     [pk1, loc1] = max(od.fsi_res.near_hfr_spec{iC}.subsampled_ppc(lf+pks.loc-1));
                     if pk1 > max_val*pk_thresh
                         near_hfr_hg_ppc_pk = pks.loc(loc1);
+                        hfr_hg_ppc_pk_idx = loc1;
                     else
                        flag_near_hfr_hg_ppc_peak = false;
                     end
@@ -542,7 +546,22 @@ for idx = 1:length(rats)
                     sd_ppc = std(p1_p2_ppc);
                     hfr_lfr_sts = od.fsi_res.near_hfr_spec{iC}.subsampled_sts - od.fsi_res.near_lfr_spec{iC}.subsampled_sts;
                     hfr_lfr_ppc = od.fsi_res.near_hfr_spec{iC}.subsampled_ppc - od.fsi_res.near_lfr_spec{iC}.subsampled_ppc;
-                                   
+                    
+                    % Continue if at least one Significant Positive peak
+                    % and one negative peak in the gamma range
+                    % Find High Gamma PPC Peak
+                    lf = find(od.fsi_res.near_p2_spec{iC}.freqs >= hg(1), 1, 'first');
+                    rf = find(od.fsi_res.near_p2_spec{iC}.freqs <= hg(2), 1, 'last');  
+                    sig_high_idx = find(hfr_lfr_ppc(lf:rf)' >= (mean_ppc(lf:rf) + sd_ppc(lf:rf)));
+                    sig_low_idx = find(hfr_lfr_ppc(lf:rf)' <= (mean_ppc(lf:rf) - sd_ppc(lf:rf)));
+                    
+                    if isempty(sig_high_idx) | isempty(sig_low_idx) | sum(lfr_hg_ppc_pk_idx == sig_low_idx) == 0 | sum(hfr_hg_ppc_pk_idx == sig_high_idx) == 0 
+                       close all;
+                       continue;
+                    else
+                     	o_prefix = cat(2, o_prefix, '_sig_peaks_');
+                    end
+                   
                     % Plot PPC
                     subplot(3,3,3)
                     this_legend = {};
@@ -600,6 +619,7 @@ for idx = 1:length(rats)
                     
                     
                     % Plot histograms
+                    
                     subplot(6,6,17)
                     hold on
                     histogram(near_p1_lg_sts_pk - near_p2_lg_sts_pk,lg(1)-lg(2)-0.5:5:lg(2)-lg(1)+0.5,'FaceColor','red','FaceAlpha',0.6);
@@ -908,6 +928,7 @@ for idx = 1:length(rats)
                     [pk1, loc1] = max(od.msn_res.near_lfr_spec{iC}.ppc(lf+pks.loc-1));
                     if pk1 > max_val*pk_thresh
                         near_lfr_hg_ppc_pk = pks.loc(loc1);
+                        lfr_hg_ppc_pk_idx = loc1;
                     else
                        flag_near_lfr_hg_ppc_peak = false;
                     end
@@ -966,6 +987,7 @@ for idx = 1:length(rats)
                     [pk1, loc1] = max(od.msn_res.near_hfr_spec{iC}.ppc(lf+pks.loc-1));
                     if pk1 > max_val*pk_thresh
                         near_hfr_hg_ppc_pk = pks.loc(loc1);
+                        hfr_hg_ppc_pk_idx = loc1;
                     else
                        flag_near_hfr_hg_ppc_peak = false;
                     end
@@ -1242,6 +1264,22 @@ for idx = 1:length(rats)
                     sd_ppc = std(p1_p2_ppc);
                     hfr_lfr_sts = od.msn_res.near_hfr_spec{iC}.sts_vals - od.msn_res.near_lfr_spec{iC}.sts_vals;
                     hfr_lfr_ppc = od.msn_res.near_hfr_spec{iC}.ppc - od.msn_res.near_lfr_spec{iC}.ppc;
+                    
+                    % Continue if at least one Significant Positive peak
+                    % and one negative peak in the gamma range
+                    % Find High Gamma PPC Peak
+                    lf = find(od.msn_res.near_p2_spec{iC}.freqs >= hg(1), 1, 'first');
+                    rf = find(od.msn_res.near_p2_spec{iC}.freqs <= hg(2), 1, 'last');  
+                    sig_high_idx = find(hfr_lfr_ppc(lf:rf)' >= (mean_ppc(lf:rf) + sd_ppc(lf:rf)));
+                    sig_low_idx = find(hfr_lfr_ppc(lf:rf)' <= (mean_ppc(lf:rf) - sd_ppc(lf:rf)));
+                    
+                    if isempty(sig_high_idx) | isempty(sig_low_idx) | sum(lfr_hg_ppc_pk_idx == sig_low_idx) == 0 | sum(hfr_hg_ppc_pk_idx == sig_high_idx) == 0 
+                       close all;
+                       continue;
+                    else
+                     	o_prefix = cat(2, o_prefix, '_sig_peaks_');
+                    end
+                    
                                    
                     % Plot PPC
                     subplot(3,3,3)
