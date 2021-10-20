@@ -548,23 +548,23 @@ for idx = 1:length(rats)
                     hfr_lfr_ppc = od.fsi_res.near_hfr_spec{iC}.subsampled_ppc - od.fsi_res.near_lfr_spec{iC}.subsampled_ppc;
                     
                     % Add "SIG" to filename if any of the hfr_lfr ppc lies outside mean +- 2*sd
-                    if sum(hfr_lfr_ppc(x1:end)' >= mean_ppc(x1:end) + 2*sd_ppc(x1:end)) ~= 0 & ...
-                        sum(hfr_lfr_ppc(x1:end)' <= mean_ppc(x1:end) - 2*sd_ppc(x1:end)) ~= 0
-                        [~ , f1] = max(hfr_lfr_ppc(x1:end)' - (mean_ppc(x1:end) + 2*sd_ppc(x1:end)));
-                        [~ , f2] = max((mean_ppc(x1:end) - 2*sd_ppc(x1:end)) - hfr_lfr_ppc(x1:end)');
+                    if sum(hfr_lfr_ppc(x1:end) >= mean_ppc(x1:end) + 2*sd_ppc(x1:end)) ~= 0 & ...
+                        sum(hfr_lfr_ppc(x1:end) <= mean_ppc(x1:end) - 2*sd_ppc(x1:end)) ~= 0
+                        [~ , f1] = max(hfr_lfr_ppc(x1:end) - (mean_ppc(x1:end) + 2*sd_ppc(x1:end)));
+                        [~ , f2] = max((mean_ppc(x1:end) - 2*sd_ppc(x1:end)) - hfr_lfr_ppc(x1:end));
                         foi = od.fsi_res.near_spec{iC}.freqs(x1:end);
                         f1 = foi(f1);
                         f2 = foi(f2);
                         this_prefix = sprintf("_SIGhfr_%.0f_SIGlfr_%.0f",f1,f2);
                         o_prefix = cat(2, o_prefix, convertStringsToChars(this_prefix));
-                    elseif sum(hfr_lfr_ppc(x1:end)' >= mean_ppc(x1:end) + 2*sd_ppc(x1:end)) ~= 0
-                        [~ , f1] = max(hfr_lfr_ppc(x1:end)' - (mean_ppc(x1:end) + 2*sd_ppc(x1:end)));
+                    elseif sum(hfr_lfr_ppc(x1:end) >= mean_ppc(x1:end) + 2*sd_ppc(x1:end)) ~= 0
+                        [~ , f1] = max(hfr_lfr_ppc(x1:end) - (mean_ppc(x1:end) + 2*sd_ppc(x1:end)));
                         foi = od.fsi_res.near_spec{iC}.freqs(x1:end);
                         f1 = foi(f1);
                         this_prefix = sprintf("_SIGhfr_%.0f",f1);
                         o_prefix = cat(2, o_prefix, convertStringsToChars(this_prefix));
-                    elseif sum(hfr_lfr_ppc(x1:end)' <= mean_ppc(x1:end) - 2*sd_ppc(x1:end)) ~= 0
-                        [~ , f2] = max((mean_ppc(x1:end) - 2*sd_ppc(x1:end)) - hfr_lfr_ppc(x1:end)');
+                    elseif sum(hfr_lfr_ppc(x1:end) <= mean_ppc(x1:end) - 2*sd_ppc(x1:end)) ~= 0
+                        [~ , f2] = max((mean_ppc(x1:end) - 2*sd_ppc(x1:end)) - hfr_lfr_ppc(x1:end));
                         foi = od.fsi_res.near_spec{iC}.freqs(x1:end);
                         f2 = foi(f2);
                         this_prefix = sprintf("_SIGlfr_%.0f",f2);
