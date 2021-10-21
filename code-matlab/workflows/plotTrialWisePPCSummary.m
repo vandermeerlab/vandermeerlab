@@ -27,7 +27,7 @@ for idx = 1:length(rats)
                    continue;
                end
                this_ppc = od.fsi_res.near_spec{iC}.trial_wise_ppc(valid_trials,:);
-               fsi_ppc_sd = [fsi_ppc_sd; std(this_ppc)]
+               fsi_ppc_sd = [fsi_ppc_sd; std(this_ppc)];
             end
         end
         
@@ -48,8 +48,14 @@ for idx = 1:length(rats)
                    continue;
                end
                this_ppc = od.msn_res.near_spec{iC}.trial_wise_ppc(valid_trials,:);
-               msn_ppc_sd = [msn_ppc_sd; std(this_ppc)]
+               msn_ppc_sd = [msn_ppc_sd; std(this_ppc)];
             end
         end
     end
 end
+% Plot histograms
+q0 = mean(fsi_ppc_sd, 2);
+q1 = mean(msn_ppc_sd, 2);
+histogram(q0, 'FaceColor', 'green', 'FaceAlpha', 0.4);
+hold on;
+histogram(q1, 'FaceColor', 'red', 'FaceAlpha', 0.4);
