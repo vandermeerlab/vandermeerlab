@@ -252,7 +252,7 @@ function od = generateSTS(cfg_in)
         near_trialwise_spk_count = zeros(1, length(near_data.trial));
         for iT = 1:length(near_data.trial)
            near_trialwise_spk_count(iT) = sum(near_data.trial{iT}(2,:));
-           spk_count2 = spk_count2 + near_trialwise_spk_count(iT); 
+           spk_count2 = spk_count2 + near_trialwise_spk_count(iT);
         end
         % Skip if no spikes present!
         if spk_count2 <  cfg_master.nMinSpikes2
@@ -304,8 +304,10 @@ function od = generateSTS(cfg_in)
             cfg_ppc.channel       = this_sts.lfplabel; % selected LFP channels
             cfg_ppc.avgoverchan   = 'weighted';
             this_flag = false;
+            % If a trial has only one spike, ppc can't be calculated!
+            % Need at at least 2 spikes!
             for iT = 1:length(near_data.trial)
-                 if od.msn_res.near_spec{iM}.trialwise_spk_count(iT) == 0
+                 if od.msn_res.near_spec{iM}.trialwise_spk_count(iT) < 2
                      continue;
                  else
                     this_trial_sts = this_sts;
@@ -332,17 +334,21 @@ function od = generateSTS(cfg_in)
     od.msn_near_dist = [];
     
     % Subsample only if all the splits are problem free
+    % Also convert all numbers less than 2 to 0 because you need at least 2
+    % spikes in a trial to calculate PPC
     if isfield(od,'msn_res') && isfield(od.msn_res, 'near_spec')
         for iM = 1:length(od.msn_res.near_spec)
             if ~od.msn_res.near_spec{iM}.flag_tooFewSpikes & ...
-                ~od.msn_res.near_spec{iM}.flag_nanppc     
-                    od.msn_near_dist = [od.msn_near_dist, od.msn_res.near_spec{iM}.trialwise_spk_count'];
+                ~od.msn_res.near_spec{iM}.flag_nanppc
+                    temp_spk_count = od.msn_res.near_spec{iM}.trialwise_spk_count';
+                    temp_spk_count(temp_spk_count < 2) = 0;
+                    od.msn_near_dist = [od.msn_near_dist, temp_spk_count];
             end
         end
     end
     
     % Calculate spectral measures for all FSIs
-    all_fsi = find(od.cell_type == 2);
+       all_fsi = find(od.cell_type == 2);
     for iM = 1:length(all_fsi)   
         iC  = all_fsi(iM);
         % Calculate and save STA
@@ -492,7 +498,7 @@ function od = generateSTS(cfg_in)
                 cfg_ppc.avgoverchan   = 'weighted';
                 this_flag = false;
                 for iT = 1:length(near_data.trial)
-                    if od.fsi_res.near_spec{iM}.trialwise_spk_count(iT) == 0
+                    if od.fsi_res.near_spec{iM}.trialwise_spk_count(iT) < 2
                      continue;
                     else
                         this_trial_sts = this_sts;
@@ -513,7 +519,7 @@ function od = generateSTS(cfg_in)
                     od.fsi_res.near_spec{iM}.trial_wise_ppc = near_trialwise_ppc;
                 end 
             else %Subsample cfg_master.num_subsamples times and then average for each trial
-                % Algo: Choose a random non-zero number from each row of
+                % Algo: Choose a random non-zero number, and greater than 2! from each row of
                 % od.msn_near_dist and subset that many spikes for that
                 % particular trial. If all numbers in that trial are zero,
                 % then skip that trial for the FSI. If one of the MSN trial
@@ -529,7 +535,7 @@ function od = generateSTS(cfg_in)
                 cfg_ppc.avgoverchan   = 'weighted';
                 this_flag = false;
                 for iT = 1:length(near_data.trial)
-                    if od.fsi_res.near_spec{iM}.trialwise_spk_count(iT) == 0 || ...
+                    if od.fsi_res.near_spec{iM}.trialwise_spk_count(iT) < 2 || ...
                             sum(od.msn_near_dist(iT,:)) == 0
                         continue;
                     elseif od.fsi_res.near_spec{iM}.trialwise_spk_count(iT) < max(od.msn_near_dist(iT,:))
@@ -546,11 +552,13 @@ function od = generateSTS(cfg_in)
                         near_trialwise_ppc(iT,:) = this_trial_ppc.ppc0;    
                     else
                         temp_trial_ppc = zeros(cfg_master.num_subsamples, length(od.fsi_res.near_spec{iM}.freqs));
-                        s_factor = 1/length(find(od.msn_near_dist(iT,:)));
+                        valid_choices = od.msn_near_dist(iT,:);
+                        valid_choices = valid_choices(valid_choices>1);
+                        s_factor = 1/length(valid_choices);
                         flag_sub_nan = false;
                         for iS = 1:cfg_master.num_subsamples
-                            choice = floor(rand()/s_factor)+1;
-                            sub_idx = randsample(trial_wise_spike{iT}, od.msn_near_dist(iT,choice));
+                            choice = floor(rand()/s_factor)+1;                 
+                            sub_idx = randsample(trial_wise_spike{iT}, valid_choices(choice));
                             sub_idx = sort(sub_idx);
                             sub_sts = this_sts;
                             sub_sts.fourierspctrm{1} = sub_sts.fourierspctrm{1}(sub_idx,:,:);
