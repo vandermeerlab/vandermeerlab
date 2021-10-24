@@ -58,6 +58,6 @@ end
 % Plot histograms
 q0 = mean(fsi_ppc_sd, 2);
 q1 = mean(msn_ppc_sd, 2);
-histogram(q0, 'FaceColor', 'green', 'FaceAlpha', 0.4);
+histogram(q0,0:0.05:1, 'FaceColor', 'green', 'FaceAlpha', 0.4);
 hold on;
-histogram(q1, 'FaceColor', 'red', 'FaceAlpha', 0.4);
+histogram(q1,0:0.05:1, 'FaceColor', 'red', 'FaceAlpha', 0.4);
