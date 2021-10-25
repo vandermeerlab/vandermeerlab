@@ -1,5 +1,5 @@
-cd('D:\RandomVstrAnalysis\ft_trialwise_ppc');
-% cd('/Users/manishm/Dropbox (Dartmouth College)/AnalysisResults/FieldTripResults/ft_trialwise_ppc');
+% cd('D:\RandomVstrAnalysis\ft_trialwise_ppc');
+cd('/Users/manishm/Dropbox (Dartmouth College)/AnalysisResults/FieldTripResults/ft_trialwise_ppc');
 rats = {'R117','R119','R131','R132'};
 
 msn_ppc_sd = [];
@@ -55,9 +55,24 @@ for idx = 1:length(rats)
         end
     end
 end
-% Plot histograms
+%% Plot histograms
+
 q0 = mean(fsi_ppc_sd, 2);
 q1 = mean(msn_ppc_sd, 2);
 histogram(q0,0:0.05:1, 'FaceColor', 'green', 'FaceAlpha', 0.4);
 hold on;
 histogram(q1,0:0.05:1, 'FaceColor', 'red', 'FaceAlpha', 0.4);
+legend({'FSI', 'MSN'});
+title('Distribution of standard deviations of ppc across trials, averaged over all the frequencies')
+
+%% Helper functions
+% function to normalize data
+function ndata = normdata(data)
+    if (sum(isnan(data)) == length(data))
+        ndata = data;
+    else
+        maxd = max(data);
+        mind = min(data);
+        ndata = (data - mind)/(maxd-mind);
+    end
+end
