@@ -1,9 +1,13 @@
+% Generates Scatter Plots of Difference in Peak Frequencies vs difference
+% in mean firing rates
+
 fsi_near_lfr_hg_ppc_peaks = [];
 fsi_near_lfr_lg_ppc_peaks = [];
 fsi_near_hfr_hg_ppc_peaks = [];
 fsi_near_hfr_lg_ppc_peaks = [];
 fsi_near_lfr_frs = [];
 fsi_near_hfr_frs = [];
+valid_fsi_labels = [];
 
 msn_near_lfr_hg_ppc_peaks = [];
 msn_near_lfr_lg_ppc_peaks = [];
@@ -11,12 +15,12 @@ msn_near_hfr_hg_ppc_peaks = [];
 msn_near_hfr_lg_ppc_peaks = [];
 msn_near_lfr_frs = [];
 msn_near_hfr_frs = [];
-
+valid_msn_labels = [];
 
 sessions_with_msn_ppc_peak_ge_fsi = [];
 
 % cd('D:\RandomVstrAnalysis\ft_results');
-cd('/Users/manishm/Dropbox (Dartmouth College)/AnalysisResults/FieldTripResults/ft_results');
+cd('D:\RandomVstrAnalysis\ft_results');
 
 rats = {'R117','R119','R131','R132'};
 lg = [3,30];
@@ -145,6 +149,7 @@ for idx = 1:length(rats)
                     
                     fsi_near_lfr_frs = [fsi_near_lfr_frs, near_lfr_spec_mean];
                     fsi_near_hfr_frs = [fsi_near_hfr_frs, near_hfr_spec_mean];
+                    valid_fsi_labels = [valid_fsi_labels fsi_labels(iC)];
                 end
             else
                 continue
@@ -267,6 +272,7 @@ for idx = 1:length(rats)
                     
                     msn_near_lfr_frs = [msn_near_lfr_frs, near_lfr_spec_mean];
                     msn_near_hfr_frs = [msn_near_hfr_frs, near_hfr_spec_mean];
+                    valid_msn_labels = [valid_msn_labels msn_labels(iC)];
                 end
             else
                 continue
@@ -275,13 +281,47 @@ for idx = 1:length(rats)
     end
 end
 
-%% Plot Distance betweem Peak Frequencies vs Difference in Mean Firing rates
-close all
-fig = figure('WindowState', 'maximized');
-scatter(msn_near_hfr_frs - msn_near_lfr_frs, msn_near_hfr_hg_ppc_peaks - msn_near_lfr_hg_ppc_peaks, ...
-    'Marker', 'o', 'MarkerFaceColor', 'blue', 'MarkerFaceAlpha', 0.5);
-ylabel('Difference in Frequency of Maximum Phase Locking', 'FontSize', 16)
-xlabel('Difference in Firing Rates between HFR trials and LFR trials', 'FontSize', 16)
+%% Plot Distance betweem Peak Frequencies vs Difference in Mean Firing rates in MSNs and FSIs
+close all;
+fig_1 = figure('WindowState', 'maximized');
+s1 = scatter(msn_near_hfr_frs - msn_near_lfr_frs, msn_near_hfr_hg_ppc_peaks - msn_near_lfr_hg_ppc_peaks);
+s1.Marker = 'o';
+s1.MarkerFaceColor = [0.8500 0.3250 0.0980];
+s1.MarkerFaceAlpha = 0.5;
+s1.MarkerEdgeColor = [0.8500 0.3250 0.0980];
+s1.MarkerEdgeAlpha = 0.5;
+s1.SizeData = 150;
+hold on;
+s2 = scatter(fsi_near_hfr_frs - fsi_near_lfr_frs, fsi_near_hfr_hg_ppc_peaks - fsi_near_lfr_hg_ppc_peaks);
+s2.Marker = 'o';
+s2.MarkerFaceColor = 'blue';
+s2.MarkerFaceAlpha = 0.5;
+s2.MarkerEdgeColor = 'blue';
+s2.MarkerEdgeAlpha = 0.5;
+s2.SizeData = 150;
+ax1 = gca(fig_1);
+ax1.XAxis.FontSize = 20;
+ax1.YAxis.FontSize = 20;
+ax1.XLim = [0,10];
+ax1.YLim = [-120 120];
+ax1.YLabel.String = '\Delta Peak Frequency';
+ax1.XLabel.String = '\Delta Firing Rate';
+ax1.XLabel.FontSize = 24;
+ax1.YLabel.FontSize = 24;
+leg = legend({'MSN', 'FSI'});
+leg.FontName = 'Arial';
+leg.FontSize = 20;
+leg.FontWeight = 'bold';
 box off;
 %%
-WriteFig(fig,'~/test',1);
+fig_2 = figure('WindowState', 'maximized');
+hold on;
+for iF = 1:length(valid_fsi_labels)
+    text(fsi_near_hfr_frs(iF) - fsi_near_lfr_frs(iF), ...
+        fsi_near_hfr_hg_ppc_peaks(iF) - fsi_near_lfr_hg_ppc_peaks(iF), ...
+        valid_fsi_labels(iF), 'Interpreter', 'none');
+end
+xlim([0,10])
+ylim([-100 100])
+%%
+WriteFig(fig,'D:\RandomVstrAnalysis\temp\test',1);
