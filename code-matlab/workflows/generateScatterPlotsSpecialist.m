@@ -324,4 +324,14 @@ end
 xlim([0,10])
 ylim([-100 100])
 %%
+fig_3 = figure('WindowState', 'maximized');
+hold on;
+for iF = 1:length(valid_msn_labels)
+    text(msn_near_hfr_frs(iF) - msn_near_lfr_frs(iF), ...
+        msn_near_hfr_hg_ppc_peaks(iF) - msn_near_lfr_hg_ppc_peaks(iF), ...
+        valid_msn_labels(iF), 'Interpreter', 'none');
+end
+xlim([0,10])
+ylim([-100 100])
+%%
 WriteFig(fig,'D:\RandomVstrAnalysis\temp\test',1);

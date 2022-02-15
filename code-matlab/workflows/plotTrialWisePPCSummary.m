@@ -1,5 +1,5 @@
-% cd('D:\RandomVstrAnalysis\ft_trialwise_ppc');
-cd('/Users/manishm/Dropbox (Dartmouth College)/AnalysisResults/FieldTripResults/ft_trialwise_ppc');
+cd('D:\RandomVstrAnalysis\ft_trialwise_ppc');
+% cd('/Users/manishm/Dropbox (Dartmouth College)/AnalysisResults/FieldTripResults/ft_trialwise_ppc');
 rats = {'R117','R119','R131','R132'};
 
 msn_ppc_sd = [];
@@ -56,13 +56,25 @@ for idx = 1:length(rats)
     end
 end
 %% Plot histograms
-
+close all;
 q0 = mean(fsi_ppc_sd, 2);
 q1 = mean(msn_ppc_sd, 2);
-histogram(q0,0:0.05:1, 'FaceColor', 'green', 'FaceAlpha', 0.4);
+fig = figure('WindowState', 'maximized');
+h1 = histogram(q0,0:0.05:1, 'FaceColor', 'green', 'FaceAlpha', 0.4);
 hold on;
-histogram(q1,0:0.05:1, 'FaceColor', 'red', 'FaceAlpha', 0.4);
-legend({'FSI', 'MSN'});
+h2 = histogram(q1,0:0.05:1, 'FaceColor', 'red', 'FaceAlpha', 0.4);
+ax = gca(fig);
+leg = legend({'FSI', 'MSN'});
+ax.XAxis.FontSize = 20;
+ax.YAxis.FontSize = 20;
+ax.XLabel.String = 'Mean of SDs over all frequencies';
+ax.XLabel.FontSize = 24;
+leg = legend({'MSN', 'FSI'});
+leg.FontName = 'Arial';
+leg.FontSize = 20;
+leg.FontWeight = 'bold';
+box off;
+%%
 title('Distribution of standard deviations of ppc across trials, averaged over all the frequencies')
 
 %% Helper functions
