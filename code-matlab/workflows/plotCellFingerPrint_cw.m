@@ -37,7 +37,7 @@ for iC = 1:length(fsi_cw)
         ax1.XAxis.FontSize = 18;
         leg1 = legend({sprintf('LFR: %d spikes',od.fsi_res.near_lfr_spec{iF}.spk_count), ...
             sprintf('HFR: %d spikes',od.fsi_res.near_hfr_spec{iF}.spk_count)});
-        leg1.FontSize = 18;
+        leg1.FontSize = 17;
        
         % Find PPC_peaks  
         lf = find(od.fsi_res.near_spec{iF}.freqs >= hg(1), 1, 'first');
@@ -53,6 +53,19 @@ for iC = 1:length(fsi_cw)
         [~, loc1] = max(od.fsi_res.near_lfr_spec{iF}.subsampled_ppc(lf+pks.loc-1));
         near_lfr_ppc_pk = pks.loc(loc1) + hg(1) - 1;
         
+        % Calculate mean mfr and range
+        nz_trials = od.fsi_res.near_spec{iF}.mfr > 0;
+        lfr_trials = od.fsi_res.near_spec{iF}.mfr <= od.fsi_res.near_spec{iF}.fr_thresh;
+        lfr_trials = lfr_trials & nz_trials;
+        hfr_trials = ~lfr_trials;
+        hfr_trials = hfr_trials & nz_trials;
+        near_lfr_spec_mean = sum(od.fsi_res.near_spec{iF}.trial_spk_count(lfr_trials))/...
+            sum(od.fsi_res.near_spec{iF}.trial_spk_count(lfr_trials)'./...
+            od.fsi_res.near_spec{iF}.mfr(lfr_trials));
+        near_hfr_spec_mean = sum(od.fsi_res.near_spec{iF}.trial_spk_count(hfr_trials))/...
+            sum(od.fsi_res.near_spec{iF}.trial_spk_count(hfr_trials)'./...
+            od.fsi_res.near_spec{iF}.mfr(hfr_trials));  
+       
         % Plot PPC
         ax2 = subplot(2,1,2);
         hold on;
@@ -72,9 +85,11 @@ for iC = 1:length(fsi_cw)
         ax2.XAxis.FontSize = 18;
         ax2.XLim = hg;
         ax2.XTick = [5 10 20 30 40 50 60 70 80 90 100];
-        leg2 = legend({sprintf('LFR Peak Frequency: %.2f Hz',near_lfr_ppc_pk), ...
-           sprintf('HFR Peak Frequency: %.2f Hz',near_hfr_ppc_pk)});
-        leg2.FontSize = 18;
+        leg2 = legend({sprintf('LFR Peak Frequency: %.2f Hz\nMean Firing Rate: %.2f Hz',...
+            near_lfr_ppc_pk, near_lfr_spec_mean), ...
+           sprintf('HFR Peak Frequency: %.2f Hz\nMean Firing RateL %.2f Hz',...
+           near_hfr_ppc_pk, near_hfr_spec_mean)});
+        leg2.FontSize = 17;
         saveas(fig, cat(2,this_label,'_FSI.svg'));
       end
    end
@@ -110,7 +125,7 @@ for iC = 1:length(msn_cw)
         ax1.XAxis.FontSize = 18;
         leg1 = legend({sprintf('LFR: %d spikes',od.msn_res.near_lfr_spec{iM}.spk_count), ...
             sprintf('HFR: %d spikes',od.msn_res.near_hfr_spec{iM}.spk_count)});
-        leg1.FontSize = 18;
+        leg1.FontSize = 17;
        
         % Find PPC_peaks  
         lf = find(od.msn_res.near_spec{iM}.freqs >= hg(1), 1, 'first');
@@ -125,6 +140,19 @@ for iC = 1:length(msn_cw)
         max_val = max(od.msn_res.near_lfr_spec{iM}.ppc);
         [~, loc1] = max(od.msn_res.near_lfr_spec{iM}.ppc(lf+pks.loc-1));
         near_lfr_ppc_pk = pks.loc(loc1) + hg(1) - 1;
+        
+        % Calculate mean mfr and range
+        nz_trials = od.msn_res.near_spec{iM}.mfr > 0;
+        lfr_trials = od.msn_res.near_spec{iM}.mfr <= od.msn_res.near_spec{iM}.fr_thresh;
+        lfr_trials = lfr_trials & nz_trials;
+        hfr_trials = ~lfr_trials;
+        hfr_trials = hfr_trials & nz_trials;
+        near_lfr_spec_mean = sum(od.msn_res.near_spec{iM}.trial_spk_count(lfr_trials))/...
+            sum(od.msn_res.near_spec{iM}.trial_spk_count(lfr_trials)'./...
+            od.msn_res.near_spec{iM}.mfr(lfr_trials));
+        near_hfr_spec_mean = sum(od.msn_res.near_spec{iM}.trial_spk_count(hfr_trials))/...
+            sum(od.msn_res.near_spec{iM}.trial_spk_count(hfr_trials)'./...
+            od.msn_res.near_spec{iM}.mfr(hfr_trials)); 
         
         % Plot PPC
         ax2 = subplot(2,1,2);
@@ -145,9 +173,11 @@ for iC = 1:length(msn_cw)
         ax2.XAxis.FontSize = 18;
         ax2.XLim = hg;
         ax2.XTick = [5 10 20 30 40 50 60 70 80 90 100];
-        leg2 = legend({sprintf('LFR Peak Frequency: %.2f Hz',near_lfr_ppc_pk), ...
-           sprintf('HFR Peak Frequency: %.2f Hz',near_hfr_ppc_pk)});
-        leg2.FontSize = 18;
+        leg2 = legend({sprintf('LFR Peak Frequency: %.2f Hz\nMean Firing Rate: %.2f Hz',...
+            near_lfr_ppc_pk, near_lfr_spec_mean), ...
+           sprintf('HFR Peak Frequency: %.2f Hz\nMean Firing RateL %.2f Hz',...
+           near_hfr_ppc_pk, near_hfr_spec_mean)});
+        leg2.FontSize = 17;
         saveas(fig, cat(2,this_label,'_MSN.svg'));
       end
    end
