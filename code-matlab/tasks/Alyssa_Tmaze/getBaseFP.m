@@ -16,6 +16,9 @@ function base_fp = getBaseFP
 if ispc
     machinename = getenv('COMPUTERNAME');
     %filesep = '\';
+elseif ismac
+    machinename = getenv('USER');
+    %filesep = '/';
 else
     machinename = getenv('HOSTNAME');
     %filesep = '/';
@@ -37,6 +40,8 @@ switch machinename
         base_fp = 'D:\data\promoted\';
     case 'CALLISTO'
         base_fp = 'E:\data\promoted\';
+    case 'mac'
+        base_fp = '/Users/mac/Dropbox (Dartmouth College)/Data/Carey/';
     otherwise
         error('Unknown computer. Edit this function to add your data path and run the analysis.')
 end
