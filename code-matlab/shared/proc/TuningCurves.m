@@ -216,7 +216,7 @@ switch cfg.nDim
 end
 
 %% housekeeping
-tc_out = tc;
+tc_out = [];
 
 % main data
 tc_out.tc = tc;

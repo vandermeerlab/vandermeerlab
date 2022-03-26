@@ -6,7 +6,7 @@ function pass_flag = checkTmazeReqs(cfg_in)
 % Displays missing items in the command window. problem = 1 if anything is
 % missing (can be used as a flag to hault further analysis or w/e)
 %
-% cfg_def.checkall = 0; or 1 check everything; function knows all Tmaze ExpKeys 
+% cfg_def.checkall = 0; or 1 check everything; function knows all Tmaze ExpKeys
 % and metadata fields (unless additional ones were added after this was
 % written)
 %
@@ -26,9 +26,9 @@ function pass_flag = checkTmazeReqs(cfg_in)
 % cfg_def.verbose = 1; 1 display command window text, 0 don't
 % cfg_def.unzip = 1; % attempt to unzip vt file if no *.nvt found with 7zip.org
 %
-% ACarey May 2015, for Tmaze project 
+% ACarey May 2015, for Tmaze project
 
-%% 
+%%
 if isempty(cfg_in)
     disp('checkTmazeReqs: cfg is empty, not checking requisites')
     pass_flag = 1;
@@ -67,7 +67,7 @@ if cfg.checkall
     cfg.requireHSdetach = 1; % R044 only
     cfg.requireFiles = 1;
 end
-%% 
+%%
 
 disp([mfun,': searching for required data in session folders...'])
 if ispc
@@ -81,8 +81,20 @@ else
     filesep = '/';
 end
 
-%get data path
-base_fp = getBaseFP;
+switch machinename
+    case {'ISIDRO','MVDMLAB-PERSEUS','ODYSSEUS'}
+        base_fp = 'C:\data\';
+    case {'EQUINOX','BERGKAMP'}
+        base_fp = 'D:\data\';
+    case 'MVDMLAB-ATHENA'
+        base_fp = 'D:\vandermeerlab\';
+    case {'MVDMLAB-EUROPA','DIONYSUS'}
+        base_fp = 'D:\data\promoted\';
+    case 'CALLISTO'
+        base_fp = 'E:\data\promoted\';
+    case 'mac'
+        base_fp = '/Users/mac/Dropbox (Dartmouth College)/Data/Carey/';
+end
 
 %%
 
@@ -102,24 +114,24 @@ rat_list = TmazeRats;
 rat_list = rat_list(ix);
 
 for iRat = 1:length(rat_list)
-    
+
     % go to the rat's folder
     ratfolder = [base_fp,rat_list{iRat}];
     cd(ratfolder);
-    
+
     % Get all the sessions
     session_list = dir(pwd);
     session_list = session_list([session_list.isdir]);
     session_list = session_list(arrayfun(@(x) x.name(1), session_list) ~= '.');
-   
+
     for iSession = 1:length(session_list)
-        session = [ratfolder,filesep,session_list(iSession).name]; 
+        session = [ratfolder,filesep,session_list(iSession).name];
         cd(strcat(session));
         [~,sessionID,~] = fileparts(session);
 
         % now we're in the folder for a specific session; verify that we have
         %requisites...if not, say so:
-        
+
         if cfg.requireExpKeys
             fn = FindFiles('*keys.m');
             if isempty(fn)
@@ -133,7 +145,7 @@ for iRat = 1:length(rat_list)
                 end
             end
         end
-        
+
         if cfg.requireMetadata
             fn = FindFiles('*metadata.mat');
             if isempty(fn)
@@ -147,19 +159,20 @@ for iRat = 1:length(rat_list)
                 end
             end
         end
-        
+
         if cfg.requireVT
             fn = FindFiles('*.nvt');
             if isempty(fn)
                 disp(['Video tracking file not found in ',sessionID])
                 vt_fn = FindFiles('*VT1.zip');
                 if ~isempty(vt_fn) & cfg.unzip
-                    system(cat(2,'7z x ',vt_fn{1}));
+                    unzip(vt_fn{1});
+                    % system(cat(2,'7z x ',vt_fn{1}));
                 end
                 pass_flag = 0;
             end
         end
-        
+
         if cfg.requireCandidates
             fn = FindFiles('*-candidates.mat');
             if isempty(fn)
@@ -167,7 +180,7 @@ for iRat = 1:length(rat_list)
                 pass_flag = 0;
             end
         end
-        
+
         if cfg.requirePrecandidates
             fn = FindFiles('*-precandidates.mat');
             if isempty(fn)
@@ -175,14 +188,14 @@ for iRat = 1:length(rat_list)
                 pass_flag = 0;
             end
         end
-        
+
         if cfg.requireTimes && strcmp(rat_list(iRat),'R042') % for R042 only
             fn = FindFiles('*times.mat');
             if isempty(fn)
                 disp(['Times file not found in ',sessionID])
                 pass_flag = 0;
             end
-        end   
+        end
         if cfg.requireTimes && sum(strcmp(sessionID,{'R044-2013-12-21','R044-2013-12-22'})) >= 1 % for these sessions only
             fn = FindFiles('*HS_detach_times.mat');
             if isempty(fn)
@@ -190,17 +203,17 @@ for iRat = 1:length(rat_list)
                 pass_flag = 0;
             end
         end
-        
-        if cfg.requireFiles 
+
+        if cfg.requireFiles
             if ~exist('files','dir')
                 disp(['Files folder not found in ',sessionID])
                 mkdir('files');
                 pass_flag = 0;
             end
-        end 
-        
+        end
+
     end
-    if ~pass_flag 
+    if ~pass_flag
         disp(' ') % for formatting, kind of
     end
 end
