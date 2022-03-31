@@ -6,6 +6,14 @@ fsi_near_lfr_hg_ppc_peaks = [];
 fsi_near_lfr_lg_ppc_peaks = [];
 fsi_near_hfr_hg_ppc_peaks = [];
 fsi_near_hfr_lg_ppc_peaks = [];
+fsi_near_hfr_pos_peak_ptile = [];
+fsi_near_hfr_pos_peak_ratio = [];
+fsi_near_lfr_pos_peak_ptile = [];
+fsi_near_lfr_pos_peak_ratio = [];
+fsi_near_hfr_neg_peak_ptile = [];
+fsi_near_hfr_neg_peak_ratio = [];
+fsi_near_lfr_neg_peak_ptile = [];
+fsi_near_lfr_neg_peak_ratio = [];
 fsi_near_lfr_frs = [];
 fsi_near_hfr_frs = [];
 fsi_max_difs = [];
@@ -17,6 +25,14 @@ msn_near_lfr_hg_ppc_peaks = [];
 msn_near_lfr_lg_ppc_peaks = [];
 msn_near_hfr_hg_ppc_peaks = [];
 msn_near_hfr_lg_ppc_peaks = [];
+msn_near_hfr_pos_peak_ptile = [];
+msn_near_hfr_pos_peak_ratio = [];
+msn_near_lfr_pos_peak_ptile = [];
+msn_near_lfr_pos_peak_ratio = [];
+msn_near_hfr_neg_peak_ptile = [];
+msn_near_hfr_neg_peak_ratio = [];
+msn_near_lfr_neg_peak_ptile = [];
+msn_near_lfr_neg_peak_ratio = [];
 msn_near_lfr_frs = [];
 msn_near_hfr_frs = [];
 msn_max_difs = [];
@@ -24,9 +40,6 @@ msn_min_difs = [];
 valid_msn_labels = [];
 sig_dif_msn = []; %0 if none, 1 if lfr>hfr, 2 if hfr>lfr, 3 if both
 
-sessions_with_msn_ppc_peak_ge_fsi = [];
-
-% cd('D:\RandomVstrAnalysis\ft_results');
 cd('D:\RandomVstrAnalysis\ft_results');
 
 rats = {'R117','R119','R131','R132'};
@@ -148,6 +161,31 @@ for idx = 1:length(rats)
                     od.fsi_res.near_lfr_spec{iC}.subsampled_ppc(lf:rf);
                 [dif_max, max_loc] = max(hfr_lfr_ppc);
                 [dif_min, min_loc] = min(hfr_lfr_ppc);
+                
+                %Save the percentile and the ratio of the highest and
+                %lowest ppc_dif
+                this_hfr_ppc = od.fsi_res.near_hfr_spec{iC}.subsampled_ppc(lf:rf);
+                this_lfr_ppc = od.fsi_res.near_lfr_spec{iC}.subsampled_ppc(lf:rf);
+                pos_sig_hfr_ptile = sum(this_hfr_ppc(max_loc) >= this_hfr_ppc)/length(this_hfr_ppc);
+                pos_sig_lfr_ptile = sum(this_lfr_ppc(max_loc) >= this_lfr_ppc)/length(this_lfr_ppc);
+                pos_sig_hfr_ratio = this_hfr_ppc(max_loc)/max(this_hfr_ppc);
+                pos_sig_lfr_ratio = this_lfr_ppc(max_loc)/max(this_lfr_ppc);
+                
+                neg_sig_hfr_ptile = sum(this_hfr_ppc(min_loc) >= this_hfr_ppc)/length(this_hfr_ppc);
+                neg_sig_lfr_ptile = sum(this_lfr_ppc(min_loc) >= this_lfr_ppc)/length(this_lfr_ppc);
+                neg_sig_hfr_ratio = this_hfr_ppc(min_loc)/max(this_hfr_ppc);
+                neg_sig_lfr_ratio = this_lfr_ppc(min_loc)/max(this_lfr_ppc);
+         
+                fsi_near_hfr_pos_peak_ptile = [fsi_near_hfr_pos_peak_ptile pos_sig_hfr_ptile];
+                fsi_near_hfr_pos_peak_ratio = [fsi_near_hfr_pos_peak_ratio pos_sig_hfr_ratio];
+                fsi_near_lfr_pos_peak_ptile = [fsi_near_lfr_pos_peak_ptile pos_sig_lfr_ptile];
+                fsi_near_lfr_pos_peak_ratio = [fsi_near_lfr_pos_peak_ratio pos_sig_lfr_ratio];
+                
+                fsi_near_hfr_neg_peak_ptile = [fsi_near_hfr_neg_peak_ptile neg_sig_hfr_ptile];
+                fsi_near_hfr_neg_peak_ratio = [fsi_near_hfr_neg_peak_ratio neg_sig_hfr_ratio];
+                fsi_near_lfr_neg_peak_ptile = [fsi_near_lfr_neg_peak_ptile neg_sig_lfr_ptile];
+                fsi_near_lfr_neg_peak_ratio = [fsi_near_lfr_neg_peak_ratio neg_sig_lfr_ratio];
+                
                 if dif_max > 0 && dif_min < 0
                     flag_dif = true;
                 else
@@ -155,8 +193,8 @@ for idx = 1:length(rats)
                 end
                 
                 %Mark significance of ppc_dif
-                p1_p2_ppc = od.fsi_res.near_p1_spec{iC}.ppc(lf:rf) - ...
-                    od.fsi_res.near_p2_spec{iC}.ppc(lf:rf);
+                p1_p2_ppc = od.fsi_res.near_p1_spec{iC}.subsampled_ppc(:,lf:rf) - ...
+                    od.fsi_res.near_p2_spec{iC}.subsampled_ppc(:,lf:rf);
                 mean_ppc = mean(p1_p2_ppc, 1);
                 sd_ppc = std(p1_p2_ppc, 1);
                 % Add "SIG" to filename if any of the hfr_lfr ppc lies outside mean +- 3*sd
@@ -170,7 +208,6 @@ for idx = 1:length(rats)
                 else
                     sig_dif_fsi = [sig_dif_fsi 0];
                 end
-                
                 
                 % if peaks exist in both low gamma and high gamma range
                 if all_ppc_peaks_in_lg && all_ppc_peaks_in_hg && ...
@@ -302,8 +339,35 @@ for idx = 1:length(rats)
                 rf = find(od.msn_res.near_spec{iC}.freqs <= hg(2), 1, 'last');
                 hfr_lfr_ppc = od.msn_res.near_hfr_spec{iC}.ppc(lf:rf) - ...
                     od.msn_res.near_lfr_spec{iC}.ppc(lf:rf);
+                %Need to transpose this to convert to suitable dimensions
+                hfr_lfr_ppc = hfr_lfr_ppc';
                 [dif_max, max_loc] = max(hfr_lfr_ppc);
                 [dif_min, min_loc] = min(hfr_lfr_ppc);
+                
+                %Save the percentile and the ratio of the highest and
+                %lowest ppc_dif
+                this_hfr_ppc = od.msn_res.near_hfr_spec{iC}.ppc(lf:rf);
+                this_lfr_ppc = od.msn_res.near_lfr_spec{iC}.ppc(lf:rf);
+                pos_sig_hfr_ptile = sum(this_hfr_ppc(max_loc) >= this_hfr_ppc)/length(this_hfr_ppc);
+                pos_sig_lfr_ptile = sum(this_lfr_ppc(max_loc) >= this_lfr_ppc)/length(this_lfr_ppc);
+                pos_sig_hfr_ratio = this_hfr_ppc(max_loc)/max(this_hfr_ppc);
+                pos_sig_lfr_ratio = this_lfr_ppc(max_loc)/max(this_lfr_ppc);
+                
+                neg_sig_hfr_ptile = sum(this_hfr_ppc(min_loc) >= this_hfr_ppc)/length(this_hfr_ppc);
+                neg_sig_lfr_ptile = sum(this_lfr_ppc(min_loc) >= this_lfr_ppc)/length(this_lfr_ppc);
+                neg_sig_hfr_ratio = this_hfr_ppc(min_loc)/max(this_hfr_ppc);
+                neg_sig_lfr_ratio = this_lfr_ppc(min_loc)/max(this_lfr_ppc);
+         
+                msn_near_hfr_pos_peak_ptile = [msn_near_hfr_pos_peak_ptile pos_sig_hfr_ptile];
+                msn_near_hfr_pos_peak_ratio = [msn_near_hfr_pos_peak_ratio pos_sig_hfr_ratio];
+                msn_near_lfr_pos_peak_ptile = [msn_near_lfr_pos_peak_ptile pos_sig_lfr_ptile];
+                msn_near_lfr_pos_peak_ratio = [msn_near_lfr_pos_peak_ratio pos_sig_lfr_ratio];
+                
+                msn_near_hfr_neg_peak_ptile = [msn_near_hfr_neg_peak_ptile neg_sig_hfr_ptile];
+                msn_near_hfr_neg_peak_ratio = [msn_near_hfr_neg_peak_ratio neg_sig_hfr_ratio];
+                msn_near_lfr_neg_peak_ptile = [msn_near_lfr_neg_peak_ptile neg_sig_lfr_ptile];
+                msn_near_lfr_neg_peak_ratio = [msn_near_lfr_neg_peak_ratio neg_sig_lfr_ratio];
+                
                 if dif_max > 0 && dif_min < 0
                     flag_dif = true;
                 else
@@ -311,10 +375,10 @@ for idx = 1:length(rats)
                 end
                 
                 %Mark significance of ppc_dif
-                p1_p2_ppc = od.msn_res.near_p1_spec{iC}.ppc(lf:rf) - ...
-                    od.msn_res.near_p2_spec{iC}.ppc(lf:rf);
+                p1_p2_ppc = od.msn_res.near_p1_spec{iC}.ppc(:,lf:rf) - ...
+                    od.msn_res.near_p2_spec{iC}.ppc(:,lf:rf);
                 mean_ppc = mean(p1_p2_ppc, 1);
-                sd_ppc = std(p1_p2_ppc);
+                sd_ppc = std(p1_p2_ppc, 1);
                 % Add "SIG" to filename if any of the hfr_lfr ppc lies outside mean +- 3*sd
                 if sum(hfr_lfr_ppc >= mean_ppc + 3*sd_ppc) ~= 0 & ...
                         sum(hfr_lfr_ppc <= mean_ppc - 3*sd_ppc) ~= 0
@@ -447,3 +511,8 @@ keyboard;
 s2 = scatter(fsi_near_hfr_hg_ppc_peaks - fsi_near_lfr_hg_ppc_peaks, ...
     fsi_max_difs - fsi_min_difs);
 
+%% Significant differnce sandbox
+% 0 if none, 1 if lfr>hfr, 2 if hfr>lfr, 3 if both
+scatter(msn_near_lfr_pos_peak_ptile(sig_dif_msn ==2), msn_near_hfr_pos_peak_ptile(sig_dif_msn ==2))
+figure
+scatter(msn_near_lfr_neg_peak_ptile(sig_dif_msn ==1), msn_near_hfr_neg_peak_ptile(sig_dif_msn ==1))
