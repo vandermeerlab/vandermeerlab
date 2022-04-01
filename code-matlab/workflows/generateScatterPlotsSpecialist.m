@@ -197,7 +197,6 @@ for idx = 1:length(rats)
                     od.fsi_res.near_p2_spec{iC}.subsampled_ppc(:,lf:rf);
                 mean_ppc = mean(p1_p2_ppc, 1);
                 sd_ppc = std(p1_p2_ppc, 1);
-                % Add "SIG" to filename if any of the hfr_lfr ppc lies outside mean +- 3*sd
                 if sum(hfr_lfr_ppc >= mean_ppc + 3*sd_ppc) ~= 0 & ...
                         sum(hfr_lfr_ppc <= mean_ppc - 3*sd_ppc) ~= 0
                     sig_dif_fsi = [sig_dif_fsi 3];
@@ -226,8 +225,8 @@ for idx = 1:length(rats)
                     fsi_near_hfr_frs = [fsi_near_hfr_frs, near_hfr_spec_mean];
                     valid_fsi_labels = [valid_fsi_labels fsi_labels(iC)];
                     
-                    fsi_max_difs = [fsi_max_difs max_loc];
-                    fsi_min_difs = [fsi_min_difs min_loc];
+                    fsi_max_difs = [fsi_max_difs od.fsi_res.near_hfr_spec{iC}.freqs(hg(1)+max_loc-1)];
+                    fsi_min_difs = [fsi_min_difs od.fsi_res.near_lfr_spec{iC}.freqs(hg(1)+min_loc-1)];
                 end
             else
                 continue
@@ -379,7 +378,6 @@ for idx = 1:length(rats)
                     od.msn_res.near_p2_spec{iC}.ppc(:,lf:rf);
                 mean_ppc = mean(p1_p2_ppc, 1);
                 sd_ppc = std(p1_p2_ppc, 1);
-                % Add "SIG" to filename if any of the hfr_lfr ppc lies outside mean +- 3*sd
                 if sum(hfr_lfr_ppc >= mean_ppc + 3*sd_ppc) ~= 0 & ...
                         sum(hfr_lfr_ppc <= mean_ppc - 3*sd_ppc) ~= 0
                     sig_dif_msn = [sig_dif_msn 3];
@@ -409,8 +407,8 @@ for idx = 1:length(rats)
                     msn_near_hfr_frs = [msn_near_hfr_frs, near_hfr_spec_mean];
                     valid_msn_labels = [valid_msn_labels msn_labels(iC)];
                     
-                    msn_max_difs = [msn_max_difs max_loc];
-                    msn_min_difs = [msn_min_difs min_loc];
+                    msn_max_difs = [msn_max_difs od.msn_res.near_hfr_spec{iC}.freqs(hg(1)+max_loc-1)];
+                    msn_min_difs = [msn_min_difs od.msn_res.near_lfr_spec{iC}.freqs(hg(1)+min_loc-1)];
                 end
             else
                 continue
@@ -511,8 +509,35 @@ keyboard;
 s2 = scatter(fsi_near_hfr_hg_ppc_peaks - fsi_near_lfr_hg_ppc_peaks, ...
     fsi_max_difs - fsi_min_difs);
 
-%% Significant differnce sandbox
+%% Significant difference sandbox
 % 0 if none, 1 if lfr>hfr, 2 if hfr>lfr, 3 if both
+sig_fsi_labels = valid_fsi_labels(sig_dif_fsi ~= 0);
+sig_msn_labels = valid_msn_labels(sig_dif_msn ~= 0);
+sig_fsi_type = sig_dif_fsi(sig_dif_fsi~= 0);
+sig_msn_type = sig_dif_msn(sig_dif_msn~= 0);
+sig_msn_max_difs = msn_max_difs(sig_dif_msn~= 0);
+sig_msn_min_difs = msn_min_difs(sig_dif_msn~= 0);
+sig_fsi_max_difs = fsi_max_difs(sig_dif_fsi~= 0);
+sig_fsi_min_difs = fsi_min_difs(sig_dif_fsi~= 0);
+sig_fsi_pos_hfr_peak_ptile = fsi_near_hfr_pos_peak_ptile(sig_dif_fsi~= 0);
+sig_fsi_pos_lfr_peak_ptile = fsi_near_lfr_pos_peak_ptile(sig_dif_fsi~= 0);
+sig_fsi_pos_hfr_peak_ratio = fsi_near_hfr_pos_peak_ratio(sig_dif_fsi~= 0);
+sig_fsi_pos_lfr_peak_ratio = fsi_near_lfr_pos_peak_ratio(sig_dif_fsi~= 0);
+sig_fsi_neg_hfr_peak_ptile = fsi_near_hfr_neg_peak_ptile(sig_dif_fsi~= 0);
+sig_fsi_neg_lfr_peak_ptile = fsi_near_lfr_neg_peak_ptile(sig_dif_fsi~= 0);
+sig_fsi_neg_hfr_peak_ratio = fsi_near_hfr_neg_peak_ratio(sig_dif_fsi~= 0);
+sig_fsi_neg_lfr_peak_ratio = fsi_near_lfr_neg_peak_ratio(sig_dif_fsi~= 0);
+sig_msn_pos_hfr_peak_ptile = msn_near_hfr_pos_peak_ptile(sig_dif_msn~= 0);
+sig_msn_pos_lfr_peak_ptile = msn_near_lfr_pos_peak_ptile(sig_dif_msn~= 0);
+sig_msn_pos_hfr_peak_ratio = msn_near_hfr_pos_peak_ratio(sig_dif_msn~= 0);
+sig_msn_pos_lfr_peak_ratio = msn_near_lfr_pos_peak_ratio(sig_dif_msn~= 0);
+sig_msn_neg_hfr_peak_ptile = msn_near_hfr_neg_peak_ptile(sig_dif_msn~= 0);
+sig_msn_neg_lfr_peak_ptile = msn_near_lfr_neg_peak_ptile(sig_dif_msn~= 0);
+sig_msn_neg_hfr_peak_ratio = msn_near_hfr_neg_peak_ratio(sig_dif_msn~= 0);
+sig_msn_neg_lfr_peak_ratio = msn_near_lfr_neg_peak_ratio(sig_dif_msn~= 0);
+
+
+%% Play around with plotting
 scatter(msn_near_lfr_pos_peak_ptile(sig_dif_msn ==2), msn_near_hfr_pos_peak_ptile(sig_dif_msn ==2))
 figure
 scatter(msn_near_lfr_neg_peak_ptile(sig_dif_msn ==1), msn_near_hfr_neg_peak_ptile(sig_dif_msn ==1))
