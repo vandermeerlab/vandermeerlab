@@ -159,8 +159,14 @@ for idx = 1:length(rats)
                 rf = find(od.fsi_res.near_spec{iC}.freqs <= hg(2), 1, 'last');
                 hfr_lfr_ppc = od.fsi_res.near_hfr_spec{iC}.subsampled_ppc(lf:rf) - ...
                     od.fsi_res.near_lfr_spec{iC}.subsampled_ppc(lf:rf);
-                [dif_max, max_loc] = max(hfr_lfr_ppc);
-                [dif_min, min_loc] = min(hfr_lfr_ppc);
+                p1_p2_ppc = od.fsi_res.near_p1_spec{iC}.subsampled_ppc(:,lf:rf) - ...
+                    od.fsi_res.near_p2_spec{iC}.subsampled_ppc(:,lf:rf);
+                mean_ppc = mean(p1_p2_ppc, 1);
+                sd_ppc = std(p1_p2_ppc, 1);
+                pos_difs = hfr_lfr_ppc - (mean_ppc + 3*sd_ppc);
+                neg_difs =(mean_ppc - 3*sd_ppc) - hfr_lfr_ppc;
+                [dif_max, max_loc] = max(pos_difs);
+                [dif_min, min_loc] = max(neg_difs);
                 
                 %Save the percentile and the ratio of the highest and
                 %lowest ppc_dif
@@ -186,17 +192,7 @@ for idx = 1:length(rats)
                 fsi_near_lfr_neg_peak_ptile = [fsi_near_lfr_neg_peak_ptile neg_sig_lfr_ptile];
                 fsi_near_lfr_neg_peak_ratio = [fsi_near_lfr_neg_peak_ratio neg_sig_lfr_ratio];
                 
-                if dif_max > 0 && dif_min < 0
-                    flag_dif = true;
-                else
-                    flag_dif = false;
-                end
-                
                 %Mark significance of ppc_dif
-                p1_p2_ppc = od.fsi_res.near_p1_spec{iC}.subsampled_ppc(:,lf:rf) - ...
-                    od.fsi_res.near_p2_spec{iC}.subsampled_ppc(:,lf:rf);
-                mean_ppc = mean(p1_p2_ppc, 1);
-                sd_ppc = std(p1_p2_ppc, 1);
                 if sum(hfr_lfr_ppc >= mean_ppc + 3*sd_ppc) ~= 0 & ...
                         sum(hfr_lfr_ppc <= mean_ppc - 3*sd_ppc) ~= 0
                     sig_dif_fsi = [sig_dif_fsi 3];
@@ -209,8 +205,7 @@ for idx = 1:length(rats)
                 end
                 
                 % if peaks exist in both low gamma and high gamma range
-                if all_ppc_peaks_in_lg && all_ppc_peaks_in_hg && ...
-                        flag_dif
+                if all_ppc_peaks_in_lg && all_ppc_peaks_in_hg
                     near_lfr_lg_ppc_pk = od.fsi_res.near_lfr_spec{iC}.freqs(lg(1)+near_lfr_lg_ppc_pk-1);
                     near_lfr_hg_ppc_pk = od.fsi_res.near_lfr_spec{iC}.freqs(hg(1)+near_lfr_hg_ppc_pk-1);
                     near_hfr_lg_ppc_pk = od.fsi_res.near_hfr_spec{iC}.freqs(lg(1)+near_hfr_lg_ppc_pk-1);
@@ -340,8 +335,14 @@ for idx = 1:length(rats)
                     od.msn_res.near_lfr_spec{iC}.ppc(lf:rf);
                 %Need to transpose this to convert to suitable dimensions
                 hfr_lfr_ppc = hfr_lfr_ppc';
-                [dif_max, max_loc] = max(hfr_lfr_ppc);
-                [dif_min, min_loc] = min(hfr_lfr_ppc);
+                p1_p2_ppc = od.msn_res.near_p1_spec{iC}.ppc(:,lf:rf) - ...
+                    od.msn_res.near_p2_spec{iC}.ppc(:,lf:rf);
+                mean_ppc = mean(p1_p2_ppc, 1);
+                sd_ppc = std(p1_p2_ppc, 1);
+                pos_difs = hfr_lfr_ppc - (mean_ppc + 3*sd_ppc);
+                neg_difs =(mean_ppc - 3*sd_ppc) - hfr_lfr_ppc;
+                [dif_max, max_loc] = max(pos_difs);
+                [dif_min, min_loc] = max(neg_difs);
                 
                 %Save the percentile and the ratio of the highest and
                 %lowest ppc_dif
@@ -366,18 +367,8 @@ for idx = 1:length(rats)
                 msn_near_hfr_neg_peak_ratio = [msn_near_hfr_neg_peak_ratio neg_sig_hfr_ratio];
                 msn_near_lfr_neg_peak_ptile = [msn_near_lfr_neg_peak_ptile neg_sig_lfr_ptile];
                 msn_near_lfr_neg_peak_ratio = [msn_near_lfr_neg_peak_ratio neg_sig_lfr_ratio];
-                
-                if dif_max > 0 && dif_min < 0
-                    flag_dif = true;
-                else
-                    flag_dif = false;
-                end
-                
+                            
                 %Mark significance of ppc_dif
-                p1_p2_ppc = od.msn_res.near_p1_spec{iC}.ppc(:,lf:rf) - ...
-                    od.msn_res.near_p2_spec{iC}.ppc(:,lf:rf);
-                mean_ppc = mean(p1_p2_ppc, 1);
-                sd_ppc = std(p1_p2_ppc, 1);
                 if sum(hfr_lfr_ppc >= mean_ppc + 3*sd_ppc) ~= 0 & ...
                         sum(hfr_lfr_ppc <= mean_ppc - 3*sd_ppc) ~= 0
                     sig_dif_msn = [sig_dif_msn 3];
@@ -390,9 +381,7 @@ for idx = 1:length(rats)
                 end
                 
                 % if peaks exist in both low gamma and high gamma range
-                if all_ppc_peaks_in_lg && all_ppc_peaks_in_hg && ...
-                        flag_dif
-                    
+                if all_ppc_peaks_in_lg && all_ppc_peaks_in_hg
                     near_lfr_lg_ppc_pk = od.msn_res.near_lfr_spec{iC}.freqs(lg(1)+near_lfr_lg_ppc_pk-1);
                     near_lfr_hg_ppc_pk = od.msn_res.near_lfr_spec{iC}.freqs(hg(1)+near_lfr_hg_ppc_pk-1);
                     near_hfr_lg_ppc_pk = od.msn_res.near_hfr_spec{iC}.freqs(lg(1)+near_hfr_lg_ppc_pk-1);
