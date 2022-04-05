@@ -249,5 +249,60 @@ for iC = 1:length(sig_msn_labels)
       end
    end
 end
-
+%%
+close all;
+fig = figure;
+ax1 = subplot(2,2,1);
+s1 = scatter(sig_msn_pos_lfr_peak_ptile(sig_msn_type ==2), ...
+    sig_msn_pos_hfr_peak_ptile(sig_msn_type ==2));
+ax1.XLabel.String = 'LFR Peak Percentile';
+ax1.YLabel.String = 'HFR Peak Percentile';
+ax1.Title.String = 'HFR > LFR';
+ax2 = subplot(2,2,3);
+s2 = scatter(sig_msn_pos_lfr_peak_ratio(sig_msn_type ==2), ...
+    sig_msn_pos_hfr_peak_ratio(sig_msn_type ==2));
+ax2.XLabel.String = 'LFR Peak Ratio';
+ax2.YLabel.String = 'HFR Peak Ratio';
+ax2.Title.String = 'HFR > LFR';
+ax3 = subplot(2,2,2);
+s3 = scatter(sig_msn_neg_lfr_peak_ptile(sig_msn_type ==1), ...
+    sig_msn_neg_hfr_peak_ptile(sig_msn_type ==1));
+ax3.XLabel.String = 'LFR Peak Percentile';
+ax3.YLabel.String = 'HFR Peak Percentile';
+ax3.Title.String = 'HFR < LFR';
+ax4 = subplot(2,2,4);
+s4 = scatter(sig_msn_neg_lfr_peak_ratio(sig_msn_type ==1), ...
+    sig_msn_neg_hfr_peak_ratio(sig_msn_type ==1));
+ax4.XLabel.String = 'LFR Peak Ratio';
+ax4.YLabel.String = 'HFR Peak Ratio';
+ax4.Title.String = 'HFR < LFR';
+suptitle('MSN');
+%%
+close all;
+fig = figure;
+ax1 = subplot(2,2,1);
+s1 = scatter(sig_fsi_pos_lfr_peak_ptile(sig_fsi_type ==2), ...
+    sig_fsi_pos_hfr_peak_ptile(sig_fsi_type ==2));
+ax1.XLabel.String = 'LFR Peak Percentile';
+ax1.YLabel.String = 'HFR Peak Percentile';
+ax1.Title.String = 'HFR > LFR';
+ax2 = subplot(2,2,3);
+s2 = scatter(sig_fsi_pos_lfr_peak_ratio(sig_fsi_type ==2), ...
+    sig_fsi_pos_hfr_peak_ratio(sig_fsi_type ==2));
+ax2.XLabel.String = 'LFR Peak Ratio';
+ax2.YLabel.String = 'HFR Peak Ratio';
+ax2.Title.String = 'HFR > LFR';
+ax3 = subplot(2,2,2);
+s3 = scatter(sig_fsi_neg_lfr_peak_ptile(sig_fsi_type ==1), ...
+    sig_fsi_neg_hfr_peak_ptile(sig_fsi_type ==1));
+ax3.XLabel.String = 'LFR Peak Percentile';
+ax3.YLabel.String = 'HFR Peak Percentile';
+ax3.Title.String = 'HFR < LFR';
+ax4 = subplot(2,2,4);
+s4 = scatter(sig_fsi_neg_lfr_peak_ratio(sig_fsi_type ==1), ...
+    sig_fsi_neg_hfr_peak_ratio(sig_fsi_type ==1));
+ax4.XLabel.String = 'LFR Peak Ratio';
+ax4.YLabel.String = 'HFR Peak Ratio';
+ax4.Title.String = 'HFR < LFR';
+suptitle('FSI');
 
