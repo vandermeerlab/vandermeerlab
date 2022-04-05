@@ -6,6 +6,10 @@ hg = [5,100];
 pk_thresh = -1;
 num_control_splits = 100;
 
+fsi_mfr_difs = [];
+fsi_freq_difs = [];
+msn_mfr_difs = [];
+msn_freq_difs = [];
 load('./significant_dif.mat');
 %%
 %Generate FSI_stuff
@@ -91,6 +95,8 @@ for iC = 1:length(sig_fsi_labels)
            sprintf('HFR Peak Frequency: %.2f Hz\nMean Firing RateL %.2f Hz',...
            near_hfr_ppc_pk, near_hfr_spec_mean)});
         leg2.FontSize = 12;
+        fsi_mfr_difs = [fsi_mfr_difs near_hfr_spec_mean-near_lfr_spec_mean];
+        fsi_freq_difs = [fsi_freq_difs near_hfr_ppc_pk-near_lfr_ppc_pk]; 
         
         %Plot PPC dif (as sanity check)
         ax3 = subplot(3,1,3);
@@ -121,7 +127,7 @@ for iC = 1:length(sig_fsi_labels)
         ax3.XAxis.FontSize = 18;
         ax3.XLim = hg;
         ax3.XTick = [5 10 20 30 40 50 60 70 80 90 100];
-        saveas(fig, cat(2,this_label,'_FSI.fig'));
+%         saveas(fig, cat(2,this_label,'_FSI.fig'));
       end
    end
 end
@@ -207,6 +213,8 @@ for iC = 1:length(sig_msn_labels)
            sprintf('HFR Peak Frequency: %.2f Hz\nMean Firing RateL %.2f Hz',...
            near_hfr_ppc_pk, near_hfr_spec_mean)});
         leg2.FontSize = 12;
+        msn_mfr_difs = [msn_mfr_difs near_hfr_spec_mean-near_lfr_spec_mean];
+        msn_freq_difs = [msn_freq_difs near_hfr_ppc_pk-near_lfr_ppc_pk]; 
                
         %Plot PPC dif (as sanity check)
         ax3 = subplot(3,1,3);
@@ -245,7 +253,7 @@ for iC = 1:length(sig_msn_labels)
         ax3.XAxis.FontSize = 18;
         ax3.XLim = hg;
         ax3.XTick = [5 10 20 30 40 50 60 70 80 90 100];
-        saveas(fig, cat(2,this_label,'_MSN.fig'));
+%         saveas(fig, cat(2,this_label,'_MSN.fig'));
       end
    end
 end
@@ -305,4 +313,9 @@ ax4.XLabel.String = 'LFR Peak Ratio';
 ax4.YLabel.String = 'HFR Peak Ratio';
 ax4.Title.String = 'HFR < LFR';
 suptitle('FSI');
-
+%%
+scatter(msn_mfr_difs, msn_freq_difs)
+hold on
+scatter(msn_mfr_difs(sig_msn_type==1), msn_freq_difs(sig_msn_type==1))
+scatter(msn_mfr_difs(sig_msn_type==2), msn_freq_difs(sig_msn_type==2))
+%%
