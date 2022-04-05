@@ -7,7 +7,7 @@ pk_thresh = -1;
 num_control_splits = 100;
 
 load('./significant_dif.mat');
-
+%%
 %Generate FSI_stuff
 for iC = 1:length(sig_fsi_labels)
    %generate correct file to read
@@ -228,7 +228,7 @@ for iC = 1:length(sig_msn_labels)
             p8 = xline(sig_msn_min_difs(iC), '-blue');
               leg3 = legend({sprintf('LFR Peak percentile: %.2f \nPeak Ratio: %.2f \nFrequency: %.2f Hz', ...
                 sig_msn_neg_lfr_peak_ptile(iC)*100, sig_msn_neg_lfr_peak_ratio(iC), sig_msn_min_difs(iC))});
-        elseif sig_msn_type == 2
+        elseif sig_msn_type(iC) == 2
             p8 = xline(sig_msn_max_difs(iC), '-blue');
             leg3 = legend({sprintf('HFR Peak percentile: %.2f \nPeak Ratio: %.2f \nFrequency: %.2f Hz', ...
                 sig_msn_pos_hfr_peak_ptile(iC)*100, sig_msn_pos_hfr_peak_ratio(iC), sig_msn_max_difs(iC))});
