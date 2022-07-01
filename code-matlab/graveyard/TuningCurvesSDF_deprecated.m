@@ -21,6 +21,8 @@ function tc = TuningCurvesSDF(cfg_in,sdf,tuning_var)
 % cfg.occ_dt = 1/30; % time corresponding to each occupancy sample
 %
 % MvdM 2016-05-07
+%
+% DEPRECATED - use TuningCurvesTSD() instead
 
 cfg_def = [];
 cfg_def.binEdges = linspace(min(tuning_var.data(1,:)),max(tuning_var.data(1,:)),101); % 100 bins s
