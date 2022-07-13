@@ -14,8 +14,8 @@ function [tc, nSamples] = TuningCurvesTSD(cfg_in, target_tsd, tuning_tsd)
 %
 % OUTPUTS:
 %
-% tc
-% nSamples
+% tc: [nBins x 1] (1D) or [nBinsX x nBinsY] (2D) matrix of average target_tsd values binned by tuning_tsd 
+% nSamples: target_tsd counts for each tc bin
 %
 % CFG:
 %
@@ -24,6 +24,16 @@ function [tc, nSamples] = TuningCurvesTSD(cfg_in, target_tsd, tuning_tsd)
 % cfg.nBins = [100 100]; % only used if cfg.binEdges is empty, use this many bins
 %  between min and max for each dimension (can be 1D or 2D) 
 % cfg.minOcc = 1; % minimum occupancy (in samples)
+%
+%%% EXAMPLE: compute average Y position for X, Y bins
+%
+% pos = LoadPos([]);
+%
+% posX = pos; posX.data = posX.data(1,:); posX.label = posX.label(1);
+% posY = pos; posY.data = posY.data(2,:); posY.label = posY.label(2);
+%
+% [tc, nSamples] = TuningCurvesTSD([], cfg, posY, pos);
+% imagesc(tc);
 %
 % MvdM 2022
 
