@@ -17,6 +17,10 @@ function iv_out = TSDtoIV2(cfg_in,tsd_in)
 %     cfg.threshold = 0; Single number or [1 x 2] double (see cfg.operation)
 %                    specifying threshold value(s).
 %
+%     cfg.threshold2 = []; % single number specifying threshold each iv needs
+%                    to exceed in order to be kept, i.e. needs to contain at 
+%                    least one sample higher than this value.
+%
 %     cfg.operation =  '>'; 
 %             '>' - data > threshold
 %             '<' - data < threshold
@@ -49,6 +53,7 @@ function iv_out = TSDtoIV2(cfg_in,tsd_in)
 % set cfg defaults
 cfg_def.method = 'zscore';
 cfg_def.threshold = 0;
+cfg_def.threshold2 = [];
 cfg_def.operation =  '>'; % return intervals where threshold is exceeded
 cfg_def.ResizeAtMean = 0;
 cfg_def.target = [];
@@ -120,6 +125,19 @@ up_t = tsd_in.tvec(up_keep);
 down_t = tsd_in.tvec(down_keep);
 
 iv_out = iv(up_t,down_t);
+
+if ~isempty(cfg.threshold2)
+    % keep intervals that meet second threshold (contain at least one sample higher than this value)
+    cfg_thr2 = [];
+    cfg_thr2.method = 'max';
+    cfg_thr2.label = 'maxSWRp';
+    iv_out = AddTSDtoIV(cfg_thr2,iv_out,tsd(tsd_in.tvec,temp_data));
+    
+    cfg_thr2 = [];
+    cfg_thr2.operation = '>';
+    cfg_thr2.threshold = cfg.threshold2;
+    iv_out = SelectIV(cfg_thr2,iv_out,'maxSWRp');
+end
 
 if cfg.ResizeAtMean
     % this implementation is probably slow, because the logical operations

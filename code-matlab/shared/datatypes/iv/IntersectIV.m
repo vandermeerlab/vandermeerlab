@@ -17,6 +17,7 @@ function iv1 = IntersectIV(cfg_in,iv1,iv2)
 % MvdM 2014-06-24
 
 cfg_def = [];
+cfg_def.include_edges = 0;
 
 mfun = mfilename;
 cfg = ProcessConfig(cfg_def,cfg_in,mfun); % should take whatever is in cfg_in and put it into cfg!
@@ -25,8 +26,14 @@ keep = zeros(length(iv1.tstart),1);
 for iI = 1:length(iv1.tstart)
     
     % first, check if any start or end is within this interval
-    temp1 = find(iv2.tstart > iv1.tstart(iI) & iv2.tstart < iv1.tend(iI));
-    temp2 = find(iv2.tend > iv1.tstart(iI) & iv2.tend < iv1.tend(iI));
+    
+    if cfg.include_edges
+        temp1 = find(iv2.tstart > iv1.tstart(iI) & iv2.tstart < iv1.tend(iI));
+        temp2 = find(iv2.tend > iv1.tstart(iI) & iv2.tend < iv1.tend(iI));
+    else
+        temp1 = find(iv2.tstart > iv1.tstart(iI) & iv2.tstart < iv1.tend(iI));
+        temp2 = find(iv2.tend > iv1.tstart(iI) & iv2.tend < iv1.tend(iI));
+    end
     
     if ~isempty(temp1) || ~isempty(temp2)
        keep(iI) = 1;
@@ -34,10 +41,19 @@ for iI = 1:length(iv1.tstart)
     end
     
     % check if interval is enveloped by anything
-    for iJ = 1:length(iv2.tstart)
-        if iv2.tstart(iJ) < iv1.tstart(iI) && iv2.tend(iJ) > iv1.tend(iI)
-            keep(iI) = 1;
-            break;
+    if cfg.include_edges
+        for iJ = 1:length(iv2.tstart)
+            if iv2.tstart(iJ) <= iv1.tstart(iI) && iv2.tend(iJ) >= iv1.tend(iI)
+                keep(iI) = 1;
+                break;
+            end
+        end
+    else
+        for iJ = 1:length(iv2.tstart)
+            if iv2.tstart(iJ) < iv1.tstart(iI) && iv2.tend(iJ) > iv1.tend(iI)
+                keep(iI) = 1;
+                break;
+            end
         end
     end
     

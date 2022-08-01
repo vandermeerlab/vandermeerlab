@@ -40,11 +40,11 @@ clear
 
 % What to load and where to find it
 cfg.input_fn = 'behavior'; % the script knows the proper file extension (.mat) so don't put it here
-cfg.input_fd = 'D:\My_Documents\TmazePaper\data';
+cfg.input_fd = 'C:\temp';
 
 % What to call the output and where to save it
 cfg.output_fn = 'behaviorChiSquareTest'; % it saves as a .txt
-cfg.output_fd = 'D:\My_Documents\TmazePaper\data';
+cfg.output_fd = 'C:\temp';
 
 % Do you want to save the results?
 cfg.writeDiary = 1; % keep a record of command window history; for this script, this is the results of the chi square test

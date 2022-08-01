@@ -27,4 +27,5 @@
 *.mtc
 *.mtc0
 *.asv
-code-matlab/shared/datatypes/tsd/UnionTSD.m
+*.xml
+*.tap
