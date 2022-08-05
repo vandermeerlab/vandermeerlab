@@ -18,3 +18,17 @@ function TestOutputSize(testCase)
 
 end
 
+function TestType(testCase)
+
+    % see if the type of the input variable remains the same after going
+    % through the function
+    tvec = 0:0.5:50;
+    % create x array
+    x = rand(1, length(tvec));
+    start_type = class(x);
+    dx = dxdt(tvec, x);
+    end_type = class(dx);
+    verifyEqual(testCase, start_type, end_type);
+
+end
+
