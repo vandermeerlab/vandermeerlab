@@ -42,6 +42,16 @@ Licensed code
 
 - UltraMegaSort2000 by DN Hill, SB Mehta, MS Fee and Kleinfeld Lab (https://physics.ucsd.edu/neurophysics/links.html)
 
+- JSONlab, by Qianqian Fang (https://github.com/fangq/jsonlab)
+
+ - export_fig by Yair Altman (https://github.com/fangq/jsonlab)
+
+ - linspecer by Jonathan C. Lansey (https://github.com/davidkun/linspecer)
+
+ - matlab-plot-big by Tucker McClure (https://github.com/tuckermcclure/matlab-plot-big)
+
+ - Open Ephys MATLAB tools (https://github.com/open-ephys/open-ephys-matlab-tools)
+
 Contributors
 ============
 - Alyssa Carey
