@@ -23,10 +23,30 @@ try
     whereami = fileparts(whoami);
     cd(whereami);
     
+    % clean
+    if ispc
+        system('del *.xml');
+    elseif isunix
+        system('rm *.xml');
+    end
+    
     % set up path containing all folders to be tracked for code coverage
     src = fullfile(pwd, 'shared');
-    p = genpath(src);
-    addpath(p); % this returns a single string with ; as separator between folders
+    p = genpath(src); p_tok = regexp(p, pathsep, 'split'); % tokenize path so we can exclude folders later
+    
+    addpath(p);
+    
+    % remove non-tracked folders from path
+    rmpath(genpath(fullfile(pwd, 'shared\io\open_ephys')));
+    rmpath(genpath(fullfile(pwd, 'shared\io\neuralynx')));
+    rmpath(genpath(fullfile(pwd, 'shared\viz\matlab-plot-big')));
+    rmpath(genpath(fullfile(pwd, 'shared\viz\export_fig')));
+    rmpath(genpath(fullfile(pwd, 'shared\viz\linspecer')));
+    rmpath(genpath(fullfile(pwd, 'shared\viz\numSubplots')));
+    
+    fp = path; fp_tok = regexp(fp, pathsep, 'split');
+    
+    tracked_folders = intersect(p_tok, fp_tok);
     
     % path contining all tests to be run
     tests = fullfile(pwd, 'tests');
@@ -40,9 +60,8 @@ try
     
     % Add Cobertura: need to add each tracked folder separately, apparently
     fprintf('\nRunAllTests.m: Adding folders to cover:\n')
-    sep = strfind(p,pathsep); idx = 1; % idx "cursor" tracks position in path string
-    for iF = 1:length(sep)
-        this_folder = p(idx:sep(iF) - 1);
+    for iF = 1:length(tracked_folders)
+        this_folder = tracked_folders{iF};
         disp(this_folder);
         
         coverageFile = fullfile(getenv('WORKSPACE'), sprintf('coverage%d.xml',iF));
@@ -58,7 +77,6 @@ catch e
     fprintf('\n*********************\nRunAllTests.m failed!\n*********************\n');
     disp(getReport(e,'extended'));
     
-
     if strcmp(hostname,'mvdmlab-athena'), exit(1); end % hack to only quit on CI machine
 end
 % if running on CI machine, exit
