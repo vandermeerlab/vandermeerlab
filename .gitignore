@@ -28,5 +28,3 @@ codecov.exe
 *.mtc
 *.mtc0
 *.asv
-*.xml
-*.tap
