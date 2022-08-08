@@ -1,4 +1,4 @@
-function iv_out = MergeIV2(cfg_in,iv_in)
+function iv_out = MergeIV(cfg_in,iv_in)
 %MERGEIV Merge touching, overlapping, or nearby intervals within an iv struct
 %   iv_out = MERGEIV(cfg,iv_in)
 % 
