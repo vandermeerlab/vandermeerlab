@@ -369,7 +369,7 @@ if strcmp(Do_AutoClust,'yes')
        end
    end
    if strcmpi('KlustaKwik',gPar.ClusterAlgorithm)
-       KlustaKwikPath = which('KlustaKwik.exe');
+       KlustaKwikPath = which('KlustaKwik.out');
        if ~isempty(KlustaKwikPath)
            disp(['KlustaKwikPath undefined, using ' KlustaKwikPath]);
        else
