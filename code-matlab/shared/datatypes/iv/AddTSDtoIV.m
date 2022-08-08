@@ -54,7 +54,7 @@ switch cfg.method
         end
 end
 
-iv.usr.(cfg.label) = data_temp;
+iv.usr.(cfg.label) = data_temp(:); % ensure column shape
 
 % housekeeping
 iv.cfg.history.mfun = cat(1,iv.cfg.history.mfun,mfun);

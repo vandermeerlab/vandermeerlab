@@ -62,6 +62,7 @@ if isempty(iv_in.tstart)
     if cfg.verbose
         fprintf('%s: iv_in is empty, returning iv_in\n',mfun)
         iv_out = History(iv_in,mfun,cfg);
+        idx = [];
         return
     end
 end
