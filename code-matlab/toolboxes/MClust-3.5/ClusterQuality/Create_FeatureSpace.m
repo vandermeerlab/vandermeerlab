@@ -39,8 +39,10 @@ for iCh = 1:nCh
     nan_idx = isnan(w);
     w(nan_idx) = 0;
     
-    [pc,wpc,variances,t2] = princomp(w);
     
+%     [pc,wpc,variances,t2] = princomp(w);
+% princomp is discontinued, use pca: https://www.mathworks.com/matlabcentral/answers/447831-princomp-has-been-removed-use-pca-instead
+    [pc,wpc,variances,t2] = pca(w);
     % Get the first principal component coefficients for each spike
     Fet(:,iCh + 4) = wpc(:,1);
 end

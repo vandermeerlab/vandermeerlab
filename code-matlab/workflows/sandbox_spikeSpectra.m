@@ -225,7 +225,7 @@ for iS = 1:length(fd)
         
         ALL.STA(cc,:) = xc;
         
-        if cfg_master.plot
+        if cfg_master.plotfft
             subplot(222);
             plot(tvec, xc);
             title('raw STA');

@@ -41,11 +41,11 @@ cfg.colormode = 'inventory3'; % see TmazeColors for colormode descriptions
 
 % what to load and where to find it
 cfg.input_fn = 'behavior'; % the script knows the proper file extension (.mat) so don't put it here
-cfg.input_fd = 'E:\Documents\TmazePaper\data';
+cfg.input_fd = 'C:\temp';
 
 % what to call the output figure and where to save it
 cfg.output_fn = 'behaviorMulti'; % it saves as a .png
-cfg.output_fd = 'E:\Documents\TmazePaper\visuals';
+cfg.output_fd = 'C:\temp';
 
 % in the trial-by-choice subplot, do you want to plot the water inverted?
 cfg.invertWater = 1; % 1 yes, 0 no
@@ -78,7 +78,7 @@ location = [1 2 4 5]; % where to place the bar
 
 % get the accumulated data subplotted first 
 
-FontSize = 10; 
+FontSize = 14; 
 
 figure; hold on
 
@@ -95,7 +95,7 @@ subplot(3,4,[1 2 5 6])
     end
     
     ylabel('p(choice)','FontSize',FontSize); set(gca,'XLim',[0 location(4)+1])
-    set(gca,'YLim',[0 1],'XTick',location,'XTickLabel',{'L' 'R' 'L' 'R'},'FontSize',FontSize,'YLim',[0 1],'LineWidth',1,'YTick',0:0.25:1);
+    set(gca,'YLim',[0 1],'XTick',location,'TickDir','out','XTickLabel',{'L' 'R' 'L' 'R'},'FontSize',FontSize,'YLim',[0 1],'LineWidth',1,'YTick',0:0.25:1);
     xlabel('       food restricted               water restricted      ','FontSize',FontSize)
     
     title(['all rats: ',num2str(behav.all.nLTrials),' left trials, ',num2str(behav.all.nRTrials),' right trials']);
@@ -136,23 +136,23 @@ subplot(3,4,[3 4 7 8])
     % plot food choice on food days
     h(1) = plot(pLtrl,'Color',colors.all.f,'LineWidth',2); 
     hold on;
-    plot(pLtrl,'Color',colors.all.f,'LineStyle',foodstyle,'MarkerSize',foodsize);
+    plot(pLtrl,foodstyle,'Color',colors.all.f,'MarkerSize',foodsize);
     
     % plot water choice on water days
     if cfg.invertWater
         ugh = [pRtrl; ones(size(pRtrl))];
         pRtrl = abs(diff(ugh,1));
         h(2) = plot(pRtrl,'Color',colors.all.w,'LineWidth',2);
-        %plot(pRtrl,'Color',colors.all.w,'LineStyle','.','MarkerSize',20);
+        plot(pRtrl,'.','Color',colors.all.w,'MarkerSize',20);
         ylims = [0 1];
         ylabel('p(choose food)')
     else
         h(2) = plot(pRtrl,'Color',colors.all.w,'LineWidth',2);
-        plot(pRtrl,'Color',colors.all.w,'LineStyle','.','MarkerSize',20);
+        plot(pRtrl,'.','Color',colors.all.w,'LineStyle','MarkerSize',20);
         ylims = [0.25 1];
     end
     
-    set(gca,'XTick',0:5:25, ...
+    set(gca,'XTick',0:5:25,'TickDir','out',...
         'YLim',ylims,'XLim',[0 length(cfg.plotTrials)+2],'LineWidth',1,'YTick',0.25:0.25:1,'FontSize',FontSize);
     box off;
     set(gca,'Layer','top')
@@ -208,7 +208,7 @@ for iRat = 1:length(rats)
     end
     
     set(gca,'XLim',[0 location(4)+1])
-    set(gca,'YLim',[0 1],'XTick',location,'XTickLabel',{'L' 'R' 'L' 'R'},'FontSize',FontSize,'YLim',[0 1],'LineWidth',1,'YTick',0:0.25:1);
+    set(gca,'YLim',[0 1],'TickDir','out','XTick',location,'XTickLabel',{'L' 'R' 'L' 'R'},'FontSize',FontSize,'YLim',[0 1],'LineWidth',1,'YTick',0:0.25:1);
     xlabel('  food          water ', 'FontSize',FontSize)
     
     %title([rats{iRat},', 6 sessions, ',num2str(behav.(rats{iRat}).nFood),' left trials, ',num2str(behav.(rats{iRat}).nWater), ' right trials']);
@@ -228,9 +228,9 @@ end
 
 if cfg.writeFiles
     cd(cfg.output_fd)
-    print(gcf,'-dpng','-r300',[cfg.output_fn,'.png']); % this doesn't save with the dimension i see on screen
-    print(gcf,'-depsc','-r300',cfg.output_fn);
-    print(gcf,'-dpdf','-r300',cfg.output_fn);
+    print(gcf,'-painters','-dpng','-r300',[cfg.output_fn,'.png']); % this doesn't save with the dimension i see on screen
+    print(gcf,'-painters','-depsc','-r300',cfg.output_fn);
+    print(gcf,'-painters','-dpdf','-r300',cfg.output_fn);
     %set(gcf,'Color','w')
     %img = getframe(gcf);
     %imwrite(img.cdata,[cfg.output_fn,'.png']);

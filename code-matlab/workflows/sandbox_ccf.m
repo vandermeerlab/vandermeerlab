@@ -3,31 +3,28 @@
 %
 % The analysis proceeds as follows:
 % - load data
-% - remove spikes arouhnd +/-5 sec window around reward times and retain
-% neurons with at least 100 spikes after the removal
+% - restrict spikes to around +/-5 sec window around reward times and retain
+%   neurons with at least 100 spikes remaining
 % - separate type 1 (MSNs) and type 2 (FSI) neurons
 % - generate cross correlation MSN pairs (cx1), FSI pairs (cx2), and
 %    MSN-FSI pairs (cx3)
 %
 % output variables are stored in the od variable, which can be saved and
 % later used to plot the figures
-% 
-% TODO: Use restict() and invertIV() to remove spikes around the reward
-% times
 
 %% setup
 clear;
 cd('/Users/manishm/Work/vanDerMeerLab/ADRLabData/');
 please = [];
-please.rats = {'R117'};%,'R119','R131','R132'}; % vStr-only rats
+please.rats = {'R117','R119','R131','R132'}; % vStr-only rats
 [cfg_in.fd,cfg_in.fd_extra] = getDataPath(please);
 cfg_in.write_output = 1;
-cfg_in.output_dir = '/Users/manishm/Work/vanDerMeerLab/Common/temp';
+cfg_in.output_dir = '/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp';
 cfg_in.cx_binsize = 0.01; 
 
 %%
 % Top level loop which calls the main function for all the sessions
-for iS = 1:2%length(cfg_in.fd) % for each session...
+for iS = 1:length(cfg_in.fd) % for each session...
     
     cfg_in.iS = iS;
     pushdir(cfg_in.fd{iS});
@@ -55,7 +52,11 @@ function od = generateCCF(cfg_in)
     cfg_master.write_output = 0;
     cfg_master.output_prefix = 'ccf_';
     cfg_master.output_dir = 'C:\temp';
-    cfg_master.cx_binsize = 0.01;
+    cfg_master.exc_types = 0; %cell types to be excluded
+    cfg_master.cx_msn = 0.01;  % bin size for cross-correlation between pairs of Medium Spiny Neurons (MSNs) in seconds
+    cfg_master.cx_fsi = 0.005;  % bin size for cross-correlations between pairs of Fast Spiking Interneurons (FSIs) in seconds
+    cfg_master.cx_mix = 0.005;  % bin size for cross-correlations between pairs of 1 FSI abd 1 MSN in seconds
+    cfg_master.max_t = 0.5; % half window length for the cross correlations in seconds in seconds
 
     cfg_master = ProcessConfig(cfg_master,cfg_in);
     
@@ -117,64 +118,228 @@ function od = generateCCF(cfg_in)
         end
     end % of previous day available checks
 
-    %restrict spikes to times that animal was on the track
-    sd.S = restrict(sd.S, ExpKeys.TimeOnTrack, ExpKeys.TimeOffTrack);
-
-    % reward deliveries
-    evt = LoadEvents([]);
-    reward_t = evt.t{1}; % should generalize this with known labels etc.. and remove double labels
-
-    % Remove spikes 5 sec from around the reward times
-    for i = 1:length(sd.S.t)
-        sd.S.t{i} = RemoveSpikes(sd.S.t{i}, reward_t, 5);
+    % restrict spikes to a timeWindow of +/-5 seconds around the reward
+        
+    rt1 = getRewardTimes();
+    rt1 = rt1(rt1 > ExpKeys.TimeOnTrack);
+    rt2 = getRewardTimes2();
+    rt2 = rt2(rt2 > ExpKeys.TimeOnTrack);
+    
+    % Sometimes (in R117-2007-06-12, for instance) getRewardTimes() returns
+    % times that are spaced out less than 5 sec apart (possibly erroneus). 
+    % Getting rid of such reward times to maintain consistency
+    rt_dif = diff(rt1);
+    rt_dif = find(rt_dif <= 5);
+    valid_rt1 = true(length(rt1),1);
+    valid_rt2 = true(length(rt2),1);
+    for i = 1:length(rt_dif)
+        valid_rt1(rt_dif(i)) = false;
+        valid_rt1(rt_dif(i)+1) = false;
+        valid_rt2(rt2 >= rt1(rt_dif(i)) & rt2 <= rt1(rt_dif(i)+2)) = false;
     end
+    % Sometimes (in R119-2007-07-05, for instance) getRewardTimes2() returns
+    % times that are spaced out less than 5 sec apart (possibly erroneus). 
+    % Getting rid of such reward times to maintain consistency
+    rt_dif = diff(rt2);
+    rt_dif = find(rt_dif <= 5);
+    for i = 1:length(rt_dif)
+        valid_rt2(rt_dif(i)) = false;
+        valid_rt2(rt_dif(i)+1) = false;
+        valid_rt1(rt1 >= rt2(rt_dif(i)-1) & rt1 <= rt2(rt_dif(i)+1)) = false;
+    end
+    
+    rt1 = rt1(valid_rt1);
+    rt2 = rt2(valid_rt2);
+    
+    % Sometimes (in R117-2007-06-17, for instance) the second reward is
+    % triggered but not the first one in the last trial
+    if length(rt1) ~= length(rt2)
+        rt1 = rt1(1:end-1);
+    end
+    
+    % Sanity check to make sure that rt2 is always triggered after rt1
+    keep = (rt1 <= rt2);
+    rt1 = rt1(keep);
+    rt2 = rt2(keep);
+    
+    % For near reward_trials  
+    w_start1 = rt1 - 5;
+    w_end1 = rt1 + 5;
+    w_start2 = rt2 - 5;
+    w_end2 =  rt2 + 5;
+    % Last trial time shouldn't exceed Experiment end time
+    w_end2(end) = min(w_end2(end), ExpKeys.TimeOffTrack);
+    w_start = sort([w_start1; w_start2]);
+    w_end = sort([w_end1; w_end2]);
+    rt_iv = iv(w_start, w_end);
+    rt_iv = MergeIV([], rt_iv);
+    sd.S1 = restrict(sd.S, rt_iv);
 
-    sd.S.cell_type = sd.S.usr.cell_type;
+    sd.S1.cell_type = sd.S1.usr.cell_type;
+    sd.S1.tt_id = sd.S1.usr.tt_num;
 
-    exc_types = 0;
-    %Keep cells greater with greater than 100 spikes and of the allowed types
-    sd.S = KeepCells(sd.S,cfg_master.nMinSpikes,exc_types);
-
-    %Crosscorrelation for MSNs
-    c1 = sd.S.t(sd.S.cell_type == 1);
-    c2 = sd.S.t(sd.S.cell_type == 2);
+    % Keep cells greater with greater than nMinSpike spikes and of the allowed types
+    sd.S1 = KeepCells(sd.S1,cfg_master.nMinSpikes,cfg_master.exc_types);
+    
+    % Setting up parameters for cross_correlations
+    c1 = sd.S1.t(sd.S1.cell_type == 1);
+    c2 = sd.S1.t(sd.S1.cell_type == 2);
+    od.S1.tt1 = sd.S1.tt_id(sd.S1.cell_type == 1);
+    od.S1.tt2 = sd.S1.tt_id(sd.S1.cell_type == 2);
     n1 = length(c1);
     t1 = (n1*(n1-1))/2;
     n2 = length(c2);
     t2 = (n2*(n2-1))/2;
     n3 = n1*n2;
-    od.cx1 = cell(t1,1);
-    od.cx2 = cell(t2,1);
-    od.cx3 = cell(n3,1);
-    od.l1 = sd.S.label(sd.S.cell_type == 1);
-    od.l2 = sd.S.label(sd.S.cell_type == 2);
-
-    % 10 millsecond bins for ccf
-    cfg_cx.binsize = cfg_master.cx_binsize;
-
+    od.S1.cx1 = cell(t1,1);
+    od.S1.cx2 = cell(t2,1);
+    od.S1.cx3 = cell(n3,1);
+    od.S1.l1 = sd.S1.label(sd.S1.cell_type == 1);
+    od.S1.l2 = sd.S1.label(sd.S1.cell_type == 2);
+    od.S1.tvec1 = (-cfg_master.max_t:cfg_master.cx_msn:cfg_master.max_t);
+    od.S1.tvec2 = (-cfg_master.max_t:cfg_master.cx_fsi:cfg_master.max_t);
+    od.S1.tvec3 = (-cfg_master.max_t:cfg_master.cx_mix:cfg_master.max_t);
+    
+    cfg_cx.max_t = cfg_master.max_t;
+    cfg_cx.smooth = 1;
+    % Cross correlations for MSNs
+    cfg_cx.binsize =  cfg_master.cx_msn;
+    cfg_cx.gauss_w = 7*cfg_cx.binsize;
+    cfg_cx.gauss_sd = cfg_cx.binsize;
     k = 1;
     for i = 1:(n1-1)
         for j = (i+1):n1
-            [od.cx1{k},~] = ccf(cfg_cx,c1{i},c1{j});
+            if od.S1.tt1(i) == od.S1.tt1(j) %same tetrode
+                od.S1.cx1{k} = nan(length(od.S1.tvec1),1);
+            else
+                [od.S1.cx1{k},~] = ccf2(cfg_cx,c1{i},c1{j});
+            end
             k = k+1;
         end
     end
-
+    
+    % Cross correlations for FSIs
+    cfg_cx.binsize =  cfg_master.cx_fsi;
+    cfg_cx.gauss_w = 15*cfg_cx.binsize;
+    cfg_cx.gauss_sd = cfg_cx.binsize;
     k = 1;
     for i = 1:(n2-1)
         for j = (i+1):n2
-            [od.cx2{k},~] = ccf(cfg_cx,c2{i},c2{j});
+            if od.S1.tt2(i) == od.S1.tt2(j) %same tetrode
+                od.S1.cx2{k} = nan(length(od.S1.tvec2),1);
+            else
+            [od.S1.cx2{k},~] = ccf2(cfg_cx,c2{i},c2{j});
+            end
             k = k+1;
         end
     end
 
+    % Cross correlations for MSN-FSI pairs
+    cfg_cx.binsize =  cfg_master.cx_mix;
+    cfg_cx.gauss_w = 15*cfg_cx.binsize;
+    cfg_cx.gauss_sd = cfg_cx.binsize;
     k = 1;
     for i = 1:n1
         for j = 1:n2
-            [od.cx3{k},~] = ccf(cfg_cx,c1{i},c2{j});
+            if od.S1.tt1(i) == od.S1.tt2(j) %same tetrode
+                od.S1.cx3{k} = nan(length(od.S1.tvec3),1);
+            else
+            [od.S1.cx3{k},~] = ccf2(cfg_cx,c1{i},c2{j});
+            end
             k = k+1;
         end
     end
+    
+    % For away_reward_trials
+    w_start = [ExpKeys.TimeOnTrack;rt2(1:end-1)+5];
+    w_end = (rt1-5);
+    
+    % Get rid of extra long-trials (greater than mean + 1*SD)
+    trial_length = w_end - w_start;
+    mtl = mean(trial_length); stl = std(trial_length);
+    valid_trials = (trial_length <= mtl + stl); 
+    w_start = w_start(valid_trials);
+    w_end= w_end(valid_trials);
+    
+    rt_iv = iv(w_start, w_end);
+    rt_iv = MergeIV([], rt_iv);
+    sd.S2 = restrict(sd.S, rt_iv);
+
+    sd.S2.cell_type = sd.S2.usr.cell_type;
+    sd.S2.tt_id = sd.S2.usr.tt_num;
+
+    % Keep cells greater with greater than nMinSpike spikes and of the allowed types
+    sd.S2 = KeepCells(sd.S2,cfg_master.nMinSpikes,cfg_master.exc_types);
+    
+    % Setting up parameters for cross_correlations
+    c1 = sd.S2.t(sd.S2.cell_type == 1);
+    c2 = sd.S2.t(sd.S2.cell_type == 2);
+    od.S2.tt1 = sd.S2.tt_id(sd.S2.cell_type == 1);
+    od.S2.tt2 = sd.S2.tt_id(sd.S2.cell_type == 2);
+    n1 = length(c1);
+    t1 = (n1*(n1-1))/2;
+    n2 = length(c2);
+    t2 = (n2*(n2-1))/2;
+    n3 = n1*n2;
+    od.S2.cx1 = cell(t1,1);
+    od.S2.cx2 = cell(t2,1);
+    od.S2.cx3 = cell(n3,1);
+    od.S2.l1 = sd.S2.label(sd.S2.cell_type == 1);
+    od.S2.l2 = sd.S2.label(sd.S2.cell_type == 2);
+    od.S2.tvec1 = (-cfg_master.max_t:cfg_master.cx_msn:cfg_master.max_t);
+    od.S2.tvec2 = (-cfg_master.max_t:cfg_master.cx_fsi:cfg_master.max_t);
+    od.S2.tvec3 = (-cfg_master.max_t:cfg_master.cx_mix:cfg_master.max_t);
+    
+    cfg_cx.max_t = cfg_master.max_t;
+    cfg_cx.smooth = 1;
+    % Cross correlations for MSNs
+    cfg_cx.binsize =  cfg_master.cx_msn;
+    cfg_cx.gauss_w = 7*cfg_cx.binsize;
+    cfg_cx.gauss_sd = cfg_cx.binsize;
+    k = 1;
+    for i = 1:(n1-1)
+        for j = (i+1):n1
+            if od.S2.tt1(i) == od.S2.tt1(j) %same tetrode
+                od.S2.cx1{k} = nan(length(od.S2.tvec1),1);
+            else
+                [od.S2.cx1{k},~] = ccf2(cfg_cx,c1{i},c1{j});
+            end
+            k = k+1;
+        end
+    end
+    
+    % Cross correlations for FSIs
+    cfg_cx.binsize =  cfg_master.cx_fsi;
+    cfg_cx.gauss_w = 15*cfg_cx.binsize;
+    cfg_cx.gauss_sd = cfg_cx.binsize;
+    k = 1;
+    for i = 1:(n2-1)
+        for j = (i+1):n2
+            if od.S2.tt2(i) == od.S2.tt2(j) %same tetrode
+                od.S2.cx2{k} = nan(length(od.S2.tvec2),1);
+            else
+            [od.S2.cx2{k},~] = ccf2(cfg_cx,c2{i},c2{j});
+            end
+            k = k+1;
+        end
+    end
+
+    % Cross correlations for MSN-FSI pairs
+    cfg_cx.binsize =  cfg_master.cx_mix;
+    cfg_cx.gauss_w = 15*cfg_cx.binsize;
+    cfg_cx.gauss_sd = cfg_cx.binsize;
+    k = 1;
+    for i = 1:n1
+        for j = 1:n2
+            if od.S2.tt1(i) == od.S2.tt2(j) %same tetrode
+                od.S2.cx3{k} = nan(length(od.S2.tvec3),1);
+            else
+            [od.S2.cx3{k},~] = ccf2(cfg_cx,c1{i},c2{j});
+            end
+            k = k+1;
+        end
+    end
+    
     if cfg_master.write_output
          [~, fp, ~] = fileparts(pwd);
          pushdir(cfg_master.output_dir);
@@ -205,6 +370,7 @@ function S = KeepCells(S,minSpikes,cTypes)
     S.label = S.label(keep);
     S.t = S.t(keep);
     S.cell_type = S.cell_type(keep);
+    S.tt_id = S.tt_id(keep);
 end
 
 
@@ -233,24 +399,4 @@ function S = LoadSpikesTarget(cfg_in)
         keep = ismember(S.usr.tt_num, tt_num_keep);
         S = SelectTS([], S, keep);
     end
-end
-
-%%
-% function to remove spikes from ost that are in a window of length w_length
-% around timpepoints in r_time
-% very inefficient implementation
-function rst = RemoveSpikes(ost, r_time, w_length) 
-    keep = true(length(ost), 1);
-    for iS = 1:length(ost)
-            cur_spk = ost(iS);
-            for iT = 1:length(r_time)
-                low = r_time(iT) - w_length;
-                high = r_time(iT) + w_length;
-                if cur_spk >= low && cur_spk <= high
-                    keep(iS)= false;
-                    break
-                end
-            end        
-    end
-    rst = ost(keep);
 end

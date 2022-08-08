@@ -1,4 +1,5 @@
 *.*~
+codecov.exe
 *.aux
 *.bbl
 *.blg
@@ -16,7 +17,6 @@
 *.lot
 *.nav
 *.nlo
-*.out
 *.pdfsync
 *.ps
 *.snm
@@ -27,9 +27,5 @@
 *.mtc
 *.mtc0
 *.asv
-code-matlab/shared/datatypes/tsd/UnionTSD.m
-code-matlab/shared/io/.DS_Store
-code-matlab/shared/.DS_Store
-code-matlab/.DS_Store
-.DS_Store
-.DS_Store
+*.DS_Store
+code-matlab/shared/io/getDataPath.m
