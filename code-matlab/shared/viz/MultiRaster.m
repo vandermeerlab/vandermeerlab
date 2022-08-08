@@ -170,8 +170,7 @@ ts_only = @(x) isfield(x,'t') && ~isfield(x,'tstart');
 iv_only = @(x) isfield(x,'tstart') && ~isfield(x,'t');
 
 if isfield(cfg,'lfp') %lfp
-    %hS = PlotSpikeRaster2(cfg,S);
-    hS = PlotSpikeRaster_fast(cfg,S);
+    hS = PlotSpikeRaster2(cfg,S);
     ylims = get(gca,'YLim');
     
     spikelims = get(gca,'Xlim');
@@ -228,25 +227,21 @@ end
 %% Choose Plotting mode
 switch plotMode        
     case 1 % just spikes
-        %h.S = PlotSpikeRaster2(cfg,S);
-        h.S = PlotSpikeRaster_fast(cfg,S);
+        h.S = PlotSpikeRaster2(cfg,S);
         ylims = get(gca,'YLim');
         
     case 2 % ts data only
         evtTimes = (cfg.evt.t{:});
-        %h.S = PlotSpikeRaster2(cfg,S);
-        h.S = PlotSpikeRaster_fast(cfg,S);
+        h.S = PlotSpikeRaster2(cfg,S);
         PlotTSEvt(cfg,cfg.evt)
         ylims = get(gca,'YLim');
         
     case 3 % iv data only
         evtTimes = (cfg.evt.tstart + cfg.evt.tend)./2;
         S_iv = restrict(S,cfg.evt.tstart,cfg.evt.tend);
-        %h.S = PlotSpikeRaster2(cfg,S); % plots all spikes
-        h.S = PlotSpikeRaster_fast(cfg,S); % plots all spikes
+        h.S = PlotSpikeRaster2(cfg,S); % plots all spikes
         cfg.spkColor = 'r';
-        %h.S_iv = PlotSpikeRaster2(cfg,S_iv); % plots event spikes overtop in a different color
-        h.S_iv = PlotSpikeRaster_fast(cfg,S_iv);
+        h.S_iv = PlotSpikeRaster2(cfg,S_iv); % plots event spikes overtop in a different color
         ylims = get(gca,'YLim');
         
     case 4 % ts + iv data NOT WORKING YET
@@ -269,8 +264,7 @@ switch plotMode
                 upper_val = lower_val+cfg.lfpHeight;
                 
                 lfp.data = rescale(lfp.data,lower_val,upper_val);
-                %h.LFP(iLFP) = plot(lfp.tvec,lfp.data,'Color',cmap(iLFP,:),'LineWidth',cfg.lfpWidth);
-                h.LFP(iLFP) = reduce_plot(lfp.tvec,lfp.data,'Color',cmap(iLFP,:),'LineWidth',cfg.lfpWidth);
+                h.LFP(iLFP) = plot(lfp.tvec,lfp.data,'Color',cmap(iLFP,:),'LineWidth',cfg.lfpWidth);
             end
         else
             lfp = cfg.lfp;
@@ -283,8 +277,7 @@ switch plotMode
             upper_val = lower_val+cfg.lfpHeight;
             
             lfp.data = rescale(lfp.data,lower_val,upper_val);
-            %h.LFP = plot(lfp.tvec,lfp.data,'Color',cfg.lfpColor,'LineWidth',cfg.lfpWidth);
-            h.LFP = reduce_plot(lfp.tvec,lfp.data,'Color',cfg.lfpColor,'LineWidth',cfg.lfpWidth);
+            h.LFP = plot(lfp.tvec,lfp.data,'Color',cfg.lfpColor,'LineWidth',cfg.lfpWidth);
         end
         ylims = get(gca,'YLim'); ylims(1) = lower_val;
 
@@ -307,8 +300,7 @@ switch plotMode
                 upper_val = lower_val+cfg.lfpHeight;
                 
                 lfp.data = rescale(lfp.data,lower_val,upper_val);
-                %h.LFP(iLFP) = plot(lfp.tvec,lfp.data,'Color',cmap(iLFP,:),'LineWidth',cfg.lfpWidth);
-                h.LFP(iLFP) = reduce_plot(lfp.tvec,lfp.data,'Color',cmap(iLFP,:),'LineWidth',cfg.lfpWidth);
+                h.LFP(iLFP) = plot(lfp.tvec,lfp.data,'Color',cmap(iLFP,:),'LineWidth',cfg.lfpWidth);
             end
         else
             lfp = cfg.lfp;
@@ -321,8 +313,7 @@ switch plotMode
             upper_val = lower_val+cfg.lfpHeight;
             
             lfp.data = rescale(lfp.data,lower_val,upper_val);
-            %h.LFP = plot(lfp.tvec,lfp.data,'Color',cfg.lfpColor,'LineWidth',cfg.lfpWidth);
-            h.LFP = reduce_plot(lfp.tvec,lfp.data,'Color',cfg.lfpColor,'LineWidth',cfg.lfpWidth);
+            h.LFP = plot(lfp.tvec,lfp.data,'Color',cfg.lfpColor,'LineWidth',cfg.lfpWidth);
         end
         ylims = get(gca,'YLim'); ylims(1) = lower_val;
         PlotTSEvt([],cfg.evt)

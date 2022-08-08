@@ -55,8 +55,7 @@ for iEvent = 1:length(cfg.eventList)
    
     ev_string = cfg.eventList{iEvent};
 
-    %ev_id = strncmp(ev_string,EventStrings,length(ev_string));
-    ev_id = strmatch(ev_string,EventStrings,'exact');
+    ev_id = strncmp(ev_string,EventStrings,length(ev_string));
     ev_t = EVTimeStamps(ev_id)*10^-6;
     
     % check if this eventLabel already exists, if so append (not create new)

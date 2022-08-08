@@ -12,14 +12,12 @@ cfg = ProcessConfig(cfg_def,cfg_in);
 
 mfun = mfilename;
 
-if isempty(iv1) | isempty(iv1.tstart) % function should work for empty arguments
-    %iv1 = iv([],[]);
-    iv1 = iv2; return;
+if isempty(iv1) % function should work for empty arguments
+    iv1 = iv([],[]);
 end
 
-if isempty(iv2) | isempty(iv2.tstart)
-    %iv2 = iv([],[]);
-    return;
+if isempty(iv2)
+    iv2 = iv([],[]);
 end
 
 if ~CheckIV(iv1) | ~CheckIV(iv2)
@@ -31,21 +29,6 @@ iv1.tend = cat(1,iv1.tend,iv2.tend);
 
 [iv1.tstart,sort_idx] = sort(iv1.tstart,'ascend');
 iv1.tend = iv1.tend(sort_idx);
-
-% process usr fields -- needs check for columnness, N-D cases etc..
-if (isfield(iv1,'usr') && ~isempty(iv1.usr)) && (isfield(iv2,'usr') && ~isempty(iv2.usr))
-    ivfields = fieldnames(iv1.usr);
-    for iField = 1:length(ivfields)
-        iv1.usr.(ivfields{iField}) = cat(1,iv1.usr.(ivfields{iField}),iv2.usr.(ivfields{iField})); % note, assumes column shape!
-        iv1.usr.(ivfields{iField}) = iv1.usr.(ivfields{iField})(sort_idx);
-    end
-elseif (~isfield(iv1,'usr') && isfield(iv2,'usr')) | (isfield(iv1,'usr') && ~isfield(iv2,'usr'))
-    error('Cannot merge usr fields: only one input has an usr field');
-elseif (isfield(iv1,'usr') && isempty(iv1.usr)) && (isfield(iv2,'usr') && ~isempty(iv2.usr))
-    error('Cannot merge usr fields: only iv2 has non-empty usr field');
-elseif (isfield(iv1,'usr') && ~isempty(iv1.usr)) && (isfield(iv2,'usr') && isempty(iv2.usr))
-    error('Cannot merge usr fields: only iv1 has non-empty usr field');
-end
 
 % housekeeping
 iv1.cfg.history.mfun = cat(1,iv1.cfg.history.mfun,mfun);

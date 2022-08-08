@@ -1,5 +1,5 @@
-function [in,keep] = restrict(in,varargin)
-% function [out,keep] = restrict(in,varargin)
+function in = restrict(in,varargin)
+% function out = restrict(in,varargin)
 %
 % restricts times in data object to specific intervals
 %
@@ -82,17 +82,6 @@ switch type
     case 'iv'
         in.tstart = in.tstart(keep);
         in.tend = in.tend(keep);
-        
-        if isfield(in,'usr')
-            if ~isempty(in.usr)
-               fn = fieldnames(in.usr);
-               for iFN = 1:length(fn)
-                   temp = in.usr.(fn{iFN});
-                   temp = temp(keep);
-                   in.usr.(fn{iFN}) = temp;
-               end
-            end
-        end
         
 end
 

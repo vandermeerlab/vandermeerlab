@@ -1,5 +1,4 @@
 *.*~
-codecov.exe
 *.aux
 *.bbl
 *.blg
@@ -28,3 +27,5 @@ codecov.exe
 *.mtc
 *.mtc0
 *.asv
+*.DS_Store
+

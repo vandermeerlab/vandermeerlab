@@ -17,17 +17,13 @@
 %%
 
 prefix = ''; % ex: "test_', will be prepended to the filename
-suffix = '_HT1-3_noTheta'; %[date,'']; appended to filename
+suffix = ''; %[date,'']; appended to filename
 
 writeDiary = 1; % if 1, save command window text to session 'files' folders;
 %                  the command window text includes things like "n events
 %                  left after theta thresholding" and so on.
 
-gen = [];
 gen.load_questionable_cells = 0;
-gen.SWRmethod = 'HT'; 
-gen.MUAmethod = 'AM';
-gen.ThetaThreshold = [];
 
 %% verify requisites: detection is a long process, don't want it erroring partway through 
 
@@ -43,7 +39,7 @@ if writeDiary, cfg.requireFiles = 1; end
 proceed = checkTmazeReqs(cfg); 
 
 %%
-cfg.rats = {'R042','R044','R050','R064'};
+cfg.rats = {'R064'};%{'R042','R044','R050'};
 originalFolder = pwd;
 
 if proceed % Detect candidate replay events and save them as a .mat file

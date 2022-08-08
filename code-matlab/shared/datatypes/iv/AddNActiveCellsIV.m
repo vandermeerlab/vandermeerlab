@@ -7,7 +7,7 @@ function iv_in = AddNActiveCellsIV(cfg_in,iv_in,S)
 %       S - spikes
 %
 %   OUTPUT:
-%       iv_out - iv with nActiveCells usr field added
+%       iv_out - iv with nActiveCells field added
 %
 %   CFG OPTIONS:
 %
@@ -65,7 +65,7 @@ end
 if cfg.verbose && isfield(iv_in.usr,cfg.label)
     disp(['WARNING in ',mfun,': iv data already includes usr.',cfg.label,', overwriting...'])
 end
-iv_in.usr.(cfg.label) = nC(:); % ensure column shape
+iv_in.usr.(cfg.label) = nC;
 
 
 % housekeeping

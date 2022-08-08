@@ -90,13 +90,13 @@ clear
 % Set your current directory to the Tmaze session you want to work with
 
 % T-maze specific recording segments to restrict data to
-cfg.whichEpochs = {'task'}; %  {'prerecord','task','postrecord'} 
+cfg.whichEpochs = {'prerecord','task','postrecord'}; %  {'prerecord','task','postrecord'} 
 
 % How many seconds of data do you want to peruse? (this gets evenly divded between the chosen epochs)
-cfg.nSeconds = 360; % 720 seconds = 12 minutes
+cfg.nSeconds = 720; % 720 seconds = 12 minutes
 
 % Select t files or tt files
-cfg.whichSFiles = 'none'; % 't' for MClust t files (isolated units), or 'tt' for MakeTTFiles tt files (all spikes from tetrode)
+cfg.whichSFiles = 'tt'; % 't' for MClust t files (isolated units), or 'tt' for MakeTTFiles tt files (all spikes from tetrode)
 % 'none' for no spike files available
 
 % Do you want the LFP filtered?
@@ -146,7 +146,6 @@ switch cfg.whichSFiles
         S = ts;
         S.t{1}(1,1) = CSC.tvec(1); % make a fake S because MultiRaster requires this as an input in order to work
         S.t{1}(2,1) = CSC.tvec(end);
-        S.label = {'fakeS'};
     otherwise
         error('Unrecognized cfg.whichSFiles. Better check that spelling.')
 end
@@ -170,7 +169,7 @@ please = []; please.weightby = 'amplitude'; % return envelope
 envelope = OldWizard(please,CSC);
 
 % Threshold to produce intervals
-please = []; please.method = 'zscore'; please.threshold = 1;
+please = []; please.method = 'zscore'; please.threshold = 0;
 envelopeIV = TSDtoIV2(please,envelope);
 
 % Remove events that are too short

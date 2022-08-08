@@ -9,7 +9,7 @@
 % are.
 
 %% get sessions we can use
-cfg = []; cfg.rats = {'R042','R044','R050','R064'}; cfg.writeFig = 0;
+cfg = []; cfg.rats = {'R050'}; cfg.writeFig = 0;
 fd = getTmazeDataPath(cfg);
 
 nSessions = length(fd);

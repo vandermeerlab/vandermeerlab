@@ -1,4 +1,4 @@
-function LoadCandidates(varargin)
+function LoadCandidates
 %LOADCANDIDATES Load candidates into caller workspace
 %   No need for any inputs; it checks the current directory automatically
 %
@@ -9,30 +9,16 @@ function LoadCandidates(varargin)
 % found in the current directory or subdirectories.
 %
 % A.Carey May 2015 
-% MvdM 2017 modified to accept cfg.suffix input; implemented as varargin for
-% compatibility
 
-suffix = [];
-switch nargin
-    case 0
-    case 1
-        if isfield(varargin{1},'suffix')
-            suffix = varargin{1}.suffix;
-        else
-            error('I couldn''t find any input fields I know how to handle.');
-        end
-    otherwise
-        error('I don''t know what to do with more than one input argument.');
-end
+%%
 
 %[~,name,~] = fileparts(pwd); 
 
-fstring = cat(2,'*-candidates',suffix,'.mat');
-fn = FindFiles(fstring);
+fn = FindFiles('*-candidates.mat');
 if isempty(fn)
-    fprintf('LoadCandidates: no files matching %s were found in %s\n',fstring,pwd);
+    disp(['LoadCandidates: No files matching',' ''*candidates.mat'' ','were found in', [' ',pwd]])
 elseif length(fn) > 1
-    fprintf('LoadCandidates: more than one file matching %s was found in %s\n',fstring,pwd);
+    disp(['LoadCandidates: More than one file matching',' ''*candidates.mat'' ','was found in', [' ',pwd]])
     disp('candidates not loaded')
 else
     load(fn{1})
