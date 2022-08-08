@@ -26,6 +26,9 @@
 *.maf
 *.mtc
 *.mtc0
+<<<<<<< HEAD
 *.asv
 *.DS_Store
-
+=======
+*.asv
+>>>>>>> parent of a3979a4 (Merge branch 'Mclust3.5_mac_working' into master)
