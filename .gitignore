@@ -17,6 +17,7 @@ codecov.exe
 *.lot
 *.nav
 *.nlo
+*.out
 *.pdfsync
 *.ps
 *.snm
@@ -27,4 +28,3 @@ codecov.exe
 *.mtc
 *.mtc0
 *.asv
-*.DS_Store

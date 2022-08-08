@@ -42,11 +42,11 @@ maxPossibleClusters = maxClusters;
 close(figHandle);
 
 % find KlustaKwik
-KlustaKwikPath = which('KlustaKwik.out');
+KlustaKwikPath = which('KlustaKwik.exe');
 if ~isempty(KlustaKwikPath)
     disp(['Using ' KlustaKwikPath]);
 else
-    disp('Did not find KlustaKwik.out');
+    disp('Did not find KlustaKwik.exe.');
     return
 end     
 

@@ -259,7 +259,7 @@ void GetOneRecord(FILE *fp, double &T, double wv[128])
     for (int j = 0; j<2; j++)
       for(int k = 0; k<32; k++)
 	wv[j + 4*k] = (double) swapbytes(snData[j + 2*k]);  
-    for (int j=0; j<4; j++)
+    for (; j<4; j++)
       for(int k = 0; k<32; k++)
 	wv[j + 4*k] = 0;  
     
@@ -274,7 +274,7 @@ void GetOneRecord(FILE *fp, double &T, double wv[128])
     for (int j = 0; j<2; j++)
       for(int k = 0; k<32; k++)
 	wv[j + 4*k] = (double) snData[j + 2*k];  
-    for(int j = 0; j<4; j++)
+    for (; j<4; j++)
       for(int k = 0; k<32; k++)
 	wv[j + 4*k] = 0;  
   }
