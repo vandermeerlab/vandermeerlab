@@ -25,6 +25,7 @@ function out = Generate_DecSeq(cfg_in)
 % cfg_def.nMinNeurons = 4; % minimum number of neurons that needs to be active
 % cfg_def.maxJump_cm = 40;
 % cfg_def.minSeqLength = 10; % note, this is in bins
+% cfg_def.nMaxNanSkipSequential = 0; % NaNs that can be skipped without breaking sequence
 % cfg_def.plotOutput = 0;
 % cfg_def.Qdt = 0.005; % this is the binsize used for decoding
 % cfg_def.Qboxcar = 5; % boxcar smoothing of spike counts (in bins). So Qdt = 0.005 and Qboxcar = 5 give a true bin size of 25ms, moved in 5ms steps.
@@ -52,11 +53,13 @@ cfg_def.nSpikesHist = -0.5:105;
 cfg_def.nMinNeurons = 4;
 cfg_def.maxJump_cm = 40;
 cfg_def.minSeqLength = 10;
+cfg_def.nMaxNanSkipSequential = 0;
 cfg_def.plotOutput = 0;
 cfg_def.Qdt = 0.005;
 cfg_def.Qboxcar = 5;
 cfg_def.writeFiles = 1;
 cfg_def.removeInterneurons = 0;
+cfg_def.keepPosterior = 0;
 
 nMaxLaps = 20;
 %cfg_def.encdecmat = 1-eye(20);
@@ -296,6 +299,7 @@ for iCond = 1:nCond
     binSize_cm = ExpKeys.pathlength/cfg.nBins; % cm in one bin
     cfg_seq.maxJump = round(cfg.maxJump_cm/binSize_cm); % number of bins corresponding to 40cm
     cfg_seq.minLength = cfg.minSeqLength;
+    cfg_seq.nMaxNanSkipSequential = cfg.nMaxNanSkipSequential;
     [expCond(iCond).seq_iv,expCond(iCond).decode_map] = DecSeqDetectZ(cfg_seq,expCond(iCond).P2);
     
     %% plot
@@ -320,8 +324,11 @@ for iCond = 1:nCond
     %% remove source matrices (too memory-intensive)
     % NOTE: could keep Q and decoded bits for detected sequences
     % (helpful for shuffle checks later)?
-    expCond(iCond).Q = []; expCond(iCond).Qraw = []; expCond(iCond).P = []; expCond(iCond).P2 = [];
-    
+    if cfg.keepPosterior
+        expCond(iCond).Q = []; expCond(iCond).Qraw = [];
+    else
+        expCond(iCond).Q = []; expCond(iCond).Qraw = []; expCond(iCond).P = []; expCond(iCond).P2 = [];
+    end
 end % of iCond loop
 
 out.expCond = expCond;
