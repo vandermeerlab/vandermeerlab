@@ -78,7 +78,8 @@ switch cfg.display
     case 'tsd' % plot tsd with highlighted iv
         
         if ~cfg.iv_only
-        h.LFP = plot(tsd_in.tvec,temp_data,cfg.bgcol,'MarkerSize',cfg.MarkerSize);
+        %h.LFP = plot(tsd_in.tvec,temp_data,cfg.bgcol,'MarkerSize',cfg.MarkerSize);
+        h.LFP = reduce_plot(tsd_in.tvec,temp_data,cfg.bgcol,'MarkerSize',cfg.MarkerSize);
         end
         hold on;
         
@@ -86,6 +87,7 @@ switch cfg.display
         for iI = 1:length(tstart_idx)
         
             h.LFP_iv(iI) = plot(tsd_in.tvec(tstart_idx(iI):tend_idx(iI)),temp_data(tstart_idx(iI):tend_idx(iI)),cfg.fgcol,'MarkerSize',cfg.MarkerSize);
+            %h.LFP_iv(iI) = reduce_plot(tsd_in.tvec(tstart_idx(iI):tend_idx(iI)),temp_data(tstart_idx(iI):tend_idx(iI)),cfg.fgcol,'MarkerSize',cfg.MarkerSize);
             
         end
             

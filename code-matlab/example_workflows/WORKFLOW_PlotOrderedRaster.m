@@ -78,6 +78,14 @@ for iCond = 1:nCond
     
 end
     
+%% plot some TCs
+k = gausskernel(11, 1);
+this_tc = expCond(1).fields;
+for iC = 1:size(this_tc.tc, 2)
+    this_tc.tc(:, iC) = conv2(this_tc.tc(:, iC), k, 'same');
+end
+TCPlot([], this_tc)
+
 %% load CSC with good SWRs
 cfg = []; cfg.fc = ExpKeys.goodSWR(1);
 csc = LoadCSC(cfg);
@@ -88,7 +96,7 @@ fh = figure('KeyPressFcn',@navigate);
 for iCond = 1:nCond
     ax(iCond) = subplot(2,1,iCond);
     
-    S_temp = SelectTS([],S,expCond(iCond).fields.template_idx); % template_idx contains ordered place cells
+    S_temp = SelectTS([],S,expCond(iCond).fields.template_idx); % template_idx contains ordered place cells   
     
     cfg_mr = []; cfg_mr.openNewFig = 0; cfg_mr.lfp = csc;
     MultiRaster(cfg_mr,S_temp); % see http://ctnsrv.uwaterloo.ca/vandermeerlab/doku.php?id=analysis:nsb2015:week3short

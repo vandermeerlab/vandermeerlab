@@ -68,7 +68,6 @@ if cfg.checkall
     cfg.requireFiles = 1;
 end
 %% 
-
 disp([mfun,': searching for required data in session folders...'])
 filesep = '\';
 
@@ -167,7 +166,7 @@ for iRat = 1:length(rat_list)
             end
         end
         
-        if cfg.requireTimes && strcmp(rat_list(iRat).name,'R042') % for R042 only
+        if cfg.requireTimes && strcmp(rat_list{iRat},'R042') % for R042 only
             fn = FindFiles('*times.mat');
             if isempty(fn)
                 disp(['Times file not found in ',sessionID])
@@ -201,4 +200,3 @@ end
 % return to the original folder
 cd(original_folder)
 end
-
