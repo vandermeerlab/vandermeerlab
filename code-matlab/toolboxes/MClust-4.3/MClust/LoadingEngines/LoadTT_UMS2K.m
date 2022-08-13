@@ -4,13 +4,13 @@ function [T, WV] = LoadTT_UMS2K(fn, records_to_get, records_flag)
 
 if nargin == 1
     load(fn);
-    T = spk.unwrapped_times;
-    WV = permute(spk.waveforms, [1 3 2]);
+    T = double(spk.unwrapped_times);
+    WV = permute(double(spk.waveforms), [1 3 2]);
     
 elseif nargin == 3
     load(fn);
-    T = spk.unwrapped_times;
-    WV = permute(spk.waveforms, [1 3 2]);
+    T = double(spk.unwrapped_times);
+    WV = permute(double(spk.waveforms), [1 3 2]);
     
     switch records_flag
         case 1 % implies that records_to_get is a timestamp list.

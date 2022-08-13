@@ -1,28 +1,31 @@
 %% set paths: trodes file loader etc
 restoredefaultpath;
 addpath(genpath('C:\Users\mvdm\Documents\GitHub\vandermeerlab\code-matlab\toolboxes\ums2k_02_23_2012'));
-%addpath('C:\Users\mvdm\Documents\GitHub\vandermeerlab\code-matlab\shared\io\neuralynx');
+addpath(genpath('C:\Users\mvdm\Documents\GitHub\vandermeerlab\code-matlab\shared\'));
 addpath('C:\Trodes_2-2-3_Windows64\Resources\TrodesToMatlab\');
 
-%%
-cd('C:\Data\R204\r204_screening_sq2');
-fn = 'r204_screening_sq2.rec';
-ttno = 3;
+cd('C:\Data\r204_screening_rec16');
+fn = 'r204_screening_rec16.rec';
+
+%% load and reference
+ttno = 11;
+refno = 9;
 
 out = readTrodesFileContinuous(fn, [ttno 1; ttno 2; ttno 3; ttno 4]);
 Fs = out.samplingRate;
 
-%% 
-Wp = [ 700 8000] * 2 / Fs; % pass band for filtering
-Ws = [ 500 10000] * 2 / Fs; % transition zone
-[N, Wn] = buttord(Wp, Ws, 3, 20); % determine filter parameters
-[B, A] = butter(N, Wn); % builds filter
+out_ref = readTrodesFileContinuous(fn, [refno 1]);
+for iC = 1:4
+    out.channelData(:, iC) = out.channelData(:, iC) - out_ref.channelData;
+end
+clear out_ref;
+raw = out;
 
-bpFilt = designfilt('bandpassfir', 'FilterOrder', 1000, 'CutoffFrequency1', 600, 'CutoffFrequency2', 9000, 'SampleRate', Fs);
+%% filter in spike band
+bpFilt = designfilt('bandpassfir', 'StopbandFrequency1', 550, 'PassbandFrequency1', 650, 'PassbandFrequency2', 7000, 'StopbandFrequency2', 8000, 'StopbandAttenuation1', 60, 'PassbandRipple', 1, 'StopbandAttenuation2', 60, 'SampleRate', 30000);
 
 for iC = 1:4
-    %out.channelData(:, iC) = filtfilt(bpFilt, out.channelData(:, iC));
-    out.channelData(:, iC) = filtfilt(B, A, out.channelData(:, iC));
+    out.channelData(:, iC) = filtfilt(bpFilt, out.channelData(:, iC));
 end
 
 %% restrict data for testing purposes
@@ -33,7 +36,7 @@ end
 %% use ums2k spike detector
 spk = ss_default_params(Fs);
 spk.params.window_size = 1.06; % in ms
-spk.params.cross_time = 0.3; % in ms
+spk.params.cross_time = 0.24; % in ms
 spk.params.thresh = 4; % SDs above mean
 spk.params.max_jitter = 0.5;
 
@@ -41,8 +44,56 @@ clear temp_data; temp_data{1} = out.channelData;
 spk = ss_detect(temp_data, spk);
 spk = ss_align(spk)
 
+spk.unwrapped_times = spk.unwrapped_times + out.timestamps(1);
+clear temp_data;
+
+%% some plotting
+nSpks = 100;
+spk_idx = nearest_idx3(double(spk.unwrapped_times(1:nSpks)), out.timestamps);
+
+% find out which channel is biggest
+wv_temp = sq(max(spk.waveforms, [], 2));
+[~, wv_idx] = max(wv_temp, [], 2);
+
+figure(1)
+h1 = subplot(211);
+spk_idx_lin = sub2ind(size(raw.channelData), spk_idx, wv_idx(1:nSpks));
+spk_val = raw.channelData(spk_idx_lin);
+plot(out.timestamps(1:spk_idx(end)), raw.channelData(1:spk_idx(end), :));
+hold on;
+plot(spk.unwrapped_times(1:nSpks), spk_val - 10, '.r', 'MarkerSize', 20);
+
+h2 = subplot(212);
+spk_val = out.channelData(spk_idx_lin);
+plot(out.timestamps(1:spk_idx(end)), out.channelData(1:spk_idx(end), :));
+hold on;
+plot(spk.unwrapped_times(1:nSpks), spk_val - 10, '.r', 'MarkerSize', 20);
+linkaxes([h1 h2], 'x');
+
+for iSpk = 1:length(spk.unwrapped_times)
+    figure(2)
+    plot(sq(spk.waveforms(iSpk,:,:))); 
+    figure(1)
+    xlim([spk.unwrapped_times(iSpk)-0.005 spk.unwrapped_times(iSpk)+0.005])
+    
+    pause; 
+end
 %%
-spk.waveforms = -spk.waveforms * 100; % invert spikes, and conversion factor hack to be able to see waveforms better in MClust
+wv_peak = max(spk.waveforms, [], 2);
+wv_valley = min(spk.waveforms, [], 2);
+subplot(331); plot(wv_peak(:,1),wv_peak(:,2),'.k'); axis off;
+subplot(332); plot(wv_peak(:,1),wv_peak(:,3),'.k'); axis off;
+subplot(333); plot(wv_peak(:,1),wv_peak(:,4),'.k'); axis off;
+subplot(334); plot(wv_peak(:,2),wv_peak(:,3),'.k'); axis off;
+subplot(335); plot(wv_peak(:,2),wv_peak(:,4),'.k'); axis off;
+subplot(336); plot(wv_valley(:,1),wv_peak(:,1),'.r'); axis off;
+subplot(337); plot(wv_valley(:,2),wv_peak(:,2),'.r'); axis off;
+subplot(338); plot(wv_valley(:,3),wv_peak(:,3),'.r'); axis off;
+subplot(339); plot(wv_valley(:,4),wv_peak(:,4),'.r'); axis off;
+
+%%
+%spk.waveforms = -double(spk.waveforms) * 100; % invert spikes, and conversion factor hack to be able to see waveforms better in MClust
+spk.waveforms = double(spk.waveforms) * 100; % non-inverted spikes...
 [~, fname, ~] = fileparts(fn);
 fn_out = cat(2, fname, '_TT', num2str(ttno));
 save(fn_out, 'spk');
