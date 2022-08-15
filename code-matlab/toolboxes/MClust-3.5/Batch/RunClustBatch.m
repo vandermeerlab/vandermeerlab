@@ -423,7 +423,10 @@ if strcmp(Do_AutoClust,'yes')
            % changed i to jF in parameter_string below and added code to
            % match up file names to eliminate errors after subsampling.
            % JCJ Sept 2007
-           [SSFNp,SSFNn]=fileparts(gPar.SubsampledFileNames{i});
+           [SSFNp,SSFNn,SSFNe]=fileparts(gPar.SubsampledFileNames{i});
+           if strcmp(gPar.LoadingEngine, 'mClustTrodesLoadingEngine') % deal with multiple extensions - MvdM
+               SSFNn = cat(2,SSFNn,SSFNe);
+           end
            for iF=1:length(fPar)
                [OFNp,OFNn]=fileparts(fPar{iF}.FileName);
                if strncmpi(OFNn,SSFNn,length(OFNn)); 
