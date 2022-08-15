@@ -217,7 +217,7 @@ if cfg.getTTnumbers
         out = regexp(S.label{iC},'TT(\d\d)','tokens');
         
         if isempty(out)
-            error('Filename %s does not contain TTxx, cannot extract tetrode number.',S.label{iC});
+            warning('Filename %s does not contain TTxx, cannot extract tetrode number.',S.label{iC});
         else
             S.usr.tt_num(iC) = str2double(cell2mat(out{1}));
         end
