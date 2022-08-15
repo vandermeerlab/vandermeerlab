@@ -1,11 +1,21 @@
-%% set paths: trodes file loader etc
-restoredefaultpath;
-addpath(genpath('D:\My_Documents\GitHub\vandermeerlab\code-matlab\toolboxes\ums2k_02_23_2012'));
-addpath(genpath('D:\My_Documents\GitHub\vandermeerlab\code-matlab\shared\'));
-addpath('C:\Trodes_2-3-2_Windows64\Resources\TrodesToMatlab\');
+%% define wher stuff lives on your machine
+params.trodesDir = 'C:\Trodes_2-3-2_Windows64';
+params.dataDir = 'C:\data\r204_screening_rec16';
+params.githubDir = 'C:\Users\mvdm\Documents\GitHub';
 
-cd('D:\data\R204');
-fn = 'r204_screening_rec16.rec';
+%% set paths, discover filenames
+restoredefaultpath;
+addpath(genpath(cat(2, params.githubDir, '\vandermeerlab\code-matlab\shared')));
+addpath(cat(2, params.trodesDir, '\Resources\TrodesToMatlab\'));
+addpath(params.trodesDir);
+
+full_fn = FindFile('*.rec', 'StartingDirectory', params.dataDir);
+[fp fn fe] = fileparts(full_fn);
+cd(params.dataDir);
+
+%% call trodes utilities to export data from .rec file
+eval(cat(2, '! ', params.trodesDir, filesep, 'exportspikes.exe -rec ', fn, fe, ' -output ', fn));
+eval(cat(2, '! ', params.trodesDir, filesep, 'exportLFP.exe -rec ', fn, fe, ' -output ', fn));
 
 %% automated version
 % first make spikes and LFP files, then RunClustBatch (with Batch_Trodes.txt) and MClust .t file export
