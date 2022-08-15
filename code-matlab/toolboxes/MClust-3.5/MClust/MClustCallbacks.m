@@ -167,14 +167,17 @@ case 'KlustaKwikSelection'
     end
     
     [p rootname e ] = fileparts(fn);
-    [p rootname e ] = fileparts(rootname);
-    [p rootname e ] = fileparts(rootname);
-    
     
     if rootname       
 		% Load in the clusters from KlustaKwik
 		file_no = 1;
-		clu_file = [fullfile(fdir,rootname) '.clu.' num2str(file_no)];
+        if strcmp(MClust_NeuralLoadingFunction, 'mClustTrodesLoadingEngine')
+            clu_file = [fullfile(fdir,rootname) '.clu.' num2str(file_no)];
+        else
+            [p rootname e ] = fileparts(rootname);
+            [p rootname e ] = fileparts(rootname);
+            clu_file = [fullfile(fdir,rootname) '.clu.' num2str(file_no)];
+        end
 		KlustaKwik_Clusters = KlustaKwikImport(clu_file);
     end
        
