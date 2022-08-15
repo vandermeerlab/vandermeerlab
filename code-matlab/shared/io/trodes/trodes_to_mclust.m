@@ -1,13 +1,32 @@
 %% set paths: trodes file loader etc
 restoredefaultpath;
-addpath(genpath('C:\Users\mvdm\Documents\GitHub\vandermeerlab\code-matlab\toolboxes\ums2k_02_23_2012'));
-addpath(genpath('C:\Users\mvdm\Documents\GitHub\vandermeerlab\code-matlab\shared\'));
-addpath('C:\Trodes_2-2-3_Windows64\Resources\TrodesToMatlab\');
+addpath(genpath('D:\My_Documents\GitHub\vandermeerlab\code-matlab\toolboxes\ums2k_02_23_2012'));
+addpath(genpath('D:\My_Documents\GitHub\vandermeerlab\code-matlab\shared\'));
+addpath('C:\Trodes_2-3-2_Windows64\Resources\TrodesToMatlab\');
 
-cd('C:\Data\r204_screening_rec16');
+cd('D:\data\R204');
 fn = 'r204_screening_rec16.rec';
 
-%% load and reference
+%% automated version
+% first make spikes and LFP files, then RunClustBatch (with Batch_Trodes.txt) and MClust .t file export
+% note there are Trodes batch files for this
+
+cd('D:\data\R204\r204_screening_rec16.LFP')
+out = readTrodesExtractedDataFile('D:\data\R204\r204_screening_rec16.LFP\r204_screening_rec16.LFP_nt11ch1.dat')
+out_ts = readTrodesExtractedDataFile('r204_screening_rec16.timestamps.dat')
+
+lfp = tsd(double(out_ts.fields.data)./out_ts.clockrate, double(out.fields.data)');
+
+please = [];
+please.uint = '64';
+S = LoadSpikes(please);
+
+cfg_mr = [];
+cfg_mr.lfp = lfp;
+MultiRaster(cfg_mr, S);
+
+
+%% load and reference (manual)
 ttno = 11;
 refno = 9;
 
@@ -37,7 +56,7 @@ end
 spk = ss_default_params(Fs);
 spk.params.window_size = 1.06; % in ms
 spk.params.cross_time = 0.24; % in ms
-spk.params.thresh = 4; % SDs above mean
+spk.params.thresh = 2; % SDs above mean
 spk.params.max_jitter = 0.5;
 
 clear temp_data; temp_data{1} = out.channelData;
@@ -86,7 +105,7 @@ subplot(332); plot(wv_peak(:,1),wv_peak(:,3),'.k'); axis off;
 subplot(333); plot(wv_peak(:,1),wv_peak(:,4),'.k'); axis off;
 subplot(334); plot(wv_peak(:,2),wv_peak(:,3),'.k'); axis off;
 subplot(335); plot(wv_peak(:,2),wv_peak(:,4),'.k'); axis off;
-subplot(336); plot(wv_valley(:,1),wv_peak(:,1),'.r'); axis off;
+subplot(336); plot(wv_peak(:,3),wv_peak(:,4),'.k'); axis off;
 subplot(337); plot(wv_valley(:,2),wv_peak(:,2),'.r'); axis off;
 subplot(338); plot(wv_valley(:,3),wv_peak(:,3),'.r'); axis off;
 subplot(339); plot(wv_valley(:,4),wv_peak(:,4),'.r'); axis off;
