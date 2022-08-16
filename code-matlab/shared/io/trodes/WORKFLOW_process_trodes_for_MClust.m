@@ -25,7 +25,7 @@ eval(cat(2, '! ', params.trodesDir, filesep, 'exportLFP.exe -rec ', fn, fe, ' -o
 %% now batch-run KlustaKwik
 restoredefaultpath;
 addpath(genpath(cat(2, params.githubDir, '\vandermeerlab\code-matlab\toolboxes\Mclust-3.5')));
-addpath(cat(2, params.trodesDir, '\Resources\TrodesToMatlab'));
+addpath(cat(2, params.trodesDir, '\Resources\TrodesToMatlab')); % NOTE make sure that you rename Trodes's MATLAB loading engine so that MClust's one takes precedence
 
 eval(cat(2, '! copy ', which('Batch_Trodes.txt'), ' ', fn, '.spikes\Batch.txt')); % copy basic Trodes template
 
@@ -39,13 +39,15 @@ cd('D:\data\R204\r204_screening_rec16.LFP')
 out = readTrodesExtractedDataFile('D:\data\R204\r204_screening_rec16.LFP\r204_screening_rec16.LFP_nt11ch1.dat');
 out_ts = readTrodesExtractedDataFile('r204_screening_rec16.timestamps.dat');
 
-lfp = tsd(double(out_ts.fields.data)./out_ts.clockrate, double(out.fields.data)');
+lfp = tsd(double(out_ts.fields.data)./out_ts.clockrate, double(out.fields.data)'); % ugly and hard to test, should make wrapped loading function
 clear out out_ts;
 
+% spikes
 please = [];
 please.uint = '64';
 S = LoadSpikes(please);
 
+% plot
 cfg_mr = [];
 cfg_mr.lfp = lfp;
 MultiRaster(cfg_mr, S);

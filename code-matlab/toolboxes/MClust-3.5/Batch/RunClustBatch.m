@@ -37,6 +37,7 @@ Do_AutoClust = 'yes'; % Stop after initial processing (creation of FDs for BBClu
 prevRunMat = [];
 StartAtStep = 0;
 ForceRun = false; % ADR 25 Feb 2008
+KK_order = 'forward'; % 'reverse', MvdM 2022
 % NormalizeFDYN = 'no';
 % record_block_size = 40000;
 % template_matching = 0;
@@ -388,8 +389,15 @@ if strcmp(Do_AutoClust,'yes')
 	   load FinishedFiles.mat
    end
    popdir;
-	   
-   for i = 1:nFiles
+	
+   switch KK_order
+       case 'forward'
+           ord = 1:nFiles;
+       case 'reverse'
+           ord = nFiles:-1:1;
+   end
+   
+   for i = ord
 	   
        CurrTime = datestr(now);
        CurrHour = str2num(CurrTime(end-7:end-6));
