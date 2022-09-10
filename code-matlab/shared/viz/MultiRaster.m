@@ -70,9 +70,10 @@ function h = MultiRaster(cfg_in,S)
 %      
 %       cfg.openNewFig - default 1 
 %           If you want to use MultiRaster with subplot, set cfg.openNewFig
-%           to 0.Open MultiRaster and read the Help section for instructions.
-%           
-%
+%           to 0.Open MultiRaster and read the Help section for instructions.       
+%      
+%       cfg.fastSpikes - default 0 
+%           Set to 1 to plot spikes as dots rather than lines for a modest speedup.
 %
 % youkitan 2014-11-06 
 % edit 2015-01-20
@@ -111,6 +112,7 @@ cfg_def.windowSize = 1;
 cfg_def.openNewFig = 1;
 cfg_def.setAxes = 'on';
 cfg_def.verbose = 0;
+cfg_def.fastSpikes = 0;
 
 mfun = mfilename;
 cfg = ProcessConfig(cfg_def,cfg_in,mfun);
@@ -170,8 +172,7 @@ ts_only = @(x) isfield(x,'t') && ~isfield(x,'tstart');
 iv_only = @(x) isfield(x,'tstart') && ~isfield(x,'t');
 
 if isfield(cfg,'lfp') %lfp
-    %hS = PlotSpikeRaster2(cfg,S);
-    hS = PlotSpikeRaster_fast(cfg,S);
+    if cfg.fastSpikes, hS = PlotSpikeRaster_fast(cfg,S); else hS = PlotSpikeRaster2(cfg,S); end
     ylims = get(gca,'YLim');
     
     spikelims = get(gca,'Xlim');
@@ -228,25 +229,21 @@ end
 %% Choose Plotting mode
 switch plotMode        
     case 1 % just spikes
-        %h.S = PlotSpikeRaster2(cfg,S);
-        h.S = PlotSpikeRaster_fast(cfg,S);
+        if cfg.fastSpikes, hS = PlotSpikeRaster_fast(cfg,S); else hS = PlotSpikeRaster2(cfg,S); end
         ylims = get(gca,'YLim');
         
     case 2 % ts data only
         evtTimes = (cfg.evt.t{:});
-        %h.S = PlotSpikeRaster2(cfg,S);
-        h.S = PlotSpikeRaster_fast(cfg,S);
+        if cfg.fastSpikes, hS = PlotSpikeRaster_fast(cfg,S); else hS = PlotSpikeRaster2(cfg,S); end
         PlotTSEvt(cfg,cfg.evt)
         ylims = get(gca,'YLim');
         
     case 3 % iv data only
         evtTimes = (cfg.evt.tstart + cfg.evt.tend)./2;
         S_iv = restrict(S,cfg.evt.tstart,cfg.evt.tend);
-        %h.S = PlotSpikeRaster2(cfg,S); % plots all spikes
-        h.S = PlotSpikeRaster_fast(cfg,S); % plots all spikes
+        if cfg.fastSpikes, hS = PlotSpikeRaster_fast(cfg,S); else hS = PlotSpikeRaster2(cfg,S); end
         cfg.spkColor = 'r';
-        %h.S_iv = PlotSpikeRaster2(cfg,S_iv); % plots event spikes overtop in a different color
-        h.S_iv = PlotSpikeRaster_fast(cfg,S_iv);
+        if cfg.fastSpikes, hS = PlotSpikeRaster_fast(cfg,S); else hS = PlotSpikeRaster2(cfg,S); end
         ylims = get(gca,'YLim');
         
     case 4 % ts + iv data NOT WORKING YET
