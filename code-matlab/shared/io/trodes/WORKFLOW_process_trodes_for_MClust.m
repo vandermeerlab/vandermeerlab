@@ -35,14 +35,19 @@ RunClustBatch;
 %% ready to sort in MClust; this will generate .t files
 
 %% example to load and plot data
-cd('D:\data\R204\r204_screening_rec16.LFP')
-out = readTrodesExtractedDataFile('D:\data\R204\r204_screening_rec16.LFP\r204_screening_rec16.LFP_nt11ch1.dat');
-out_ts = readTrodesExtractedDataFile('r204_screening_rec16.timestamps.dat');
+cd('C:\Data\r204_screening_rec16\r204_screening_rec16.LFP')
 
-lfp = tsd(double(out_ts.fields.data)./out_ts.clockrate, double(out.fields.data)'); % ugly and hard to test, should make wrapped loading function
+out = readTrodesExtractedDataFile('r204_screening_rec16.LFP_nt11ch1.dat');
+out_ts = readTrodesExtractedDataFile('r204_screening_rec16.timestamps.dat');
+lfp(1) = tsd(double(out_ts.fields.data)./out_ts.clockrate, double(out.fields.data)'); % ugly and hard to test, should make wrapped loading function
+
+out = readTrodesExtractedDataFile('r204_screening_rec16.LFP_nt24ch1.dat');
+lfp(2) = tsd(double(out_ts.fields.data)./out_ts.clockrate, double(out.fields.data)');
 clear out out_ts;
 
 % spikes
+cd('C:\Data\r204_screening_rec16\r204_screening_rec16.spikes')
+
 please = [];
 please.uint = '64';
 S = LoadSpikes(please);
