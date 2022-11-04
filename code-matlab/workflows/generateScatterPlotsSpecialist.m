@@ -2,10 +2,8 @@
 % in mean firing rates
 
 %SD is not being calculated properly
-fsi_near_lfr_hg_ppc_peaks = [];
-fsi_near_lfr_lg_ppc_peaks = [];
-fsi_near_hfr_hg_ppc_peaks = [];
-fsi_near_hfr_lg_ppc_peaks = [];
+fsi_near_lfr_ppc_peaks = [];
+fsi_near_hfr_ppc_peaks = [];
 fsi_near_hfr_pos_peak_ptile = [];
 fsi_near_hfr_pos_peak_ratio = [];
 fsi_near_lfr_pos_peak_ptile = [];
@@ -18,13 +16,15 @@ fsi_near_lfr_frs = [];
 fsi_near_hfr_frs = [];
 fsi_max_difs = [];
 fsi_min_difs = [];
+fsi_near_ppc_peaks = [];
+fsi_near_ppc_maxval = [];
+fsi_near_hfr_ppc_maxval = [];
+fsi_near_lfr_ppc_maxval = [];
 valid_fsi_labels = [];
 sig_dif_fsi = []; %0 if none, 1 if lfr>hfr, 2 if hfr>lfr, 3 if both
 
-msn_near_lfr_hg_ppc_peaks = [];
-msn_near_lfr_lg_ppc_peaks = [];
-msn_near_hfr_hg_ppc_peaks = [];
-msn_near_hfr_lg_ppc_peaks = [];
+msn_near_lfr_ppc_peaks = [];
+msn_near_hfr_ppc_peaks = [];
 msn_near_hfr_pos_peak_ptile = [];
 msn_near_hfr_pos_peak_ratio = [];
 msn_near_lfr_pos_peak_ptile = [];
@@ -37,14 +37,17 @@ msn_near_lfr_frs = [];
 msn_near_hfr_frs = [];
 msn_max_difs = [];
 msn_min_difs = [];
+msn_near_ppc_peaks = [];
+msn_near_ppc_maxval = [];
+msn_near_hfr_ppc_maxval = [];
+msn_near_lfr_ppc_maxval = [];
 valid_msn_labels = [];
 sig_dif_msn = []; %0 if none, 1 if lfr>hfr, 2 if hfr>lfr, 3 if both
 
 cd('D:\RandomVstrAnalysis\ft_results');
 
 rats = {'R117','R119','R131','R132'};
-lg = [3,30];
-hg = [5,100];
+fw = [5,100];
 pk_thresh = -1;
 for idx = 1:length(rats)
     curRat = rats{idx};
@@ -57,86 +60,66 @@ for idx = 1:length(rats)
             if isfield(od.fsi_res.near_spec{iC},'flag_no_control_split') && ...
                         ~od.fsi_res.near_spec{iC}.flag_no_control_split  
                 
-                flag_near_lfr_lg_ppc_peak = true;
-                flag_near_lfr_hg_ppc_peak = true;
-                flag_near_hfr_lg_ppc_peak = true;
-                flag_near_hfr_hg_ppc_peak = true;
+                flag_near_lfr_ppc_peak = true;
+                flag_near_hfr_ppc_peak = true;
+                flag_near_ppc_peak = true;
+                
+                %Peaks in near_spec
+                lf = find(od.fsi_res.near_spec{iC}.freqs >= fw(1), 1, 'first');
+                rf = find(od.fsi_res.near_spec{iC}.freqs <= fw(2), 1, 'last');
+                pks = findpeaks(od.fsi_res.near_spec{iC}.subsampled_ppc(lf:rf));
+                max_val = max(od.fsi_res.near_spec{iC}.subsampled_ppc(lf:rf));
+                if ~isempty(pks.loc) 
+                    [pk1, loc1] = max(od.fsi_res.near_spec{iC}.subsampled_ppc(lf+pks.loc-1));
+                    if pk1 > max_val*pk_thresh
+                        near_ppc_val = max_val;
+                        near_ppc_pk = pks.loc(loc1);
+                    else
+                       flag_near_ppc_peak = false;
+                    end
+                else
+                    flag_near_ppc_peak = false; 
+                end   
 
                 % Peaks in near_lfr_spec
-                % Find Low Gamma PPC Peak
-                lf = find(od.fsi_res.near_spec{iC}.freqs >= lg(1), 1, 'first');
-                rf = find(od.fsi_res.near_spec{iC}.freqs <= lg(2), 1, 'last');
+                lf = find(od.fsi_res.near_spec{iC}.freqs >= fw(1), 1, 'first');
+                rf = find(od.fsi_res.near_spec{iC}.freqs <= fw(2), 1, 'last');
                 pks = findpeaks(od.fsi_res.near_lfr_spec{iC}.subsampled_ppc(lf:rf));
-                max_val = max(od.fsi_res.near_lfr_spec{iC}.subsampled_ppc);
+                max_val = max(od.fsi_res.near_lfr_spec{iC}.subsampled_ppc(lf:rf));
                 if ~isempty(pks.loc) 
                     [pk1, loc1] = max(od.fsi_res.near_lfr_spec{iC}.subsampled_ppc(lf+pks.loc-1));
                     if pk1 > max_val*pk_thresh
-                        near_lfr_lg_ppc_pk = pks.loc(loc1);
+                        near_lfr_ppc_val = max_val;
+                        near_lfr_ppc_pk = pks.loc(loc1);
                     else
-                       flag_near_lfr_lg_ppc_peak = false;
+                       flag_near_lfr_ppc_peak = false;
                     end
                 else
-                    flag_near_lfr_lg_ppc_peak = false; 
-                end    
-                
-                % Find High Gamma PPC Peak
-                lf = find(od.fsi_res.near_spec{iC}.freqs >= hg(1), 1, 'first');
-                rf = find(od.fsi_res.near_spec{iC}.freqs <= hg(2), 1, 'last');
-                pks = findpeaks(od.fsi_res.near_lfr_spec{iC}.subsampled_ppc(lf:rf));
-                max_val = max(od.fsi_res.near_lfr_spec{iC}.subsampled_ppc);
-                if ~isempty(pks.loc) 
-                    [pk1, loc1] = max(od.fsi_res.near_lfr_spec{iC}.subsampled_ppc(lf+pks.loc-1));
-                    if pk1 > max_val*pk_thresh
-                        near_lfr_hg_ppc_pk = pks.loc(loc1);
-                    else
-                       flag_near_lfr_hg_ppc_peak = false;
-                    end
-                else
-                    flag_near_lfr_hg_ppc_peak = false; 
+                    flag_near_lfr_ppc_peak = false; 
                 end
                 
                 % Peaks in near_hfr_spec               
-                % Find Low Gamma PPC Peak
-                lf = find(od.fsi_res.near_spec{iC}.freqs >= lg(1), 1, 'first');
-                rf = find(od.fsi_res.near_spec{iC}.freqs <= lg(2), 1, 'last');
+                lf = find(od.fsi_res.near_spec{iC}.freqs >= fw(1), 1, 'first');
+                rf = find(od.fsi_res.near_spec{iC}.freqs <= fw(2), 1, 'last');
                 pks = findpeaks(od.fsi_res.near_hfr_spec{iC}.subsampled_ppc(lf:rf));
-                max_val = max(od.fsi_res.near_hfr_spec{iC}.subsampled_ppc);
+                max_val = max(od.fsi_res.near_hfr_spec{iC}.subsampled_ppc(lf:rf));
                 if ~isempty(pks.loc) 
                     [pk1, loc1] = max(od.fsi_res.near_hfr_spec{iC}.subsampled_ppc(lf+pks.loc-1));
                     if pk1 > max_val*pk_thresh
-                        near_hfr_lg_ppc_pk = pks.loc(loc1);
+                        near_hfr_ppc_val = max_val;
+                        near_hfr_ppc_pk = pks.loc(loc1);
                     else
-                       flag_near_hfr_lg_ppc_peak = false;
+                       flag_near_hfr_ppc_peak = false;
                     end
                 else
-                    flag_near_hfr_lg_ppc_peak = false; 
+                    flag_near_hfr_ppc_peak = false; 
                 end
-                
-                % Find High Gamma PPC Peak
-                lf = find(od.fsi_res.near_spec{iC}.freqs >= hg(1), 1, 'first');
-                rf = find(od.fsi_res.near_spec{iC}.freqs <= hg(2), 1, 'last');
-                pks = findpeaks(od.fsi_res.near_hfr_spec{iC}.subsampled_ppc(lf:rf));
-                max_val = max(od.fsi_res.near_hfr_spec{iC}.subsampled_ppc);
-                if ~isempty(pks.loc) 
-                    [pk1, loc1] = max(od.fsi_res.near_hfr_spec{iC}.subsampled_ppc(lf+pks.loc-1));
-                    if pk1 > max_val*pk_thresh
-                        near_hfr_hg_ppc_pk = pks.loc(loc1);
-                    else
-                       flag_near_hfr_hg_ppc_peak = false;
-                    end
-                else
-                    flag_near_hfr_hg_ppc_peak = false; 
-                end
-                
-                all_ppc_peaks_in_lg = flag_near_hfr_lg_ppc_peak && ...
-                    flag_near_lfr_lg_ppc_peak;
-                         
-                all_ppc_peaks_in_hg = flag_near_hfr_hg_ppc_peak && ...
-                    flag_near_lfr_hg_ppc_peak;
+           
+                all_ppc_peaks = flag_near_hfr_ppc_peak && ...
+                    flag_near_lfr_ppc_peak;
 
-                % Skip plotting only if no peaks in either hg or lg     
-                if ~all_ppc_peaks_in_lg && ...
-                      ~all_ppc_peaks_in_hg  
+                % Skip plotting only if no peaks  
+                if ~all_ppc_peaks  
                     close all;
                     continue;
                 end
@@ -155,8 +138,8 @@ for idx = 1:length(rats)
                 near_spec_range = [min(od.fsi_res.near_spec{iC}.mfr(nz_trials)), max(od.fsi_res.near_spec{iC}.mfr(nz_trials))];
                 
                 %If both HFR and LFR dif have a positive and negative diff
-                lf = find(od.fsi_res.near_spec{iC}.freqs >= hg(1), 1, 'first');
-                rf = find(od.fsi_res.near_spec{iC}.freqs <= hg(2), 1, 'last');
+                lf = find(od.fsi_res.near_spec{iC}.freqs >= fw(1), 1, 'first');
+                rf = find(od.fsi_res.near_spec{iC}.freqs <= fw(2), 1, 'last');
                 hfr_lfr_ppc = od.fsi_res.near_hfr_spec{iC}.subsampled_ppc(lf:rf) - ...
                     od.fsi_res.near_lfr_spec{iC}.subsampled_ppc(lf:rf);
                 p1_p2_ppc = od.fsi_res.near_p1_spec{iC}.subsampled_ppc(:,lf:rf) - ...
@@ -204,24 +187,25 @@ for idx = 1:length(rats)
                     sig_dif_fsi = [sig_dif_fsi 0];
                 end
                 
-                % if peaks exist in both low gamma and high gamma range
-                if all_ppc_peaks_in_lg && all_ppc_peaks_in_hg
-                    near_lfr_lg_ppc_pk = od.fsi_res.near_lfr_spec{iC}.freqs(lg(1)+near_lfr_lg_ppc_pk-1);
-                    near_lfr_hg_ppc_pk = od.fsi_res.near_lfr_spec{iC}.freqs(hg(1)+near_lfr_hg_ppc_pk-1);
-                    near_hfr_lg_ppc_pk = od.fsi_res.near_hfr_spec{iC}.freqs(lg(1)+near_hfr_lg_ppc_pk-1);
-                    near_hfr_hg_ppc_pk = od.fsi_res.near_hfr_spec{iC}.freqs(hg(1)+near_hfr_hg_ppc_pk-1);
+                % if peaks exist 
+                if all_ppc_peaks
+                    near_lfr_ppc_pk = od.fsi_res.near_lfr_spec{iC}.freqs(fw(1)+near_lfr_ppc_pk-1);
+                    near_hfr_ppc_pk = od.fsi_res.near_hfr_spec{iC}.freqs(fw(1)+near_hfr_ppc_pk-1);
                     
-                    fsi_near_lfr_hg_ppc_peaks = [fsi_near_lfr_hg_ppc_peaks, near_lfr_hg_ppc_pk];
-                    fsi_near_lfr_lg_ppc_peaks = [fsi_near_lfr_lg_ppc_peaks, near_lfr_lg_ppc_pk];
-                    fsi_near_hfr_hg_ppc_peaks = [fsi_near_hfr_hg_ppc_peaks, near_hfr_hg_ppc_pk];
-                    fsi_near_hfr_lg_ppc_peaks = [fsi_near_hfr_lg_ppc_peaks, near_hfr_lg_ppc_pk];
+                    fsi_near_ppc_peaks = [fsi_near_ppc_peaks near_ppc_pk];    
+                    fsi_near_lfr_ppc_peaks = [fsi_near_lfr_ppc_peaks, near_lfr_ppc_pk];
+                    fsi_near_hfr_ppc_peaks = [fsi_near_hfr_ppc_peaks, near_hfr_ppc_pk];
+                    
+                    fsi_near_ppc_maxval = [fsi_near_ppc_maxval near_ppc_val];
+                    fsi_near_lfr_ppc_maxval = [fsi_near_lfr_ppc_maxval near_lfr_ppc_val];
+                    fsi_near_hfr_ppc_maxval = [fsi_near_hfr_ppc_maxval near_hfr_ppc_val];
                     
                     fsi_near_lfr_frs = [fsi_near_lfr_frs, near_lfr_spec_mean];
                     fsi_near_hfr_frs = [fsi_near_hfr_frs, near_hfr_spec_mean];
                     valid_fsi_labels = [valid_fsi_labels fsi_labels(iC)];
                     
-                    fsi_max_difs = [fsi_max_difs od.fsi_res.near_hfr_spec{iC}.freqs(hg(1)+max_loc-1)];
-                    fsi_min_difs = [fsi_min_difs od.fsi_res.near_lfr_spec{iC}.freqs(hg(1)+min_loc-1)];
+                    fsi_max_difs = [fsi_max_difs od.fsi_res.near_hfr_spec{iC}.freqs(fw(1)+max_loc-1)];
+                    fsi_min_difs = [fsi_min_difs od.fsi_res.near_lfr_spec{iC}.freqs(fw(1)+min_loc-1)];
                 end
             else
                 continue
@@ -233,86 +217,65 @@ for idx = 1:length(rats)
             if isfield(od.msn_res.near_spec{iC},'flag_no_control_split') && ...
                     ~od.msn_res.near_spec{iC}.flag_no_control_split  
                 
-                flag_near_lfr_lg_ppc_peak = true;
-                flag_near_lfr_hg_ppc_peak = true;
-                flag_near_hfr_lg_ppc_peak = true;
-                flag_near_hfr_hg_ppc_peak = true;
+                flag_near_lfr_ppc_peak = true;
+                flag_near_hfr_ppc_peak = true;
+                
+                %Peaks in near_spec
+                lf = find(od.msn_res.near_spec{iC}.freqs >= fw(1), 1, 'first');
+                rf = find(od.msn_res.near_spec{iC}.freqs <= fw(2), 1, 'last');
+                pks = findpeaks(od.msn_res.near_spec{iC}.ppc(lf:rf));
+                max_val = max(od.msn_res.near_spec{iC}.ppc(lf:rf));
+                if ~isempty(pks.loc) 
+                    [pk1, loc1] = max(od.msn_res.near_spec{iC}.ppc(lf+pks.loc-1));
+                    if pk1 > max_val*pk_thresh
+                        near_ppc_val = max_val;
+                        near_ppc_pk = pks.loc(loc1);
+                    else
+                       flag_near_ppc_peak = false;
+                    end
+                else
+                    flag_near_ppc_peak = false; 
+                end   
                 
                 % Peaks in near_lfr_spec              
-                % Find Low Gamma PPC Peak
-                lf = find(od.msn_res.near_spec{iC}.freqs >= lg(1), 1, 'first');
-                rf = find(od.msn_res.near_spec{iC}.freqs <= lg(2), 1, 'last');
+                lf = find(od.msn_res.near_spec{iC}.freqs >= fw(1), 1, 'first');
+                rf = find(od.msn_res.near_spec{iC}.freqs <= fw(2), 1, 'last');
                 pks = findpeaks(od.msn_res.near_lfr_spec{iC}.ppc(lf:rf));
-                max_val = max(od.msn_res.near_lfr_spec{iC}.ppc);
+                max_val = max(od.msn_res.near_lfr_spec{iC}.ppc(lf:rf));
                 if ~isempty(pks.loc) 
                     [pk1, loc1] = max(od.msn_res.near_lfr_spec{iC}.ppc(lf+pks.loc-1));
                     if pk1 > max_val*pk_thresh
-                        near_lfr_lg_ppc_pk = pks.loc(loc1);
+                        near_lfr_ppc_val = max_val;
+                        near_lfr_ppc_pk = pks.loc(loc1);
                     else
-                       flag_near_lfr_lg_ppc_peak = false;
+                       flag_near_lfr_ppc_peak = false;
                     end
                 else
-                    flag_near_lfr_lg_ppc_peak = false; 
-                end
-                
-                % Find High Gamma PPC Peak
-                lf = find(od.msn_res.near_spec{iC}.freqs >= hg(1), 1, 'first');
-                rf = find(od.msn_res.near_spec{iC}.freqs <= hg(2), 1, 'last');
-                pks = findpeaks(od.msn_res.near_lfr_spec{iC}.ppc(lf:rf));
-                max_val = max(od.msn_res.near_lfr_spec{iC}.ppc);
-                if ~isempty(pks.loc) 
-                    [pk1, loc1] = max(od.msn_res.near_lfr_spec{iC}.ppc(lf+pks.loc-1));
-                    if pk1 > max_val*pk_thresh
-                        near_lfr_hg_ppc_pk = pks.loc(loc1);
-                    else
-                       flag_near_lfr_hg_ppc_peak = false;
-                    end
-                else
-                    flag_near_lfr_hg_ppc_peak = false; 
+                    flag_near_lfr_ppc_peak = false; 
                 end
                 
                 % Peaks in near_hfr_spec              
-                % Find Low Gamma PPC Peak
-                lf = find(od.msn_res.near_spec{iC}.freqs >= lg(1), 1, 'first');
-                rf = find(od.msn_res.near_spec{iC}.freqs <= lg(2), 1, 'last');
+                lf = find(od.msn_res.near_spec{iC}.freqs >= fw(1), 1, 'first');
+                rf = find(od.msn_res.near_spec{iC}.freqs <= fw(2), 1, 'last');
                 pks = findpeaks(od.msn_res.near_hfr_spec{iC}.ppc(lf:rf));
-                max_val = max(od.msn_res.near_hfr_spec{iC}.ppc);
+                max_val = max(od.msn_res.near_hfr_spec{iC}.ppc(lf:rf));
                 if ~isempty(pks.loc) 
                     [pk1, loc1] = max(od.msn_res.near_hfr_spec{iC}.ppc(lf+pks.loc-1));
                     if pk1 > max_val*pk_thresh
-                        near_hfr_lg_ppc_pk = pks.loc(loc1);
+                        near_hfr_ppc_val = max_val;
+                        near_hfr_ppc_pk = pks.loc(loc1);
                     else
-                       flag_near_hfr_lg_ppc_peak = false;
+                       flag_near_hfr_ppc_peak = false;
                     end
                 else
-                    flag_near_hfr_lg_ppc_peak = false; 
+                    flag_near_hfr_ppc_peak = false; 
                 end
                 
-                % Find High Gamma PPC Peak
-                lf = find(od.msn_res.near_spec{iC}.freqs >= hg(1), 1, 'first');
-                rf = find(od.msn_res.near_spec{iC}.freqs <= hg(2), 1, 'last');
-                pks = findpeaks(od.msn_res.near_hfr_spec{iC}.ppc(lf:rf));
-                max_val = max(od.msn_res.near_hfr_spec{iC}.ppc);
-                if ~isempty(pks.loc) 
-                    [pk1, loc1] = max(od.msn_res.near_hfr_spec{iC}.ppc(lf+pks.loc-1));
-                    if pk1 > max_val*pk_thresh
-                        near_hfr_hg_ppc_pk = pks.loc(loc1);
-                    else
-                       flag_near_hfr_hg_ppc_peak = false;
-                    end
-                else
-                    flag_near_hfr_hg_ppc_peak = false; 
-                end
-                
+                all_ppc_peaks = flag_near_hfr_ppc_peak && ...
+                    flag_near_lfr_ppc_peak;
 
-                all_ppc_peaks_in_lg = flag_near_hfr_lg_ppc_peak && ...
-                    flag_near_lfr_lg_ppc_peak;
-                         
-                all_ppc_peaks_in_hg = flag_near_hfr_hg_ppc_peak && ...
-                    flag_near_lfr_hg_ppc_peak;
-
-                % Skip plotting only if no peaks in either hg or lg     
-                if ~all_ppc_peaks_in_lg && ~all_ppc_peaks_in_hg  
+                % Skip plotting only if no peaks  
+                if ~all_ppc_peaks  
                     close all;
                     continue;
                 end
@@ -329,8 +292,8 @@ for idx = 1:length(rats)
                 near_hfr_spec_range = [min(od.msn_res.near_spec{iC}.mfr(hfr_trials)), max(od.msn_res.near_spec{iC}.mfr(hfr_trials))];
                 
                 %If both HFR and LFR dif have a positive and negative diff
-                lf = find(od.msn_res.near_spec{iC}.freqs >= hg(1), 1, 'first');
-                rf = find(od.msn_res.near_spec{iC}.freqs <= hg(2), 1, 'last');
+                lf = find(od.msn_res.near_spec{iC}.freqs >= fw(1), 1, 'first');
+                rf = find(od.msn_res.near_spec{iC}.freqs <= fw(2), 1, 'last');
                 hfr_lfr_ppc = od.msn_res.near_hfr_spec{iC}.ppc(lf:rf) - ...
                     od.msn_res.near_lfr_spec{iC}.ppc(lf:rf);
                 %Need to transpose this to convert to suitable dimensions
@@ -380,24 +343,25 @@ for idx = 1:length(rats)
                     sig_dif_msn = [sig_dif_msn 0];
                 end
                 
-                % if peaks exist in both low gamma and high gamma range
-                if all_ppc_peaks_in_lg && all_ppc_peaks_in_hg
-                    near_lfr_lg_ppc_pk = od.msn_res.near_lfr_spec{iC}.freqs(lg(1)+near_lfr_lg_ppc_pk-1);
-                    near_lfr_hg_ppc_pk = od.msn_res.near_lfr_spec{iC}.freqs(hg(1)+near_lfr_hg_ppc_pk-1);
-                    near_hfr_lg_ppc_pk = od.msn_res.near_hfr_spec{iC}.freqs(lg(1)+near_hfr_lg_ppc_pk-1);
-                    near_hfr_hg_ppc_pk = od.msn_res.near_hfr_spec{iC}.freqs(hg(1)+near_hfr_hg_ppc_pk-1);  
+                % if peaks exist
+                if all_ppc_peaks
+                    near_lfr_ppc_pk = od.msn_res.near_lfr_spec{iC}.freqs(fw(1)+near_lfr_ppc_pk-1);
+                    near_hfr_ppc_pk = od.msn_res.near_hfr_spec{iC}.freqs(fw(1)+near_hfr_ppc_pk-1);  
 
-                    msn_near_lfr_hg_ppc_peaks = [msn_near_lfr_hg_ppc_peaks, near_lfr_hg_ppc_pk];
-                    msn_near_lfr_lg_ppc_peaks = [msn_near_lfr_lg_ppc_peaks, near_lfr_lg_ppc_pk];
-                    msn_near_hfr_hg_ppc_peaks = [msn_near_hfr_hg_ppc_peaks, near_hfr_hg_ppc_pk];
-                    msn_near_hfr_lg_ppc_peaks = [msn_near_hfr_lg_ppc_peaks, near_hfr_lg_ppc_pk]; 
+                    msn_near_ppc_peaks = [msn_near_ppc_peaks near_ppc_pk];    
+                    msn_near_lfr_ppc_peaks = [msn_near_lfr_ppc_peaks, near_lfr_ppc_pk];
+                    msn_near_hfr_ppc_peaks = [msn_near_hfr_ppc_peaks, near_hfr_ppc_pk];
+                    
+                    msn_near_ppc_maxval = [msn_near_ppc_maxval near_ppc_val];
+                    msn_near_lfr_ppc_maxval = [msn_near_lfr_ppc_maxval near_lfr_ppc_val];
+                    msn_near_hfr_ppc_maxval = [msn_near_hfr_ppc_maxval near_hfr_ppc_val];
                     
                     msn_near_lfr_frs = [msn_near_lfr_frs, near_lfr_spec_mean];
                     msn_near_hfr_frs = [msn_near_hfr_frs, near_hfr_spec_mean];
                     valid_msn_labels = [valid_msn_labels msn_labels(iC)];
                     
-                    msn_max_difs = [msn_max_difs od.msn_res.near_hfr_spec{iC}.freqs(hg(1)+max_loc-1)];
-                    msn_min_difs = [msn_min_difs od.msn_res.near_lfr_spec{iC}.freqs(hg(1)+min_loc-1)];
+                    msn_max_difs = [msn_max_difs od.msn_res.near_hfr_spec{iC}.freqs(fw(1)+max_loc-1)];
+                    msn_min_difs = [msn_min_difs od.msn_res.near_lfr_spec{iC}.freqs(fw(1)+min_loc-1)];
                 end
             else
                 continue
@@ -408,7 +372,7 @@ end
 
 %% Plot Distance betweem Peak Frequencies vs Difference in Mean Firing rates in MSNs and FSIs
 fig_1 = figure('WindowState', 'maximized');
-s1 = scatter(msn_near_hfr_frs - msn_near_lfr_frs, msn_near_hfr_hg_ppc_peaks - msn_near_lfr_hg_ppc_peaks);
+s1 = scatter(msn_near_hfr_frs - msn_near_lfr_frs, msn_near_hfr_ppc_peaks - msn_near_lfr_ppc_peaks);
 s1.Marker = 'o';
 s1.MarkerFaceColor = [0.8500 0.3250 0.0980];
 s1.MarkerFaceAlpha = 0.5;
@@ -416,7 +380,7 @@ s1.MarkerEdgeColor = [0.8500 0.3250 0.0980];
 s1.MarkerEdgeAlpha = 0.5;
 s1.SizeData = 150;
 hold on;
-s2 = scatter(fsi_near_hfr_frs - fsi_near_lfr_frs, fsi_near_hfr_hg_ppc_peaks - fsi_near_lfr_hg_ppc_peaks);
+s2 = scatter(fsi_near_hfr_frs - fsi_near_lfr_frs, fsi_near_hfr_ppc_peaks - fsi_near_lfr_ppc_peaks);
 s2.Marker = 'o';
 s2.MarkerFaceColor = 'blue';
 s2.MarkerFaceAlpha = 0.5;
@@ -437,27 +401,28 @@ leg.FontName = 'Arial';
 leg.FontSize = 20;
 leg.FontWeight = 'bold';
 box off;
-%%
+%% Plot scatter with FSI labels
 fig_2 = figure('WindowState', 'maximized');
 hold on;
 for iF = 1:length(valid_fsi_labels)
     text(fsi_near_hfr_frs(iF) - fsi_near_lfr_frs(iF), ...
-        fsi_near_hfr_hg_ppc_peaks(iF) - fsi_near_lfr_hg_ppc_peaks(iF), ...
+        fsi_near_hfr_ppc_peaks(iF) - fsi_near_lfr_ppc_peaks(iF), ...
         valid_fsi_labels(iF), 'Interpreter', 'none');
 end
 xlim([0,10])
 ylim([-100 100])
-%%
+title('FSI Label scatter');
+%% Plot scatter with MSN labels
 fig_3 = figure('WindowState', 'maximized');
 hold on;
 for iF = 1:length(valid_msn_labels)
     text(msn_near_hfr_frs(iF) - msn_near_lfr_frs(iF), ...
-        msn_near_hfr_hg_ppc_peaks(iF) - msn_near_lfr_hg_ppc_peaks(iF), ...
+        msn_near_hfr_ppc_peaks(iF) - msn_near_lfr_ppc_peaks(iF), ...
         valid_msn_labels(iF), 'Interpreter', 'none');
 end
 xlim([0,10])
 ylim([-100 100])
-
+title('MSN Label scatter');
 %% Plot Distance betweem Peak Frequencies vs Difference in Mean Firing rates in MSNs and FSIs
 fig_4 = figure('WindowState', 'maximized');
 s1 = scatter(msn_near_hfr_frs - msn_near_lfr_frs, msn_max_difs - msn_min_difs);
@@ -492,10 +457,10 @@ box off;
 
 %% Plot scatters of different methods of peak differences
 fig_4 = figure('WindowState', 'maximized');
-s1 = scatter(msn_near_hfr_hg_ppc_peaks - msn_near_lfr_hg_ppc_peaks, ...
+s1 = scatter(msn_near_hfr_ppc_peaks - msn_near_lfr_ppc_peaks, ...
     msn_max_difs - msn_min_difs);
 keyboard;
-s2 = scatter(fsi_near_hfr_hg_ppc_peaks - fsi_near_lfr_hg_ppc_peaks, ...
+s2 = scatter(fsi_near_hfr_ppc_peaks - fsi_near_lfr_ppc_peaks, ...
     fsi_max_difs - fsi_min_difs);
 
 %% Significant difference sandbox
@@ -530,3 +495,58 @@ sig_msn_neg_lfr_peak_ratio = msn_near_lfr_neg_peak_ratio(sig_dif_msn~= 0);
 scatter(msn_near_lfr_pos_peak_ptile(sig_dif_msn ==2), msn_near_hfr_pos_peak_ptile(sig_dif_msn ==2))
 figure
 scatter(msn_near_lfr_neg_peak_ptile(sig_dif_msn ==1), msn_near_hfr_neg_peak_ptile(sig_dif_msn ==1))
+
+
+%% Plot PPC Value Histograms
+fig_5 = figure;
+ax1 = subplot(2,1,1);
+hold on;
+h1 = histogram(msn_near_ppc_maxval,0:0.01:0.2, 'FaceColor','blue','FaceAlpha',0.4);
+h2 = histogram(msn_near_lfr_ppc_maxval,0:0.01:0.2, 'FaceColor','red','FaceAlpha',0.4);
+h3 = histogram(msn_near_hfr_ppc_maxval,0:0.01:0.2, 'FaceColor','green','FaceAlpha',0.4);
+ax1.Title.String = 'MSN';
+ax1.XLabel.String = 'Max PPC Value';
+
+ax2 = subplot(2,1,2);
+hold on;
+h4 = histogram(fsi_near_ppc_maxval,0:0.01:0.2, 'FaceColor','blue','FaceAlpha',0.4);
+h5 = histogram(fsi_near_lfr_ppc_maxval,0:0.01:0.2, 'FaceColor','red','FaceAlpha',0.4);
+h6 = histogram(fsi_near_hfr_ppc_maxval,0:0.01:0.2, 'FaceColor','green','FaceAlpha',0.4);
+ax2.Title.String = 'FSI';
+ax2.XLabel.String = 'Max PPC Value';
+
+%% Plot Only Significant PPC Value Histograms
+fig_6 = figure;
+ax1 = subplot(2,1,1);
+hold on;
+h1 = histogram(msn_near_ppc_maxval(sig_dif_msn~=0),0:0.01:0.2, 'FaceColor','blue','FaceAlpha',0.4);
+h2 = histogram(msn_near_lfr_ppc_maxval(sig_dif_msn~=0),0:0.01:0.2, 'FaceColor','red','FaceAlpha',0.4);
+h3 = histogram(msn_near_hfr_ppc_maxval(sig_dif_msn~=0),0:0.01:0.2, 'FaceColor','green','FaceAlpha',0.4);
+ax1.Title.String = 'MSN';
+ax1.XLabel.String = 'Max PPC Value';
+
+ax2 = subplot(2,1,2);
+hold on;
+h4 = histogram(fsi_near_ppc_maxval(sig_dif_fsi~=0),0:0.01:0.2, 'FaceColor','blue','FaceAlpha',0.4);
+h5 = histogram(fsi_near_lfr_ppc_maxval(sig_dif_fsi~=0),0:0.01:0.2, 'FaceColor','red','FaceAlpha',0.4);
+h6 = histogram(fsi_near_hfr_ppc_maxval(sig_dif_fsi~=0),0:0.01:0.2, 'FaceColor','green','FaceAlpha',0.4);
+ax2.Title.String = 'FSI';
+ax2.XLabel.String = 'Max PPC Value';
+
+%% Plot distribution of Firing Rates
+fig_7 = figure;
+ax1 = subplot(2,1,1);
+hold on
+h1 = histogram(fsi_near_hfr_frs - fsi_near_lfr_frs,0:1:10, 'FaceColor','red','FaceAlpha',0.4);
+h2 = histogram(msn_near_hfr_frs - msn_near_lfr_frs,0:1:10, 'FaceColor','green','FaceAlpha',0.4);
+leg1 = legend({'FSI', 'MSN'});
+ax1.Title.String = 'Distribution of Firing Rate Differences';
+ax1.XLabel.String = 'HFR - LFR';
+
+ax2 = subplot(2,1,2);
+hold on
+h3 = histogram(fsi_near_hfr_frs(sig_dif_fsi~=0) - fsi_near_lfr_frs(sig_dif_fsi~=0),0:1:10, 'FaceColor','red','FaceAlpha',0.4);
+h4 = histogram(msn_near_hfr_frs(sig_dif_msn~=0) - msn_near_lfr_frs(sig_dif_msn~=0),0:1:10, 'FaceColor','green','FaceAlpha',0.4);
+leg2 = legend({'FSI', 'MSN'});
+ax2.Title.String = 'Distribution of Firing Rate Differences for Significant cases';
+ax2.XLabel.String = 'HFR - LFR';

@@ -1,6 +1,4 @@
 cd('D:\RandomVstrAnalysis\ft_results');
-% cd('/Users/manishm/Dropbox (Dartmouth College)/AnalysisResults/FieldTripResults/ft_results');
-
 rats = {'R117','R119','R131','R132'};
 hg = [5,100];
 pk_thresh = -1;
@@ -87,7 +85,7 @@ for iC = 1:length(fsi_cw)
         ax2.XTick = [5 10 20 30 40 50 60 70 80 90 100];
         leg2 = legend({sprintf('LFR Peak Frequency: %.2f Hz\nMean Firing Rate: %.2f Hz',...
             near_lfr_ppc_pk, near_lfr_spec_mean), ...
-           sprintf('HFR Peak Frequency: %.2f Hz\nMean Firing RateL %.2f Hz',...
+           sprintf('HFR Peak Frequency: %.2f Hz\nMean Firing Rate %.2f Hz',...
            near_hfr_ppc_pk, near_hfr_spec_mean)});
         leg2.FontSize = 17;
         saveas(fig, cat(2,this_label,'_FSI.svg'));

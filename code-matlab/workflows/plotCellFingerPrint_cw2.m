@@ -2,7 +2,7 @@ cd('D:\RandomVstrAnalysis\ft_results');
 % cd('/Users/manishm/Dropbox (Dartmouth College)/AnalysisResults/FieldTripResults/ft_results');
 
 rats = {'R117','R119','R131','R132'};
-hg = [5,100];
+fw = [5,100];
 pk_thresh = -1;
 num_control_splits = 100;
 
@@ -44,18 +44,18 @@ for iC = 1:length(sig_fsi_labels)
         leg1.FontSize = 17;
        
         % Find PPC_peaks  
-        lf = find(od.fsi_res.near_spec{iF}.freqs >= hg(1), 1, 'first');
-        rf = find(od.fsi_res.near_spec{iF}.freqs <= hg(2), 1, 'last');
+        lf = find(od.fsi_res.near_spec{iF}.freqs >= fw(1), 1, 'first');
+        rf = find(od.fsi_res.near_spec{iF}.freqs <= fw(2), 1, 'last');
         % HFR Peak
         pks = findpeaks(od.fsi_res.near_hfr_spec{iF}.subsampled_ppc(lf:rf)); 
         [~, loc1] = max(od.fsi_res.near_hfr_spec{iF}.subsampled_ppc(lf+pks.loc-1));
-        near_hfr_ppc_pk = pks.loc(loc1) + hg(1) - 1;
+        near_hfr_ppc_pk = pks.loc(loc1) + fw(1) - 1;
         
         % LFR Peak
         pks = findpeaks(od.fsi_res.near_lfr_spec{iF}.subsampled_ppc(lf:rf));
         max_val = max(od.fsi_res.near_lfr_spec{iF}.subsampled_ppc);
         [~, loc1] = max(od.fsi_res.near_lfr_spec{iF}.subsampled_ppc(lf+pks.loc-1));
-        near_lfr_ppc_pk = pks.loc(loc1) + hg(1) - 1;
+        near_lfr_ppc_pk = pks.loc(loc1) + fw(1) - 1;
         
         % Calculate mean mfr and range
         nz_trials = od.fsi_res.near_spec{iF}.mfr > 0;
@@ -83,12 +83,12 @@ for iC = 1:length(sig_fsi_labels)
         q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
         
         ax2.Box = 'off';
-        ax2.YTick = [];
         ax2.Title.String = 'Pairwise Phase Consistency (PPC)';
         ax2.XLabel.String = 'Frequency (in Hz)';
         ax2.Title.FontSize = 20;
         ax2.XAxis.FontSize = 18;
-        ax2.XLim = hg;
+        ax2.XLim = fw;
+        ax2.YLim = [0 0.04];
         ax2.XTick = [5 10 20 30 40 50 60 70 80 90 100];
         leg2 = legend({sprintf('LFR Peak Frequency: %.2f Hz\nMean Firing Rate: %.2f Hz',...
             near_lfr_ppc_pk, near_lfr_spec_mean), ...
@@ -125,9 +125,9 @@ for iC = 1:length(sig_fsi_labels)
         ax3.XLabel.String = 'Frequency (in Hz)';
         ax3.Title.FontSize = 20;
         ax3.XAxis.FontSize = 18;
-        ax3.XLim = hg;
+        ax3.XLim = fw;
         ax3.XTick = [5 10 20 30 40 50 60 70 80 90 100];
-%         saveas(fig, cat(2,this_label,'_FSI.fig'));
+        saveas(fig, cat(2,this_label,'_FSI.fig'));
       end
    end
 end
@@ -152,7 +152,6 @@ for iC = 1:length(sig_msn_labels)
         p2 = plot(ax1, od.msn_res.near_spec{iM}.sta_time, ...
             od.msn_res.near_hfr_spec{iM}.sta_vals, 'Color', 'green');
         ax1.Box = 'off';
-        ax1.YTick = [];
         ax1.XTick = [-0.5 -0.25 0 0.25 0.5];
         ax1.Title.String = 'Spike Triggered Average (STA)';
         ax1.XLabel.String = 'Time (in sec)';
@@ -163,18 +162,18 @@ for iC = 1:length(sig_msn_labels)
         leg1.FontSize = 17;
        
         % Find PPC_peaks  
-        lf = find(od.msn_res.near_spec{iM}.freqs >= hg(1), 1, 'first');
-        rf = find(od.msn_res.near_spec{iM}.freqs <= hg(2), 1, 'last');
+        lf = find(od.msn_res.near_spec{iM}.freqs >= fw(1), 1, 'first');
+        rf = find(od.msn_res.near_spec{iM}.freqs <= fw(2), 1, 'last');
         % HFR Peak
         pks = findpeaks(od.msn_res.near_hfr_spec{iM}.ppc(lf:rf)); 
         [~, loc1] = max(od.msn_res.near_hfr_spec{iM}.ppc(lf+pks.loc-1));
-        near_hfr_ppc_pk = pks.loc(loc1) + hg(1) - 1;
+        near_hfr_ppc_pk = pks.loc(loc1) + fw(1) - 1;
         
         % LFR Peak
         pks = findpeaks(od.msn_res.near_lfr_spec{iM}.ppc(lf:rf));
         max_val = max(od.msn_res.near_lfr_spec{iM}.ppc);
         [~, loc1] = max(od.msn_res.near_lfr_spec{iM}.ppc(lf+pks.loc-1));
-        near_lfr_ppc_pk = pks.loc(loc1) + hg(1) - 1;
+        near_lfr_ppc_pk = pks.loc(loc1) + fw(1) - 1;
         
         % Calculate mean mfr and range
         nz_trials = od.msn_res.near_spec{iM}.mfr > 0;
@@ -201,12 +200,12 @@ for iC = 1:length(sig_msn_labels)
         q0 = xline(near_hfr_ppc_pk, 'Color', 'green', 'LineStyle', '--');
         q0.Annotation.LegendInformation.IconDisplayStyle = 'off';
         ax2.Box = 'off';
-        ax2.YTick = [];
         ax2.Title.String = 'Pairwise Phase Consistency (PPC)';
         ax2.XLabel.String = 'Frequency (in Hz)';
         ax2.Title.FontSize = 20;
         ax2.XAxis.FontSize = 18;
-        ax2.XLim = hg;
+        ax2.XLim = fw;
+        ax2.YLim = [0 0.04];
         ax2.XTick = [5 10 20 30 40 50 60 70 80 90 100];
         leg2 = legend({sprintf('LFR Peak Frequency: %.2f Hz\nMean Firing Rate: %.2f Hz',...
             near_lfr_ppc_pk, near_lfr_spec_mean), ...
@@ -251,9 +250,9 @@ for iC = 1:length(sig_msn_labels)
         ax3.XLabel.String = 'Frequency (in Hz)';
         ax3.Title.FontSize = 20;
         ax3.XAxis.FontSize = 18;
-        ax3.XLim = hg;
+        ax3.XLim = fw;
         ax3.XTick = [5 10 20 30 40 50 60 70 80 90 100];
-%         saveas(fig, cat(2,this_label,'_MSN.fig'));
+        saveas(fig, cat(2,this_label,'_MSN.fig'));
       end
    end
 end
