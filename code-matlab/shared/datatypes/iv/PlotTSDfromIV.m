@@ -79,14 +79,14 @@ switch cfg.display
         
         if ~cfg.iv_only
         %h.LFP = plot(tsd_in.tvec,temp_data,cfg.bgcol,'MarkerSize',cfg.MarkerSize);
-        h.LFP = reduce_plot(tsd_in.tvec,temp_data,cfg.bgcol,'MarkerSize',cfg.MarkerSize);
+        h.LFP = reduce_plot(tsd_in.tvec,temp_data, 'Color', cfg.bgcol,'MarkerSize',cfg.MarkerSize);
         end
         hold on;
         
         h.LFP_iv = nan(size(tstart_idx));
         for iI = 1:length(tstart_idx)
         
-            h.LFP_iv(iI) = plot(tsd_in.tvec(tstart_idx(iI):tend_idx(iI)),temp_data(tstart_idx(iI):tend_idx(iI)),cfg.fgcol,'MarkerSize',cfg.MarkerSize);
+            h.LFP_iv(iI) = plot(tsd_in.tvec(tstart_idx(iI):tend_idx(iI)),temp_data(tstart_idx(iI):tend_idx(iI)),'Color', cfg.fgcol,'MarkerSize',cfg.MarkerSize);
             %h.LFP_iv(iI) = reduce_plot(tsd_in.tvec(tstart_idx(iI):tend_idx(iI)),temp_data(tstart_idx(iI):tend_idx(iI)),cfg.fgcol,'MarkerSize',cfg.MarkerSize);
             
         end
@@ -103,9 +103,9 @@ switch cfg.display
             figure(figno);
             subtightplot(cfg.subplotdim(1),cfg.subplotdim(2),plotno);
             
-            h.LFP(iI) = plot(tsd_in.tvec(bg_tstart_idx(iI):bg_tend_idx(iI)),temp_data(bg_tstart_idx(iI):bg_tend_idx(iI)),cfg.bgcol,'MarkerSize',1);
+            h.LFP(iI) = plot(tsd_in.tvec(bg_tstart_idx(iI):bg_tend_idx(iI)),temp_data(bg_tstart_idx(iI):bg_tend_idx(iI)), 'Color', cfg.bgcol,'MarkerSize',1);
             hold on;
-            h.LFP_iv(iI) = plot(tsd_in.tvec(tstart_idx(iI):tend_idx(iI)),temp_data(tstart_idx(iI):tend_idx(iI)),cfg.fgcol,'MarkerSize',1);
+            h.LFP_iv(iI) = plot(tsd_in.tvec(tstart_idx(iI):tend_idx(iI)),temp_data(tstart_idx(iI):tend_idx(iI)),'Color', cfg.fgcol,'MarkerSize',1);
                         
             axis off; axis tight;
             if ~isempty(cfg.title)
