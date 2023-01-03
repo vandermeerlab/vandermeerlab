@@ -2,7 +2,7 @@
 % TODO: Generalize to do this for various step sizes and input frequencies
 clear;
 close all;
-n_phases = 4;
+n_phases = 5;
 c_ord = linspecer(n_phases);
 f1 = 100;
 cycles = 8; % Total cycles of sinewave
@@ -85,14 +85,16 @@ first_wave(7*step_size+1:end) = wave_phase_2(next_idx+1:next_idx+step_size+1);
 color_scheme = zeros(size(x));
 phase_angles = angle(hilbert(first_wave));
 for i = 1:length(color_scheme)
-    if phase_angles(i) <= -0.5*pi
+    if phase_angles(i) <= -0.6*pi
         color_scheme(i) = 1;
-    elseif phase_angles(i) <= 0
+    elseif phase_angles(i) <= -0.2*pi
         color_scheme(i) = 2;
-    elseif phase_angles(i) <= 0.5*pi
+    elseif phase_angles(i) <= 0.2*pi
         color_scheme(i) = 3;
+    elseif phase_angles(i) <= 0.6*pi
+        color_scheme(i) = 4;
     else
-        color_scheme(i) = 4;           
+        color_scheme(i) = 5;           
     end
 end
 changes_in_phase = find(diff(color_scheme));
@@ -114,14 +116,16 @@ second_wave = sin(x);
 color_scheme = zeros(size(x));
 phase_angles = angle(hilbert(second_wave));
 for i = 1:length(color_scheme)
-    if phase_angles(i) <= -0.5*pi
+    if phase_angles(i) <= -0.6*pi
         color_scheme(i) = 1;
-    elseif phase_angles(i) <= 0
+    elseif phase_angles(i) <= -0.2*pi
         color_scheme(i) = 2;
-    elseif phase_angles(i) <= 0.5*pi
+    elseif phase_angles(i) <= 0.2*pi
         color_scheme(i) = 3;
+    elseif phase_angles(i) <= 0.6*pi
+        color_scheme(i) = 4;
     else
-        color_scheme(i) = 4;           
+        color_scheme(i) = 5;           
     end
 end
 changes_in_phase = find(diff(color_scheme));
@@ -180,14 +184,16 @@ third_wave(3*step_size+1:end) = wave_phase_1(next_idx+1:next_idx+step_size+1);
 color_scheme = zeros(size(x));
 phase_angles = angle(hilbert(third_wave));
 for i = 1:length(color_scheme)
-    if phase_angles(i) <= -0.5*pi
+    if phase_angles(i) <= -0.6*pi
         color_scheme(i) = 1;
-    elseif phase_angles(i) <= 0
+    elseif phase_angles(i) <= -0.2*pi
         color_scheme(i) = 2;
-    elseif phase_angles(i) <= 0.5*pi
+    elseif phase_angles(i) <= 0.2*pi
         color_scheme(i) = 3;
+    elseif phase_angles(i) <= 0.6*pi
+        color_scheme(i) = 4;
     else
-        color_scheme(i) = 4;           
+        color_scheme(i) = 5;           
     end
 end
 changes_in_phase = find(diff(color_scheme));

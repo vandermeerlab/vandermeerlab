@@ -62,12 +62,12 @@ for iF = 1:length(f_list)
     subset_freqs = (freqs >= f_start) & (freqs <= f_stop);
 %     msn_subset = max(msn_ppc(:,subset_freqs), [], 2);  
     msn_subset = mean(msn_ppc(:,subset_freqs), 2);  
-    h1 = histogram(msn_subset, [0:0.00025:0.05,1],'Normalization', 'probability', 'FaceColor', 'black', 'FaceAlpha', 1); 
+    h1 = histogram(msn_subset, [0:0.00025:0.02,1],'Normalization', 'probability', 'FaceColor', 'black', 'FaceAlpha', 1); 
     h1.EdgeAlpha = 1;
     h1.EdgeColor = [1 1 1];
     title(sprintf('%d Hz - %d Hz', f_start, f_stop), 'FontSize', 25);
     grid on;
-    axes{iF}.XLim = [0 0.051];
+    axes{iF}.XLim = [0 0.021];
     axes{iF}.YLim = [0 0.1];
     axes{iF}.XAxis.FontSize = 18;
     axes{iF}.XAxis.FontWeight = 'normal';
@@ -77,11 +77,10 @@ for iF = 1:length(f_list)
     axes{iF}.XAxis.Label.String = 'PPC';
     axes{iF}.YAxis.Label.String = 'Proportion';
     axes{iF}.Box = 'off';
-end
-%Put breakpoint and then run
-for iF = 1:length(f_list)
-    axes{iF}.XAxis.TickLabels{end} = '>0.05';
-    axes{iF}.YAxis.TickLabels{end} = '>0.1';
+    axes{iF}.XTick = [0 0.01 0.02];
+    axes{iF}.YTick = [0 0.05 0.1];
+    axes{iF}.XAxis.TickLabels{end} = '> 0.02';
+    axes{iF}.YAxis.TickLabels{end} = '> 0.1';
 end
 
 %%
@@ -94,35 +93,26 @@ for iF = 1:length(f_list)
     subset_freqs = (freqs >= f_start) & (freqs <= f_stop);
 %     fsi_subset = max(fsi_ppc(:,subset_freqs), [], 2);  
     fsi_subset = mean(fsi_ppc(:,subset_freqs), 2); 
-    h1 = histogram(fsi_subset, [0:0.00025:0.05,1], 'Normalization', 'probability', 'FaceColor', 'black', 'FaceAlpha', 1); 
+    h1 = histogram(fsi_subset, [0:0.00025:0.02,1], 'Normalization', 'probability', 'FaceColor', 'black', 'FaceAlpha', 1); 
     h1.EdgeAlpha = 1;
     h1.EdgeColor = [1 1 1];
     title(sprintf('%d Hz - %d Hz', f_start, f_stop), 'FontSize', 25);
     grid on;
-    axes{iF}.XLim = [0 0.051];
+    axes{iF}.XLim = [0 0.021];
     axes{iF}.YLim = [0 0.1];
-    axes{iF}.XAxis.FontSize = 18;
+    axes{iF}.XTick = [0 0.01 0.02];
+    axes{iF}.YTick = [0 0.05 0.1];
+    axes{iF}.XAxis.TickLabels{end} = '> 0.02';
+    axes{iF}.YAxis.TickLabels{end} = '> 0.1';
+    axes{iF}.XAxis.FontSize = 20;
     axes{iF}.XAxis.FontWeight = 'normal';
-    axes{iF}.YAxis.FontSize = 18;
+    axes{iF}.YAxis.FontSize = 20;
     axes{iF}.YAxis.FontWeight = 'normal';
     axes{iF}.TickDir = 'out';
     axes{iF}.XAxis.Label.String = 'PPC';
     axes{iF}.YAxis.Label.String = 'Proportion';
     axes{iF}.Box = 'off';
 end
-%Put breakpoint and then run
-for iF = 1:length(f_list)
-    axes{iF}.XAxis.TickLabels{end} = '>0.05';
-    axes{iF}.YAxis.TickLabels{end} = '>0.1';
-end
-
-%% testing pctrile function and plotting
-figure;
-req_msn_label = 'R117-2007-06-09-TT03_4';
-label_idx = find(strcmp(msn_labels, req_msn_label));
-test = get_ptile(msn_ppc, label_idx);
-bar(1:99/91:99.6, test)
-
 
 %% Helper functions
 % function to return frequency wise percentile values for input cells

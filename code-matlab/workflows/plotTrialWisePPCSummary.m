@@ -5,7 +5,7 @@ msn_ppc_sd = [];
 fsi_ppc_sd = [];
 missing_msn = [];
 
-set(0,'DefaultAxesFontName','Garamond');
+set(0,'DefaultAxesFontName','Helvetica');
 set(0,'DefaultAxesFontWeight','bold');
 
 load('./cellsOfInterest.mat');
@@ -62,21 +62,25 @@ close all;
 q0 = mean(fsi_ppc_sd, 2);
 q1 = mean(msn_ppc_sd, 2);
 fig = figure('WindowState', 'maximized');
-h1 = histogram(q0,0:0.05:1, 'FaceColor', 'green', 'FaceAlpha', 1);
+h1 = histogram(q0,0:0.05:1, 'Normalization', 'probability', 'FaceColor', 'green', 'FaceAlpha', 1);
 hold on;
-h2 = histogram(q1,0:0.05:1, 'FaceColor', 'red', 'FaceAlpha', 0.6);
+h2 = histogram(q1,0:0.05:1, 'Normalization', 'probability', 'FaceColor', 'red', 'FaceAlpha', 0.6);
 ax = gca(fig);
 ax.XAxis.FontSize = 40;
 ax.YAxis.FontSize = 40;
-% ax.XLabel.String = 'Mean of SDs over all frequencies';
+ax.TickDir = 'out';
+ax.YTick = [0 0.5 1];
+ax.XTick = [0 0.3 0.5];
+ax.XLabel.String = 'Mean of SDs over all frequencies';
+ax.YLabel.String = 'Proportion';
 % ax.XLabel.FontSize = 40;
-ax.XLim = [-0.05, 0.55];
+ax.XLim = [0, 0.5];
 leg = legend({'FSI', 'MSN'});
-leg.FontName = 'Garamond';
+leg.FontName = 'Helvetica';
 leg.FontSize = 40;
 leg.FontWeight = 'bold';
 box off;
-title('Distribution of Average SD', 'FontSize', 40)
+% title('Distribution of Average SD', 'FontSize', 40)
 
 %% Helper functions
 % function to normalize data

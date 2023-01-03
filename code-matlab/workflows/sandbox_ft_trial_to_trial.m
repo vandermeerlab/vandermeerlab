@@ -3,7 +3,9 @@
 % subsampling
 %% setup
 clear;
-cd('D:\ADRLabData');
+% Setup rng seed for reproducibility
+rng(4994);
+cd('E:\ADRLabData');
 % cd('/Users/manishm/Work/vanDerMeerLab/ADRLabData');
 please = [];
 please.rats = {'R117','R119','R131','R132'}; % vStr-only rats

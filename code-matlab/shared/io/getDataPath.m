@@ -62,7 +62,7 @@ switch machinename
     case 'CALLISTO'
         base_fp = 'E:\data\promoted\';
     case {'MVDMLAB-PHOBOS'}
-        base_fp = 'D:\ADRLabData';
+        base_fp = 'E:\ADRLabData';
     case {'manishm'}
         base_fp = '/Users/manishm/Work/vanDerMeerLab/ADRLabData';
     otherwise
