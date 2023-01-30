@@ -1,6 +1,6 @@
 cd('E:\Dropbox (Dartmouth College)\AnalysisResults\FieldTripResults\ft_results');
 rats = {'R117','R119','R131','R132'};
-fw = [5,100];
+fw = [2,100];
 pk_thresh = -1;
 num_control_splits = 100;
 

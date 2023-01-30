@@ -2,7 +2,7 @@ cd('D:\RandomVstrAnalysis\ft_results');
 % cd('/Users/manishm/Dropbox (Dartmouth College)/AnalysisResults/FieldTripResults/ft_results');
 
 rats = {'R117','R119','R131','R132'};
-lg = [5,30];
+lg = [2,30];
 hg = [30,100];
 pk_thresh = -1;
 num_control_splits = 100;
