@@ -11,10 +11,10 @@ clear;
 cd('E:\ADRLabData');
 % cd('/Users/manishm/Work/vanDerMeerLab/ADRLabData');
 please = [];
-please.rats = {'R117','R119','R131','R132'}; % vStr-only rats
+please.rats = {'R117'};%{'R117','R119','R131','R132'}; % vStr-only rats
 [cfg_in.fd,cfg_in.fd_extra] = getDataPath(please);
 cfg_in.write_output = 1;
-cfg_in.output_dir = 'E:\RandomVstrAnalysis\temp';
+cfg_in.output_dir = 'D:\RandomVstrAnalysis\temp';
 % cfg_in.output_dir = '/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp';
 cfg_in.incl_types = [1, 2];
 cfg_in.nMinSpikes1 = 400; % For on track
@@ -692,11 +692,6 @@ function od = generateSTS(cfg_in)
     od.msn_near_hfr_dist = [];
     od.msn_near_p1_dist = [];
     od.msn_near_p2_dist = [];
-    od.msn_away_dist = [];
-    od.msn_away_lfr_dist = [];
-    od.msn_away_hfr_dist = [];
-    od.msn_away_p1_dist = [];
-    od.msn_away_p2_dist = [];
     
     % Subsample only if all the splits are problem free
     if isfield(od,'msn_res')
@@ -717,22 +712,6 @@ function od = generateSTS(cfg_in)
                     od.msn_near_hfr_dist = [od.msn_near_hfr_dist od.msn_res.near_hfr_spec{iM}.spk_count];
                     od.msn_near_p1_dist = [od.msn_near_p1_dist round(mean(od.msn_res.near_p1_spec{iM}.spk_count))];
                     od.msn_near_p2_dist = [od.msn_near_p2_dist round(mean(od.msn_res.near_p2_spec{iM}.spk_count))];
-            end
-            if ~od.msn_res.away_spec{iM}.flag_tooFewSpikes & ...
-                ~od.msn_res.away_spec{iM}.flag_nansts & ...
-                ~od.msn_res.away_spec{iM}.flag_nanppc & ...
-                ~od.msn_res.away_lfr_spec{iM}.flag_tooFewSpikes & ...
-                ~od.msn_res.away_lfr_spec{iM}.flag_nansts & ...
-                ~od.msn_res.away_lfr_spec{iM}.flag_nanppc & ...
-                ~od.msn_res.away_hfr_spec{iM}.flag_tooFewSpikes & ...
-                ~od.msn_res.away_hfr_spec{iM}.flag_nansts &  ...
-                ~od.msn_res.away_hfr_spec{iM}.flag_nanppc & ...
-                ~od.msn_res.away_spec{iM}.flag_no_control_split        
-                    od.msn_away_dist = [od.msn_away_dist od.msn_res.away_spec{iM}.spk_count];
-                    od.msn_away_lfr_dist = [od.msn_away_lfr_dist od.msn_res.away_lfr_spec{iM}.spk_count];
-                    od.msn_away_hfr_dist = [od.msn_away_hfr_dist od.msn_res.away_hfr_spec{iM}.spk_count];
-                    od.msn_away_p1_dist = [od.msn_away_p1_dist round(mean(od.msn_res.away_p1_spec{iM}.spk_count))];
-                    od.msn_away_p2_dist = [od.msn_away_p2_dist round(mean(od.msn_res.away_p2_spec{iM}.spk_count))];
             end
         end
     end
