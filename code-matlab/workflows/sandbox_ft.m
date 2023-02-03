@@ -11,7 +11,7 @@ clear;
 cd('E:\ADRLabData');
 % cd('/Users/manishm/Work/vanDerMeerLab/ADRLabData');
 please = [];
-please.rats = {'R117'};%{'R117','R119','R131','R132'}; % vStr-only rats
+please.rats = {'R119'};%{'R117','R119','R131','R132'}; % vStr-only rats
 [cfg_in.fd,cfg_in.fd_extra] = getDataPath(please);
 cfg_in.write_output = 1;
 cfg_in.output_dir = 'D:\RandomVstrAnalysis\temp';
@@ -26,7 +26,7 @@ cfg_in.num_subsamples = 1000;
 
 %%
 % Top level loop which calls the main function for all the sessions
-for iS = 1:length(cfg_in.fd) % for each session...
+for iS = 13:length(cfg_in.fd) % for each session...
     cfg_in.iS = iS;
     pushdir(cfg_in.fd{iS});
     generateSTS(cfg_in); % do the business
@@ -281,8 +281,13 @@ function od = generateSTS(cfg_in)
         w_end =  rt2 + 5;
         % Last trial time shouldn't exceed Experiment end time
         w_end(end) = min(w_end(end), ExpKeys.TimeOffTrack);
-        w_start = sort(w_start);
-        w_end = sort(w_end);
+        % Sorting makes it wonky in some cases (in R119-2007-07-06),so 
+        % only keep trials that are within 3 s.d of the mean trial length
+        temp_lb = mean(w_end - w_start) - 3*std(w_end - w_start);
+        temp_ub = mean(w_end - w_start) + 3*std(w_end - w_start);
+        keep = (w_end - w_start >= temp_lb) & (w_end - w_start <= temp_ub);
+        w_start = w_start(keep);
+        w_end = w_end(keep);
         rt_iv = iv(w_start, w_end);
         
         % Break down data into near trials
@@ -853,8 +858,13 @@ function od = generateSTS(cfg_in)
         w_end =  rt2 + 5;
         % Last trial time shouldn't exceed Experiment end time
         w_end(end) = min(w_end(end), ExpKeys.TimeOffTrack);
-        w_start = sort(w_start);
-        w_end = sort(w_end);
+        % Sorting makes it wonky in some cases (in R119-2007-07-06),so 
+        % only keep trials that are within 3 s.d of the mean trial length
+        temp_lb = mean(w_end - w_start) - 3*std(w_end - w_start);
+        temp_ub = mean(w_end - w_start) + 3*std(w_end - w_start);
+        keep = (w_end - w_start >= temp_lb) & (w_end - w_start <= temp_ub);
+        w_start = w_start(keep);
+        w_end = w_end(keep);
         rt_iv = iv(w_start, w_end);
         
         % Break down data into near trials
