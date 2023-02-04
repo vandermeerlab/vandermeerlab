@@ -284,7 +284,7 @@ function od = generateSTS(cfg_in)
         w_end(end) = min(w_end(end), ExpKeys.TimeOffTrack);
         % Sorting makes it wonky in some cases (in R119-2007-07-06),so 
         % only keep trials that are not outliers
-        keep = isoutlier(w_end - w_start, 'median');
+        keep = ~isoutlier(w_end - w_start, 'median');
         w_start = w_start(keep);
         w_end = w_end(keep);
         rt_iv = iv(w_start, w_end);
@@ -859,7 +859,7 @@ function od = generateSTS(cfg_in)
         w_end(end) = min(w_end(end), ExpKeys.TimeOffTrack);
         % Sorting makes it wonky in some cases (in R119-2007-07-06),so 
         % only keep trials that are not outliers
-        keep = isoutlier(w_end - w_start, 'median');
+        keep = ~isoutlier(w_end - w_start, 'median');
         w_start = w_start(keep);
         w_end = w_end(keep);
         rt_iv = iv(w_start, w_end);
