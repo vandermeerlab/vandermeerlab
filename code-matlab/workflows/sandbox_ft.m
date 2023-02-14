@@ -11,7 +11,7 @@ clear;
 cd('E:\ADRLabData');
 % cd('/Users/manishm/Work/vanDerMeerLab/ADRLabData');
 please = [];
-please.rats = {'R131'};%{'R117','R119','R131','R132'}; % vStr-only rats
+please.rats = {'R132'};%{'R117','R119','R131','R132'}; % vStr-only rats
 [cfg_in.fd,cfg_in.fd_extra] = getDataPath(please);
 cfg_in.write_output = 1;
 cfg_in.output_dir = 'D:\RandomVstrAnalysis\temp';
@@ -26,7 +26,7 @@ cfg_in.num_subsamples = 1000;
 
 %%
 % Top level loop which calls the main function for all the sessions
-for iS = 1:length(cfg_in.fd) % for each session...
+for iS = length(cfg_in.fd)%1:length(cfg_in.fd) % for each session...
     cfg_in.iS = iS;
     pushdir(cfg_in.fd{iS});
     generateSTS(cfg_in); % do the business
@@ -942,8 +942,8 @@ function od = generateSTS(cfg_in)
                 od.fsi_res.near_spec{iM}.flag_no_subsampling = true;
             elseif isfield(od.fsi_res.near_spec{iM},'flag_nanppc') && od.fsi_res.near_spec{iM}.flag_nanppc
                 od.fsi_res.near_spec{iM}.flag_no_subsampling = true;
-            elseif isfield(od.fsi_res.onTrack_spec{iM},'flag_no_subsampling') && od.fsi_res.onTrack_spec{iM}.flag_no_subsampling
-                od.fsi_res.near_spec{iM}.flag_no_subsampling = true;
+%             elseif isfield(od.fsi_res.onTrack_spec{iM},'flag_no_subsampling') && od.fsi_res.onTrack_spec{iM}.flag_no_subsampling
+%                 od.fsi_res.near_spec{iM}.flag_no_subsampling = true;
             else
                 od.fsi_res.near_spec{iM}.flag_no_subsampling = false;
                 temp_sts_vals = zeros(cfg_master.num_subsamples, length(od.fsi_res.near_spec{iM}.sts_vals));
