@@ -9,8 +9,7 @@ for idx = 1:length(rats)
     searchString = strcat(curRat,'*ft_spec.mat');
     ofiles = dir(searchString);
     for jdx = 1:length(ofiles)
-        load(ofiles(jdx).name);
-
+        load(ofiles(jdx).name); % Load a particular session
         %do fsi stuff
         fsi_labels  = od.label(od.cell_type == 2);
         fsi_labels = cellfun(@(x) extractBefore(x, '.t'), fsi_labels, 'UniformOutput', false);
