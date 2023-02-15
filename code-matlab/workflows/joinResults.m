@@ -1,5 +1,4 @@
-%Script to get rough count fof how many cells we have
-%TODO  "Check for too Few Spikes flag first"
+%Script to join trial-wise and aggregated results packet
 cd('D:\RandomVstrAnalysis\ft_results\');
 tw_dir = 'D:\RandomVstrAnalysis\trialwise_ppc\';
 
@@ -65,6 +64,8 @@ for idx = 1:length(rats)
                 od.msn_res.near_spec{iC}.trialwise_ppc = this_tw.od.msn_res.near_spec{jC}.trial_wise_ppc;
             end
         end
+        fn_out = cat(2, 'D:\RandomVstrAnalysis\final_results\', ofiles(jdx).name);
+        save(fn_out,'od');
     end
 end
 fsi_problem = fsi_problem';
