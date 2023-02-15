@@ -1,11 +1,11 @@
-%Script to get rough count fof how many cells we have
+%Script to get rough count of how many cells we have
 
 cd('D:\RandomVstrAnalysis\ft_results\');
 rats = {'R117','R119','R131','R132'};
 
 msn_summary = table("label","too_few_spikes","spike_count","nan_in_sts","nan_in_ppc", "no_control");
 fsi_summary = table("label","too_few_spikes","spike_count","nan_in_sts","nan_in_ppc", "subsampled", "no_control");
-% For now let's select the cells that have no probelmes
+% For now let's select the cells that have no probelms
 for idx = 1:length(rats)
     curRat = rats{idx};
     searchString = strcat(curRat,'*ft_spec.mat');
