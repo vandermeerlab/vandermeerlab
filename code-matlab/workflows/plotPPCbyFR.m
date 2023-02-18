@@ -32,7 +32,7 @@ for idx = 1:length(rats)
                     end
                 end
                 % Plot stuff
-                fig = figure;
+                fig = figure('WindowState', 'maximized');
                 for iF = 1:length(f_list)
                     r_ppc = binned_ppc(iF,:);
                     keep = ~isnan(r_ppc); %getting rid of bins that had no fr values
@@ -98,7 +98,7 @@ for idx = 1:length(rats)
                     end
                 end
                 % Plot stuff
-                fig = figure;
+                fig = figure('WindowState', 'maximized');
                 for iF = 1:length(f_list)
                     r_ppc = binned_ppc(iF,:);
                     keep = ~isnan(r_ppc); %getting rid of bins that had no fr values
