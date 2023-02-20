@@ -2,10 +2,9 @@
 % TODO: How to handle cases with
 cd('D:\RandomVstrAnalysis\final_results\'); % Change this to your local machine location for results
 rats = {'R117','R119','R131','R132'};
-clean_msn = 0;
-clean_fsi = 0;
 f_list = {[3 5], [7 9], [14 25], [40 65], [65 90]};
 c_list = {'blue', 'cyan', 'red', 'magenta', 'green'};
+nbins = 8; %Arbitrarily chosen
 for idx = 1:length(rats)
     curRat = rats{idx};
     searchString = strcat(curRat,'*ft_spec.mat');
@@ -20,7 +19,7 @@ for idx = 1:length(rats)
                 %do fsi_stuff
                 nz_trials = find(od.fsi_res.near_spec{iC}.mfr > 0);
                 tw_fr = od.fsi_res.near_spec{iC}.mfr(nz_trials);
-                [count, edges, bin] = histcounts(tw_fr);
+                [count, edges, bin] = histcounts(tw_fr, nbins);
                 fr_vals = (edges(1:end-1) + edges(2:end))/2;  
                 binned_ppc = zeros(length(f_list), length(count));
                 for iF = 1:length(f_list)
@@ -36,28 +35,26 @@ for idx = 1:length(rats)
                 fig = figure('WindowState', 'maximized');
                 for iF = 1:length(f_list)
                     r_ppc = binned_ppc(iF,:);
+                    % Getting rid of nan ppc valiues for sensible plotting
                     keep = ~isnan(r_ppc); %getting rid of bins that had no fr values
                     r_ppc = r_ppc(keep);
                     r_fr = fr_vals(keep);
-                    % Sort ppc values and then use the sorted idx to sort the firing rates
-                    [r_ppc, sidx] = sort(r_ppc);
-                    r_fr = r_fr(sidx);
                     % Also store normalized values
                     n_ppc = (r_ppc - min(r_ppc))/(max(r_ppc) - min(r_ppc));
-                    n_fr = r_fr/min(r_fr);
+                    n_fr = (r_fr - min(r_fr))/(max(r_fr) - min(r_fr));
 
                     % Plot raw values on left
                     subplot(3,length(f_list),iF)
-                    plot(r_ppc, r_fr, 'color', c_list{iF});
-                    ylabel('Firing rate (Hz)')
-                    xlabel('PPC')
+                    plot(r_fr, r_ppc, 'color', c_list{iF});
+                    xlabel('Firing rate (Hz)')
+                    ylabel('PPC')
                     title(sprintf("%d Hz - %d Hz", f_list{iF}(1), f_list{iF}(2)), 'color', c_list{iF})
                     
                     % Plot normalized values on right
                     subplot(3,length(f_list),iF+length(f_list))
-                    plot(n_ppc, n_fr, 'color', c_list{iF});
-                    ylabel('Norm Firing rate')
-                    xlabel('Norm PPC')
+                    plot(n_fr, n_ppc, 'color', c_list{iF});
+                    xlabel('Norm Firing rate')
+                    ylabel('Norm PPC')
                 end
                 % Plot PPC and STS for comparison
                 subplot(3,length(f_list), 2*length(f_list)+1:2*length(f_list)+2)
@@ -100,7 +97,7 @@ for idx = 1:length(rats)
                 %do msn_stuff
                 nz_trials = find(od.msn_res.near_spec{iC}.mfr > 0);
                 tw_fr = od.msn_res.near_spec{iC}.mfr(nz_trials);
-                [count, edges, bin] = histcounts(tw_fr);
+                [count, edges, bin] = histcounts(tw_fr, nbins);
                 fr_vals = (edges(1:end-1) + edges(2:end))/2;  
                 binned_ppc = zeros(length(f_list), length(count));
                 for iF = 1:length(f_list)
@@ -116,28 +113,26 @@ for idx = 1:length(rats)
                 fig = figure('WindowState', 'maximized');
                 for iF = 1:length(f_list)
                     r_ppc = binned_ppc(iF,:);
+                    % Getting rid of nan ppc valiues for sensible plotting
                     keep = ~isnan(r_ppc); %getting rid of bins that had no fr values
                     r_ppc = r_ppc(keep);
                     r_fr = fr_vals(keep);
-                    % Sort ppc values and then use the sorted idx to sort the firing rates
-                    [r_ppc, sidx] = sort(r_ppc);
-                    r_fr = r_fr(sidx);
                     % Also store normalized values
                     n_ppc = (r_ppc - min(r_ppc))/(max(r_ppc) - min(r_ppc));
-                    n_fr = r_fr/min(r_fr);
+                    n_fr = (r_fr - min(r_fr))/(max(r_fr) - min(r_fr));
 
                     % Plot raw values on left
                     subplot(3,length(f_list),iF)
-                    plot(r_ppc, r_fr, 'color', c_list{iF});
-                    ylabel('Firing rate (Hz)')
-                    xlabel('PPC')
+                    plot(r_fr, r_ppc, 'color', c_list{iF});
+                    xlabel('Firing rate (Hz)')
+                    ylabel('PPC')
                     title(sprintf("%d Hz - %d Hz", f_list{iF}(1), f_list{iF}(2)), 'color', c_list{iF})
                     
                     % Plot normalized values on right
                     subplot(3,length(f_list),iF+length(f_list))
-                    plot(n_ppc, n_fr, 'color', c_list{iF});
-                    ylabel('Norm Firing rate')
-                    xlabel('Norm PPC')
+                    plot(n_fr, n_ppc, 'color', c_list{iF});
+                    xlabel('Norm Firing rate')
+                    ylabel('Norm PPC')
                 end
                 % Plot PPC and STS for comparison
                 subplot(3,length(f_list), 2*length(f_list)+1:2*length(f_list)+2)
@@ -173,5 +168,3 @@ for idx = 1:length(rats)
         end
     end
 end
-fprintf("Total number of clean MSNs are %d.\n", clean_msn);
-fprintf("Total number of clean FSIs are %d.\n", clean_fsi);
