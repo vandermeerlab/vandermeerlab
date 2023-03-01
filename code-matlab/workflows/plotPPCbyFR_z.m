@@ -1,4 +1,5 @@
 % Script to plot PPC by firing rate
+% TODO: First row: Raw PPC vs Raw FR, Second row: Norm PPC vs Z-Scored FR
 cd('D:\RandomVstrAnalysis\final_results\'); % Change this to your local machine location for results
 rats = {'R117','R119','R131','R132'};
 
@@ -7,7 +8,7 @@ f_list = {[3 5], [7 9], [14 25], [40 65], [65 90]};
 c_list = {'blue', 'cyan', 'red', 'magenta', 'green'}; % make sure c_list and f_list have equal number of items
 min_trial_spikes = 4; % Minimum number of spikes in a trial for it to be considered
 min_trials = 10; % Minimum number of spike-count thresholded trials in a cell for it to be considered
-nbins = 7; % some fixed number
+edges = [-100,-2.5,-1.5,-0.5,0.5,1.5,2.5,100]; % The first and last bins are arbitrarily large to contain anything outside 3 standard deviations
 
 
 for idx = 1:length(rats)
@@ -26,9 +27,8 @@ for idx = 1:length(rats)
                 if length(nz_trials) < min_trials
                     continue;
                 end
-                tw_fr = od.fsi_res.near_spec{iC}.mfr(nz_trials);
-                [count, edges, bin] = histcounts(tw_fr, nbins);
-                fr_vals = (edges(1:end-1) + edges(2:end))/2;  
+                tw_fr = zscore(od.fsi_res.near_spec{iC}.mfr(nz_trials));
+                [count, edges, bin] = histcounts(tw_fr, edges); 
                 binned_ppc = zeros(length(f_list), length(count));
                 for iF = 1:length(f_list)
                     f_idx = find(round(od.fsi_res.near_spec{iC}.freqs) >= f_list{iF}(1) & ...
@@ -46,21 +46,22 @@ for idx = 1:length(rats)
                     % Getting rid of nan ppc valiues for sensible plotting
                     keep = ~isnan(r_ppc); %getting rid of bins that had no fr values
                     r_ppc = r_ppc(keep);
-                    r_fr = fr_vals(keep);
                     % Also store normalized values
                     n_ppc = (r_ppc - min(r_ppc))/(max(r_ppc) - min(r_ppc));
-                    n_fr = (r_fr - min(r_fr))/(max(r_fr) - min(r_fr));
+%                     n_fr = (r_fr - min(r_fr))/(max(r_fr) - min(r_fr));
 
-                    % Plot raw values on left
-                    subplot(3,length(f_list),iF)
-                    plot(r_fr, r_ppc, 'color', c_list{iF});
+                    % Plot raw values on top
+                    subplot(2,length(f_list),iF)
+                    plot(n_ppc, 'color', c_list{iF});
+                    
                     xlabel('Firing rate (Hz)')
                     ylabel('PPC')
                     title(sprintf("%d Hz - %d Hz", f_list{iF}(1), f_list{iF}(2)), 'color', c_list{iF})
                     
-                    % Plot normalized values on right
+                    % Plot normalized values on bottm
                     subplot(3,length(f_list),iF+length(f_list))
-                    plot(n_fr, n_ppc, 'color', c_list{iF});
+                    plot(n_ppc, 'color', c_list{iF});
+
                     xlabel('Norm Firing rate')
                     ylabel('Norm PPC')
                 end
