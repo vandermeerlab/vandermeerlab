@@ -9,8 +9,8 @@ msn_out = {};
 % Setting up parameters
 f_list = {[3 5], [7 9], [14 25], [40 65], [65 90]};
 c_list = {'blue', 'cyan', 'red', 'magenta', 'green'}; % make sure c_list and f_list have equal number of items
-min_trial_spikes = 6; % Minimum number of spikes in a trial for it to be considered
-min_trials = 8; % Minimum number of spike-count thresholded trials in a cell for it to be considered
+min_trial_spikes = 4; % Minimum number of spikes in a trial for it to be considered
+min_trials = 10; % Minimum number of spike-count thresholded trials in a cell for it to be considered
 nbins = 7; % some fixed number
 
 % Run for all sessions

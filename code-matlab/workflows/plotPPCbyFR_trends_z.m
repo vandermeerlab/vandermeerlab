@@ -12,7 +12,7 @@ f_list = {[3 5], [7 9], [14 25], [40 65], [65 90]};
 c_list = {'blue', 'cyan', 'red', 'magenta', 'green'}; % make sure c_list and f_list have equal number of items
 min_trial_spikes = 4; % Minimum number of spikes in a trial for it to be considered
 min_trials = 10; % Minimum number of spike-count thresholded trials in a cell for it to be considered
-edges = [-100,-2.5,-1.5,-0.5,0.5,1.5,2.5,100]; % The first and last bins are arbitrarily large to contain anything outside 3 standard deviations
+edges = [-100,-2,-1.2,-0.4,0.4,1.2,2,100]; % The first and last bins are arbitrarily large to contain anything outside 2 standard deviations
 
 % Run for all sessions
 for idx = 1:length(rats)
@@ -95,10 +95,10 @@ for iF = 1:length(f_list)
     temp_ppc = cell2mat(fsi_out(:,iF));
     plot(mean(temp_ppc,'omitnan'), 'color', 'black', 'LineWidth', 3);
     xticks([1.5, 2.5, 3.5, 4.5, 5.5, 6.5])
-    xticklabels({'-2.5', '-1.5', '-0.5', '0.5', '1.5', '2.5'})
+    xticklabels({'-2', '-1.2', '-0.4', '0.4', '1.2', '2'})
     xlim([0.85 7.15])
     ylabel('Norm PPC')
-    xlabel('Norm FR')
+    xlabel('Z-scored FR')
     title(sprintf("%d Hz - %d Hz", f_list{iF}(1), f_list{iF}(2)), 'color', c_list{iF})
     
     % Plot MSNs
@@ -110,12 +110,10 @@ for iF = 1:length(f_list)
     temp_ppc = cell2mat(msn_out(:,iF));
     plot(mean(temp_ppc,'omitnan'), 'color', 'black', 'LineWidth', 3);
     xticks([1.5, 2.5, 3.5, 4.5, 5.5, 6.5])
-    xticklabels({'-2.5', '-1.5', '-0.5', '0.5', '1.5', '2.5'})
+    xticklabels({'-2', '-1.2', '-0.4', '0.4', '1.2', '2'})
     xlim([0.85 7.15])
     ylabel('Norm PPC')
-    xlabel('Norm FR')
-    ylabel('Norm PPC')
-    xlabel('Norm FR')
+    xlabel('Z-scored FR')
     title(sprintf("%d Hz - %d Hz", f_list{iF}(1), f_list{iF}(2)), 'color', c_list{iF})
 end
 %% Plot heatmap
@@ -130,9 +128,9 @@ for iF = 1:length(f_list)
     temp_ppc(:,:) = temp_ppc(sidx,:);
     imagesc(temp_ppc)
     xticks([1.5, 2.5, 3.5, 4.5, 5.5, 6.5])
-    xticklabels({'-2.5', '-1.5', '-0.5', '0.5', '1.5', '2.5'})
+    xticklabels({'-2', '-1.2', '-0.4', '0.4', '1.2', '2'})
     ylabel('Norm PPC')
-    xlabel('Norm FR')
+    xlabel('Z-scored FR')
     axis off
     title(sprintf("%d Hz - %d Hz", f_list{iF}(1), f_list{iF}(2)), 'color', c_list{iF})
     
@@ -145,9 +143,9 @@ for iF = 1:length(f_list)
     temp_ppc(:,:) = temp_ppc(sidx,:);
     imagesc(temp_ppc)
     xticks([1.5, 2.5, 3.5, 4.5, 5.5, 6.5])
-    xticklabels({'-2.5', '-1.5', '-0.5', '0.5', '1.5', '2.5'})
+    xticklabels({'-2', '-1.2', '-0.4', '0.4', '1.2', '2'})
     ylabel('Norm PPC')
-    xlabel('Norm FR')
+    xlabel('Z-scored FR')
     axis off
     title(sprintf("%d Hz - %d Hz", f_list{iF}(1), f_list{iF}(2)), 'color', c_list{iF})
 end

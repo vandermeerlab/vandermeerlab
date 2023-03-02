@@ -44,23 +44,24 @@ for idx = 1:length(rats)
                 for iF = 1:length(f_list)
                     r_ppc = binned_ppc(iF,:);
                     % Getting rid of nan ppc valiues for sensible plotting
-                    keep = ~isnan(r_ppc); %getting rid of bins that had no fr values
-                    r_ppc = r_ppc(keep);
-                    r_fr = fr_vals(keep);
+%                     keep = ~isnan(r_ppc); %getting rid of bins that had no fr values
+%                     r_ppc = r_ppc(keep);
+%                     r_fr = fr_vals(keep);
+                    r_fr = fr_vals;
                     % Also store normalized values
                     n_ppc = (r_ppc - min(r_ppc))/(max(r_ppc) - min(r_ppc));
                     n_fr = (r_fr - min(r_fr))/(max(r_fr) - min(r_fr));
 
-                    % Plot raw values on left
+                    % Plot raw values on top
                     subplot(3,length(f_list),iF)
-                    plot(r_fr, r_ppc, 'color', c_list{iF});
+                    plot(r_fr, r_ppc, 'color', c_list{iF}, 'LineWidth', 3);
                     xlabel('Firing rate (Hz)')
                     ylabel('PPC')
                     title(sprintf("%d Hz - %d Hz", f_list{iF}(1), f_list{iF}(2)), 'color', c_list{iF})
                     
-                    % Plot normalized values on right
+                    % Plot normalized values on bottom
                     subplot(3,length(f_list),iF+length(f_list))
-                    plot(n_fr, n_ppc, 'color', c_list{iF});
+                    plot(n_fr, n_ppc, 'color', c_list{iF}, 'LineWidth', 3);
                     xlabel('Norm Firing rate')
                     ylabel('Norm PPC')
                 end
@@ -92,7 +93,7 @@ for idx = 1:length(rats)
                 title('ALL trials')
 
                 sgtitle(sprintf("FSI: %s", fsi_labels{iC}), 'Interpreter', 'None');
-                WriteFig(fig,cat(2,'FSI_', fsi_labels{iC}),1);
+                WriteFig(fig,cat(2,'nFSI_', fsi_labels{iC}),1);
                 close;
             end
         end
@@ -102,7 +103,7 @@ for idx = 1:length(rats)
         msn_labels = cellfun(@(x) extractBefore(x, '.t'), msn_labels, 'UniformOutput', false);
         for iC = 1:length(msn_labels)
             if isfield(od.msn_res.near_spec{iC}, 'flag_no_control_split') && ~od.msn_res.near_spec{iC}.flag_no_control_split
-                %do msn_stuff
+                % do msn_stuff
                 nz_trials = find(od.msn_res.near_spec{iC}.mfr >= min_trial_spikes);
                 if length(nz_trials) < min_trials
                     continue;
@@ -125,23 +126,24 @@ for idx = 1:length(rats)
                 for iF = 1:length(f_list)
                     r_ppc = binned_ppc(iF,:);
                     % Getting rid of nan ppc valiues for sensible plotting
-                    keep = ~isnan(r_ppc); %getting rid of bins that had no fr values
-                    r_ppc = r_ppc(keep);
-                    r_fr = fr_vals(keep);
+%                     keep = ~isnan(r_ppc); %getting rid of bins that had no fr values
+%                     r_ppc = r_ppc(keep);
+%                     r_fr = fr_vals(keep);
+                    r_fr = fr_vals;
                     % Also store normalized values
                     n_ppc = (r_ppc - min(r_ppc))/(max(r_ppc) - min(r_ppc));
                     n_fr = (r_fr - min(r_fr))/(max(r_fr) - min(r_fr));
 
-                    % Plot raw values on left
+                    % Plot raw values on top
                     subplot(3,length(f_list),iF)
-                    plot(r_fr, r_ppc, 'color', c_list{iF});
+                    plot(r_fr, r_ppc, 'color', c_list{iF}, 'LineWidth', 3);
                     xlabel('Firing rate (Hz)')
                     ylabel('PPC')
                     title(sprintf("%d Hz - %d Hz", f_list{iF}(1), f_list{iF}(2)), 'color', c_list{iF})
                     
-                    % Plot normalized values on right
+                    % Plot normalized values on bottom
                     subplot(3,length(f_list),iF+length(f_list))
-                    plot(n_fr, n_ppc, 'color', c_list{iF});
+                    plot(n_fr, n_ppc, 'color', c_list{iF}, 'LineWidth', 3);
                     xlabel('Norm Firing rate')
                     ylabel('Norm PPC')
                 end
@@ -173,7 +175,7 @@ for idx = 1:length(rats)
                 title('ALL trials')
 
                 sgtitle(sprintf("MSN: %s", msn_labels{iC}), 'Interpreter', 'None');
-                WriteFig(fig,cat(2,'MSN_', msn_labels{iC}),1);
+                WriteFig(fig,cat(2,'nMSN_', msn_labels{iC}),1);
                 close;
             end
         end
