@@ -5,8 +5,8 @@ rats = {'R117','R119','R131','R132'};
 % Setting up parameters
 f_list = {[3 5], [7 9], [14 25], [40 65], [65 90]};
 c_list = {'blue', 'cyan', 'red', 'magenta', 'green'}; % make sure c_list and f_list have equal number of items
-min_trial_spikes = 4; % Minimum number of spikes in a trial for it to be considered
-min_trials = 10; % Minimum number of spike-count thresholded trials in a cell for it to be considered
+min_trial_spikes = 20; % Minimum number of spikes in a trial for it to be considered
+min_trials = 25; % Minimum number of spike-count thresholded trials in a cell for it to be considered
 nbins = 7; % some fixed number
 
 
@@ -22,7 +22,7 @@ for idx = 1:length(rats)
         for iC = 1:length(fsi_labels)
             if isfield(od.fsi_res.near_spec{iC}, 'flag_no_control_split') && ~od.fsi_res.near_spec{iC}.flag_no_control_split
                 % do fsi_stuff
-                nz_trials = find(od.fsi_res.near_spec{iC}.mfr >= min_trial_spikes);
+                nz_trials = find(od.fsi_res.near_spec{iC}.trialwise_spk_count >= min_trial_spikes);
                 if length(nz_trials) < min_trials
                     continue;
                 end
@@ -104,7 +104,7 @@ for idx = 1:length(rats)
         for iC = 1:length(msn_labels)
             if isfield(od.msn_res.near_spec{iC}, 'flag_no_control_split') && ~od.msn_res.near_spec{iC}.flag_no_control_split
                 % do msn_stuff
-                nz_trials = find(od.msn_res.near_spec{iC}.mfr >= min_trial_spikes);
+                nz_trials = find(od.msn_res.near_spec{iC}.trialwise_spk_count >= min_trial_spikes);
                 if length(nz_trials) < min_trials
                     continue;
                 end
