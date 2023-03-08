@@ -3,33 +3,32 @@
 % subsampling
 %% setup
 clear;
-cd('D:\ADRLabData');
+% Setup rng seed for reproducibility
+rng(4994);
+cd('E:\ADRLabData');
 % cd('/Users/manishm/Work/vanDerMeerLab/ADRLabData');
 please = [];
-please.rats = {'R117','R119','R131','R132'}; % vStr-only rats
+please.rats = {'R132'}; %{'R117','R119','R131','R132'}; % vStr-only rats
 [cfg_in.fd,cfg_in.fd_extra] = getDataPath(please);
 cfg_in.write_output = 1;
-cfg_in.output_dir = 'D:\RandomVstrAnalysis\temp';
+cfg_in.output_dir = 'D:\RandomVstrAnalysis\temp2';
 % cfg_in.output_dir = '/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp';
 cfg_in.incl_types = [1, 2];
 cfg_in.nMinSpikes1 = 400; % For on track
-cfg_in.nMinSpikes2 = 400; % For near and away
-cfg_in.nMinSpikes3 = 200; % For lfr, hfr, p1 and p2
+cfg_in.nMinSpikes2 = 400; % For near
+cfg_in.nMinSpikes3 = 150; % For lfr, hfr, p1 and p2
 cfg_in.nControlSplits = 100;
 cfg_in.num_subsamples = 1000;
 
 
 %%
 % Top level loop which calls the main function for all the sessions
-diary on;
 for iS = 1:length(cfg_in.fd) % for each session...
     cfg_in.iS = iS;
     pushdir(cfg_in.fd{iS});
     generateSTS(cfg_in); % do the business
     popdir;
-    
 end % of sessions
-diary off;
 
 %%
 % Main function to generate spike_triggered_spectra
@@ -183,7 +182,7 @@ function od = generateSTS(cfg_in)
         cfg_ft.channel = ft_csc.label(1);
         this_data = ft_appendspike([], ft_csc, sd.S.ft_spikes(iC));
  
-        % Block of code to divide recordings session into near and away trials
+        % Block of code to divide recordings session into near trials
 
         % restrict spikes to a timeWindow of +/-5 seconds around the reward  
         rt1 = getRewardTimes();
@@ -225,17 +224,16 @@ function od = generateSTS(cfg_in)
         rt2 = rt2(keep);
 
         % For near reward_trials  
-        w_start1 = rt1 - 5;
-        w_end1 = rt1 + 5;
-        w_start2 = rt2 - 5;
-        w_end2 =  rt2 + 5;
+        w_start = rt1 - 5;
+        w_end =  rt2 + 5;
         % Last trial time shouldn't exceed Experiment end time
-        w_end2(end) = min(w_end2(end), ExpKeys.TimeOffTrack);
-        w_start = sort([w_start1; w_start2]);
-        w_end = sort([w_end1; w_end2]);
+        w_end(end) = min(w_end(end), ExpKeys.TimeOffTrack);
+        % Sorting makes it wonky in some cases (in R119-2007-07-06),so 
+        % only keep trials that are not outliers
+        keep = ~isoutlier(w_end - w_start, 'median');
+        w_start = w_start(keep);
+        w_end = w_end(keep);
         rt_iv = iv(w_start, w_end);
-        % TODO: Catch warnings from Merge IV and set a flag
-        rt_iv = MergeIV([], rt_iv);
         
         % Break down data into near trials
         temp_tvec = ft_csc.time{1} + double(ft_csc.hdr.FirstTimeStamp)/1e6;     
@@ -399,17 +397,16 @@ function od = generateSTS(cfg_in)
         rt2 = rt2(keep);
 
         % For near reward_trials  
-        w_start1 = rt1 - 5;
-        w_end1 = rt1 + 5;
-        w_start2 = rt2 - 5;
-        w_end2 =  rt2 + 5;
+        w_start = rt1 - 5;
+        w_end =  rt2 + 5;
         % Last trial time shouldn't exceed Experiment end time
-        w_end2(end) = min(w_end2(end), ExpKeys.TimeOffTrack);
-        w_start = sort([w_start1; w_start2]);
-        w_end = sort([w_end1; w_end2]);
+        w_end(end) = min(w_end(end), ExpKeys.TimeOffTrack);
+        % Sorting makes it wonky in some cases (in R119-2007-07-06),so 
+        % only keep trials that are not outliers
+        keep = ~isoutlier(w_end - w_start, 'median');
+        w_start = w_start(keep);
+        w_end = w_end(keep);
         rt_iv = iv(w_start, w_end);
-        % TODO: Catch warnings from Merge IV and set a flag
-        rt_iv = MergeIV([], rt_iv);
         
         % Break down data into near trials
         temp_tvec = ft_csc.time{1} + double(ft_csc.hdr.FirstTimeStamp)/1e6;     
@@ -536,9 +533,9 @@ function od = generateSTS(cfg_in)
                 this_flag = false;
                 for iT = 1:length(near_data.trial)
                     if od.fsi_res.near_spec{iM}.trialwise_spk_count(iT) < 2 || ...
-                            sum(od.msn_near_dist(iT,:)) == 0
+                            max(od.msn_near_dist(iT,:)) < 2
                         continue;
-                    elseif od.fsi_res.near_spec{iM}.trialwise_spk_count(iT) < max(od.msn_near_dist(iT,:))
+                    elseif od.fsi_res.near_spec{iM}.trialwise_spk_count(iT) <= max(od.msn_near_dist(iT,:))
                         this_trial_sts = this_sts;
                         this_trial_spks = trial_wise_spike{iT};
                         this_trial_sts.fourierspctrum{1} = this_trial_sts.fourierspctrm{1}(this_trial_spks,:,:);
