@@ -39,7 +39,9 @@ for idx = 1:length(rats)
                     f_idx = find(round(od.fsi_res.near_spec{iC}.freqs) >= f_list{iF}(1) & ...
                         round(od.fsi_res.near_spec{iC}.freqs) <= f_list{iF}(2));
                     % take the average PPC across the frequency window of interest.
-                    tw_ppc =  mean(od.fsi_res.near_spec{iC}.trialwise_ppc(nz_trials,f_idx),2);
+%                     tw_ppc =  mean(od.fsi_res.near_spec{iC}.trialwise_ppc(nz_trials,f_idx),2);
+                    % take max PPC in that range
+                    tw_ppc =  max(od.fsi_res.near_spec{iC}.trialwise_ppc(nz_trials,f_idx),[],2);
                     for iB = 1:length(count)
                         binned_ppc(iF,iB) = mean(tw_ppc(bin == iB)); %expect nan_values
                     end
@@ -71,7 +73,9 @@ for idx = 1:length(rats)
                     f_idx = find(round(od.msn_res.near_spec{iC}.freqs) >= f_list{iF}(1) & ...
                         round(od.msn_res.near_spec{iC}.freqs) <= f_list{iF}(2));
                     % take the average PPC across the frequency window of interest.
-                    tw_ppc =  mean(od.msn_res.near_spec{iC}.trialwise_ppc(nz_trials,f_idx),2);
+%                     tw_ppc =  mean(od.msn_res.near_spec{iC}.trialwise_ppc(nz_trials,f_idx),2);
+                    % take max PPC in that range
+                    tw_ppc =  max(od.msn_res.near_spec{iC}.trialwise_ppc(nz_trials,f_idx),[],2);
                     for iB = 1:length(count)
                         binned_ppc(iF,iB) = mean(tw_ppc(bin == iB)); %expect nan_values
                     end
@@ -123,7 +127,7 @@ for iF = 1:length(f_list)
     temp_ppc = cell2mat(fsi_out(:,iF));
     temp_ppc = temp_ppc(1:2:end,:);
     % Sort according to the middle ppc bin
-    [~,sidx] = sort(temp_ppc(:,4));
+    [~,sidx] = sort(temp_ppc(:,1));
     temp_ppc(:,:) = temp_ppc(sidx,:);
     imagesc(temp_ppc)
     ylabel('Norm PPC')
@@ -137,7 +141,7 @@ for iF = 1:length(f_list)
     temp_ppc = cell2mat(msn_out(:,iF));
     temp_ppc = temp_ppc(1:2:end,:);
     % Sort according to the middle ppc bin
-    [~,sidx] = sort(temp_ppc(:,4));
+    [~,sidx] = sort(temp_ppc(:,1));
     temp_ppc(:,:) = temp_ppc(sidx,:);
     imagesc(temp_ppc)
     ylabel('Norm PPC')

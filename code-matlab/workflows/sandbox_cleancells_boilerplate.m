@@ -10,22 +10,22 @@ for idx = 1:length(rats)
     ofiles = dir(searchString);
     for jdx = 1:length(ofiles)
         load(ofiles(jdx).name); % Load a particular session
-        %do fsi stuff
+        % do fsi stuff
         fsi_labels  = od.label(od.cell_type == 2);
         fsi_labels = cellfun(@(x) extractBefore(x, '.t'), fsi_labels, 'UniformOutput', false);
         for iC = 1:length(fsi_labels)
             if isfield(od.fsi_res.near_spec{iC}, 'flag_no_control_split') && ~od.fsi_res.near_spec{iC}.flag_no_control_split
-                %do fsi_stuff
+                % do fsi_stuff
                 clean_fsi = clean_fsi + 1;
             end
         end
 
-        %do msn stuff
+        % do msn stuff
         msn_labels  = od.label(od.cell_type == 1);
         msn_labels = cellfun(@(x) extractBefore(x, '.t'), msn_labels, 'UniformOutput', false);
         for iC = 1:length(msn_labels)
             if isfield(od.msn_res.near_spec{iC}, 'flag_no_control_split') && ~od.msn_res.near_spec{iC}.flag_no_control_split
-                %do msn_stuff
+                % do msn_stuff
                 clean_msn = clean_msn + 1;
             end
         end

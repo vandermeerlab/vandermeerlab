@@ -10,7 +10,7 @@ msn_out = {};
 % Setting up parameters
 f_list = {[3 5], [7 9], [14 25], [40 65], [65 90]};
 c_list = {'blue', 'cyan', 'red', 'magenta', 'green'}; % make sure c_list and f_list have equal number of items
-min_trial_spikes = 50; % Minimum number of spikes in a trial for it to be considered
+min_trial_spikes = 20; % Minimum number of spikes in a trial for it to be considered
 min_trials = 25; % Minimum number of spike-count thresholded trials in a cell for it to be considered
 edges = [-100,-2,-1.2,-0.4,0.4,1.2,2,100]; % The first and last bins are arbitrarily large to contain anything outside 2 standard deviations
 
@@ -40,9 +40,9 @@ for idx = 1:length(rats)
                     f_idx = find(round(od.fsi_res.near_spec{iC}.freqs) >= f_list{iF}(1) & ...
                         round(od.fsi_res.near_spec{iC}.freqs) <= f_list{iF}(2));
                     % take the average PPC across the frequency window of interest.
-%                     tw_ppc =  mean(od.fsi_res.near_spec{iC}.trialwise_ppc(nz_trials,f_idx),2);
+                    tw_ppc =  mean(od.fsi_res.near_spec{iC}.trialwise_ppc(nz_trials,f_idx),2);
                     % take max PPC in that range
-                    tw_ppc =  max(od.fsi_res.near_spec{iC}.trialwise_ppc(nz_trials,f_idx),[],2);
+%                     tw_ppc =  max(od.fsi_res.near_spec{iC}.trialwise_ppc(nz_trials,f_idx),[],2);
                     for iB = 1:length(count)
                         binned_ppc(iF,iB) = mean(tw_ppc(bin == iB)); %expect nan_values
                     end
@@ -71,9 +71,9 @@ for idx = 1:length(rats)
                     f_idx = find(round(od.msn_res.near_spec{iC}.freqs) >= f_list{iF}(1) & ...
                         round(od.msn_res.near_spec{iC}.freqs) <= f_list{iF}(2));
                     % take the average PPC across the frequency window of interest.
-%                     tw_ppc =  mean(od.msn_res.near_spec{iC}.trialwise_ppc(nz_trials,f_idx),2);
+                    tw_ppc =  mean(od.msn_res.near_spec{iC}.trialwise_ppc(nz_trials,f_idx),2);
                     % take max PPC in that range
-                    tw_ppc =  max(od.msn_res.near_spec{iC}.trialwise_ppc(nz_trials,f_idx),[],2);
+%                     tw_ppc =  max(od.msn_res.near_spec{iC}.trialwise_ppc(nz_trials,f_idx),[],2);
                     for iB = 1:length(count)
                         binned_ppc(iF,iB) = mean(tw_ppc(bin == iB)); %expect nan_values
                     end

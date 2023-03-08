@@ -35,7 +35,10 @@ for idx = 1:length(rats)
                     f_idx = find(round(od.fsi_res.near_spec{iC}.freqs) >= f_list{iF}(1) & ...
                         round(od.fsi_res.near_spec{iC}.freqs) <= f_list{iF}(2));
                     % take the average PPC across the frequency window of interest.
-                    tw_ppc =  mean(od.fsi_res.near_spec{iC}.trialwise_ppc(nz_trials,f_idx),2);
+%                     tw_ppc =  mean(od.fsi_res.near_spec{iC}.trialwise_ppc(nz_trials,f_idx),2);
+                    % take the max PPC in that range
+                    tw_ppc =  max(od.fsi_res.near_spec{iC}.trialwise_ppc(nz_trials,f_idx),[],2);
+                    
                     for iB = 1:length(count)
                         binned_ppc(iF,iB) = mean(tw_ppc(bin == iB)); %expect nan_values
                     end
@@ -121,7 +124,9 @@ for idx = 1:length(rats)
                     f_idx = find(round(od.msn_res.near_spec{iC}.freqs) >= f_list{iF}(1) & ...
                         round(od.msn_res.near_spec{iC}.freqs) <= f_list{iF}(2));
                     % take the average PPC across the frequency window of interest.
-                    tw_ppc =  mean(od.msn_res.near_spec{iC}.trialwise_ppc(nz_trials,f_idx),2);
+%                     tw_ppc =  mean(od.msn_res.near_spec{iC}.trialwise_ppc(nz_trials,f_idx),2);
+                    % take the max PPC in that range
+                    tw_ppc = max(od.msn_res.near_spec{iC}.trialwise_ppc(nz_trials,f_idx),[],2);
                     for iB = 1:length(count)
                         binned_ppc(iF,iB) = mean(tw_ppc(bin == iB)); %expect nan_values
                     end
@@ -155,6 +160,20 @@ for idx = 1:length(rats)
                     xlabel('Z-Scored Firing rate')
                     ylabel('Norm PPC')
                 end
+
+                % Plot PPC and STS for comparison
+                subplot(3,length(f_list), 2*length(f_list)+1:2*length(f_list)+2)
+                plot(od.msn_res.near_spec{iC}.freqs, od.msn_res.near_spec{iC}.ppc, 'color', 'black')
+                hold on;
+                for iF = 1:length(f_list)
+                    f_idx = find(round(od.msn_res.near_spec{iC}.freqs) >= f_list{iF}(1) & ...
+                        round(od.msn_res.near_spec{iC}.freqs) <= f_list{iF}(2));
+                    area(od.msn_res.near_spec{iC}.freqs(f_idx), od.msn_res.near_spec{iC}.ppc(f_idx), ...
+                        'FaceColor', c_list{iF}, 'FaceAlpha', 0.5)                    
+                end
+                xlabel('Frequencies (Hz)');
+                ylabel('PPC');
+                title('ALL trials')
 
                 subplot(3,length(f_list), 2*length(f_list)+3:2*length(f_list)+4)
                 plot(od.msn_res.near_spec{iC}.freqs, od.msn_res.near_spec{iC}.sts_vals, 'color', 'black')
