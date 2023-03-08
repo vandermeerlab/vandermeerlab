@@ -177,7 +177,7 @@ this_ppc              = ft_spiketriggeredspectrum_stat(cfg_ppc,this_sts);
 if ~isempty(find(isnan(this_ppc.ppc0),1))
     warning('Cell %s has nans in the unsampled ppc0',sd.S.label{iC});
 end
-od.unsampled_ppc0 = this_ppc.ppc0';
+od.unsampled_ppc0 = this_ppc.ppc0;
 
 cfg_ppc.method = 'ppc2';
 this_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc,this_sts);
@@ -185,13 +185,14 @@ this_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc,this_sts);
 if ~isempty(find(isnan(this_ppc.ppc2),1))
     warning('Cell %s has nans in the unsampled ppc2',sd.S.label{iC});
 end
-od.unsampled_ppc2 = this_ppc.ppc2';
+od.unsampled_ppc2 = this_ppc.ppc2;
 
 %% Set parameters for subsampling
 s_factors = [2, 5, 10, 25, 50]; % factor by which spike count is divided in a given round of subsampling
 n_subs = 250; % Rounds of subsampling
 all_scount = od.spk_count;
-
+od.s_factors = s_factors;
+od.n_subs = n_subs;
 % Random subsampling
 od.rsample = cell(1,length(s_factors));
 for iS = 1:length(s_factors)
@@ -237,4 +238,29 @@ for iS = 1:length(s_factors)
 end
 %% Save recalculated values
 save(strcat('D:\RandomVstrAnalysis\temp\',label, '_ppc_test.mat'), 'od')
+%% Plotting
+f_list = {[3 5], [7 9], [14 25], [40 65], [65 90]};
+c_list = {'blue', 'cyan', 'red', 'magenta', 'green'}; % make sure c_list and f_list have equal number of items
+fig = figure('WindowState', 'maximized');
+for iF = 1:length(f_list)
+    ax = subplot(1, length(f_list), iF);
+    hold on
+    f_idx = find(round(od.freqs) >= f_list{iF}(1) & ...
+        round(od.freqs) <= f_list{iF}(2));
+    u0 = mean(od.unsampled_ppc0(f_idx));
+    u2 = mean(od.unsampled_ppc2(f_idx));
+    % take max PPC in the range
+%     plot(od.s_factors, u0);
+%     plot(od.s_factors, u2);
+    plot(od.s_factors, abs(cellfun(@(x) mean(x.ppc0(f_idx)), od.rsample) - u0));
+    plot(od.s_factors, abs(cellfun(@(x) mean(x.ppc0(f_idx)), od.csample) - u0));
+    ax.YAxis.Exponent = 0;
+    xticks(od.s_factors)
+    xlabel('Subsampling Factor');
+    legend({'Random', 'Contiguous'}, 'FontSize', 10, 'Location','northwest');
+    title(sprintf("%d Hz - %d Hz", f_list{iF}(1), f_list{iF}(2)), 'color', c_list{iF})
+end
+sgtitle(sprintf('FSI, Total Spikes: %d, Rounds of Subsampling: %d', od.spk_count, od.n_subs))
+WriteFig(fig,strcat('D:\RandomVstrAnalysis\temp\',label, '_PPCTest'),1);
+close;
 
