@@ -1,13 +1,14 @@
-%% Boiler plate to recalculate spectral measures for any FSI or MSN
+%% Script to generate PPC as a function of firing-rate
 % setup
-
 clear;
 %load significant cells
 cd('D:\RandomVstrAnalysis\final_results\'); % Change this to your local machine location for results
 load('./significance.mat');
 
-% Change the below line to msn or msn to choose cell accordingly 
-label = sig_msn{randi(length(sig_msn),1)};
+% Load through
+for iF = 1:
+
+label = sig_fsi{randi(length(sig_fsi),1)};
 
 % generate correct path on the basis of the label
 toks = strsplit(label, '-');
@@ -260,7 +261,7 @@ for iF = 1:length(f_list)
     legend({'Random', 'Contiguous'}, 'FontSize', 10, 'Location','northwest');
     title(sprintf("%d Hz - %d Hz", f_list{iF}(1), f_list{iF}(2)), 'color', c_list{iF})
 end
-sgtitle(sprintf('MSN, Total Spikes: %d, Rounds of Subsampling: %d', od.spk_count, od.n_subs))
+sgtitle(sprintf('FSI, Total Spikes: %d, Rounds of Subsampling: %d', od.spk_count, od.n_subs))
 WriteFig(fig,strcat('D:\RandomVstrAnalysis\temp\',label, '_PPCTest'),1);
 close;
 
