@@ -1,12 +1,9 @@
-%% Boiler plate to recalculate spectral measures for any FSI or MSN
+%% Recalculate spectral measures for any FSI
 % setup
-
 clear;
 %load significant cells
 cd('D:\RandomVstrAnalysis\final_results\'); % Change this to your local machine location for results
 load('./significance.mat');
-
-% Change the below line to msn or fsi to choose cell accordingly 
 label = sig_fsi{randi(length(sig_fsi),1)};
 
 % generate correct path on the basis of the label

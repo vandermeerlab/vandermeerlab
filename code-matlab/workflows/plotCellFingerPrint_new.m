@@ -5,8 +5,8 @@ clean_msn = 0;
 clean_fsi = 0;
 c1 = [75/255 0/255 146/255];  % Violet/Purple
 c2 = [26/255 255/255 26/255]; % Green
-c3 = [0.7 0.7 0.7]; %Gray
-min_freq = 2;
+c3 = [0.7 0.7 0.7]; % Gray
+min_freq = 2; % Minimum frequency in Hertz
 % Load Significance info
 load('./significance.mat');
 %%
