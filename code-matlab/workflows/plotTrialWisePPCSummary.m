@@ -74,3 +74,29 @@ leg.FontWeight = 'bold';
 box off;
 % title('Distribution of Average SD', 'FontSize', 40)
 
+%% Alternate plotting
+q0 = mean(fsi_sd, 2);
+q1 = mean(msn_sd, 2);
+fig = figure('WindowState', 'maximized');
+ax1 = subplot(1,2,1);
+h1 = histogram(ax1, q0,0:0.005:1, 'Normalization', 'count', 'FaceColor', 'green', 'FaceAlpha', 1);
+title('FSI');
+ax1.XAxis.FontSize = 25;
+ax1.YAxis.FontSize = 25;
+ax1.XLabel.String = 'Mean of SDs over all frequencies';
+ax1.YLabel.String = 'Count';
+ax1.TickDir = 'out';
+ax1.XTick = [0,0.1,0.2,0.4];
+ax1.XLim = [0, 0.4];
+ax1.Box = 'off';
+ax2 = subplot(1,2,2);
+h2 = histogram(ax2, q1,0:0.005:1, 'Normalization', 'count', 'FaceColor', 'red', 'FaceAlpha', 0.6);
+title('MSN');
+ax2.XAxis.FontSize = 25;
+ax2.YAxis.FontSize = 25;
+ax2.TickDir = 'out';
+ax2.XTick = [0,0.1,0.2,0.4];
+ax2.XLim = [0, 0.4];
+ax2.Box = 'off';
+ax2.XLabel.String = 'Mean of SDs over all frequencies';
+ax2.YLabel.String = 'Count';
