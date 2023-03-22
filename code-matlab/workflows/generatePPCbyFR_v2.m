@@ -5,11 +5,13 @@ clear;
 %load significant cells
 cd('D:\RandomVstrAnalysis\final_results\'); % Change this to your local machine location for results
 load('./significance.mat');
-num_subs = 10;
+num_subs = 1000;
 z_edges = [-100,-2,-1,0,1,2,100]; % z-score bin edges
 n_edges = [0:1/6:1]; % norm bin edges
 nbins = length(z_edges-1); % Number of bins
-nshufs = 1000;
+nshufs = 1000; % number of shuffles to calculate STS/PPC Significance
+spk_dt = 0.025; % interspike interval for surrogate spike train used for spike-triggered spectrum pool
+visited  = dictionary('dummy',{-1}); % Use this to avoid creating fake spike-triggered spectra again
 
 % Cycle through MSNs first
 for iC = 1:length(sig_msn)
@@ -176,29 +178,44 @@ for iC = 1:length(sig_msn)
     cfg_ppc.avgoverchan   = 'weighted';
     cfg_ppc.timwin        = 'all'; % compute over all available spikes in the window
 
+    if(~isKey(visited, path))
+        % If visiting this path for the first time, create session wide STS-pool
+        cfg_f.begsample = cfg_onTrack.begsample;
+        cfg_f.endsample = cfg_onTrack.endsample;
+        f_spike = sd.S.ft_spikes;
+        f_spike.timestamp{1} = double(ft_csc.hdr.FirstTimeStamp) +  ...
+            10^6*(ft_csc.time{1}(1):spk_dt:ft_csc.time{1}(end));
+        f_data = ft_appendspike([], ft_csc,f_spike);
+        f_data = ft_redefinetrial(cfg_f,f_data);
+        fprintf("Number of fake spikes for session %s is %d\n", path, sum(f_data.trial{1}(2,:)));
+        cfg_f = [];
+        cfg_f.method = 'mtmconvol';
+        cfg_f.foi = 1:1:100;
+        cfg_f.t_ftimwin = 5./cfg_sts.foi;
+        cfg_f.taper = 'hanning';
+        cfg_f.spikechannel =  f_spike.label{1};
+        cfg_sts.channel = f_data.label{1};
+        f_sts = ft_spiketriggeredspectrum(cfg_f, f_data);
+        visited(path) = {f_sts};
+        clear f_data f_sts cfg_f f_spike
+    else
+        fprintf('This saved you time!')
+    end
+
     % do shuffles for significance_testing
+    od.nshufs = nshufs;
+    pool_sts = visited(path);
+    pool_sts = pool_sts{1};
     shuf_sts = zeros(nshufs, length(od.unsampled_sts));
     shuf_ppc = zeros(nshufs, length(od.unsampled_sts));
     for iShuf = 1:nshufs
-        shuf_data = near_data;
-        % shuffle spikes in each trial while maintaining the same
-        % distribution of ISIs barring 1 or 2 at most
-        for iT = 1:length(shuf_data.trial)
-            n_spk = zeros(1,length(shuf_data.trial{iT}));
-            t_spk = find(shuf_data.trial{iT}(2,:));
-            % Skip if no spikes
-            if isempty(t_spk)
-                continue
-            end
-            t_ISI = diff(t_spk);
-            t_ISI = t_ISI(randperm(length(t_ISI))); % shuffle the ISIs
-            t_spk = [0, cumsum(t_ISI)] + randi(length(n_spk)); % add a random start
-            t_spk = 1 + mod(t_spk-1,length(n_spk)); % making the new spike timings sensible
-            n_spk(t_spk) = 1;
-            shuf_data.trial{iT}(2,:) = n_spk;
-            assert(sum(shuf_data.trial{iT}(2,:)) == sum(near_data.trial{iT}(2,:)));
-        end
-        this_sts = ft_spiketriggeredspectrum(cfg_sts, shuf_data);
+        pool_count = length(pool_sts.time{1});
+        keep = randperm(pool_count);
+        keep = keep(1:od.spk_count);
+        this_sts = pool_sts;
+        this_sts.fourierspctrm{1} = pool_sts.fourierspctrm{1}(keep,:,:);
+        this_sts.time{1} = pool_sts.time{1}(keep,:);
+        this_sts.trial{1} = pool_sts.trial{1}(keep,:);
         shuf_sts(iShuf,:) = nanmean(sq(abs(this_sts.fourierspctrm{1})));
         this_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc, this_sts);
         shuf_ppc(iShuf,:) = this_ppc.ppc0;
@@ -476,29 +493,44 @@ for iC = 1:length(sig_fsi)
     cfg_ppc.avgoverchan   = 'weighted';
     cfg_ppc.timwin        = 'all'; % compute over all available spikes in the window
 
+    if(~isKey(visited, path))
+        % If visiting this path for the first time, create session wide STS-pool
+        cfg_f.begsample = cfg_onTrack.begsample;
+        cfg_f.endsample = cfg_onTrack.endsample;
+        f_spike = sd.S.ft_spikes;
+        f_spike.timestamp{1} = double(ft_csc.hdr.FirstTimeStamp) +  ...
+            10^6*(ft_csc.time{1}(1):spk_dt:ft_csc.time{1}(end));
+        f_data = ft_appendspike([], ft_csc,f_spike);
+        f_data = ft_redefinetrial(cfg_f,f_data);
+        fprintf("Number of fake spikes for session %s is %d\n", path, sum(f_data.trial{1}(2,:)));
+        cfg_f = [];
+        cfg_f.method = 'mtmconvol';
+        cfg_f.foi = 1:1:100;
+        cfg_f.t_ftimwin = 5./cfg_sts.foi;
+        cfg_f.taper = 'hanning';
+        cfg_f.spikechannel =  f_spike.label{1};
+        cfg_sts.channel = f_data.label{1};
+        f_sts = ft_spiketriggeredspectrum(cfg_f, f_data);
+        visited(path) = {f_sts};
+        clear f_data f_sts cfg_f f_spike
+    else
+        fprintf('This saved you time!')
+    end
+
     % do shuffles for significance_testing
+    od.nshufs = nshufs;
+    pool_sts = visited(path);
+    pool_sts = pool_sts{1};
     shuf_sts = zeros(nshufs, length(od.unsampled_sts));
     shuf_ppc = zeros(nshufs, length(od.unsampled_sts));
     for iShuf = 1:nshufs
-        shuf_data = near_data;
-        % shuffle spikes in each trial while maintaining the same
-        % distribution of ISIs barring 1 or 2 at most
-        for iT = 1:length(shuf_data.trial)
-            n_spk = zeros(1,length(shuf_data.trial{iT}));
-            t_spk = find(shuf_data.trial{iT}(2,:));
-            % Skip if no spikes
-            if isempty(t_spk)
-                continue
-            end
-            t_ISI = diff(t_spk);
-            t_ISI = t_ISI(randperm(length(t_ISI))); % shuffle the ISIs
-            t_spk = [0, cumsum(t_ISI)] + randi(length(n_spk)); % add a random start
-            t_spk = 1 + mod(t_spk-1,length(n_spk)); % making the new spike timings sensible
-            n_spk(t_spk) = 1;
-            shuf_data.trial{iT}(2,:) = n_spk;
-            assert(sum(shuf_data.trial{iT}(2,:)) == sum(near_data.trial{iT}(2,:)));
-        end
-        this_sts = ft_spiketriggeredspectrum(cfg_sts, shuf_data);
+        pool_count = length(pool_sts.time{1});
+        keep = randperm(pool_count);
+        keep = keep(1:od.spk_count);
+        this_sts = pool_sts;
+        this_sts.fourierspctrm{1} = pool_sts.fourierspctrm{1}(keep,:,:);
+        this_sts.time{1} = pool_sts.time{1}(keep,:);
+        this_sts.trial{1} = pool_sts.trial{1}(keep,:);
         shuf_sts(iShuf,:) = nanmean(sq(abs(this_sts.fourierspctrm{1})));
         this_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc, this_sts);
         shuf_ppc(iShuf,:) = this_ppc.ppc0;
