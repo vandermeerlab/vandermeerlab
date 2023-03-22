@@ -199,7 +199,7 @@ for iC = 1:length(sig_msn)
         visited(path) = {f_sts};
         clear f_data f_sts cfg_f f_spike
     else
-        fprintf('This saved you time!')
+        fprintf('This saved you time!\n')
     end
 
     % do shuffles for significance_testing
@@ -213,6 +213,7 @@ for iC = 1:length(sig_msn)
         keep = randperm(pool_count);
         keep = keep(1:od.spk_count);
         this_sts = pool_sts;
+        this_sts.label{1} = label; % Because the pooled STS might have a differnt spike channel label
         this_sts.fourierspctrm{1} = pool_sts.fourierspctrm{1}(keep,:,:);
         this_sts.time{1} = pool_sts.time{1}(keep,:);
         this_sts.trial{1} = pool_sts.trial{1}(keep,:);
@@ -528,6 +529,7 @@ for iC = 1:length(sig_fsi)
         keep = randperm(pool_count);
         keep = keep(1:od.spk_count);
         this_sts = pool_sts;
+        this_sts.label{1} = label; % Because the pooled STS might have a differnt spike channel label
         this_sts.fourierspctrm{1} = pool_sts.fourierspctrm{1}(keep,:,:);
         this_sts.time{1} = pool_sts.time{1}(keep,:);
         this_sts.trial{1} = pool_sts.trial{1}(keep,:);
