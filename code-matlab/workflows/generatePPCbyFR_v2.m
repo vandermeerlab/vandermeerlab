@@ -212,19 +212,17 @@ for iC = 1:length(sig_msn)
         pool_count = length(pool_sts.time{1});
         keep = randperm(pool_count);
         keep = keep(1:od.spk_count);
-        this_sts = pool_sts;
-        this_sts.label{1} = label; % Because the pooled STS might have a differnt spike channel label
-        this_sts.fourierspctrm{1} = pool_sts.fourierspctrm{1}(keep,:,:);
-        this_sts.time{1} = pool_sts.time{1}(keep,:);
-        this_sts.trial{1} = pool_sts.trial{1}(keep,:);
-        shuf_sts(iShuf,:) = nanmean(sq(abs(this_sts.fourierspctrm{1})));
-        this_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc, this_sts);
-        shuf_ppc(iShuf,:) = this_ppc.ppc0;
+        this_shuf = pool_sts;
+        this_shuf.label{1} = label; % Because the pooled STS might have a differnt spike channel label
+        this_shuf.fourierspctrm{1} = pool_sts.fourierspctrm{1}(keep,:,:);
+        this_shuf.time{1} = pool_sts.time{1}(keep,:);
+        this_shuf.trial{1} = pool_sts.trial{1}(keep,:);
+        shuf_sts(iShuf,:) = nanmean(sq(abs(this_shuf.fourierspctrm{1})));
+        this_shuf_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc, this_shuf);
+        shuf_ppc(iShuf,:) = this_shuf_ppc.ppc0;
     end
-    od.shuf_sts_mean = mean(shuf_sts);
-    od.shuf_sts_sd = std(shuf_sts);
-    od.shuf_ppc_mean = mean(shuf_ppc);
-    od.shuf_ppc_sd = std(shuf_ppc);
+    od.shuf_sts = shuf_sts;
+    od.shuf_ppc = shuf_ppc;
 
     % Get mfr to bin trials
     tcount = length(rt_iv.tstart);
@@ -528,19 +526,17 @@ for iC = 1:length(sig_fsi)
         pool_count = length(pool_sts.time{1});
         keep = randperm(pool_count);
         keep = keep(1:od.spk_count);
-        this_sts = pool_sts;
-        this_sts.label{1} = label; % Because the pooled STS might have a differnt spike channel label
-        this_sts.fourierspctrm{1} = pool_sts.fourierspctrm{1}(keep,:,:);
-        this_sts.time{1} = pool_sts.time{1}(keep,:);
-        this_sts.trial{1} = pool_sts.trial{1}(keep,:);
-        shuf_sts(iShuf,:) = nanmean(sq(abs(this_sts.fourierspctrm{1})));
-        this_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc, this_sts);
-        shuf_ppc(iShuf,:) = this_ppc.ppc0;
+        this_shuf = pool_sts;
+        this_shuf.label{1} = label; % Because the pooled STS might have a differnt spike channel label
+        this_shuf.fourierspctrm{1} = pool_sts.fourierspctrm{1}(keep,:,:);
+        this_shuf.time{1} = pool_sts.time{1}(keep,:);
+        this_shuf.trial{1} = pool_sts.trial{1}(keep,:);
+        shuf_sts(iShuf,:) = nanmean(sq(abs(this_shuf.fourierspctrm{1})));
+        this_shuf_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc, this_shuf);
+        shuf_ppc(iShuf,:) = this_shuf_ppc.ppc0;
     end
-    od.shuf_sts_mean = mean(shuf_sts);
-    od.shuf_sts_sd = std(shuf_sts);
-    od.shuf_ppc_mean = mean(shuf_ppc);
-    od.shuf_ppc_sd = std(shuf_ppc);
+    od.shuf_sts = shuf_sts;
+    od.shuf_ppc = shuf_ppc;
 
     % Get mfr to bin trials
     tcount = length(rt_iv.tstart);
