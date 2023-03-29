@@ -1,4 +1,4 @@
-function iv_out = MergeIV2(cfg_in,iv_in)
+function iv_out = MergeIV(cfg_in,iv_in)
 %MERGEIV Merge touching, overlapping, or nearby intervals within an iv struct
 %   iv_out = MERGEIV(cfg,iv_in)
 % 
@@ -42,12 +42,12 @@ function iv_out = MergeIV2(cfg_in,iv_in)
 cfg_def.gap = 0;
 cfg_def.verbose = 1;
 
-if ~CheckIV(iv_in);
+if ~CheckIV(iv_in)
     error('iv_in must be an iv data type.')
 end
 
 % make sure the intervals are ordered
-if ~issorted(iv_in.tstart);
+if ~issorted(iv_in.tstart)
     error('Intervals must be in ascending order.')
 end
 
@@ -63,14 +63,15 @@ iv_temp = ResizeIV(cfg_temp,iv_in);
 
 % merge the resulting iv
 remove = zeros(size(iv_temp.tstart));
-for iInterval = 1:length(iv_temp.tstart)-1;
+for iInterval = 1:length(iv_temp.tstart)-1
     if iv_temp.tstart(iInterval+1) <= iv_temp.tend(iInterval)
         remove(iInterval) = iInterval;
         iv_temp.tstart(iInterval+1) = iv_temp.tstart(iInterval);
     end
 end
 
-remove = remove > 0; % kill will be 1 for intervals to remove, and zero for the ones to be kept
+remove = remove > 0; % kill will be 1 for intervals to remove, and zero
+% for the ones to be kept
 iv_temp.tstart(remove) = [];
 iv_temp.tend(remove) = [];
 
@@ -82,7 +83,8 @@ iv_out = ResizeIV(cfg_temp,iv_temp);
 
 % talk to me
 if cfg.verbose
-    disp([mfun,': ',num2str(length(iv_in.tstart)),' intervals in, ',num2str(length(iv_out.tstart)),' intervals out.'])
+    disp([mfun,': ',num2str(length(iv_in.tstart)),' intervals in, ', ...
+        num2str(length(iv_out.tstart)),' intervals out.'])
 end
 
 % housekeeping
