@@ -316,6 +316,7 @@ function od = generateSTS(cfg_in)
                     near_trialwise_ppc(iT,:) = this_trial_ppc.ppc0;
                  end
             end
+            od.msn_res.near_spec{iM}.trialwise_ppc = near_trialwise_ppc;      
         end 
     end
     
@@ -479,14 +480,17 @@ function od = generateSTS(cfg_in)
             this_flag = false;
                 
             % In each trial, subsample spikes based on co-recorded msn
-            % trial-wise spike count. If trial-wise spike count is < 2,
+            % trial-wise spike count. If trial-wise spike count is < 2, or
+            % the trial-wise spike count in all co-recorded MSNs is < 2,
             % skip that trial. If the number of FSI spikes in that trial <
             % the number of spikes in any co-recorded MSN for that trial,
             % don't subsamples and use all the FSI spikes
             for iS = 1:cfg_master.num_subsamples
                 this_tw_ppc = nan(length(near_data.trial), length(od.fsi_res.near_spec{iM}.freqs));
                 for iT = 1:length(near_data.trial)
-                    if od.fsi_res.near_spec{iM}.trialwise_spk_count(iT) < 2 
+                    valid_choices = od.msn_near_dist(iT,:);
+                    valid_choices = valid_choices(valid_choices>1);
+                    if od.fsi_res.near_spec{iM}.trialwise_spk_count(iT) < 2 || isempty(valid_choices)
                         continue;
                     elseif od.fsi_res.near_spec{iM}.trialwise_spk_count(iT) <= max(od.msn_near_dist(iT,:)) % at least one co-recorded MSN has more spikes in this trial
                         % Don't subsample, use all spikes
@@ -499,8 +503,6 @@ function od = generateSTS(cfg_in)
                         this_tw_ppc(iT,:) = sub_ppc.ppc0;
                     else
                         % Choose a number to subsample based on co-recorded MSN spike counts for this trial
-                        valid_choices = od.msn_near_dist(iT,:);
-                        valid_choices = valid_choices(valid_choices>1);
                         s_factor = 1/length(valid_choices);
                         choice = floor(rand()/s_factor)+1;                 
                         sub_idx = randsample(trial_wise_spike{iT}, valid_choices(choice));
