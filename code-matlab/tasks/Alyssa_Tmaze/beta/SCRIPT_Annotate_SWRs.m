@@ -155,16 +155,19 @@ clear
 
 % What is the filename for your manually identified intervals?
 cfg.fn = 'manualIV'; % unique string identifier for the file you containing iv data you want to annotate
+cfg.fn = 'R064-2015-04-18-manualIV_post_nofilter_ED'; % unique string identifier for the file you containing iv data you want to annotate
+cfg.fn = 'R064-2015-04-18-manualIV_post_nofilter_ED_annoted';
 
 % Do you want to be shown the intervals in random or chronological order?
 cfg.mode = 'random'; % 'chrono' or 'random'
+cfg.mode = 'chrono'; % 'chrono' or 'random'
 
 % Do you want to filter the LFP (this helps you see the shape of the SWR
 % by removing underlying oscillations or w/e)
 % If empty [], uses the settings saved from manual identification
 % If 1, filters LFP
 % If 0, does not filter the LFP
-cfg.FilterLFP = 1; % [], 0, or 1
+cfg.FilterLFP = 0; % [], 0, or 1
 
 % If this section describes what you want, hit "Run" or press F5
 

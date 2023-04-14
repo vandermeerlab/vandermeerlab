@@ -91,12 +91,14 @@ clear
 
 % T-maze specific recording segments to restrict data to
 cfg.whichEpochs = {'task'}; %  {'prerecord','task','postrecord'} 
+cfg.whichEpochs = {'postrecord'}; %  {'prerecord','task','postrecord'} 
 
 % How many seconds of data do you want to peruse? (this gets evenly divded between the chosen epochs)
 cfg.nSeconds = 360; % 720 seconds = 12 minutes
 
 % Select t files or tt files
-cfg.whichSFiles = 'none'; % 't' for MClust t files (isolated units), or 'tt' for MakeTTFiles tt files (all spikes from tetrode)
+% cfg.whichSFiles = 'none'; % 't' for MClust t files (isolated units), or 'tt' for MakeTTFiles tt files (all spikes from tetrode)
+cfg.whichSFiles = 't';
 % 'none' for no spike files available
 
 % Do you want the LFP filtered?
@@ -107,7 +109,8 @@ cfg.Restrict = 0; % If 1, restricts data to regions of interest, if 0 doesn't
 
 % *** Would you like to resume from a previous session?
 cfg.resumeSession = 0; % 1 if you want to resume, 0 if you're starting fresh
-cfg.fn = 'manualIV'; % unique string identifier for the file you saved from a previous session
+% cfg.fn = 'manualIV'; % unique string identifier for the file you saved from a previous session
+cfg.fn = 'manualIV_r064-2015-04-18_ED_post_nofilter'; % unique string identifier for the file you saved from a previous session
 
 % If this section describes what you want, hit "Run" or press F5
 
@@ -140,7 +143,8 @@ switch cfg.whichSFiles
     case 't'
        % Load isolated units
        please = []; % load 
-       please.load_questionable_cells = 1;
+       please.load_questionable_cells = 0;
+%        please.load_questionable_cells = 1;
        S = LoadSpikes(please);
     case 'none'
         S = ts;
@@ -182,6 +186,7 @@ envelopeIV = RemoveIV(please,envelopeIV);
 if cfg.FilterLFP
     please = [];
     please.f = [40 450]; % in Hz
+    please.f = [150 300]; % in Hz
     please.type = 'fdesign'; % doit4me
     CSC = FilterLFP(please,CSC);
 end
