@@ -42,6 +42,8 @@ switch machinename
         base_fp = 'E:\data\promoted\';
     case 'mac'
         base_fp = '/Users/mac/Dropbox (Dartmouth College)/Data/Carey/';
+    case 'PROMETHEUS'
+        base_fp = 'E:\Data\Carey';
     otherwise
         error('Unknown computer. Edit this function to add your data path and run the analysis.')
 end

@@ -140,7 +140,7 @@ end		% for all files
 % this makes sure that if you specify a min cluster quality it will select appropriate clusters
 % otherwise you can have specified a min cluster quality without using the getRatings flag
 % and not have LoadSpikes restrict the cluster quality
-if cfg.min_cluster_quality < 5 && cfg.getRatings == 0
+if ~isempty(cfg.min_cluster_quality) && cfg.min_cluster_quality < 5 && cfg.getRatings == 0
     cfg.getRatings = 1;
 end
     
