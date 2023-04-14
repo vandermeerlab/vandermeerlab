@@ -90,13 +90,13 @@ clear
 % Set your current directory to the Tmaze session you want to work with
 
 % T-maze specific recording segments to restrict data to
-cfg.whichEpochs = {'prerecord','task','postrecord'}; %  {'prerecord','task','postrecord'} 
+cfg.whichEpochs = {'task'}; %  {'prerecord','task','postrecord'} 
 
 % How many seconds of data do you want to peruse? (this gets evenly divded between the chosen epochs)
 cfg.nSeconds = 720; % 720 seconds = 12 minutes
 
 % Select t files or tt files
-cfg.whichSFiles = 'tt'; % 't' for MClust t files (isolated units), or 'tt' for MakeTTFiles tt files (all spikes from tetrode)
+cfg.whichSFiles = 't'; % 't' for MClust t files (isolated units), or 'tt' for MakeTTFiles tt files (all spikes from tetrode)
 % 'none' for no spike files available
 
 % Do you want the LFP filtered?
@@ -126,7 +126,7 @@ end
 % get CSC
 LoadExpKeys
 please = [];
-please.fc = ExpKeys.goodSWR(1);
+please.fc = {'R149-2008-08-11-CSC10a.Ncs'};
 please.resample = 2000;
 CSC = LoadCSC(please);
 
@@ -169,7 +169,7 @@ please = []; please.weightby = 'amplitude'; % return envelope
 envelope = OldWizard(please,CSC);
 
 % Threshold to produce intervals
-please = []; please.method = 'zscore'; please.threshold = 0;
+please = []; please.method = 'zscore'; please.threshold = 5;
 envelopeIV = TSDtoIV2(please,envelope);
 
 % Remove events that are too short
@@ -248,4 +248,5 @@ please.hdr = hdr;
 please.mode = 'unfixed';
 please.segments = hdr.segments;
 please.evt = envelopeIV;
+please.lfp_ref = CSC_ref;
 ducktrap(please,S,CSC)

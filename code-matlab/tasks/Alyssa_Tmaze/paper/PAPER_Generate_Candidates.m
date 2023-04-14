@@ -37,7 +37,7 @@ cfg.verbose = 1; %1 - yes, 0 - no (if 0, GenCandidateEvents still talks, but no 
 cfg.load_questionable_cells = 1;
 
 % Which SWR detector do you want to use? 
-cfg.SWRmethod = 'HT'; % 'AM' for amSWR (frequency content similarity), 'HT' for OldWizard (hilbert transform), 'TR' for photonic (transient detection), or 'none' to skip
+cfg.SWRmethod = 'AM'; % 'AM' for amSWR (frequency content similarity), 'HT' for OldWizard (hilbert transform), 'TR' for photonic (transient detection), or 'none' to skip
 
 % Which MUA detector do you want to use?
 cfg.MUAmethod = 'none'; % 'AM' for amMUA, or 'none' for skip MUA detection

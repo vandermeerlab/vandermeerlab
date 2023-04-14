@@ -181,6 +181,8 @@ for iVarg = 1:length(varargin)
     end
 end
 
+cfg.lfp(2) = cfg.lfp_ref;
+
 if isempty(S) && ~isempty(cfg.lfp) % then user wants to see the LFP only
     S = ts;
     S.t{1}(1,1) = cfg.lfp.tvec(1); % make a fake S because MultiRaster requires this as an input in order to work
@@ -201,6 +203,8 @@ ax_main = gca;
 if ~isempty(cfg.sidekick)
    sidekick(cfg.sidekick{:});
 end
+
+cfg.lfp(2) = [];
 
 % ~~~~~~ SEGMENTS; plot boundaries for regions of interest ~~~~~~~~~~~~~~~~~
 if ~isempty(cfg.segments) && ~CheckIV(cfg.segments)
@@ -389,8 +393,8 @@ end
         
         % return color of LFP/spikes/intervals to have nice contrast with white background
         %if isfield(hMR,'S'); set(hMR.S(:),'Color',cfg.spkColor); end
-        if isfield(hMR,'LFP'); set(hMR.LFP,'Color',cfg.lfpColor); end
-        if isfield(hMR,'LFP_iv'); set(hMR.LFP_iv,'Color',cfg.ivColor); end
+        if isfield(hMR,'LFP'); LFPs = [hMR.LFP.LFP]; set(LFPs(1),'Color',cfg.lfpColor); end
+        if isfield(hMR,'LFP_iv'); set(hMR.LFP.LFP_iv,'Color',cfg.ivColor); end
     end
 
 %% callback functions
@@ -562,10 +566,10 @@ end
                     evt.tend(discard) = [];
                 end
                 
-                evt.hdr = cfg.hdr;
-                
+                % evt.hdr = cfg.hdr;
+                % cfg.lfp_ref = [];
                 % housekeeping
-                evt = History(evt,mfun,cfg);
+                %evt = History(evt,mfun,cfg);
                 
                 [~,name,~] = fileparts(pwd);
                 uisave('evt',[name,'-manualIV']) % opens window for saving stuff
@@ -677,8 +681,8 @@ end
                 
                 % change colors of LFP/spikes/intervals for contrast with spectrogram
                 %if isfield(hMR,'S'); set(hMR.S,'Color',[1 1 1 0.5]); end
-                if isfield(hMR,'LFP'); set(hMR.LFP,'Color','w'); end
-                if isfield(hMR,'LFP_iv'); set(hMR.LFP_iv,'Color','r'); end
+                if isfield(hMR,'LFP');  LFPs = [hMR.LFP.LFP]; set(LFPs(1),'Color','w'); end
+                if isfield(hMR,'LFP_iv'); set(hMR.LFP.LFP_iv,'Color','r'); end
                 
             case 'decibel-watt'
                 P = 10*log10(P); % rescale power
@@ -686,16 +690,16 @@ end
                 
                 % change colors of LFP/spikes/intervals for contrast with spectrogram
                 %if isfield(hMR,'S'); set(hMR.S(:),'Color','k'); end
-                if isfield(hMR,'LFP'); set(hMR.LFP,'Color','k'); end
-                if isfield(hMR,'LFP_iv'); set(hMR.LFP_iv,'Color','b'); end
+                if isfield(hMR,'LFP'); LFPs = [hMR.LFP.LFP]; set(LFPs(1),'Color','k'); end
+                if isfield(hMR,'LFP_iv'); set(hMR.LFP.LFP_iv,'Color','b'); end
                 
             case 'raw'
                 col = [0.09*10^-10 3*10^-10]; % some arbitrary range for the color scaling
                 
                 % change colors of LFP/spikes/intervals for contrast with spectrogram
                 %if isfield(hMR,'S'); set(hMR.S(:),'Color','k'); end
-                if isfield(hMR,'LFP'); set(hMR.LFP,'Color','w'); end
-                if isfield(hMR,'LFP_iv'); set(hMR.LFP_iv,'Color','r'); end
+                if isfield(hMR,'LFP');  LFPs = [hMR.LFP.LFP]; set(LFPs(1),'Color','w'); end
+                if isfield(hMR,'LFP_iv'); set(hMR.LFP.LFP_iv,'Color','r'); end
         end
         
         imagesc(T,F,P,col);

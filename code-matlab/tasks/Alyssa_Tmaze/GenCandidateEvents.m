@@ -55,13 +55,13 @@ cfg_def.MUAmethod = 'AM'; % 'AM' for amMUA, or 'none' for skip MUA detection
 cfg_def.weightby = 'amplitude'; % this applies to 'AM' amSWR and 'TR' photonic, but not 'HT' OldWizard
 cfg_def.stepSize = 1;
 cfg_def.ThreshMethod = 'zscore';
-cfg_def.DetectorThreshold = 3; % the threshold you want for generating IV data
+cfg_def.DetectorThreshold = 2; % the threshold you want for generating IV data
 %if strcmp(sessionID,'R042-2013-08-17') || strcmp(sessionID,'R044-2013-12-23')
     %cfg_def.DetectorThreshold = 2.5;
 %end
 cfg_def.mindur = 0.02; % in seconds, the minumum duration for detected events to be kept
 cfg_def.SpeedLimit = 10; % pixels per second
-cfg_def.ThetaThreshold = 2; % power, std above mean
+cfg_def.ThetaThreshold = 1.5; % power, std above mean
 cfg_def.minCells = 5; % minimum number of active cells for the event to be kept. if this is empty [], this step is skipped
 cfg_def.expandIV = [0 0]; % amount to add to the interval (catch borderline missed spikes)
 cfg_def.allowOverlap = 0; % don't allow the expanded intervals to overlap one another
@@ -88,7 +88,7 @@ if ~ isempty(cfg.SpeedLimit)
 end
 
 cfg_temp = []; cfg_temp.verbose = cfg.verbose;
-cfg_temp.fc = ExpKeys.goodSWR(1);
+cfg_temp.fc = {'R149-2008-08-11-CSC10a.Ncs'};
 CSC = LoadCSC(cfg_temp);
 
 if ~isempty(cfg.ThetaThreshold) % load a theta CSC
@@ -132,6 +132,7 @@ switch cfg.MUAmethod
     case 'AM'
         cfg_temp = [];
         cfg_temp.verbose = cfg.verbose;
+        cfg_temp.noisefloor = 0;
         [MUA,~,~] = amMUA(cfg_temp,S,CSC.tvec);
         
     case 'none'
