@@ -120,13 +120,13 @@ for idx = 1:length(rats)
                         % Check if this was a significant cell
                         sig_idx = strcmp(sig2_msn(:,1),msn_labels{iC});
                         if any(sig2_msn{sig_idx,2}(f_idx) >= p_thresh) % At least one frequency is significantly more phase_locked in HFR over LFR
-                            scatter(ax{iF}, hi_mfr, mean(hfr_ppc(f_idx)), msz, c_list{iF})
+                            scatter(ax{iF+length(f_list)}, hi_mfr, mean(hfr_ppc(f_idx)), msz, c_list{iF})
                             hfr_msn{size(hfr_msn,1)+1, 1} = msn_labels{iC};
                             freqs = od.msn_res.near_spec{iC}.freqs(f_idx);
                             hfr_msn{size(hfr_msn,1), 2} = freqs(sig2_msn{sig_idx,2}(f_idx) >= p_thresh);
                         end
-                        if any(sig2_msn{sig_idx,2}(f_idx) <= -1*p_thresh) % At least one frequency is significantly more phase_locked in HFR over LFR
-                            scatter(ax{iF}, low_mfr, mean(lfr_ppc(f_idx)), msz, c_list{iF})
+                        if any(sig2_msn{sig_idx,2}(f_idx) <= -1*p_thresh) % At least one frequency is significantly more phase_locked in  LFR over HFR
+                            scatter(ax{iF+length(f_list)}, low_mfr, mean(lfr_ppc(f_idx)), msz, c_list{iF})
                             lfr_msn{size(lfr_msn,1)+1, 1} = msn_labels{iC};
                             freqs = od.msn_res.near_spec{iC}.freqs(f_idx);
                             lfr_msn{size(lfr_msn,1), 2} = freqs(sig2_msn{sig_idx,2}(f_idx) <= -p_thresh);

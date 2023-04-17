@@ -16,7 +16,7 @@ for idx = 1:length(rats)
     for jdx = 1:length(ofiles)
         load(ofiles(jdx).name); % Load a particular session
         % do fsi stuff
-        fsi_labels  = od.label(od.cell_type == 2);
+        fsi_labels = od.label(od.cell_type == 2);
         fsi_labels = cellfun(@(x) extractBefore(x, '.t'), fsi_labels, 'UniformOutput', false);
         for iC = 1:length(fsi_labels)
             if isfield(od.fsi_res.near_spec{iC}, 'flag_no_control_split') && ~od.fsi_res.near_spec{iC}.flag_no_control_split
@@ -32,7 +32,7 @@ for idx = 1:length(rats)
                 hf_diff = hfr_ppc - lfr_ppc;
                 c_diff = p1_ppc - p2_ppc;
                 % Calculating the percentile for each frequency
-                p_out = sum(abs(hf_diff) < abs(c_diff), 1)/num_splits; % Calculating p_val of PPC for each frequency
+                p_out = sum(abs(c_diff) < abs(hf_diff), 1)/num_splits; % Calculating p_val of PPC for each frequency
                 % Positive sign for hfr > lfr and negative sign for hfr < lfr
                 p_out(hf_diff < 0) = -1 * p_out(hf_diff < 0);
                 % Calculating mean Z-score across all frequencies
@@ -59,7 +59,7 @@ for idx = 1:length(rats)
                 hf_diff = hfr_ppc - lfr_ppc;
                 c_diff = p1_ppc - p2_ppc;
                 % Calculating the percentile for each frequency
-                p_out = sum(abs(hf_diff) < abs(c_diff), 1)/num_splits; % Calculating p_val of PPC for each frequency
+                p_out = sum(abs(c_diff) < abs(hf_diff), 1)/num_splits; % Calculating p_val of PPC for each frequency
                 % Positive sign for hfr > lfr and negative sign for hfr < lfr
                 p_out(hf_diff < 0) = -1 * p_out(hf_diff < 0);
                 % Calculating mean Z-score across all frequencies
