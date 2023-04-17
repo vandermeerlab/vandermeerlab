@@ -1,9 +1,12 @@
 %% Script to plot trialwise PPC summary 
 
-cd('D:\RandomVstrAnalysis\temp2\'); % Change this to your local machine location for results
+cd('D:\RandomVstrAnalysis\trialwise_ppc\'); % Change this to your local machine location for results
 rats = {'R117','R119','R131','R132'};
-msn_sd = [];
+fsi_old_sd = [];
 fsi_sd = [];
+msn_sd = [];
+fsi_sess = {};
+msn_sess = {};
 min_trial_spikes = 50; % Minimum number of spikes per trial
 min_trials = 2; % Minimum number of trials in a cell
 min_freq = 2; % Minimum frequency in Hertz
@@ -16,6 +19,8 @@ for idx = 1:length(rats)
         load(ofiles(jdx).name); % Load a particular session
         fsi_labels  = od.label(od.cell_type == 2);
         fsi_labels = cellfun(@(x) extractBefore(x, '.t'), fsi_labels, 'UniformOutput', false);
+        fsi_sess{jdx} = [];
+        msn_sess{jdx} = [];
         for iC = 1:length(fsi_labels)
             if isfield(od.fsi_res.near_spec{iC}, 'num_subsamples') && od.fsi_res.near_spec{iC}.num_subsamples~=0
                 x1 = find(round(od.fsi_res.near_spec{iC}.freqs) > min_freq, 1, 'first');
@@ -27,12 +32,12 @@ for idx = 1:length(rats)
 
                 % Method 2: (Find average SD for each subsample and then average it across subsamples
                 sd2 = squeeze(nanstd(this_ppc,1,2)); % standard deviation for each frquency across trials, in each of the subsamples
-                sd2 = mean(sd2,1); % 'average sd' for each subsample
-                sd2 = mean(sd2); % 'average sd' averaged over all subsamples
+                sd2 = mean(sd2,2); % 'average sd' for each subsample
+%                 sd2 = mean(sd2); % 'average sd' averaged over all subsamples
 
-                % Method 3: (Save the histograms? ask mvdm)
-
-                fsi_sd = [fsi_sd; sd1, sd2];
+                fsi_old_sd = [fsi_old_sd; sd1];
+                fsi_sd = [fsi_sd; sd2];
+                fsi_sess{jdx} = [fsi_sess{jdx}; sd2];
             end
         end
 
@@ -47,6 +52,7 @@ for idx = 1:length(rats)
                 sd = nanstd(this_ppc,1,1); % standard deviation for each frequency, over trials
                 sd = mean(sd); % average sd
                 msn_sd = [msn_sd; sd];
+                msn_sess{jdx} = [msn_sess{jdx}; sd];
             end
         end
     end
@@ -54,7 +60,7 @@ end
 %% Plot histograms
 fig = figure('WindowState', 'maximized');
 ax1 = subplot(2,1,1);
-h1 = histogram(fsi_sd(:,1), 0:0.005:1, 'Normalization', 'probability', 'FaceColor', 'green', 'FaceAlpha', 1);
+h1 = histogram(fsi_old_sd, 0:0.005:1, 'Normalization', 'probability', 'FaceColor', 'green', 'FaceAlpha', 1);
 hold on;
 h2 = histogram(msn_sd,0:0.005:1, 'Normalization', 'probability', 'FaceColor', 'red', 'FaceAlpha', 0.6);
 ax1.XAxis.FontSize = 20;
@@ -75,7 +81,7 @@ ax1.Box = 'off';
 
 
 ax2 = subplot(2,1,2);
-h1 = histogram(fsi_sd(:,2), 0:0.005:1, 'Normalization', 'probability', 'FaceColor', 'green', 'FaceAlpha', 1);
+h1 = histogram(fsi_sd, 0:0.005:1, 'Normalization', 'probability', 'FaceColor', 'green', 'FaceAlpha', 1);
 hold on;
 h2 = histogram(msn_sd,0:0.005:1, 'Normalization', 'probability', 'FaceColor', 'red', 'FaceAlpha', 0.6);
 ax2.XAxis.FontSize = 20;
@@ -92,5 +98,16 @@ leg.FontName = 'Helvetica';
 leg.FontSize = 20;
 leg.FontWeight = 'bold';
 ax2.Title.String= 'New method';
-
+%% Look at session-wise distributions
+for iS = 1:length(fsi_sess)
+    if ~isempty(fsi_sess{iS})
+        figure;
+        h1 = histogram(fsi_sess{iS}, 0:0.005:1, 'Normalization', 'probability', 'FaceColor', 'green', 'FaceAlpha', 1);
+        hold on;
+        h2 = histogram(msn_sess{iS},0:0.005:1, 'Normalization', 'probability', 'FaceColor', 'red', 'FaceAlpha', 0.6);
+        xlim([0 0.5])
+        dummy = 1;
+    end
+        
+end
 

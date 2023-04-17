@@ -11,7 +11,7 @@ please = [];
 please.rats = {'R117','R119','R131','R132'}; % vStr-only rats
 [cfg_in.fd,cfg_in.fd_extra] = getDataPath(please);
 cfg_in.write_output = 1;
-cfg_in.output_dir = 'D:\RandomVstrAnalysis\temp2';
+cfg_in.output_dir = 'D:\RandomVstrAnalysis\temp';
 % cfg_in.output_dir = '/Users/manishm/Work/vanDerMeerLab/RandomVStrDataAnalysis/temp';
 cfg_in.incl_types = [1, 2];
 cfg_in.nMinSpikes1 = 400; % For on track
@@ -19,6 +19,7 @@ cfg_in.nMinSpikes2 = 400; % For near
 cfg_in.nMinSpikes3 = 150; % For lfr, hfr, p1 and p2
 cfg_in.nControlSplits = 100;
 cfg_in.num_subsamples = 1000;
+cfg_in.minTrialSpikes = 50;
 
 
 %%
@@ -302,9 +303,9 @@ function od = generateSTS(cfg_in)
             cfg_ppc.channel       = this_sts.lfplabel; % selected LFP channels
             cfg_ppc.avgoverchan   = 'weighted';
             % If a trial has only one spike, ppc can't be calculated!
-            % Need at at least 2 spikes!
+            % Need at at least minTrialSpikes(50)!
             for iT = 1:length(near_data.trial)
-                 if od.msn_res.near_spec{iM}.trialwise_spk_count(iT) < 2
+                 if od.msn_res.near_spec{iM}.trialwise_spk_count(iT) < cfg_in.minTrialSpikes
                      continue;
                  else
                     this_trial_sts = this_sts;
@@ -323,14 +324,12 @@ function od = generateSTS(cfg_in)
     % Get the msn distributions
     od.msn_near_dist = [];
     
-    % Subsample only if all the splits are problem free
-    % Also convert all numbers less than 2 to 0 because you need at least 2
-    % spikes in a trial to calculate PPC
+    % Also convert all numbers less than minTrialSpikes in trialwise spike count, to 0
     if isfield(od,'msn_res') && isfield(od.msn_res, 'near_spec')
         for iM = 1:length(od.msn_res.near_spec)
             if ~od.msn_res.near_spec{iM}.flag_tooFewSpikes
                     temp_spk_count = od.msn_res.near_spec{iM}.trialwise_spk_count';
-                    temp_spk_count(temp_spk_count < 2) = 0;
+                    temp_spk_count(temp_spk_count < cfg_in.minTrialSpikes) = 0;
                     od.msn_near_dist = [od.msn_near_dist, temp_spk_count];
             end
         end
@@ -480,8 +479,8 @@ function od = generateSTS(cfg_in)
             this_flag = false;
                 
             % In each trial, subsample spikes based on co-recorded msn
-            % trial-wise spike count. If trial-wise spike count is < 2, or
-            % the trial-wise spike count in all co-recorded MSNs is < 2,
+            % trial-wise spike count. If trial-wise spike count is < minTrialSpikes, or
+            % the trial-wise spike count in all co-recorded MSNs is < minTrialSpikes,
             % skip that trial. If the number of FSI spikes in that trial <
             % the number of spikes in any co-recorded MSN for that trial,
             % don't subsamples and use all the FSI spikes
@@ -489,8 +488,8 @@ function od = generateSTS(cfg_in)
                 this_tw_ppc = nan(length(near_data.trial), length(od.fsi_res.near_spec{iM}.freqs));
                 for iT = 1:length(near_data.trial)
                     valid_choices = od.msn_near_dist(iT,:);
-                    valid_choices = valid_choices(valid_choices>1);
-                    if od.fsi_res.near_spec{iM}.trialwise_spk_count(iT) < 2 || isempty(valid_choices)
+                    valid_choices = valid_choices(valid_choices>=cfg_in.minTrialSpikes);
+                    if od.fsi_res.near_spec{iM}.trialwise_spk_count(iT) < cfg_in.minTrialSpikes || isempty(valid_choices)
                         continue;
                     elseif od.fsi_res.near_spec{iM}.trialwise_spk_count(iT) <= max(od.msn_near_dist(iT,:)) % at least one co-recorded MSN has more spikes in this trial
                         % Don't subsample, use all spikes
