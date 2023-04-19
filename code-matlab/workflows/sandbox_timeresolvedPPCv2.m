@@ -135,7 +135,7 @@ for iC = 1:size(sig3_fsi,1)
     % Display warning to show that there were Nans in this calculation
     if ~isempty(find(isnan(this_sts.fourierspctrm{1}),1))
         this_flag = true;
-        warning('Cell %s has nans in its STS',sd.S.label{iC});
+        warning('Cell %s has nans in its STS',sd.S.label{1});
     end
     this_freq = this_sts.freq;
     this_sts_vals = nanmean(sq(abs(this_sts.fourierspctrm{1})));
@@ -322,7 +322,7 @@ for iC = 1:size(sig3_msn,1)
     % Display warning to show that there were Nans in this calculation
     if ~isempty(find(isnan(this_sts.fourierspctrm{1}),1))
         this_flag = true;
-        warning('Cell %s has nans in its STS',sd.S.label{iC});
+        warning('Cell %s has nans in its STS',sd.S.label{1});
     end
     this_freq = this_sts.freq;
     this_sts_vals = nanmean(sq(abs(this_sts.fourierspctrm{1})));
