@@ -88,7 +88,7 @@ if ~ isempty(cfg.SpeedLimit)
 end
 
 cfg_temp = []; cfg_temp.verbose = cfg.verbose;
-cfg_temp.fc = {'R149-2008-08-11-CSC10a.Ncs'};
+cfg_temp.fc = ExpKeys.goodSWR(1);
 CSC = LoadCSC(cfg_temp);
 
 if ~isempty(cfg.ThetaThreshold) % load a theta CSC

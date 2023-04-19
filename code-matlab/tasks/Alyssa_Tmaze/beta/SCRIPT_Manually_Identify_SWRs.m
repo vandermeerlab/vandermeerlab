@@ -126,7 +126,7 @@ end
 % get CSC
 LoadExpKeys
 please = [];
-please.fc = {'R149-2008-08-11-CSC10a.Ncs'};
+please.fc = ExpKeys.goodSWR(1);
 please.resample = 2000;
 CSC = LoadCSC(please);
 
