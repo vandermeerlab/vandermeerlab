@@ -26,6 +26,9 @@ function [MUA,raw,noise] = amMUA(cfg_in,S,tvec)
 %                    Measured in # of cells. How many noisy cells will we
 %                    tolerate? Increasing this number narrows the detection
 %                    width for individual events.
+%
+%   cfg.raw = 0; % if 1, return raw MUA (no noise floor; but could be capped)
+%
 %   cfg.verbose = 1; talk to me
 %
 % OUTPUTS
@@ -47,6 +50,7 @@ function [MUA,raw,noise] = amMUA(cfg_in,S,tvec)
 
 %% Parse cfg parameters
 
+cfg_def.raw = 0; % if 1, return raw MUA (no noise floor; but could be capped)
 cfg_def.spkcap = 2;
 cfg_def.noisefloor = 4; 
 cfg_def.kernelstd = 40; 
@@ -98,6 +102,12 @@ for iS = 1:length(S.t)
     %spk_tot = max(0,spk_tot);
     %spk_tot = min(spk_tot,cap);
     %muascoretot = muascoretot + spk_tot;
+end
+
+if cfg.raw
+    MUA = tsd(tvec,muascore');
+    raw = []; noise = [];
+    return;
 end
 
 % Rescale

@@ -55,14 +55,14 @@ cfg_def.MUAmethod = 'AM'; % 'AM' for amMUA, or 'none' for skip MUA detection
 cfg_def.weightby = 'amplitude'; % this applies to 'AM' amSWR and 'TR' photonic, but not 'HT' OldWizard
 cfg_def.stepSize = 1;
 cfg_def.ThreshMethod = 'zscore';
-cfg_def.DetectorThreshold = 2; % the threshold you want for generating IV data
+cfg_def.DetectorThreshold = 2.5; % the threshold you want for generating IV data
 %if strcmp(sessionID,'R042-2013-08-17') || strcmp(sessionID,'R044-2013-12-23')
     %cfg_def.DetectorThreshold = 2.5;
 %end
 cfg_def.mindur = 0.02; % in seconds, the minumum duration for detected events to be kept
-cfg_def.SpeedLimit = 10; % pixels per second
-cfg_def.ThetaThreshold = 1.5; % power, std above mean
-cfg_def.minCells = 5; % minimum number of active cells for the event to be kept. if this is empty [], this step is skipped
+cfg_def.SpeedLimit = 20; % pixels per second
+cfg_def.ThetaThreshold = 1; % power, std above mean
+cfg_def.minCells = 4; % minimum number of active cells for the event to be kept. if this is empty [], this step is skipped
 cfg_def.expandIV = [0 0]; % amount to add to the interval (catch borderline missed spikes)
 cfg_def.allowOverlap = 0; % don't allow the expanded intervals to overlap one another
 
@@ -96,6 +96,18 @@ if ~isempty(cfg.ThetaThreshold) % load a theta CSC
     lfp_theta = LoadCSC(cfg_temp);
 end
 
+% exclude spikes that are somehow occurring during recording pause
+cscdiffs = cat(1, 0, diff(CSC.tvec));
+csc_jump_idx = find(cscdiffs > 5);
+pre_gap_start = CSC.tvec(csc_jump_idx(1) - 1);
+post_gap_end = CSC.tvec(csc_jump_idx(2));
+% preS = restrict(S, 0, pre_gap_start);
+% taskS = restrict(S, ExpKeys.TimeOnTrack, ExpKeys.TimeOffTrack);
+% postS = restrict(S, post_gap_end, Inf);
+% S = concatenateTS(preS, concatenateTS(taskS, postS));
+
+S = restrict(S, [0 ExpKeys.TimeOnTrack post_gap_end], [pre_gap_start ExpKeys.TimeOffTrack Inf]);
+
 %% SWR score
 if ~strcmp(cfg.SWRmethod,'none'); disp(' '); disp('***Working on SWR detection......'); end
 
@@ -114,7 +126,7 @@ switch cfg.SWRmethod
         cfg.stepSize = [];
         
         cfg_temp =[]; cfg_temp.type = 'fdesign'; cfg_temp.f = [140 250];
-        CSCr = filterLFP(cfg_temp,CSC);
+        CSCr = FilterLFP(cfg_temp,CSC);
         
         cfg_temp.weightby = cfg.weightby; cfg_temp.kernel = 'gauss';
         SWR = photonic(cfg_temp,CSCr);
@@ -132,7 +144,10 @@ switch cfg.MUAmethod
     case 'AM'
         cfg_temp = [];
         cfg_temp.verbose = cfg.verbose;
+        cfg_temp.kernelstd = 120;
         cfg_temp.noisefloor = 0;
+        cfg_temp.spkcap = 2;
+        cfg_temp.raw = 0;
         [MUA,~,~] = amMUA(cfg_temp,S,CSC.tvec);
         
     case 'none'
@@ -187,7 +202,7 @@ if ~isempty(cfg.SpeedLimit)
     cfg_temp = []; cfg_temp.verbose = cfg.verbose;
     spd = getLinSpd(cfg_temp,pos);
     
-    cfg_temp.threshold = cfg.SpeedLimit; cfg_temp.dcn = '<'; cfg_temp.method = 'raw'; cfg_temp.verbose = cfg.verbose;
+    cfg_temp.threshold = cfg.SpeedLimit; cfg_temp.operation = '<'; cfg_temp.method = 'raw'; cfg_temp.verbose = cfg.verbose;
     %cfg_temp.minlen = 0;
     low_spd_iv = TSDtoIV(cfg_temp,spd);
     
@@ -212,8 +227,8 @@ if ~isempty(cfg.ThetaThreshold)
     cfg_temp = []; cfg_temp.verbose = cfg.verbose;
     tpow = LFPpower(cfg_temp,lfp_theta_filtered);
     
-    % detect intervals with "low theta" (z-score below 2)
-    cfg_temp = []; cfg_temp.method = 'zscore'; cfg_temp.threshold = cfg.ThetaThreshold; cfg_temp.dcn =  '<'; cfg_temp.verbose = cfg.verbose;
+    % detect intervals with "low theta" (z-score below some threshold)
+    cfg_temp = []; cfg_temp.method = 'zscore'; cfg_temp.threshold = cfg.ThetaThreshold; cfg_temp.operation =  '<'; cfg_temp.verbose = cfg.verbose;
     low_theta_iv = TSDtoIV(cfg_temp,tpow);
     
     % restrict candidate events to only those inside low theta intervals
