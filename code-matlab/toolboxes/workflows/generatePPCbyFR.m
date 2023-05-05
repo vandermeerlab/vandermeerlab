@@ -1,20 +1,15 @@
-%% Script to generate PPC as a function of binned firing-rate (z-scored and 0-1 norm)
-
+%% Script to generate PPC as a function of firing-rate
 % setup
 clear;
 %load significant cells
 cd('D:\RandomVstrAnalysis\final_results\'); % Change this to your local machine location for results
 load('./significance.mat');
 num_subs = 1000;
-z_edges = [-100,-2,-1,0,1,2,100]; % z-score bin edges
-n_edges = [0:1/6:1]; % norm bin edges
-nbins = length(z_edges-1); % Number of bins
-nshufs = 1000; % number of shuffles to calculate STS/PPC Significance
-spk_dt = 0.025; % interspike interval for surrogate spike train used for spike-triggered spectrum pool
-visited  = dictionary('dummy',{-1}); % Use this to avoid creating fake spike-triggered spectra again
+edges = [-100,-2,-1,0,1,2,100];
+nbins = length(edges-1); % Number of ins the 
 
 % Cycle through MSNs first
-for iC = 1:length(sig_msn)
+for iC = 1:length(sig_msn)  
     label = sig_msn{iC,1};
     % generate correct path on the basis of the label
     toks = strsplit(label, '-');
@@ -170,60 +165,6 @@ for iC = 1:length(sig_msn)
     od.unsampled_sts = nanmean(sq(abs(this_sts.fourierspctrm{1})));
     od.flag_nansts = this_flag;
 
-    % Configure ppc
-    cfg_ppc               = [];
-    cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
-    cfg_ppc.spikechannel  = this_sts.label;
-    cfg_ppc.channel       = this_sts.lfplabel; % selected LFP channels
-    cfg_ppc.avgoverchan   = 'weighted';
-    cfg_ppc.timwin        = 'all'; % compute over all available spikes in the window
-
-    if(~isKey(visited, path))
-        % If visiting this path for the first time, create session wide STS-pool
-        cfg_f.begsample = cfg_onTrack.begsample;
-        cfg_f.endsample = cfg_onTrack.endsample;
-        f_spike = sd.S.ft_spikes;
-        f_spike.timestamp{1} = double(ft_csc.hdr.FirstTimeStamp) +  ...
-            10^6*(ft_csc.time{1}(1):spk_dt:ft_csc.time{1}(end));
-        f_data = ft_appendspike([], ft_csc,f_spike);
-        f_data = ft_redefinetrial(cfg_f,f_data);
-        fprintf("Number of fake spikes for session %s is %d\n", path, sum(f_data.trial{1}(2,:)));
-        cfg_f = [];
-        cfg_f.method = 'mtmconvol';
-        cfg_f.foi = 1:1:100;
-        cfg_f.t_ftimwin = 5./cfg_sts.foi;
-        cfg_f.taper = 'hanning';
-        cfg_f.spikechannel =  f_spike.label{1};
-        cfg_sts.channel = f_data.label{1};
-        f_sts = ft_spiketriggeredspectrum(cfg_f, f_data);
-        visited(path) = {f_sts};
-        clear f_data f_sts cfg_f f_spike
-    else
-        fprintf('This saved you time!\n')
-    end
-
-    % do shuffles for significance_testing
-    od.nshufs = nshufs;
-    pool_sts = visited(path);
-    pool_sts = pool_sts{1};
-    shuf_sts = zeros(nshufs, length(od.unsampled_sts));
-    shuf_ppc = zeros(nshufs, length(od.unsampled_sts));
-    for iShuf = 1:nshufs
-        pool_count = length(pool_sts.time{1});
-        keep = randperm(pool_count);
-        keep = keep(1:od.spk_count);
-        this_shuf = pool_sts;
-        this_shuf.label{1} = label; % Because the pooled STS might have a differnt spike channel label
-        this_shuf.fourierspctrm{1} = pool_sts.fourierspctrm{1}(keep,:,:);
-        this_shuf.time{1} = pool_sts.time{1}(keep,:);
-        this_shuf.trial{1} = pool_sts.trial{1}(keep,:);
-        shuf_sts(iShuf,:) = nanmean(sq(abs(this_shuf.fourierspctrm{1})));
-        this_shuf_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc, this_shuf);
-        shuf_ppc(iShuf,:) = this_shuf_ppc.ppc0;
-    end
-    od.shuf_sts = shuf_sts;
-    od.shuf_ppc = shuf_ppc;
-
     % Get mfr to bin trials
     tcount = length(rt_iv.tstart);
     mfr = zeros(tcount, 1);
@@ -232,18 +173,15 @@ for iC = 1:length(sig_msn)
         all_tspikes{iT} = sum(near_data.trial{iT}(2,:));
         mfr(iT) = all_tspikes{iT}/near_data.time{iT}(end); 
     end
-    od.mfr = mfr;
-
-    % Bin trials by z_scored firing rate and then calculate PPC for each bin
-    
     % get rid of trials with 0 spikes but then put them back together
-    % later with the 0 spike trials having an absurd bin value (like -1)
+    % later wiht the 0 spike trials having an absurd bin value (like -1)
+    od.mfr = mfr;
     nz_trials = mfr > 0;
     fr_bin = zeros(size(mfr));
     fr_bin(~nz_trials) = -1;
     nz_mfr = mfr(nz_trials);
     tw_fr = zscore(nz_mfr);
-    [bcount, edges, nz_bin] = histcounts(tw_fr, z_edges);
+    [bcount, edges, nz_bin] = histcounts(tw_fr, edges);
     % Redistributing bin values to take care of zero-spike-trials
     inZ = 1;
     for iZ = 1:length(fr_bin)
@@ -252,15 +190,22 @@ for iC = 1:length(sig_msn)
             inZ = inZ + 1;
         end
     end
-    [od.z_bcount, od.z_edges, od.z_fr_bin] = deal(bcount, edges, fr_bin);
-    od.z_binned_mean = mean(nz_mfr);
-    od.z_binned_sd = std(nz_mfr);
-    od.z_binned_spk_count = zeros(length(bcount),1);
-    od.z_binned_sts = nan(length(bcount), length(this_sts.freq));
-    od.z_binned_ppc = nan(length(bcount), length(this_sts.freq));
+    [od.bcount, od.edges, od.fr_bin] = deal(bcount, edges, fr_bin);
+    od.binned_mean = mean(nz_mfr);
+    od.binned_sd = std(nz_mfr);
+    od.binned_spk_count = zeros(length(bcount),1);
+    od.binned_sts = nan(length(bcount), length(this_sts.freq));
+    od.binned_ppc = nan(length(bcount), length(this_sts.freq));
     trl_idx = this_sts.trial{1};        
     bin_idx = zeros(size(trl_idx));
 
+    % Configure ppc
+    cfg_ppc               = [];
+    cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
+    cfg_ppc.spikechannel  = this_sts.label;
+    cfg_ppc.channel       = this_sts.lfplabel; % selected LFP channels
+    cfg_ppc.avgoverchan   = 'weighted';
+    cfg_ppc.timwin        = 'all'; % compute over all available spikes in the window
     for iB = 1:length(bcount)
         % get corresponding fr_bins for spikes
         this_trials = find(fr_bin == iB);
@@ -271,53 +216,11 @@ for iC = 1:length(sig_msn)
         bin_sts.fourierspctrm{1} = bin_sts.fourierspctrm{1}(bin_idx == iB,:,:);
         bin_sts.time{1} = bin_sts.time{1}(bin_idx == iB,:);
         bin_sts.trial{1} = bin_sts.trial{1}(bin_idx == iB,:);
-        od.z_binned_sts(iB,:) = nanmean(sq(abs(bin_sts.fourierspctrm{1})));
+        od.binned_sts(iB,:) = nanmean(sq(abs(bin_sts.fourierspctrm{1})));
         bin_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc, bin_sts);
-        od.z_binned_ppc(iB,:) = bin_ppc.ppc0;
-        od.z_binned_spk_count(iB) = sum(bin_idx == iB);
+        od.binned_ppc(iB,:) = bin_ppc.ppc0;
+        od.binned_spk_count(iB) = sum(bin_idx == iB);
     end
-
-    % Bin trials by normalizing firing rate between 0-1 and then calculate PPC for each bin
- 
-    % get rid of trials with 0 spikes but then put them back together
-    % later with the 0 spike trials having an absurd bin value (like -1)
-    nz_trials = mfr > 0;
-    fr_bin = zeros(size(mfr));
-    fr_bin(~nz_trials) = -1;
-    nz_mfr = mfr(nz_trials);
-    tw_fr = (nz_mfr-min(nz_mfr))/(max(nz_mfr) - min(nz_mfr));
-    [bcount, edges, nz_bin] = histcounts(tw_fr, n_edges);
-    % Redistributing bin values to take care of zero-spike-trials
-    inZ = 1;
-    for iZ = 1:length(fr_bin)
-        if nz_trials(iZ)
-            fr_bin(iZ) = nz_bin(inZ);
-            inZ = inZ + 1;
-        end
-    end
-    [od.n_bcount, od.n_edges, od.n_fr_bin] = deal(bcount, edges, fr_bin);
-    od.n_binned_spk_count = zeros(length(bcount),1);
-    od.n_binned_sts = nan(length(bcount), length(this_sts.freq));
-    od.n_binned_ppc = nan(length(bcount), length(this_sts.freq));
-    trl_idx = this_sts.trial{1};        
-    bin_idx = zeros(size(trl_idx));
-
-    for iB = 1:length(bcount)
-        % get corresponding fr_bins for spikes
-        this_trials = find(fr_bin == iB);
-        for iT = 1:length(this_trials)
-            bin_idx(trl_idx == this_trials(iT)) = iB;
-        end
-        bin_sts = this_sts;
-        bin_sts.fourierspctrm{1} = bin_sts.fourierspctrm{1}(bin_idx == iB,:,:);
-        bin_sts.time{1} = bin_sts.time{1}(bin_idx == iB,:);
-        bin_sts.trial{1} = bin_sts.trial{1}(bin_idx == iB,:);
-        od.n_binned_sts(iB,:) = nanmean(sq(abs(bin_sts.fourierspctrm{1})));
-        bin_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc, bin_sts);
-        od.n_binned_ppc(iB,:) = bin_ppc.ppc0;
-        od.n_binned_spk_count(iB) = sum(bin_idx == iB);
-    end
-
     % Save values
     save(strcat('D:\RandomVstrAnalysis\temp\',label, '_MSN_ppcbyfr.mat'), 'od')
 end
@@ -484,60 +387,6 @@ for iC = 1:length(sig_fsi)
     od.unsampled_sts = nanmean(sq(abs(this_sts.fourierspctrm{1})));
     od.flag_nansts = this_flag;
 
-    % Configure ppc
-    cfg_ppc               = [];
-    cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
-    cfg_ppc.spikechannel  = this_sts.label;
-    cfg_ppc.channel       = this_sts.lfplabel; % selected LFP channels
-    cfg_ppc.avgoverchan   = 'weighted';
-    cfg_ppc.timwin        = 'all'; % compute over all available spikes in the window
-
-    if(~isKey(visited, path))
-        % If visiting this path for the first time, create session wide STS-pool
-        cfg_f.begsample = cfg_onTrack.begsample;
-        cfg_f.endsample = cfg_onTrack.endsample;
-        f_spike = sd.S.ft_spikes;
-        f_spike.timestamp{1} = double(ft_csc.hdr.FirstTimeStamp) +  ...
-            10^6*(ft_csc.time{1}(1):spk_dt:ft_csc.time{1}(end));
-        f_data = ft_appendspike([], ft_csc,f_spike);
-        f_data = ft_redefinetrial(cfg_f,f_data);
-        fprintf("Number of fake spikes for session %s is %d\n", path, sum(f_data.trial{1}(2,:)));
-        cfg_f = [];
-        cfg_f.method = 'mtmconvol';
-        cfg_f.foi = 1:1:100;
-        cfg_f.t_ftimwin = 5./cfg_sts.foi;
-        cfg_f.taper = 'hanning';
-        cfg_f.spikechannel =  f_spike.label{1};
-        cfg_sts.channel = f_data.label{1};
-        f_sts = ft_spiketriggeredspectrum(cfg_f, f_data);
-        visited(path) = {f_sts};
-        clear f_data f_sts cfg_f f_spike
-    else
-        fprintf('This saved you time!')
-    end
-
-    % do shuffles for significance_testing
-    od.nshufs = nshufs;
-    pool_sts = visited(path);
-    pool_sts = pool_sts{1};
-    shuf_sts = zeros(nshufs, length(od.unsampled_sts));
-    shuf_ppc = zeros(nshufs, length(od.unsampled_sts));
-    for iShuf = 1:nshufs
-        pool_count = length(pool_sts.time{1});
-        keep = randperm(pool_count);
-        keep = keep(1:od.spk_count);
-        this_shuf = pool_sts;
-        this_shuf.label{1} = label; % Because the pooled STS might have a differnt spike channel label
-        this_shuf.fourierspctrm{1} = pool_sts.fourierspctrm{1}(keep,:,:);
-        this_shuf.time{1} = pool_sts.time{1}(keep,:);
-        this_shuf.trial{1} = pool_sts.trial{1}(keep,:);
-        shuf_sts(iShuf,:) = nanmean(sq(abs(this_shuf.fourierspctrm{1})));
-        this_shuf_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc, this_shuf);
-        shuf_ppc(iShuf,:) = this_shuf_ppc.ppc0;
-    end
-    od.shuf_sts = shuf_sts;
-    od.shuf_ppc = shuf_ppc;
-
     % Get mfr to bin trials
     tcount = length(rt_iv.tstart);
     mfr = zeros(tcount, 1);
@@ -546,8 +395,33 @@ for iC = 1:length(sig_fsi)
         all_tspikes{iT} = sum(near_data.trial{iT}(2,:));
         mfr(iT) = all_tspikes{iT}/near_data.time{iT}(end); 
     end
+    % get rid of trials with 0 spikes but then put them back together
+    % later wiht the 0 spike trials having an absurd bin value (like -1)
     od.mfr = mfr;
-
+    nz_trials = mfr > 0;
+    fr_bin = zeros(size(mfr));
+    fr_bin(~nz_trials) = -1;
+    nz_mfr = mfr(nz_trials);
+    tw_fr = zscore(nz_mfr);
+    [bcount, edges, nz_bin] = histcounts(tw_fr, edges);
+    % Redistributing bin values to take care of zero-spike-trials
+    inZ = 1;
+    for iZ = 1:length(fr_bin)
+        if nz_trials(iZ)
+            fr_bin(iZ) = nz_bin(inZ);
+            inZ = inZ + 1;
+        end
+    end
+    [od.bcount, od.edges, od.fr_bin] = deal(bcount, edges, fr_bin);
+    od.binned_mean = mean(nz_mfr);
+    od.binned_sd = std(nz_mfr);
+    od.binned_spk_count = zeros(length(bcount),1);
+    od.binned_sts = nan(length(bcount), length(this_sts.freq));
+    od.binned_ppc = nan(length(bcount), length(this_sts.freq));
+    trl_idx = this_sts.trial{1};        
+    bin_idx = zeros(size(trl_idx));
+    msn_dist = round(msn_dist/length(bcount)); % Converting MSN Dist to an expected per bin count
+          
     % Check if subsampling is needed or not
     all_spikes = sum(cell2mat(all_tspikes));
     if all_spikes < max(msn_dist)
@@ -555,35 +429,14 @@ for iC = 1:length(sig_fsi)
     else
         to_sub = true;
     end
-    
-    % Bin trials by z_scored firing rate and then calculate PPC for each bin
 
-    % get rid of trials with 0 spikes but then put them back together
-    % later with the 0 spike trials having an absurd bin value (like -1)
-    nz_trials = mfr > 0;
-    fr_bin = zeros(size(mfr));
-    fr_bin(~nz_trials) = -1;
-    nz_mfr = mfr(nz_trials);
-    tw_fr = zscore(nz_mfr);
-    [bcount, edges, nz_bin] = histcounts(tw_fr, z_edges);
-    % Redistributing bin values to take care of zero-spike-trials
-    inZ = 1;
-    for iZ = 1:length(fr_bin)
-        if nz_trials(iZ)
-            fr_bin(iZ) = nz_bin(inZ);
-            inZ = inZ + 1;
-        end
-    end
-    [od.z_bcount, od.z_edges, od.z_fr_bin] = deal(bcount, edges, fr_bin);
-    od.z_binned_mean = mean(nz_mfr);
-    od.z_binned_sd = std(nz_mfr);
-    od.z_binned_spk_count = zeros(length(bcount),1);
-    od.z_binned_sts = nan(length(bcount), length(this_sts.freq));
-    od.z_binned_ppc = nan(length(bcount), length(this_sts.freq));
-    trl_idx = this_sts.trial{1};        
-    bin_idx = zeros(size(trl_idx));
-    msn_dist = round(msn_dist/length(bcount)); % Converting MSN Dist to an expected per bin count
-      
+    % Configure ppc
+    cfg_ppc               = [];
+    cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
+    cfg_ppc.spikechannel  = this_sts.label;
+    cfg_ppc.channel       = this_sts.lfplabel; % selected LFP channels
+    cfg_ppc.avgoverchan   = 'weighted';
+    cfg_ppc.timwin        = 'all'; % compute over all available spikes in the window
     for iB = 1:length(bcount)
         % get corresponding fr_bins for spikes
         this_trials = find(fr_bin == iB);
@@ -607,83 +460,18 @@ for iC = 1:length(sig_fsi)
                     bin_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc, bin_sts);
                     temp_ppc(iSub,:) = bin_ppc.ppc0;
                 end
-                    od.z_binned_sts(iB,:) = mean(temp_sts);
-                    od.z_binned_ppc(iB,:) = mean(temp_ppc);
-                    od.z_binned_spk_count(iB) = length(bin_spks);
+                    od.binned_sts(iB,:) = mean(temp_sts);
+                    od.binned_ppc(iB,:) = mean(temp_ppc);
+                    od.binned_spk_count(iB) = length(bin_spks);
             else
                 bin_sts = this_sts;
                 bin_sts.fourierspctrm{1} = bin_sts.fourierspctrm{1}(bin_spks,:,:);
                 bin_sts.time{1} = bin_sts.time{1}(bin_spks,:);
                 bin_sts.trial{1} = bin_sts.trial{1}(bin_spks,:);
-                od.z_binned_sts(iB,:) = nanmean(sq(abs(bin_sts.fourierspctrm{1})));
+                od.binned_sts(iB,:) = nanmean(sq(abs(bin_sts.fourierspctrm{1})));
                 bin_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc, bin_sts);
-                od.z_binned_ppc(iB,:) = bin_ppc.ppc0;
-                od.z_binned_spk_count(iB) = length(bin_spks);
-            end
-        end
-    end
-
-    % Bin trials by normalizing firing rate between 0-1 and then calculate PPC for each bin
-
-    % get rid of trials with 0 spikes but then put them back together
-    % later with the 0 spike trials having an absurd bin value (like -1)
-    nz_trials = mfr > 0;
-    fr_bin = zeros(size(mfr));
-    fr_bin(~nz_trials) = -1;
-    nz_mfr = mfr(nz_trials);
-    tw_fr = (nz_mfr - min(nz_mfr))/(max(nz_mfr) - min(nz_mfr));
-    [bcount, edges, nz_bin] = histcounts(tw_fr, n_edges);
-    % Redistributing bin values to take care of zero-spike-trials
-    inZ = 1;
-    for iZ = 1:length(fr_bin)
-        if nz_trials(iZ)
-            fr_bin(iZ) = nz_bin(inZ);
-            inZ = inZ + 1;
-        end
-    end
-    [od.n_bcount, od.n_edges, od.n_fr_bin] = deal(bcount, edges, fr_bin);
-    od.n_binned_spk_count = zeros(length(bcount),1);
-    od.n_binned_sts = nan(length(bcount), length(this_sts.freq));
-    od.n_binned_ppc = nan(length(bcount), length(this_sts.freq));
-    trl_idx = this_sts.trial{1};        
-    bin_idx = zeros(size(trl_idx));
-    msn_dist = round(msn_dist/length(bcount)); % Converting MSN Dist to an expected per bin count
-      
-    for iB = 1:length(bcount)
-        % get corresponding fr_bins for spikes
-        this_trials = find(fr_bin == iB);
-        for iT = 1:length(this_trials)
-            bin_idx(trl_idx == this_trials(iT)) = iB;
-        end
-        bin_spks = find(bin_idx == iB);
-        if  ~isempty(bin_spks)
-            if to_sub && (length(bin_spks) > round(max(msn_dist)))
-                temp_ppc = zeros(num_subs,length(this_sts.freq));
-                temp_sts = zeros(num_subs,length(this_sts.freq));
-                for iSub = 1:num_subs
-                    sub_count = msn_dist(randi(length(msn_dist)));
-                    sub_idx = sort(randperm(length(bin_spks), sub_count));
-                    sub_spks = bin_spks(sub_idx);
-                    bin_sts = this_sts;
-                    bin_sts.fourierspctrm{1} = bin_sts.fourierspctrm{1}(sub_spks,:,:);
-                    bin_sts.time{1} = bin_sts.time{1}(sub_spks,:);
-                    bin_sts.trial{1} = bin_sts.trial{1}(sub_spks,:);
-                    temp_sts(iSub,:) = nanmean(sq(abs(bin_sts.fourierspctrm{1})));
-                    bin_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc, bin_sts);
-                    temp_ppc(iSub,:) = bin_ppc.ppc0;
-                end
-                    od.n_binned_sts(iB,:) = mean(temp_sts);
-                    od.n_binned_ppc(iB,:) = mean(temp_ppc);
-                    od.n_binned_spk_count(iB) = length(bin_spks);
-            else
-                bin_sts = this_sts;
-                bin_sts.fourierspctrm{1} = bin_sts.fourierspctrm{1}(bin_spks,:,:);
-                bin_sts.time{1} = bin_sts.time{1}(bin_spks,:);
-                bin_sts.trial{1} = bin_sts.trial{1}(bin_spks,:);
-                od.n_binned_sts(iB,:) = nanmean(sq(abs(bin_sts.fourierspctrm{1})));
-                bin_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc, bin_sts);
-                od.n_binned_ppc(iB,:) = bin_ppc.ppc0;
-                od.n_binned_spk_count(iB) = length(bin_spks);
+                od.binned_ppc(iB,:) = bin_ppc.ppc0;
+                od.binned_spk_count(iB) = length(bin_spks);
             end
         end
     end
