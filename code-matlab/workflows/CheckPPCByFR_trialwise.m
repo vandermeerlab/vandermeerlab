@@ -44,7 +44,7 @@ for idx = 1:length(rats)
                 end
                 % Including trials which have min_trial_spikes and have no NaNs
                 nonan_thresh = ~isnan(od.fsi_res.near_spec{iC}.trialwise_unsampled_ppc(:,1));
-                spike_thresh = od.fsi_res.near_spec{iC}.trial_spk_count' >= min_trial_spikes;
+                spike_thresh = od.fsi_res.near_spec{iC}.thresh_trialwise_spk_count >= min_trial_spikes;
                 keep = nonan_thresh & spike_thresh;
                 % If the valid number of trials is less than min_trials, then skip
                 if sum(keep) < min_trials

@@ -248,10 +248,10 @@ function od = generateSTS(cfg_in)
         spk_count1 = length(restrict(sd.S, rt_iv).t{iC});
         spk_count2 = 0;
         % Save trial_wise spike conunt
-        near_trialwise_spk_count = zeros(1, length(near_data.trial));
+        near_tw_spk_count = zeros(1, length(near_data.trial));
         for iT = 1:length(near_data.trial)
-           near_trialwise_spk_count(iT) = sum(near_data.trial{iT}(2,:));
-           spk_count2 = spk_count2 + near_trialwise_spk_count(iT);
+           near_tw_spk_count(iT) = sum(near_data.trial{iT}(2,:));
+           spk_count2 = spk_count2 + near_tw_spk_count(iT);
         end
         % Skip if no spikes present!
         if spk_count2 <  cfg_master.nMinSpikes2
@@ -264,14 +264,14 @@ function od = generateSTS(cfg_in)
                 warning('ft_redefinetrial has %d spikes but restrict shows %d spikes in near-Reward trials', ...
                     spk_count1, spk_count2)
             end
-            od.fsi_res.near_spec{iM}.trialwise_spk_count = near_trialwise_spk_count;
+            od.fsi_res.near_spec{iM}.tw_spk_count = near_tw_spk_count;
             od.fsi_res.near_spec{iM}.flag_unequalSpikes = this_flag;
             
             % Extract All Spike IDs
             trial_wise_spike = cell(1, length(near_data.trial));
             last_spk_ct = 0;
             for iT = 1:length(near_data.trial)
-                this_spk_ct = near_trialwise_spk_count(iT);
+                this_spk_ct = near_tw_spk_count(iT);
                 trial_wise_spike{iT} = last_spk_ct + 1 : last_spk_ct + this_spk_ct;
                 last_spk_ct = last_spk_ct + this_spk_ct;
             end
@@ -294,14 +294,12 @@ function od = generateSTS(cfg_in)
             od.fsi_res.near_spec{iM}.sts_vals = nanmean(sq(abs(this_sts.fourierspctrm{1})));
             od.fsi_res.near_spec{iM}.flag_nansts = this_flag;
             
-            % Calculate and save trialwise_ppc and use subsampled measures
+            % Calculate and save tw_ppc and use subsampled measures
             % for near Reward Trials. However, if an FSI has fewer spikes
             % than at least one co-recorded MSN, do NOT
             % subsample and include all the spikes
 
-            % Generate num_subsamples versions of trial_wise_ppc
-            od.fsi_res.near_spec{iM}.trialwise_ppc = nan(cfg_master.num_subsamples, ...
-                length(near_data.trial), length(od.fsi_res.near_spec{iM}.freqs));
+            % Generate trial_wise_ppc
             cfg_ppc               = [];
             cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
             cfg_ppc.spikechannel  = this_sts.label;
@@ -309,22 +307,96 @@ function od = generateSTS(cfg_in)
             cfg_ppc.avgoverchan   = 'weighted';
             this_flag = false;
 
-            % If a trial has only one spike, ppc can't be calculated!
-            % Need at at least minTrialSpikes(50)!
+            % If a trial has only one spike, ppc can't be calculated! Need at at least minTrialSpikes(50)!
+            near_tw_unsampled_ppc = nan(length(near_data.trial), length(od.fsi_res.near_spec{iM}.freqs));
+            near_tw_rand_ppc = nan(length(near_data.trial), length(od.fsi_res.near_spec{iM}.freqs));
+            near_tw_first_ppc = nan(length(near_data.trial), length(od.fsi_res.near_spec{iM}.freqs));
+            near_tw_last_ppc = nan(length(near_data.trial), length(od.fsi_res.near_spec{iM}.freqs));
+            near_tw_sub_ppc = nan(length(near_data.trial), length(od.fsi_res.near_spec{iM}.freqs));
+
+            tspikes = od.fsi_res.near_spec{iM}.tw_spk_count;
+            min_spk = min(tspikes(tspikes >= cfg_master.minTrialSpikes));
             for iT = 1:length(near_data.trial)
-                 if od.fsi_res.near_spec{iM}.trialwise_spk_count(iT) < cfg_in.minTrialSpikes
+                 if tspikes(iT) < cfg_master.minTrialSpikes
                      continue;
                  else
-                    this_trial_sts = this_sts;
+                    
+                    % Use all the spikes in this trial
                     this_trial_spks = trial_wise_spike{iT};
-                    this_trial_sts.fourierspctrum{1} = this_trial_sts.fourierspctrm{1}(this_trial_spks,:,:);
+                    this_trial_sts = this_sts;
+                    this_trial_sts.fourierspctrm{1} = this_trial_sts.fourierspctrm{1}(this_trial_spks,:,:);
                     this_trial_sts.time{1} = this_trial_sts.time{1}(this_trial_spks,:);
                     this_trial_sts.trial{1} = this_trial_sts.trial{1}(this_trial_spks,:);
                     this_trial_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc,this_trial_sts);
-                    near_trialwise_ppc(iT,:) = this_trial_ppc.ppc0;
+                    near_tw_unsampled_ppc(iT,:) = this_trial_ppc.ppc0;
+
+                     % Choose a random subsample of these spikes
+                    r_idx = randperm(length(this_trial_spks), min_spk);
+                    this_spks = sort(this_trial_spks(r_idx));
+                    this_trial_sts = this_sts;
+                    this_trial_sts.fourierspctrm{1} = this_trial_sts.fourierspctrm{1}(this_spks,:,:);
+                    this_trial_sts.time{1} = this_trial_sts.time{1}(this_spks,:);
+                    this_trial_sts.trial{1} = this_trial_sts.trial{1}(this_spks,:);
+                    this_trial_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc,this_trial_sts);
+                    near_tw_rand_ppc(iT,:) = this_trial_ppc.ppc0;
+    
+                    % Choose the first min_spk
+                    this_spks = this_trial_spks(1:min_spk);
+                    this_trial_sts = this_sts;
+                    this_trial_sts.fourierspctrm{1} = this_trial_sts.fourierspctrm{1}(this_spks,:,:);
+                    this_trial_sts.time{1} = this_trial_sts.time{1}(this_spks,:);
+                    this_trial_sts.trial{1} = this_trial_sts.trial{1}(this_spks,:);
+                    this_trial_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc,this_trial_sts);
+                    near_tw_first_ppc(iT,:) = this_trial_ppc.ppc0;
+
+                    % Choose the last min_spk
+                    this_spks = this_trial_spks(end+1-min_spk:end);
+                    this_trial_sts = this_sts;
+                    this_trial_sts.fourierspctrm{1} = this_trial_sts.fourierspctrm{1}(this_spks,:,:);
+                    this_trial_sts.time{1} = this_trial_sts.time{1}(this_spks,:);
+                    this_trial_sts.trial{1} = this_trial_sts.trial{1}(this_spks,:);
+                    this_trial_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc,this_trial_sts);
+                    near_tw_last_ppc(iT,:) = this_trial_ppc.ppc0;
+
+                    % Take the average of 1000 rounds of subsampling
+                    if length(this_trial_spks) == min_spk
+                        near_tw_sub_ppc(iT,:) =  near_tw_rand_ppc(iT,:);
+                    else
+                        temp_ppc = zeros(1,size(near_tw_rand_ppc,2));
+                        for iSub = 1:cfg_master.num_subsamples
+                            r_idx = randperm(length(this_trial_spks), min_spk);
+                            this_spks = sort(this_trial_spks(r_idx));
+                            this_trial_sts = this_sts;
+                            this_trial_sts.fourierspctrm{1} = this_trial_sts.fourierspctrm{1}(this_spks,:,:);
+                            this_trial_sts.time{1} = this_trial_sts.time{1}(this_spks,:);
+                            this_trial_sts.trial{1} = this_trial_sts.trial{1}(this_spks,:);
+                            this_trial_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc,this_trial_sts);
+                            temp_ppc = temp_ppc + this_trial_ppc.ppc0;
+                        end
+                        near_tw_sub_ppc(iT,:) = temp_ppc/cfg_master.num_subsamples;
+                    end
                  end
+                    
+%                 % Uncomment to debug
+%                 figure
+%                 hold on
+%                 fq = od.fsi_res.near_spec{iM}.freqs;
+%                 plot(fq, near_tw_unsampled_ppc(iT,:), '--black')
+%                 plot(fq, near_tw_sub_ppc(iT,:), 'blue')
+%                 plot(fq, near_tw_rand_ppc(iT,:), 'magenta')
+%                 plot(fq, near_tw_first_ppc(iT,:), 'cyan')
+%                 plot(fq, near_tw_last_ppc(iT,:), 'green')
+%                 legend({'Unsampled', 'Average of subsamples', 'One Subsample', 'First spikes', 'Last Spikes'})
+%                 ylabel('Trial-wise PPC')
+%                 xlabel('Frequency')
+%                 title(sprintf('Trial number: %d', iT))
+%                 close
             end
-            od.fsi_res.near_spec{iM}.trialwise_unsampled_ppc = near_trialwise_ppc; 
+            od.fsi_res.near_spec{iM}.tw_unsampled_ppc = near_tw_unsampled_ppc;
+            od.fsi_res.near_spec{iM}.tw_rand_ppc = near_tw_rand_ppc;
+            od.fsi_res.near_spec{iM}.tw_first_ppc = near_tw_first_ppc;
+            od.fsi_res.near_spec{iM}.tw_last_ppc = near_tw_last_ppc;
+            od.fsi_res.near_spec{iM}.tw_sub_ppc = near_tw_sub_ppc;
         end 
     end
     if cfg_master.write_output  
