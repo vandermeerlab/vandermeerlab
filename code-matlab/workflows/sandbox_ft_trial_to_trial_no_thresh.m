@@ -19,6 +19,7 @@ cfg_in.nMinSpikes2 = 400; % For near
 cfg_in.nMinSpikes3 = 150; % For lfr, hfr, p1 and p2
 cfg_in.nControlSplits = 100;
 cfg_in.num_subsamples = 1000;
+cfg_in.minTrialSpikes = 2; % Not thresholding
 
 
 %%
@@ -305,7 +306,7 @@ function od = generateSTS(cfg_in)
             % If a trial has only one spike, ppc can't be calculated!
             % Need at at least 2 spikes!
             for iT = 1:length(near_data.trial)
-                 if od.msn_res.near_spec{iM}.trialwise_spk_count(iT) < 2
+                 if od.msn_res.near_spec{iM}.trialwise_spk_count(iT) < cfg_in.minTrialSpikes
                      continue;
                  else
                     this_trial_sts = this_sts;
@@ -346,9 +347,12 @@ function od = generateSTS(cfg_in)
     end
     
     % Calculate spectral measures for all FSIs
-       all_fsi = find(od.cell_type == 2);
+    all_fsi = find(od.cell_type == 2);
     for iM = 1:length(all_fsi)   
         iC  = all_fsi(iM);
+        if isempty(od.msn_near_dist)
+            continue;
+        end
         % Calculate and save STA
         cfg_ft.timwin = [-0.5 0.5];
         cfg_ft.spikechannel = sd.S.ft_spikes(iC).label{1};
@@ -471,114 +475,53 @@ function od = generateSTS(cfg_in)
             % than at least one co-recorded MSN, do NOT
             % subsample and include all the spikes
             
-            % Check if subsampling is needed
-            to_be_subsampled = true;
-            if ~isempty(od.msn_near_dist)
-                cols = size(od.msn_near_dist,2);
-                for iCol = 1:cols
-                    if od.fsi_res.near_spec{iM}.spk_count <= sum(od.msn_near_dist(:,iCol))
-                        to_be_subsampled = false;
-                        break;
-                    end
-                end
-            else
-                to_be_subsampled = false; 
-            end
-            od.fsi_res.near_spec{iM}.subsampled_flag = to_be_subsampled;
-            if ~to_be_subsampled
-                % Calculate and save trialwise_ppc
-                near_trialwise_ppc = zeros(length(near_data.trial), length(od.fsi_res.near_spec{iM}.freqs));
-                cfg_ppc               = [];
-                cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
-                cfg_ppc.spikechannel  = this_sts.label;
-                cfg_ppc.channel       = this_sts.lfplabel; % selected LFP channels
-                cfg_ppc.avgoverchan   = 'weighted';
-                this_flag = false;
-                for iT = 1:length(near_data.trial)
-                    if od.fsi_res.near_spec{iM}.trialwise_spk_count(iT) < 2
-                     continue;
-                    else
-                        this_trial_sts = this_sts;
-                        this_trial_spks = trial_wise_spike{iT};
-                        this_trial_sts.fourierspctrm{1} = this_trial_sts.fourierspctrm{1}(this_trial_spks,:,:);
-                        this_trial_sts.time{1} = this_trial_sts.time{1}(this_trial_spks,:);
-                        this_trial_sts.trial{1} = this_trial_sts.trial{1}(this_trial_spks,:);
-                        this_trial_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc,this_trial_sts);
-                        if ~isempty(find(isnan(this_trial_ppc.ppc0),1))
-                            this_flag = true;
-                            break;
-                        end
-                        near_trialwise_ppc(iT,:) = this_trial_ppc.ppc0;
-                    end
-                end
-                od.fsi_res.near_spec{iM}.flag_nanppc = this_flag;
-                if ~this_flag
-                    od.fsi_res.near_spec{iM}.trial_wise_ppc = near_trialwise_ppc;
-                end 
-            else %Subsample cfg_master.num_subsamples times and then average for each trial
-                % Algo: Choose a random non-zero number, and greater than 2! from each row of
-                % od.msn_near_dist and subset that many spikes for that
-                % particular trial. If all numbers in that trial are zero,
-                % then skip that trial for the FSI. If one of the MSN trial
-                % spike count is greater than the FSI, don't subsample and
-                % use all the spikes instead
+            % Generate num_subsamples versions of trial_wise_ppc
+            od.fsi_res.near_spec{iM}.trialwise_ppc = nan(cfg_master.num_subsamples, ...
+                length(near_data.trial), length(od.fsi_res.near_spec{iM}.freqs));
+            cfg_ppc               = [];
+            cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
+            cfg_ppc.spikechannel  = this_sts.label;
+            cfg_ppc.channel       = this_sts.lfplabel; % selected LFP channels
+            cfg_ppc.avgoverchan   = 'weighted';
+            this_flag = false;
                 
-                % Calculate and save trialwise_ppc
-                near_trialwise_ppc = zeros(length(near_data.trial), length(od.fsi_res.near_spec{iM}.freqs));
-                cfg_ppc               = [];
-                cfg_ppc.method        = 'ppc0'; % compute the Pairwise Phase Consistency
-                cfg_ppc.spikechannel  = this_sts.label;
-                cfg_ppc.channel       = this_sts.lfplabel; % selected LFP channels
-                cfg_ppc.avgoverchan   = 'weighted';
-                this_flag = false;
+            % In each trial, subsample spikes based on co-recorded msn
+            % trial-wise spike count. If trial-wise spike count is < minTrialSpikes, or
+            % the trial-wise spike count in all co-recorded MSNs is < minTrialSpikes,
+            % skip that trial. If the number of FSI spikes in that trial <
+            % the number of spikes in any co-recorded MSN for that trial,
+            % don't subsamples and use all the FSI spikes
+            for iS = 1:cfg_master.num_subsamples
+                this_tw_ppc = nan(length(near_data.trial), length(od.fsi_res.near_spec{iM}.freqs));
                 for iT = 1:length(near_data.trial)
-                    if od.fsi_res.near_spec{iM}.trialwise_spk_count(iT) < 2 || ...
-                            max(od.msn_near_dist(iT,:)) < 2
+                    valid_choices = od.msn_near_dist(iT,:);
+                    valid_choices = valid_choices(valid_choices>=cfg_master.minTrialSpikes);
+                    if od.fsi_res.near_spec{iM}.trialwise_spk_count(iT) < cfg_in.minTrialSpikes || isempty(valid_choices)
                         continue;
-                    elseif od.fsi_res.near_spec{iM}.trialwise_spk_count(iT) <= max(od.msn_near_dist(iT,:))
-                        this_trial_sts = this_sts;
-                        this_trial_spks = trial_wise_spike{iT};
-                        this_trial_sts.fourierspctrm{1} = this_trial_sts.fourierspctrm{1}(this_trial_spks,:,:);
-                        this_trial_sts.time{1} = this_trial_sts.time{1}(this_trial_spks,:);
-                        this_trial_sts.trial{1} = this_trial_sts.trial{1}(this_trial_spks,:);
-                        this_trial_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc,this_trial_sts);
-                        if ~isempty(find(isnan(this_trial_ppc.ppc0),1))
-                            this_flag = true;
-                            break;
-                        end
-                        near_trialwise_ppc(iT,:) = this_trial_ppc.ppc0;    
+                    elseif od.fsi_res.near_spec{iM}.trialwise_spk_count(iT) <= max(od.msn_near_dist(iT,:)) % at least one co-recorded MSN has more spikes in this trial
+                        % Don't subsample, use all spikes
+                        sub_idx = trial_wise_spike{iT};
+                        sub_sts = this_sts;
+                        sub_sts.fourierspctrm{1} = sub_sts.fourierspctrm{1}(sub_idx,:,:);
+                        sub_sts.time{1} = sub_sts.time{1}(sub_idx,:);
+                        sub_sts.trial{1} = sub_sts.trial{1}(sub_idx,:);
+                        sub_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc, sub_sts);
+                        this_tw_ppc(iT,:) = sub_ppc.ppc0;
                     else
-                        temp_trial_ppc = zeros(cfg_master.num_subsamples, length(od.fsi_res.near_spec{iM}.freqs));
-                        valid_choices = od.msn_near_dist(iT,:);
-                        valid_choices = valid_choices(valid_choices>1);
+                        % Choose a number to subsample based on co-recorded MSN spike counts for this trial
                         s_factor = 1/length(valid_choices);
-                        flag_sub_nan = false;
-                        for iS = 1:cfg_master.num_subsamples
-                            choice = floor(rand()/s_factor)+1;                 
-                            sub_idx = randsample(trial_wise_spike{iT}, valid_choices(choice));
-                            sub_idx = sort(sub_idx);
-                            sub_sts = this_sts;
-                            sub_sts.fourierspctrm{1} = sub_sts.fourierspctrm{1}(sub_idx,:,:);
-                            sub_sts.time{1} = sub_sts.time{1}(sub_idx,:);
-                            sub_sts.trial{1} = sub_sts.trial{1}(sub_idx,:);
-                            sub_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc, sub_sts);
-                            if ~isempty(find(isnan(sub_ppc.ppc0),1))
-                                flag_sub_nan = true;
-                                break;    
-                            end
-                            temp_trial_ppc(iS,:) = sub_ppc.ppc0; 
-                        end
-                        if flag_sub_nan
-                            this_flag = true;
-                            break;
-                        end
-                        near_trialwise_ppc(iT,:) = mean(temp_trial_ppc, 1);
+                        choice = floor(rand()/s_factor)+1;                 
+                        sub_idx = randsample(trial_wise_spike{iT}, valid_choices(choice));
+                        sub_idx = sort(sub_idx);
+                        sub_sts = this_sts;
+                        sub_sts.fourierspctrm{1} = sub_sts.fourierspctrm{1}(sub_idx,:,:);
+                        sub_sts.time{1} = sub_sts.time{1}(sub_idx,:);
+                        sub_sts.trial{1} = sub_sts.trial{1}(sub_idx,:);
+                        sub_ppc = ft_spiketriggeredspectrum_stat(cfg_ppc, sub_sts);
+                        this_tw_ppc(iT,:) = sub_ppc.ppc0;
                     end
                 end
-                od.fsi_res.near_spec{iM}.flag_nanppc = this_flag;
-                if ~this_flag
-                    od.fsi_res.near_spec{iM}.trial_wise_ppc = near_trialwise_ppc;
-                end 
+                od.fsi_res.near_spec{iM}.trialwise_ppc(iS,:,:) = this_tw_ppc;
             end
         end 
     end
