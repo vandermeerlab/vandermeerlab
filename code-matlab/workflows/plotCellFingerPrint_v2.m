@@ -88,15 +88,15 @@ for idx = 1:length(rats)
                 lfr_sts_mask = od.fsi_res.near_lfr_spec{iC}.subsampled_sts>pct_sts;
                 hfr_sts_mask = od.fsi_res.near_hfr_spec{iC}.subsampled_sts>pct_sts;
 
-                [~, this_lfr_sts_max] = max(od.fsi_res.near_lfr_spec{iC}.subsampled_sts(x1:end).*(lfr_sts_mask(x1:end)));
-                if ~isempty(this_lfr_sts_max) 
+                if ~(sum(lfr_sts_mask(x1:end)) == 0)
+                    [~, this_lfr_sts_max] = max(od.fsi_res.near_lfr_spec{iC}.subsampled_sts(x1:end).*(lfr_sts_mask(x1:end)));
                     this_lfr_sts_max = this_freqs(this_lfr_sts_max);
                     xline(ax2, this_lfr_sts_max, 'Color', c1,  'LineStyle', '--');
                 else
                     this_lfr_sts_max = NaN;
-                end
-                [~, this_hfr_sts_max] = max(od.fsi_res.near_hfr_spec{iC}.subsampled_sts(x1:end).*(hfr_sts_mask(x1:end)));
-                if ~isempty(this_hfr_sts_max) 
+                end   
+                if ~(sum(hfr_sts_mask(x1:end)) == 0) 
+                    [~, this_hfr_sts_max] = max(od.fsi_res.near_hfr_spec{iC}.subsampled_sts(x1:end).*(hfr_sts_mask(x1:end)));
                     this_hfr_sts_max = this_freqs(this_hfr_sts_max);
                     xline(ax2, this_hfr_sts_max, 'Color', c2,  'LineStyle', '--');
                 else
@@ -131,15 +131,15 @@ for idx = 1:length(rats)
                 lfr_ppc_mask = od.fsi_res.near_lfr_spec{iC}.subsampled_ppc>pct_ppc;
                 hfr_ppc_mask = od.fsi_res.near_hfr_spec{iC}.subsampled_ppc>pct_ppc;
 
-                [~, this_lfr_ppc_max] = max(od.fsi_res.near_lfr_spec{iC}.subsampled_ppc(x1:end).*(lfr_ppc_mask(x1:end)));
-                if ~isempty(this_lfr_ppc_max) 
+                if ~(sum(lfr_ppc_mask(x1:end))==0)
+                    [~, this_lfr_ppc_max] = max(od.fsi_res.near_lfr_spec{iC}.subsampled_ppc(x1:end).*(lfr_ppc_mask(x1:end)));
                     this_lfr_ppc_max = this_freqs(this_lfr_ppc_max);
                     xline(ax3, this_lfr_ppc_max, 'Color', c1,  'LineStyle', '--');
                 else
                     this_lfr_ppc_max = NaN;
                 end
-                [~, this_hfr_ppc_max] = max(od.fsi_res.near_hfr_spec{iC}.subsampled_ppc(x1:end).*(hfr_ppc_mask(x1:end)));
-                if ~isempty(this_hfr_ppc_max) 
+                if ~(sum(hfr_ppc_mask(x1:end))==0)
+                    [~, this_hfr_ppc_max] = max(od.fsi_res.near_hfr_spec{iC}.subsampled_ppc(x1:end).*(hfr_ppc_mask(x1:end)));
                     this_hfr_ppc_max = this_freqs(this_hfr_ppc_max);
                     xline(ax3, this_hfr_ppc_max, 'Color', c2,  'LineStyle', '--');
                 else
@@ -238,15 +238,15 @@ for idx = 1:length(rats)
                 lfr_sts_mask = od.msn_res.near_lfr_spec{iC}.sts_vals>pct_sts;
                 hfr_sts_mask = od.msn_res.near_hfr_spec{iC}.sts_vals>pct_sts;
 
-                [~, this_lfr_sts_max] = max(od.msn_res.near_lfr_spec{iC}.sts_vals(x1:end).*(lfr_sts_mask(x1:end)));
-                if ~isempty(this_lfr_sts_max) 
+                if ~(sum(lfr_sts_mask(x1:end)) == 0) 
+                    [~, this_lfr_sts_max] = max(od.msn_res.near_lfr_spec{iC}.sts_vals(x1:end).*(lfr_sts_mask(x1:end)));
                     this_lfr_sts_max = this_freqs(this_lfr_sts_max);
                     xline(ax2, this_lfr_sts_max, 'Color', c1,  'LineStyle', '--');
                 else
                     this_lfr_sts_max = NaN;
                 end
-                [~, this_hfr_sts_max] = max(od.msn_res.near_hfr_spec{iC}.sts_vals(x1:end).*(hfr_sts_mask(x1:end)));
-                if ~isempty(this_hfr_sts_max) 
+                if ~(sum(hfr_sts_mask(x1:end)) == 0)
+                    [~, this_hfr_sts_max] = max(od.msn_res.near_hfr_spec{iC}.sts_vals(x1:end).*(hfr_sts_mask(x1:end)));
                     this_hfr_sts_max = this_freqs(this_hfr_sts_max);
                     xline(ax2, this_hfr_sts_max, 'Color', c2,  'LineStyle', '--');
                 else
@@ -281,15 +281,15 @@ for idx = 1:length(rats)
                 lfr_ppc_mask = od.msn_res.near_lfr_spec{iC}.ppc'>pct_ppc;
                 hfr_ppc_mask = od.msn_res.near_hfr_spec{iC}.ppc'>pct_ppc;
 
-                [~, this_lfr_ppc_max] = max(od.msn_res.near_lfr_spec{iC}.ppc(x1:end)'.*(lfr_ppc_mask(x1:end)));
-                if ~isempty(this_lfr_ppc_max) 
+                if ~(sum(lfr_ppc_mask(x1:end)) == 0)
+                    [~, this_lfr_ppc_max] = max(od.msn_res.near_lfr_spec{iC}.ppc(x1:end)'.*(lfr_ppc_mask(x1:end)));
                     this_lfr_ppc_max = this_freqs(this_lfr_ppc_max);
                     xline(ax3, this_lfr_ppc_max, 'Color', c1,  'LineStyle', '--');
                 else
                     this_lfr_ppc_max = NaN;
                 end
-                [~, this_hfr_ppc_max] = max(od.msn_res.near_hfr_spec{iC}.ppc(x1:end)'.*(hfr_ppc_mask(x1:end)));
-                if ~isempty(this_hfr_ppc_max) 
+                if ~(sum(hfr_ppc_mask(x1:end)) == 0)
+                    [~, this_hfr_ppc_max] = max(od.msn_res.near_hfr_spec{iC}.ppc(x1:end)'.*(hfr_ppc_mask(x1:end)));
                     this_hfr_ppc_max = this_freqs(this_hfr_ppc_max);
                     xline(ax3, this_hfr_ppc_max, 'Color', c2,  'LineStyle', '--');
                 else
