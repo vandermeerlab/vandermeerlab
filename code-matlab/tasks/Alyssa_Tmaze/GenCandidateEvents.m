@@ -60,8 +60,8 @@ cfg_def.DetectorThreshold = 2.5; % the threshold you want for generating IV data
     %cfg_def.DetectorThreshold = 2.5;
 %end
 cfg_def.mindur = 0.02; % in seconds, the minumum duration for detected events to be kept
-cfg_def.SpeedLimit = 20; % pixels per second
-cfg_def.ThetaThreshold = 1; % power, std above mean
+cfg_def.SpeedLimit = 15; % pixels per second
+cfg_def.ThetaThreshold = ''; % power, std above mean
 cfg_def.minCells = 4; % minimum number of active cells for the event to be kept. if this is empty [], this step is skipped
 cfg_def.expandIV = [0 0]; % amount to add to the interval (catch borderline missed spikes)
 cfg_def.allowOverlap = 0; % don't allow the expanded intervals to overlap one another
@@ -89,6 +89,7 @@ end
 
 cfg_temp = []; cfg_temp.verbose = cfg.verbose;
 cfg_temp.fc = ExpKeys.goodSWR(1);
+% cfg_temp.fc = {'R149-2008-08-11-CSCr1r2.Ncs'};
 CSC = LoadCSC(cfg_temp);
 
 if ~isempty(cfg.ThetaThreshold) % load a theta CSC
@@ -96,7 +97,12 @@ if ~isempty(cfg.ThetaThreshold) % load a theta CSC
     lfp_theta = LoadCSC(cfg_temp);
 end
 
-% exclude spikes that are somehow occurring during recording pause
+%% Get reference channle to filter chewing periods
+cfg_temp = []; cfg_temp.verbose = cfg.verbose;
+cfg_temp.fc = {'R149-2008-08-12-CSCr1r2.ncs'};
+CSC_ref = LoadCSC(cfg_temp);
+
+%% exclude spikes that are somehow occurring during recording pause
 cscdiffs = cat(1, 0, diff(CSC.tvec));
 csc_jump_idx = find(cscdiffs > 5);
 pre_gap_start = CSC.tvec(csc_jump_idx(1) - 1);
@@ -115,6 +121,7 @@ switch cfg.SWRmethod
     case 'AM'
         cfg_temp = []; cfg_temp.verbose = cfg.verbose; cfg_temp.weightby = cfg.weightby; cfg_temp.stepSize = cfg.stepSize;
         [SWR,~,~] = amSWR(cfg_temp,metadata.SWRfreqs,CSC);
+        [SWR_ref,~,~] = amSWR(cfg_temp,metadata.SWRfreqs,CSC_ref);
         
     case 'HT'
         cfg.stepSize = [];
@@ -191,7 +198,47 @@ evt.data = score.data; evt.tvec = score.tvec;
 % cfg_temp.verbose = cfg.verbose; cfg_temp.mindur = cfg.mindur;
 % evt = precand(cfg_temp,CSC.tvec,SWR,MUA,S);
 
+%% SWR thresholding
+disp('***Limiting output based on SWR scores...')
 
+% threshold
+cfg_temp = [];
+cfg_temp.threshold = cfg.DetectorThreshold; cfg_temp.verbose = cfg.verbose; cfg_temp.method = cfg.ThreshMethod;
+cfg_temp.operation = '>';
+evt = TSDtoIV2(cfg_temp,SWR);
+
+% remove short intervals
+cfg_temp = []; cfg_temp.verbose = cfg.verbose; cfg_temp.mindur = cfg.mindur;
+evt = RemoveIV(cfg_temp,evt);
+
+evt.data = SWR.data; evt.tvec = SWR.tvec;
+
+disp(['***',num2str(length(evt.tstart)),' SWR-limited candidates found.'])
+
+%% SWR thresholding based on reference channel to revmoe chewing
+disp(' ')
+disp('***Limiting output based on SWR scores of reference...')
+
+cfg_temp = [];
+cfg_temp.threshold = cfg.DetectorThreshold; cfg_temp.verbose = cfg.verbose; cfg_temp.method = cfg.ThreshMethod;
+cfg_temp.operation = '<';
+SWR_ref_iv = TSDtoIV(cfg_temp,SWR_ref);
+
+evt = restrict(evt,SWR_ref_iv);
+disp(['***',num2str(length(evt.tstart)),' SWR-ref-limited candidates found.'])
+
+%% MUA thresholding
+disp(' ')
+disp('***Limiting output based on MUA scores...')
+
+cfg_temp = [];
+% cfg_temp.threshold = 1; cfg_temp.verbose = cfg.verbose; cfg_temp.method = cfg.ThreshMethod;
+% cfg_temp.operation = '>';
+cfg_temp.threshold = 0.5; cfg_temp.operation = '>'; cfg_temp.method = 'raw'; cfg_temp.verbose = cfg.verbose;
+MUA_iv = TSDtoIV(cfg_temp,MUA);
+
+evt = restrict(evt,MUA_iv);
+disp(['***',num2str(length(evt.tstart)),' MUA-limited candidates found.'])
 
 %% Speed thresholding
 
