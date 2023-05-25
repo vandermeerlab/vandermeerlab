@@ -1,7 +1,7 @@
 %% Script to generate cell_finger prints AND summary 
 cd('D:\RandomVstrAnalysis\final_results\'); % Change this to your local machine location for results
 rats = {'R117','R119','R131','R132'};
-odir = 'D:\RandomVstrAnalysis\CellFingerPrint\';
+odir = 'D:\RandomVstrAnalysis\CellFingerPrint2\';
 clean_msn = 0;
 clean_fsi = 0;
 c1 = [75/255 0/255 146/255];  % Violet/Purple
@@ -10,7 +10,8 @@ c3 = [0.7 0.7 0.7]; % Gray
 min_freq = 2; % Minimum frequency in Hertz
 p_thresh = 99; % Percentile threshold to establish significance of phase locking
 headers = {'label','lfr_min','lfr_max', 'lfr_mean', 'hfr_min', 'hfr_max', ...
-    'hfr_mean', 'lfr_sts_peak','hfr_sts_peak', 'lfr_ppc_peak', 'hfr_ppc_peak'};
+    'hfr_mean', 'lfr_sts_peak', 'lfr_sts_diff', 'hfr_sts_peak', 'hfr_sts_diff', ...
+    'lfr_ppc_peak', 'lfr_ppc_diff', 'hfr_ppc_peak', 'hfr_ppc_diff'};
 msn_summary = cell2table(cell(0,length(headers)), 'VariableNames', headers);
 fsi_summary = cell2table(cell(0,length(headers)), 'VariableNames', headers);
 %%
@@ -46,7 +47,7 @@ for idx = 1:length(rats)
                 
                 % Plot STA
                 fig = figure('WindowState', 'maximized');
-                ax1 = subplot(1,3,1);
+                ax1 = subplot(2,3,1);
                 hold on;
                 p1 = plot(ax1, od.fsi_res.near_spec{iC}.sta_time, ...
                     od.fsi_res.near_lfr_spec{iC}.sta_vals, 'Color', c1);
@@ -73,7 +74,7 @@ for idx = 1:length(rats)
 %                 leg1.FontSize = 17;
 
                 % Plot STS
-                ax2 = subplot(1,3,2);
+                ax2 = subplot(2,3,2);
                 hold on;
                 p4 = plot(ax2, od.fsi_res.near_spec{iC}.freqs, ...
                     od.fsi_res.near_lfr_spec{iC}.subsampled_sts, 'Color', c1);
@@ -114,9 +115,79 @@ for idx = 1:length(rats)
                 ax2.XAxis.FontWeight = 'normal';
                 ax2.TickDir = 'out';
                 leg2 = legend({'LFR','HFR','All Trials', sprintf('%2d thresh', p_thresh)}, 'Location','best');
-                
+
+                % Plot STS diff
+                control_sts_diff = abs(od.fsi_res.near_p1_spec{iC}.subsampled_sts - od.fsi_res.near_p2_spec{iC}.subsampled_sts);
+                pct_sts_diff = prctile(control_sts_diff, p_thresh);
+                sts_diff = od.fsi_res.near_hfr_spec{iC}.subsampled_sts - od.fsi_res.near_lfr_spec{iC}.subsampled_sts;
+                ax2 = subplot(2,3,5);
+                plot(ax2, this_freqs, sts_diff(x1:end), 'Color', 'black');
+                hold on
+                plot(ax2, this_freqs, pct_sts_diff(x1:end), 'Color', c2, 'LineStyle','--');
+                plot(ax2, this_freqs, -pct_sts_diff(x1:end), 'Color', c1, 'LineStyle','--');
+                                
+                if ~(sum(lfr_sts_mask(x1:end)) == 0)
+                    thresh_diff = -pct_sts_diff;
+                    this_diff = sts_diff;
+                    thresh_diff(~lfr_sts_mask) = NaN;
+                    this_diff(~lfr_sts_mask) = NaN;
+                    plot(ax2, this_freqs, thresh_diff(x1:end), 'Color', c1, 'LineWidth', 2);
+                    % if the sts diff crosses the threshold, save this
+                    this_diff = this_diff(x1:end);
+                    thresh_diff = thresh_diff(x1:end);
+                    cidx = this_diff < thresh_diff; % the sign is negative, so threshold crossing is less than
+                    if sum(cidx) ~= 0
+                        % Find where this is lfr-hfr most away from the threshold
+                        this_diff(~cidx) = NaN;
+                        thresh_diff(~cidx) = NaN;
+                        [~, this_lfr_sts_diff_max] = max(thresh_diff - this_diff);
+                        this_lfr_sts_diff_max = this_freqs(this_lfr_sts_diff_max);
+                        xline(ax2, this_lfr_sts_diff_max, 'Color', c1,  'LineStyle', '--', 'LineWidth', 2);
+                    else
+                       this_lfr_sts_diff_max = NaN;
+                    end
+                else
+                    this_lfr_sts_diff_max = NaN;
+                end
+
+                if ~(sum(hfr_sts_mask(x1:end)) == 0)
+                    thresh_diff = pct_sts_diff;
+                    this_diff = sts_diff;
+                    thresh_diff(~hfr_sts_mask) = NaN;
+                    this_diff(~hfr_sts_mask) = NaN;
+                    plot(ax2, this_freqs, thresh_diff(x1:end), 'Color', c2, 'LineWidth', 2);
+                    % if the sts diff crosses the threshold, save this
+                    this_diff = this_diff(x1:end);
+                    thresh_diff = thresh_diff(x1:end);
+                    cidx = this_diff > thresh_diff; % the sign is positive, so threshold crossing is l]greater than
+                    if sum(cidx) ~= 0
+                        % Find where this is hfr-hfr most away from the threshold
+                        this_diff(~cidx) = NaN;
+                        thresh_diff(~cidx) = NaN;
+                        [~, this_hfr_sts_diff_max] = max(this_diff - thresh_diff);
+                        this_hfr_sts_diff_max = this_freqs(this_hfr_sts_diff_max);
+                        xline(ax2, this_hfr_sts_diff_max, 'Color', c2,  'LineStyle', '--', 'LineWidth', 2);
+                    else
+                       this_hfr_sts_diff_max = NaN;
+                    end
+                else
+                    this_hfr_sts_diff_max = NaN;
+                end
+
+                ax2.Box = 'off';
+                ax2.YTick = [];
+                ax2.XLim = [x1 100];
+                ax2.XTick = [x1 10 25 50 75 100];
+                ax2.Title.String = 'STS diff';
+                ax2.XLabel.String = 'Frequency (Hz)';
+                ax2.Title.FontSize = 25;
+                ax2.XAxis.FontSize = 18;
+                ax2.XAxis.FontWeight = 'normal';
+                ax2.TickDir = 'out';
+                leg2 = legend({'HFR-LFR','HFR>LFR','LFR>HFR'}, 'Location','best');
+            
                 % Plot PPC
-                ax3 = subplot(,3,3);
+                ax3 = subplot(2,3,3);
                 hold on;
                 p9 = plot(ax3, od.fsi_res.near_spec{iC}.freqs, ...
                     od.fsi_res.near_lfr_spec{iC}.subsampled_ppc, 'Color', c1);
@@ -160,10 +231,81 @@ for idx = 1:length(rats)
                 leg3 = legend({sprintf('%.2f Hz', this_lfr_mean), sprintf('%.2f Hz', this_hfr_mean), ...
                     'All Trials', sprintf('%2d thresh', p_thresh)}, 'Location','best');
                 
+                % Plot PPC diff
+                control_ppc_diff = abs(od.fsi_res.near_p1_spec{iC}.subsampled_ppc - od.fsi_res.near_p2_spec{iC}.subsampled_ppc);
+                pct_ppc_diff = prctile(control_ppc_diff, p_thresh);
+                ppc_diff = od.fsi_res.near_hfr_spec{iC}.subsampled_ppc - od.fsi_res.near_lfr_spec{iC}.subsampled_ppc;
+                ax3 = subplot(2,3,6);
+                plot(ax3, this_freqs, ppc_diff(x1:end), 'Color', 'black');
+                hold on
+                plot(ax3, this_freqs, pct_ppc_diff(x1:end), 'Color', c2, 'LineStyle','--');
+                plot(ax3, this_freqs, -pct_ppc_diff(x1:end), 'Color', c1, 'LineStyle','--');
+                                
+                if ~(sum(lfr_ppc_mask(x1:end)) == 0)
+                    thresh_diff = -pct_ppc_diff;
+                    this_diff = ppc_diff;
+                    thresh_diff(~lfr_ppc_mask) = NaN;
+                    this_diff(~lfr_ppc_mask) = NaN;
+                    plot(ax3, this_freqs, thresh_diff(x1:end), 'Color', c1, 'LineWidth', 2);
+                    % if the ppc diff crosses the threshold, save this
+                    this_diff = this_diff(x1:end);
+                    thresh_diff = thresh_diff(x1:end);
+                    cidx = this_diff < thresh_diff; % the sign is negative, so threshold crossing is less than
+                    if sum(cidx) ~= 0
+                        % Find where this is lfr-hfr most away from the threshold
+                        this_diff(~cidx) = NaN;
+                        thresh_diff(~cidx) = NaN;
+                        [~, this_lfr_ppc_diff_max] = max(thresh_diff - this_diff);
+                        this_lfr_ppc_diff_max = this_freqs(this_lfr_ppc_diff_max);
+                        xline(ax3, this_lfr_ppc_diff_max, 'Color', c1,  'LineStyle', '--', 'LineWidth', 2);
+                    else
+                       this_lfr_ppc_diff_max = NaN;
+                    end
+                else
+                    this_lfr_ppc_diff_max = NaN;
+                end
+
+                if ~(sum(hfr_ppc_mask(x1:end)) == 0)
+                    thresh_diff = pct_ppc_diff;
+                    this_diff = ppc_diff;
+                    thresh_diff(~hfr_ppc_mask) = NaN;
+                    this_diff(~hfr_ppc_mask) = NaN;
+                    plot(ax3, this_freqs, thresh_diff(x1:end), 'Color', c2, 'LineWidth', 2);
+                    % if the ppc diff crosses the threshold, save this
+                    this_diff = this_diff(x1:end);
+                    thresh_diff = thresh_diff(x1:end);
+                    cidx = this_diff > thresh_diff; % the sign is positive, so threshold crossing is l]greater than
+                    if sum(cidx) ~= 0
+                        % Find where this is hfr-hfr most away from the threshold
+                        this_diff(~cidx) = NaN;
+                        thresh_diff(~cidx) = NaN;
+                        [~, this_hfr_ppc_diff_max] = max(this_diff - thresh_diff);
+                        this_hfr_ppc_diff_max = this_freqs(this_hfr_ppc_diff_max);
+                        xline(ax3, this_hfr_ppc_diff_max, 'Color', c2,  'LineStyle', '--', 'LineWidth', 2);
+                    else
+                       this_hfr_ppc_diff_max = NaN;
+                    end
+                else
+                    this_hfr_ppc_diff_max = NaN;
+                end
+
+                ax3.Box = 'off';
+                ax3.YTick = [];
+                ax3.XLim = [x1 100];
+                ax3.XTick = [x1 10 25 50 75 100];
+                ax3.Title.String = 'PPC diff';
+                ax3.XLabel.String = 'Frequency (Hz)';
+                ax3.Title.FontSize = 25;
+                ax3.XAxis.FontSize = 18;
+                ax3.XAxis.FontWeight = 'normal';
+                ax3.TickDir = 'out';
+                leg2 = legend({'HFR-LFR','HFR>LFR','LFR>HFR'}, 'Location','best');
+                
                 this_row = {fsi_labels{iC}, this_lfr_min, this_lfr_max, ...
                     this_lfr_mean, this_hfr_min, this_hfr_max, this_hfr_mean, ...
-                    this_lfr_sts_max, this_hfr_sts_max, this_lfr_ppc_max, this_hfr_ppc_max};
-                
+                    this_lfr_sts_max, this_lfr_sts_diff_max, this_hfr_sts_max,...
+                    this_hfr_sts_diff_max, this_lfr_ppc_max, this_lfr_ppc_diff_max, ...
+                    this_hfr_ppc_max, this_hfr_ppc_diff_max};    
                 fsi_summary = [fsi_summary; this_row];
 	            print(fig, '-dpng', '-r300', strcat(odir, fsi_labels{iC}, '_FSI'));
                 close;
@@ -196,7 +338,7 @@ for idx = 1:length(rats)
                 
                 % Plot STA
                 fig = figure('WindowState', 'maximized');
-                ax1 = subplot(1,3,1);
+                ax1 = subplot(2,3,1);
                 hold on;
                 p1 = plot(ax1, od.msn_res.near_spec{iC}.sta_time, ...
                     od.msn_res.near_lfr_spec{iC}.sta_vals, 'Color', c1);
@@ -223,7 +365,7 @@ for idx = 1:length(rats)
 %                 leg1.FontSize = 17;
 
                 % Plot STS
-                ax2 = subplot(1,3,2);
+                ax2 = subplot(2,3,2);
                 hold on;
                 p4 = plot(ax2, od.msn_res.near_spec{iC}.freqs, ...
                     od.msn_res.near_lfr_spec{iC}.sts_vals, 'Color', c1);
@@ -264,9 +406,79 @@ for idx = 1:length(rats)
                 ax2.XAxis.FontWeight = 'normal';
                 ax2.TickDir = 'out';
                 leg2 = legend({'LFR','HFR','All Trials', sprintf('%2d thresh', p_thresh)}, 'Location','best');
+
+                % Plot STS diff
+                control_sts_diff = abs(od.msn_res.near_p1_spec{iC}.sts - od.msn_res.near_p2_spec{iC}.sts);
+                pct_sts_diff = prctile(control_sts_diff, p_thresh);
+                sts_diff = od.msn_res.near_hfr_spec{iC}.sts_vals - od.msn_res.near_lfr_spec{iC}.sts_vals;
+                ax2 = subplot(2,3,5);
+                plot(ax2, this_freqs, sts_diff(x1:end), 'Color', 'black');
+                hold on
+                plot(ax2, this_freqs, pct_sts_diff(x1:end), 'Color', c2, 'LineStyle','--');
+                plot(ax2, this_freqs, -pct_sts_diff(x1:end), 'Color', c1, 'LineStyle','--');
+                                
+                if ~(sum(lfr_sts_mask(x1:end)) == 0)
+                    thresh_diff = -pct_sts_diff;
+                    this_diff = sts_diff;
+                    thresh_diff(~lfr_sts_mask) = NaN;
+                    this_diff(~lfr_sts_mask) = NaN;
+                    plot(ax2, this_freqs, thresh_diff(x1:end), 'Color', c1, 'LineWidth', 2);
+                    % if the sts diff crosses the threshold, save this
+                    this_diff = this_diff(x1:end);
+                    thresh_diff = thresh_diff(x1:end);
+                    cidx = this_diff < thresh_diff; % the sign is negative, so threshold crossing is less than
+                    if sum(cidx) ~= 0
+                        % Find where this is lfr-hfr most away from the threshold
+                        this_diff(~cidx) = NaN;
+                        thresh_diff(~cidx) = NaN;
+                        [~, this_lfr_sts_diff_max] = max(thresh_diff - this_diff);
+                        this_lfr_sts_diff_max = this_freqs(this_lfr_sts_diff_max);
+                        xline(ax2, this_lfr_sts_diff_max, 'Color', c1,  'LineStyle', '--', 'LineWidth', 2);
+                    else
+                       this_lfr_sts_diff_max = NaN;
+                    end
+                else
+                    this_lfr_sts_diff_max = NaN;
+                end
+
+                if ~(sum(hfr_sts_mask(x1:end)) == 0)
+                    thresh_diff = pct_sts_diff;
+                    this_diff = sts_diff;
+                    thresh_diff(~hfr_sts_mask) = NaN;
+                    this_diff(~hfr_sts_mask) = NaN;
+                    plot(ax2, this_freqs, thresh_diff(x1:end), 'Color', c2, 'LineWidth', 2);
+                    % if the sts diff crosses the threshold, save this
+                    this_diff = this_diff(x1:end);
+                    thresh_diff = thresh_diff(x1:end);
+                    cidx = this_diff > thresh_diff; % the sign is positive, so threshold crossing is l]greater than
+                    if sum(cidx) ~= 0
+                        % Find where this is hfr-hfr most away from the threshold
+                        this_diff(~cidx) = NaN;
+                        thresh_diff(~cidx) = NaN;
+                        [~, this_hfr_sts_diff_max] = max(this_diff - thresh_diff);
+                        this_hfr_sts_diff_max = this_freqs(this_hfr_sts_diff_max);
+                        xline(ax2, this_hfr_sts_diff_max, 'Color', c2,  'LineStyle', '--', 'LineWidth', 2);
+                    else
+                       this_hfr_sts_diff_max = NaN;
+                    end
+                else
+                    this_hfr_sts_diff_max = NaN;
+                end
+
+                ax2.Box = 'off';
+                ax2.YTick = [];
+                ax2.XLim = [x1 100];
+                ax2.XTick = [x1 10 25 50 75 100];
+                ax2.Title.String = 'STS diff';
+                ax2.XLabel.String = 'Frequency (Hz)';
+                ax2.Title.FontSize = 25;
+                ax2.XAxis.FontSize = 18;
+                ax2.XAxis.FontWeight = 'normal';
+                ax2.TickDir = 'out';
+                leg2 = legend({'HFR-LFR','HFR>LFR','LFR>HFR'}, 'Location','best');
                 
                 % Plot PPC
-                ax3 = subplot(1,3,3);
+                ax3 = subplot(2,3,3);
                 hold on;
                 p9 = plot(ax3, od.msn_res.near_spec{iC}.freqs, ...
                     od.msn_res.near_lfr_spec{iC}.ppc', 'Color', c1);
@@ -309,11 +521,82 @@ for idx = 1:length(rats)
                 ax3.TickDir = 'out';
                 leg3 = legend({sprintf('%.2f Hz', this_lfr_mean), sprintf('%.2f Hz', this_hfr_mean), ...
                     'All Trials', sprintf('%2d thresh', p_thresh)}, 'Location','best');
+
+                % Plot PPC diff
+                control_ppc_diff = abs(od.msn_res.near_p1_spec{iC}.ppc - od.msn_res.near_p2_spec{iC}.ppc);
+                pct_ppc_diff = prctile(control_ppc_diff, p_thresh);
+                ppc_diff = od.msn_res.near_hfr_spec{iC}.ppc' - od.msn_res.near_lfr_spec{iC}.ppc';
+                ax3 = subplot(2,3,6);
+                plot(ax3, this_freqs, ppc_diff(x1:end), 'Color', 'black');
+                hold on
+                plot(ax3, this_freqs, pct_ppc_diff(x1:end), 'Color', c2, 'LineStyle','--');
+                plot(ax3, this_freqs, -pct_ppc_diff(x1:end), 'Color', c1, 'LineStyle','--');
+                                
+                if ~(sum(lfr_ppc_mask(x1:end)) == 0)
+                    thresh_diff = -pct_ppc_diff;
+                    this_diff = ppc_diff;
+                    thresh_diff(~lfr_ppc_mask) = NaN;
+                    this_diff(~lfr_ppc_mask) = NaN;
+                    plot(ax3, this_freqs, thresh_diff(x1:end), 'Color', c1, 'LineWidth', 2);
+                    % if the ppc diff crosses the threshold, save this
+                    this_diff = this_diff(x1:end);
+                    thresh_diff = thresh_diff(x1:end);
+                    cidx = this_diff < thresh_diff; % the sign is negative, so threshold crossing is less than
+                    if sum(cidx) ~= 0
+                        % Find where this is lfr-hfr most away from the threshold
+                        this_diff(~cidx) = NaN;
+                        thresh_diff(~cidx) = NaN;
+                        [~, this_lfr_ppc_diff_max] = max(thresh_diff - this_diff);
+                        this_lfr_ppc_diff_max = this_freqs(this_lfr_ppc_diff_max);
+                        xline(ax3, this_lfr_ppc_diff_max, 'Color', c1,  'LineStyle', '--', 'LineWidth', 2);
+                    else
+                       this_lfr_ppc_diff_max = NaN;
+                    end
+                else
+                    this_lfr_ppc_diff_max = NaN;
+                end
+
+                if ~(sum(hfr_ppc_mask(x1:end)) == 0)
+                    thresh_diff = pct_ppc_diff;
+                    this_diff = ppc_diff;
+                    thresh_diff(~hfr_ppc_mask) = NaN;
+                    this_diff(~hfr_ppc_mask) = NaN;
+                    plot(ax3, this_freqs, thresh_diff(x1:end), 'Color', c2, 'LineWidth', 2);
+                    % if the ppc diff crosses the threshold, save this
+                    this_diff = this_diff(x1:end);
+                    thresh_diff = thresh_diff(x1:end);
+                    cidx = this_diff > thresh_diff; % the sign is positive, so threshold crossing is l]greater than
+                    if sum(cidx) ~= 0
+                        % Find where this is hfr-hfr most away from the threshold
+                        this_diff(~cidx) = NaN;
+                        thresh_diff(~cidx) = NaN;
+                        [~, this_hfr_ppc_diff_max] = max(this_diff - thresh_diff);
+                        this_hfr_ppc_diff_max = this_freqs(this_hfr_ppc_diff_max);
+                        xline(ax3, this_hfr_ppc_diff_max, 'Color', c2,  'LineStyle', '--', 'LineWidth', 2);
+                    else
+                       this_hfr_ppc_diff_max = NaN;
+                    end
+                else
+                    this_hfr_ppc_diff_max = NaN;
+                end
+
+                ax3.Box = 'off';
+                ax3.YTick = [];
+                ax3.XLim = [x1 100];
+                ax3.XTick = [x1 10 25 50 75 100];
+                ax3.Title.String = 'PPC diff';
+                ax3.XLabel.String = 'Frequency (Hz)';
+                ax3.Title.FontSize = 25;
+                ax3.XAxis.FontSize = 18;
+                ax3.XAxis.FontWeight = 'normal';
+                ax3.TickDir = 'out';
+                leg2 = legend({'HFR-LFR','HFR>LFR','LFR>HFR'}, 'Location','best');
                 
                 this_row = {msn_labels{iC}, this_lfr_min, this_lfr_max, ...
                     this_lfr_mean, this_hfr_min, this_hfr_max, this_hfr_mean, ...
-                    this_lfr_sts_max, this_hfr_sts_max, this_lfr_ppc_max, this_hfr_ppc_max};
-                
+                    this_lfr_sts_max, this_lfr_sts_diff_max, this_hfr_sts_max,...
+                    this_hfr_sts_diff_max, this_lfr_ppc_max, this_lfr_ppc_diff_max, ...
+                    this_hfr_ppc_max, this_hfr_ppc_diff_max}; 
                 msn_summary = [msn_summary; this_row];
                 print(fig, '-dpng', '-r300', strcat(odir, msn_labels{iC}, '_MSN'));
                 close;
