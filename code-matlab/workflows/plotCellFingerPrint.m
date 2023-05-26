@@ -15,6 +15,7 @@ headers = {'label','lfr_min','lfr_max', 'lfr_mean', 'hfr_min', 'hfr_max', ...
     'lfr_ppc_peak', 'lfr_ppc_diff', 'hfr_ppc_peak', 'hfr_ppc_diff'};
 msn_summary = cell2table(cell(0,length(headers)), 'VariableNames', headers);
 fsi_summary = cell2table(cell(0,length(headers)), 'VariableNames', headers);
+set(groot, 'defaultAxesFontSize', 12);
 %%
 for idx = 1:length(rats)
     curRat = rats{idx};
@@ -308,6 +309,13 @@ for idx = 1:length(rats)
                     this_hfr_sts_diff_max, this_lfr_ppc_max, this_lfr_ppc_diff_max, ...
                     this_hfr_ppc_max, this_hfr_ppc_diff_max};    
                 fsi_summary = [fsi_summary; this_row];
+                
+                ax = subplot(2,3,4);
+                text(0.2,0.5, strcat(fsi_labels{iC}, '_FSI'), 'Interpreter', 'None', 'FontSize', 14);
+                ax.Box = 'off';
+                ax.Box = 'off';
+                ax.Visible = 'off';
+
 	            print(fig, '-dpng', '-r300', strcat(odir, fsi_labels{iC}, '_FSI'));
                 close;
             end
@@ -599,6 +607,12 @@ for idx = 1:length(rats)
                     this_hfr_sts_diff_max, this_lfr_ppc_max, this_lfr_ppc_diff_max, ...
                     this_hfr_ppc_max, this_hfr_ppc_diff_max}; 
                 msn_summary = [msn_summary; this_row];
+
+                ax = subplot(2,3,4);
+                text(0.2,0.5, strcat(msn_labels{iC}, '_MSN'), 'Interpreter', 'None', 'FontSize', 14);
+                ax.Box = 'off';
+                ax.Visible = 'off';
+
                 print(fig, '-dpng', '-r300', strcat(odir, msn_labels{iC}, '_MSN'));
                 close;
             end

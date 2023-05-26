@@ -2,7 +2,7 @@
 
 cd('D:\RandomVstrAnalysis\final_results\'); % Change this to your local machine location for results
 % load significant cells
-load('significance_v2.mat'); % Label, HFR PPC high, LFR PPC high, HFR STS high, LFR STS high
+
 rats = {'R117','R119','R131','R132'};
 clean_msn = 0;
 clean_fsi = 0;
