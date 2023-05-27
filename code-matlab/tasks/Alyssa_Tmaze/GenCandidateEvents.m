@@ -99,7 +99,7 @@ end
 
 %% Get reference channle to filter chewing periods
 cfg_temp = []; cfg_temp.verbose = cfg.verbose;
-cfg_temp.fc = {'R149-2008-08-12-CSCr1r2.ncs'};
+cfg_temp.fc = {'R149-2008-08-14-CSCr1r2.ncs'};
 CSC_ref = LoadCSC(cfg_temp);
 
 %% exclude spikes that are somehow occurring during recording pause
@@ -198,14 +198,18 @@ evt.data = score.data; evt.tvec = score.tvec;
 % cfg_temp.verbose = cfg.verbose; cfg_temp.mindur = cfg.mindur;
 % evt = precand(cfg_temp,CSC.tvec,SWR,MUA,S);
 
+%%
+SWR_diff = SWR;
+SWR_diff.data = SWR.data - interp1(SWR_ref.tvec, SWR_ref.data, SWR.tvec)';
+
 %% SWR thresholding
 disp('***Limiting output based on SWR scores...')
 
 % threshold
 cfg_temp = [];
-cfg_temp.threshold = cfg.DetectorThreshold; cfg_temp.verbose = cfg.verbose; cfg_temp.method = cfg.ThreshMethod;
+cfg_temp.threshold = 2; cfg_temp.verbose = cfg.verbose; cfg_temp.method = cfg.ThreshMethod;
 cfg_temp.operation = '>';
-evt = TSDtoIV2(cfg_temp,SWR);
+evt = TSDtoIV2(cfg_temp, SWR);
 
 % remove short intervals
 cfg_temp = []; cfg_temp.verbose = cfg.verbose; cfg_temp.mindur = cfg.mindur;
@@ -220,25 +224,13 @@ disp(' ')
 disp('***Limiting output based on SWR scores of reference...')
 
 cfg_temp = [];
-cfg_temp.threshold = cfg.DetectorThreshold; cfg_temp.verbose = cfg.verbose; cfg_temp.method = cfg.ThreshMethod;
-cfg_temp.operation = '<';
-SWR_ref_iv = TSDtoIV(cfg_temp,SWR_ref);
+cfg_temp.threshold = 0.5; cfg_temp.verbose = cfg.verbose; cfg_temp.method = cfg.ThreshMethod;
+cfg_temp.operation = '>';
+SWR_ref_iv = TSDtoIV(cfg_temp,SWR_diff);
 
 evt = restrict(evt,SWR_ref_iv);
+
 disp(['***',num2str(length(evt.tstart)),' SWR-ref-limited candidates found.'])
-
-%% MUA thresholding
-disp(' ')
-disp('***Limiting output based on MUA scores...')
-
-cfg_temp = [];
-% cfg_temp.threshold = 1; cfg_temp.verbose = cfg.verbose; cfg_temp.method = cfg.ThreshMethod;
-% cfg_temp.operation = '>';
-cfg_temp.threshold = 0.5; cfg_temp.operation = '>'; cfg_temp.method = 'raw'; cfg_temp.verbose = cfg.verbose;
-MUA_iv = TSDtoIV(cfg_temp,MUA);
-
-evt = restrict(evt,MUA_iv);
-disp(['***',num2str(length(evt.tstart)),' MUA-limited candidates found.'])
 
 %% Speed thresholding
 
@@ -256,6 +248,20 @@ if ~isempty(cfg.SpeedLimit)
     evt = restrict(evt,low_spd_iv);
     disp(['***',num2str(length(evt.tstart)),' speed-limited candidates found.'])
 end
+
+%% MUA thresholding
+disp(' ')
+disp('***Limiting output based on MUA scores...')
+
+cfg_temp = [];
+% cfg_temp.threshold = 1; cfg_temp.verbose = cfg.verbose; cfg_temp.method = cfg.ThreshMethod;
+% cfg_temp.operation = '>';
+cfg_temp.threshold = 0.5; cfg_temp.operation = '>'; cfg_temp.method = 'raw'; cfg_temp.verbose = cfg.verbose;
+MUA_iv = TSDtoIV(cfg_temp,MUA);
+
+evt = restrict(evt,MUA_iv);
+disp(['***',num2str(length(evt.tstart)),' MUA-limited candidates found.'])
+
 
 %% Theta power thresholding
 % in case there's theta even when the rat is moving very slowly or is
