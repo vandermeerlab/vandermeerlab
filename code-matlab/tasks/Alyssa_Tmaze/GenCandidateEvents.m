@@ -44,6 +44,8 @@ function evt = GenCandidateEvents(cfg_in)
 tic
 mfun = mfilename;
 [~,sessionID,~] = fileparts(pwd);
+% session_split = split(sessionID, '-');
+% subjectID = session_split{1};
 disp(['***',mfun,': Looking for candidate events:']);
 
 %% parse cfg parameters
@@ -55,12 +57,17 @@ cfg_def.MUAmethod = 'AM'; % 'AM' for amMUA, or 'none' for skip MUA detection
 cfg_def.weightby = 'amplitude'; % this applies to 'AM' amSWR and 'TR' photonic, but not 'HT' OldWizard
 cfg_def.stepSize = 1;
 cfg_def.ThreshMethod = 'zscore';
-cfg_def.DetectorThreshold = 2.5; % the threshold you want for generating IV data
+cfg_def.DetectorThreshold = 2; % the threshold you want for generating IV data
 %if strcmp(sessionID,'R042-2013-08-17') || strcmp(sessionID,'R044-2013-12-23')
     %cfg_def.DetectorThreshold = 2.5;
 %end
 cfg_def.mindur = 0.02; % in seconds, the minumum duration for detected events to be kept
+cfg_def.SWRDiffFromRef = 1; % the threshold that SWR spectral scores need to be larger than reference channel
+if strcmp(sessionID,'R152-2008-09-09') || strcmp(sessionID,'R152-2008-09-10') || strcmp(sessionID,'R152-2008-09-11')
+    cfg_def.SWRDiffFromRef = 1.5;
+end
 cfg_def.SpeedLimit = 15; % pixels per second
+
 cfg_def.ThetaThreshold = ''; % power, std above mean
 cfg_def.minCells = 4; % minimum number of active cells for the event to be kept. if this is empty [], this step is skipped
 cfg_def.expandIV = [0 0]; % amount to add to the interval (catch borderline missed spikes)
@@ -89,7 +96,6 @@ end
 
 cfg_temp = []; cfg_temp.verbose = cfg.verbose;
 cfg_temp.fc = ExpKeys.goodSWR(1);
-% cfg_temp.fc = {'R149-2008-08-11-CSCr1r2.Ncs'};
 CSC = LoadCSC(cfg_temp);
 
 if ~isempty(cfg.ThetaThreshold) % load a theta CSC
@@ -99,18 +105,20 @@ end
 
 %% Get reference channle to filter chewing periods
 cfg_temp = []; cfg_temp.verbose = cfg.verbose;
-cfg_temp.fc = {'R149-2008-08-14-CSCr1r2.ncs'};
+cfg_temp.fc = ExpKeys.goodRef(1);
 CSC_ref = LoadCSC(cfg_temp);
 
 %% exclude spikes that are somehow occurring during recording pause
 cscdiffs = cat(1, 0, diff(CSC.tvec));
-csc_jump_idx = find(cscdiffs > 5);
+
+if strcmp(sessionID,'R159-2008-12-07') || strcmp(sessionID,'R159-2008-12-08')
+    diff_in_sec = 3;
+else
+    diff_in_sec = 5;
+end
+csc_jump_idx = find(cscdiffs > diff_in_sec);
 pre_gap_start = CSC.tvec(csc_jump_idx(1) - 1);
 post_gap_end = CSC.tvec(csc_jump_idx(2));
-% preS = restrict(S, 0, pre_gap_start);
-% taskS = restrict(S, ExpKeys.TimeOnTrack, ExpKeys.TimeOffTrack);
-% postS = restrict(S, post_gap_end, Inf);
-% S = concatenateTS(preS, concatenateTS(taskS, postS));
 
 S = restrict(S, [0 ExpKeys.TimeOnTrack post_gap_end], [pre_gap_start ExpKeys.TimeOffTrack Inf]);
 
@@ -207,7 +215,7 @@ disp('***Limiting output based on SWR scores...')
 
 % threshold
 cfg_temp = [];
-cfg_temp.threshold = 2; cfg_temp.verbose = cfg.verbose; cfg_temp.method = cfg.ThreshMethod;
+cfg_temp.threshold = cfg.DetectorThreshold; cfg_temp.verbose = cfg.verbose; cfg_temp.method = cfg.ThreshMethod;
 cfg_temp.operation = '>';
 evt = TSDtoIV2(cfg_temp, SWR);
 
@@ -224,11 +232,13 @@ disp(' ')
 disp('***Limiting output based on SWR scores of reference...')
 
 cfg_temp = [];
-cfg_temp.threshold = 0.5; cfg_temp.verbose = cfg.verbose; cfg_temp.method = cfg.ThreshMethod;
+cfg_temp.threshold = cfg.SWRDiffFromRef; cfg_temp.verbose = cfg.verbose; cfg_temp.method = cfg.ThreshMethod;
 cfg_temp.operation = '>';
 SWR_ref_iv = TSDtoIV(cfg_temp,SWR_diff);
 
-evt = restrict(evt,SWR_ref_iv);
+evt = IntersectIV([],evt, SWR_ref_iv);
+
+% evt = restrict(evt,SWR_ref_iv);
 
 disp(['***',num2str(length(evt.tstart)),' SWR-ref-limited candidates found.'])
 
@@ -241,6 +251,7 @@ if ~isempty(cfg.SpeedLimit)
     cfg_temp = []; cfg_temp.verbose = cfg.verbose;
     spd = getLinSpd(cfg_temp,pos);
     
+    
     cfg_temp.threshold = cfg.SpeedLimit; cfg_temp.operation = '<'; cfg_temp.method = 'raw'; cfg_temp.verbose = cfg.verbose;
     %cfg_temp.minlen = 0;
     low_spd_iv = TSDtoIV(cfg_temp,spd);
@@ -248,6 +259,15 @@ if ~isempty(cfg.SpeedLimit)
     evt = restrict(evt,low_spd_iv);
     disp(['***',num2str(length(evt.tstart)),' speed-limited candidates found.'])
 end
+
+%% Merge events that are close in time
+disp(' ')
+disp('**Merging events that are closer than min duration...')
+    
+cfg_temp = []; cfg_temp.gap = cfg.mindur; cfg_temp.verbose = cfg.verbose;
+evt = MergeIV(cfg_temp,evt);
+
+disp(['***',num2str(length(evt.tstart)),' candidates found after merging.'])
 
 %% MUA thresholding
 disp(' ')

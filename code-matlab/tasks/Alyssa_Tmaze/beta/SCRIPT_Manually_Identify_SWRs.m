@@ -163,7 +163,7 @@ end
 
 %% Get reference channle to filter chewing periods
 please = [];
-please.fc = {'R149-2008-08-14-CSCr1r2.ncs'};
+please.fc = ExpKeys.goodRef(1);
 please.resample = 2000;
 CSC_ref = LoadCSC(please);
 
