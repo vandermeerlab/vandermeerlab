@@ -67,7 +67,7 @@ try
         coverageFile = fullfile(getenv('WORKSPACE'), sprintf('coverage%d.xml',iF));
         runner.addPlugin(CodeCoveragePlugin.forFolder(this_folder,'Producing', CoberturaFormat(coverageFile)));
         
-        idx = sep(iF)+1; % update cursor to start of next path
+        %idx = sep(iF)+1; % update cursor to start of next path
     end
 
     % Run the tests
