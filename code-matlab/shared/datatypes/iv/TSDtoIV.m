@@ -73,8 +73,12 @@ end
 switch cfg.operation
     case '>'
         detec = temp_data > cfg.threshold;
+    case '>='
+        detec = temp_data >= cfg.threshold;
     case '<'
         detec = temp_data < cfg.threshold;
+    case '<='
+        detec = temp_data <= cfg.threshold;
     case 'range'
         detec = temp_data > cfg.threshold(1) & temp_data < cfg.threshold(2);
 end

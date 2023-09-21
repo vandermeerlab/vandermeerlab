@@ -56,20 +56,24 @@ for iEvent = 1:length(cfg.eventList)
     ev_string = cfg.eventList{iEvent};
 
     %ev_id = strncmp(ev_string,EventStrings,length(ev_string));
-    ev_id = strmatch(ev_string,EventStrings,'exact');
+    ev_id = strmatch(ev_string, EventStrings, 'exact');
     ev_t = EVTimeStamps(ev_id)*10^-6;
     
     % check if this eventLabel already exists, if so append (not create new)
-    label_idx = strmatch(cfg.eventLabel{iEvent},events_ts.label,'exact');
+    label_idx = strmatch(cfg.eventLabel{iEvent}, events_ts.label, 'exact');
     
     if isempty(label_idx) % label doesn't exist, create new
         
         events_ts.t{iEvent} = ev_t;
         events_ts.label{iEvent} = cfg.eventLabel{iEvent};
         
+        if ~iscolumn(events_ts.t{iEvent})
+            events_ts.t{iEvent} = events_ts.t{iEvent}';
+        end
+        
     else % label exists, append and sort (sort is helpful for later use with nearest_idx3)
         
-        events_ts.t{label_idx} = sort(cat(2,events_ts.t{label_idx},ev_t));
+        events_ts.t{label_idx} = sort(cat(1, events_ts.t{label_idx}, ev_t));
                 
     end
     
