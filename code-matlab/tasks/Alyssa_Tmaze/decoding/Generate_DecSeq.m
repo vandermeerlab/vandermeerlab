@@ -128,15 +128,15 @@ chp = tsd(0,metadata.coord.chp_cm,{'x','y'}); % make choice point useable by cob
 nCond = length(expCond);
 for iCond = 1:nCond
     
-    cfg_linpos = []; cfg_linpos.Coord = expCond(iCond).coord;
-    expCond(iCond).linpos = LinearizePos(cfg_linpos,pos);
-    
+    this_coord.coord = expCond(iCond).coord; this_coord.units = 'au'; this_coord.standardized = 0;
+    expCond(iCond).linpos = LinearizePos([],pos,this_coord);
+
     % ensure that linpos is now in cm
-    expCond(iCond).linpos.data = (expCond(iCond).linpos.data ./ length(cfg_linpos.Coord)).*ExpKeys.pathlength;
+    expCond(iCond).linpos.data = (expCond(iCond).linpos.data ./ length(this_coord.coord)).*ExpKeys.pathlength;
     
     % get cp in linpos coordinates
-    expCond(iCond).cp = LinearizePos(cfg_linpos,chp);
-    expCond(iCond).cp.data = (expCond(iCond).cp.data ./ length(cfg_linpos.Coord)).*ExpKeys.pathlength;
+    expCond(iCond).cp = LinearizePos([],chp,this_coord);
+    expCond(iCond).cp.data = (expCond(iCond).cp.data ./ length(this_coord.coord)).*ExpKeys.pathlength;
     
 end
     
@@ -241,7 +241,8 @@ for iCond = 1:nCond
         continue;
     end
     
-    expCond(iCond).tc = TuningCurves_old(cfg_tc,enc_S,enc_linpos);
+    %expCond(iCond).tc = TuningCurves_old(cfg_tc,enc_S,enc_linpos);
+    expCond(iCond).tc = TuningCurves(cfg_tc,enc_S,enc_linpos);
     
     % keep track of cp
     [~,expCond(iCond).cp_bin] = histc(expCond(iCond).cp.data,cfg_tc.binEdges{1});
