@@ -83,11 +83,15 @@ for iSeq = 1:length(sequences)
         disp(str);
     end
 
-    
     for iSh = 1:cfg.nShuffles
         rand_idx = randperm(length(sequences{2,iSeq}));
         s2 = sequences{2,iSeq}(rand_idx);
-        [rhos_shuffled(iSh,iSeq),pvals_shuffled(iSh,iSeq)] = corr(s1,s2,'type','Spearman');
+
+        [temp_corr temp_p] = corr(s1,s2,'type','Spearman');
+        if isempty(temp_corr)
+            temp_corr = NaN; temp_p = NaN;
+        end
+        rhos_shuffled(iSh,iSeq) = temp_corr; pvals_shuffled(iSh,iSeq) = temp_p;
     end
 end
 

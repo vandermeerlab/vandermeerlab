@@ -150,12 +150,6 @@ for iF = 1:nFiles
     sample_count_tvec(iF) = length(tvec);
     sample_count_data(iF) = length(data);
     
-    % check if the data is the same length for each channel.  
-    if iF >1 && length(data) ~= length(csc_tsd.data(iF-1,:))
-        message = 'Data lengths differ across channels.';
-        error(message);
-    end
-    
     % decimate data if specified
     if ~isempty(cfg.decimateByFactor)
         
@@ -164,6 +158,14 @@ for iF = 1:nFiles
         tvec = tvec(1:cfg.decimateByFactor:end);
         hdr.SamplingFrequency = hdr.SamplingFrequency./cfg.decimateByFactor;
         
+    else
+    
+    % check if the data is the same length for each channel.  
+        if iF >1 && length(data) ~= length(csc_tsd.data(iF-1,:))
+            message = 'Data lengths differ across channels.';
+            error(message);
+        end
+    
     end
     
     % done, add to tsd

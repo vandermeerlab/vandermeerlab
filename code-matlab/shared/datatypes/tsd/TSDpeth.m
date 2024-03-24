@@ -1,5 +1,5 @@
-function out = tsdPETH(cfg_in,tsd_in,t_in)
-% function out = tsdPETH(cfg_in,tsd_in,t_in)
+function [peth_out, all_trials] = tsdPETH(cfg_in,tsd_in,t_in)
+% function [peth_out, all_trials]  = tsdPETH(cfg_in,tsd_in,t_in)
 %
 % compute peri-event time histogram (average)
 %
@@ -10,7 +10,8 @@ function out = tsdPETH(cfg_in,tsd_in,t_in)
 %
 % OUTPUTS:
 %
-% out: tsd with PETH
+% peth_out: tsd with PETH
+% all_trials: tsd with individual trials, such that t_in(n) = all_trials.data(:, n)
 %
 % cfg options:
 %
@@ -68,13 +69,13 @@ else
             
             this_iv = t_in;
                
-        case ts
+        case 'ts'
             
             if length(t_in.t) ~= 1
                 error('ts input must have exactly one .t cell');
             end
             
-            this_iv = iv(t_in.t{1} + cfg.window(1), t_in.t{1} + cfg_window(2));
+            this_iv = iv(t_in.t{1} + cfg.window(1), t_in.t{1} + cfg.window(2));
             
         otherwise
             
@@ -124,6 +125,12 @@ switch cfg.mode
 end
 
 % average and package
-out = tsd;
-out.data = nanmean(out_data);
-out.tvec = out_tvec;
+peth_out = tsd;
+peth_out.data = nanmean(out_data);
+peth_out.tvec = out_tvec;
+CheckTSD(peth_out);
+
+all_trials = tsd;
+all_trials.data = out_data;
+all_trials.tvec = out_tvec;
+CheckTSD(all_trials);
