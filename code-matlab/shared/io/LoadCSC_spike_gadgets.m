@@ -1,39 +1,55 @@
-function [csc_tsd] = load_CSC_spike_gadgets(cfg_in)
+function [csc_tsd] = LoadCSC_spike_gadgets(cfg_in)
         % function csc_tsd = load_CSC_spike_gadgets(cfg_in)
         %
         % loads SpikeGadgets ntxchx.dat files which contain raw data for 1
         % channel
+        % + loads the related time array
     
         % INPUTS: only cfg
         %
         % cfg.fc: cell array containing filenames to load
         %     if no file_list field is specified, loads all *.Ncs files in
+        % current folder (not for now though)
 
         % TODO deal with the different filename for unique timestamp file
         % and possibly multiple lfp data files
         % TODO write warning that the names should be in the same folder
         % TODO check the uV and put a warning
         % TODO check that time and data are the same length 
-    
+
         cfg_def.fc = {};
-        cfg_def.fc = {'2023-03-22_r206_sq21.LFP_nt27ch3.dat'};
+
     %     cfg_def.TimeConvFactor = 1/30000; % 30 kHz sampling rate, maybe better to get it from the file?
-        cfg_def.VoltageConvFactor = 1; % 1 means output in volts, 1000 in mV, 10^6 in uV
+
+        % 1 means output in volts, 1000 in mV, 10^6 in uV    
+        cfg_def.VoltageConvFactor = 1; 
+        
         cfg_def.decimateByFactor = [];
         cfg_def.verbose = 1;
-        cfg_def.lfp_times_fn = {'2023-03-22_r206_sq21.timestamps.dat'};
+        cfg_def.hdr = {}; % TODO fill this
     
         if ~exist('cfg_in', 'var') % temp
-            cd('C:\shared\DATA\Screening_DM\r206\2023-03-22_r206_sq21\2023-03-22_r206_sq21.LFP\')
+            this_fn = 'r208_rec7';
+            this_flp_ch = 'nt27ch1';
+            this_path = 'D:\DATA\Screening\r208\2024-03-21\';
+            cfg_def.fc = {[this_fn '.LFP_' this_flp_ch '.dat']};
+            cfg_def.lfp_times_fn = {[this_fn '.timestamps.dat']};
+
+            cd([this_path this_fn '.rec\' this_fn '.LFP\'])
             cfg_in = cfg_def;
         end
         mfun = mfilename;
     
         cfg = ProcessConfig(cfg_def, cfg_in, mfun); % this takes fields 
         % from cfg_in and puts them into cfg
-    
+        
         if isempty(cfg.fc) % no filelist provided, load everything
+            warning('No filelist provided in config, will load all!')
             cfg.fc = FindFiles('*.dat');
+            disp('found dat files:')
+            disp(cfg.fc)
+            keyboard 
+            % need to separate timestamps and lfp files
         else    
             if ~isa(cfg.fc,'cell')
                 error('LoadCSC: cfg.fc should be a cell array.');
@@ -41,15 +57,11 @@ function [csc_tsd] = load_CSC_spike_gadgets(cfg_in)
         end
     
         if isempty(FindFiles(cfg.fc{1}))
-            error('File does not exist in directory. Check spelling.');
+            error(['File ' cfg.fc{1} 'does not exist in directory. Check spelling.']);
         end
     
         fc = sort(cfg.fc);
         nFiles = length(fc);
-    
-        % track sample counts for different files, throw error if not equal
-        sample_count_tvec = nan(nFiles, 1);
-        sample_count_data = nan(nFiles, 1);
     
         csc_tsd = tsd;
     
@@ -72,81 +84,86 @@ function [csc_tsd] = load_CSC_spike_gadgets(cfg_in)
     
         % 1. read the timestamps file (one file for all LFP files)
         disp('Reading LFP timestamps file...')
-        these_LFP_times = readTrodesExtractedDataFile(cfg.lfp_times_fn);
+        these_LFP_times = readTrodesExtractedDataFile(cfg.lfp_times_fn{:});
         orig_Fs = these_LFP_times.clockrate;
+        % How much the LFP data was decimated of from the raw sampling 
+        % rate during extraction by trodes
+        extracted_decimate_factor  = these_LFP_times.decimation; 
     
         tvec = double(these_LFP_times.fields.data) / orig_Fs; % now in s
-    
+        tvec_hdr.SamplingFrequency = orig_Fs/extracted_decimate_factor;
+        these_LFP_times.cfg.hdr{1} = tvec_hdr;
         % decimate data if specified
         if ~isempty(cfg.decimateByFactor)
+            % additional decimat(ion)
             
             fprintf('%s: Decimating tvec by factor %d...\n', mfun, ...
                 cfg.decimateByFactor)
             tvec = tvec(1:cfg.decimateByFactor:end);
-            % TODO deal with the 'header' at some point
-    %         hdr.SamplingFrequency = hdr.SamplingFrequency./cfg.decimateByFactor;
+            tvec_hdr.SamplingFrequency = tvec_hdr.SamplingFrequency./cfg.decimateByFactor;
+    
         end
+
+        % Add the time to the tsd
+        csc_tsd.tvec = tvec;
+
     
         for iF = 1:nFiles
             fname = fc{iF};
     
             disp(['Reading LFP data file: ' fname '...'])
-            % NOTE: the data should be in uV so to match the desired unit, 
-            % we need to set it to V [TO IMPROVE ED]
             this_LFP =  readTrodesExtractedDataFile(fname);
+            % This gives data in microVolts
             lfp_data = double(this_LFP.fields.data) * this_LFP.voltage_scaling;
-            lfp_data = lfp_data/10^6;
-            
+            % This code wants the data to be in Volts so convert to volts
+            % but also convert to the desired unit using the config
+            % conversion factor
+            lfp_data = lfp_data/10^6 * cfg.VoltageConvFactor;
 
-            if isempty(lfp_data) % TODO check if this is ever the case
+            if cfg.verbose
+                disp(['LFP reference: ' this_LFP.reference])
+                disp(['LFP low pass filter: ' this_LFP.low_pass_filter])
+            end
+
+            if isempty(lfp_data) 
                 warning(['No csc data (disabled tetrode channel). ' ...
                     'Consider deleting ',fname,'.']);
             end
     
             % track sizes
-            sample_count_tvec(iF) = length(tvec);
-            sample_count_data(iF) = length(lfp_data);
+            sample_count_tvec = length(tvec);
+            sample_count_data = length(lfp_data);
     
             % check if the data is the same length for each channel.  
             if iF >1 && length(lfp_data) ~= length(csc_tsd.data(iF-1,:))
                 message = 'Data lengths differ across channels.';
                 error(message);
             end
-
-            %TODO do test of length of timestamp and lfp data should be the
-            %same
     
-            % decimate data if specified
+            % decimate data (again) if specified
             if ~isempty(cfg.decimateByFactor)
                 
                 fprintf('%s: Decimating by factor %d...\n', mfun, ...
                     cfg.decimateByFactor)
-                lfp_data = decimate(lfp_data, cfg.decimateByFactor);
-                tvec = tvec(1:cfg.decimateByFactor:end);
-                % TODO deal with this header thing
-    %             hdr.SamplingFrequency = hdr.SamplingFrequency./cfg.decimateByFactor;   
+                lfp_data = decimate(lfp_data, cfg.decimateByFactor); 
             end
     
             % done, add to tsd
-            csc_tsd.tvec = tvec;
             csc_tsd.data(iF,:) = lfp_data;
             
             [~, fn, fe] = fileparts(fname);
             csc_tsd.label{iF} = cat(2, fn, fe);
-    
-            % TODO deal with the header
-    %         csc_tsd.cfg.hdr{iF} = hdr;
+            % All LFP loaded from the same folder should have the same time
+            % vector... but if not this will create problems
+            csc_tsd.cfg.hdr{iF} = tvec_hdr;
     
         end
-    % check if anything unequal --> error
-    if numel(unique(sample_count_data)) > 1
-        error('Data sizes unequal.');
+    % check if the data is the same length for data and time
+    if sample_count_tvec ~= sample_count_data
+        message = 'Data lengths differ between data and time arrays!';
+        error(message);
     end
-    
-    if numel(unique(sample_count_tvec)) > 1
-       error('tvec sizes unequal.');
-    end
-    
+        
     % check if ExpKeys available
     keys_f = FindFiles('*keys.m');
     if ~isempty(keys_f)
