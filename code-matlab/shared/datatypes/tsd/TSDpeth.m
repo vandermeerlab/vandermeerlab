@@ -69,13 +69,13 @@ else
             
             this_iv = t_in;
                
-        case ts
+        case 'ts'
             
             if length(t_in.t) ~= 1
                 error('ts input must have exactly one .t cell');
             end
             
-            this_iv = iv(t_in.t{1} + cfg.window(1), t_in.t{1} + cfg_window(2));
+            this_iv = iv(t_in.t{1} + cfg.window(1), t_in.t{1} + cfg.window(2));
             
         otherwise
             
