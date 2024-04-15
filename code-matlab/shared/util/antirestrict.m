@@ -1,23 +1,15 @@
-function [in,keep] = restrict(in,varargin)
-% function [out,keep] = restrict(in,varargin)
+function [in,keep] = antirestrict(in, varargin)
+% function [out,keep] = antirestrict(in,varargin)
 %
-% restricts times in data object to specific intervals
-%
-% if a data time is equal to an interval edge, this data point is INCLUDED
+% cuts out specific intervals from data object
 %
 % usage:
-% out = restrict(in,iv)
-% out = restrict(in,tstart,tend) % tstart and tend can be vectors
+% out = antirestrict(in,iv)
+% out = antirestrict(in,tstart,tend) % tstart and tend can be vectors
 %
-% works on ts, tsd, iv data
+% see also restrict()
 %
-% note that for iv data, intervals must fit within restrict times (i.e.
-% will not get cut)
-%
-% MvdM 2014-07-20 initial version
-% youkitan 2016-11-27 edit: type checking update
-%
-% see also antirestrict()
+% MvdM 2024
 
 % convert input arguments to iv if not already done
 if nargin == 2
@@ -44,6 +36,8 @@ if isfield(in,'tvec') && ~isfield(in,'tstart') % tsd
         keep = keep | (in.tvec >= iv_use.tstart(iT) & in.tvec <= iv_use.tend(iT));
     end
     
+    keep = ~keep;
+
 elseif isfield(in,'tstart') % iv
     type = 'iv';
     keep = false(size(in.tstart));
@@ -51,6 +45,8 @@ elseif isfield(in,'tstart') % iv
     for iT = 1:length(iv_use.tstart)
         keep = keep | (in.tstart >= iv_use.tstart(iT) & in.tend <= iv_use.tend(iT));
     end
+
+    keep = ~keep;
     
 elseif isfield(in,'t') % ts
     type = 'ts';
@@ -60,6 +56,7 @@ elseif isfield(in,'t') % ts
         for iT = 1:length(iv_use.tstart)
             keep{iC} = keep{iC} | (in.t{iC} >= iv_use.tstart(iT) & in.t{iC} <= iv_use.tend(iT));
         end
+        keep{iC} = ~keep{iC};
     end
     
 end
