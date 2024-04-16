@@ -57,6 +57,7 @@ switch cfg.method
         nBins = max(bin);
         if nBins > length(new_tvec), error('DEBUG: Too many output bins (%d)', nBins); end
 
+        tsd_out.data = nan(size(tsd_out.tvec))';
         for iCh = nCh:-1:1
 
             for iBin = nBins:-1:1 % slow, how to speed up?
@@ -89,5 +90,9 @@ switch cfg.method
 
 end % methods
 
+
+if ~CheckTSD(tsd_out)
+    error('Output not a correctly formed tsd');
+end
 
 tsd_out = History(tsd_out, mfilename, cfg);
