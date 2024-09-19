@@ -30,3 +30,4 @@ codecov.exe
 *.asv
 *.xml
 *.tap
+*.DS_Store
