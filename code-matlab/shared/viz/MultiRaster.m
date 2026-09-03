@@ -320,9 +320,10 @@ switch plotMode
             temp = PlotTSDfromIV(cfg_temp,cfg.evt,lfp);
             h.LFP(iLFP) = temp.LFP;
             if iLFP == 1
-                h.LFP_iv = temp.LFP_iv;
+                h.LFP_iv = temp.LFP_iv(:);
+            else
+                h.LFP_iv = cat(1,h.LFP_iv,temp.LFP_iv(:));
             end
-            h.LFP_iv = cat(1,h.LFP_iv,temp.LFP_iv);
         end
         ylims = get(gca,'YLim'); ylims(1) = lower_val;
     
