@@ -83,7 +83,7 @@ switch cfg.display
         end
         hold on;
         
-        h.LFP_iv = nan(size(tstart_idx));
+        h.LFP_iv = gobjects(size(tstart_idx));
         for iI = 1:length(tstart_idx)
         
             h.LFP_iv(iI) = plot(tsd_in.tvec(tstart_idx(iI):tend_idx(iI)),temp_data(tstart_idx(iI):tend_idx(iI)),'Color', cfg.fgcol,'MarkerSize',cfg.MarkerSize);
